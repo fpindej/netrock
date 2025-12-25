@@ -1,0 +1,23 @@
+{
+	"common": {
+		"hello": "Ahoj",
+		"welcome": "Vítejte v MyProject",
+		"language": "Jazyk",
+		"theme": "Motiv",
+		"loading": "Načítání...",
+		"login": {
+			"title": "Vítejte zpět",
+			"subtitle": "Přihlaste se ke svému účtu",
+			"email": "Emailová adresa",
+			"password": "Heslo",
+			"submit": "Přihlásit se",
+			"failed": "Přihlášení selhalo",
+			"error": "Došlo k chybě"
+		}
+	},
+	"theme": {
+		"light": "Světlý",
+		"dark": "Tmavý",
+		"system": "Systémový"
+	}
+}

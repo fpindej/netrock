@@ -1,0 +1,23 @@
+{
+	"common": {
+		"hello": "Hello",
+		"welcome": "Welcome to MyProject",
+		"language": "Language",
+		"theme": "Theme",
+		"loading": "Loading...",
+		"login": {
+			"title": "Welcome back",
+			"subtitle": "Sign in to your account",
+			"email": "Email address",
+			"password": "Password",
+			"submit": "Sign in",
+			"failed": "Login failed",
+			"error": "An error occurred"
+		}
+	},
+	"theme": {
+		"light": "Light",
+		"dark": "Dark",
+		"system": "System"
+	}
+}
