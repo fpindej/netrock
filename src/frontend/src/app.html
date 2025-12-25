@@ -6,9 +6,14 @@
 		<script>
 			// Prevent FOUC (Flash of Unstyled Content)
 			(function () {
-				const theme = localStorage.getItem('theme');
+				let theme;
+				try {
+					theme = localStorage.getItem('theme');
+				} catch (e) {
+					// Ignore
+				}
 				const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				if (theme === 'dark' || (!theme && systemDark) || (theme === 'system' && systemDark)) {
+				if (theme === 'dark' || ((!theme || theme === 'system') && systemDark)) {
 					document.documentElement.classList.add('dark');
 				} else {
 					document.documentElement.classList.remove('dark');
