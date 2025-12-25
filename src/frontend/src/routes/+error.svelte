@@ -5,7 +5,6 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Ghost, Ban, TriangleAlert, Home, SearchX } from 'lucide-svelte';
 
-	// Determine content based on status code
 	function getErrorContent(status: number) {
 		switch (status) {
 			case 404:
@@ -42,7 +41,6 @@
 		}
 	}
 
-	// Reactive derived values
 	let status = $derived($page.status);
 	let message = $derived($page.error?.message);
 	let content = $derived(getErrorContent(status));

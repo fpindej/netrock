@@ -2,9 +2,6 @@
 	import { Sun, Moon } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { toggleTheme } from '$lib/theme.svelte';
-
-	// We use a derived value or just call getTheme() in the template to be reactive
-	// Since getTheme returns a state variable, it should be fine.
 </script>
 
 <Button variant="ghost" size="icon" onclick={toggleTheme} aria-label="Toggle theme">
