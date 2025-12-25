@@ -26,7 +26,7 @@
 					<div class="w-24">
 						<Button
 							onclick={async () => {
-								await client.POST('/api/Auth/logout');
+								await client.POST('/api/auth/logout');
 								await invalidateAll();
 								await goto('/login');
 							}}

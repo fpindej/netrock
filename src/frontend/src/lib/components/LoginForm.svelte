@@ -32,7 +32,7 @@
 		error = '';
 
 		try {
-			const { response, error: apiError } = await client.POST('/api/Auth/login', {
+			const { response, error: apiError } = await client.POST('/api/auth/login', {
 				body: { username: email, password }
 			});
 
