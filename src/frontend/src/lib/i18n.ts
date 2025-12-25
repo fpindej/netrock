@@ -1,5 +1,7 @@
-import { register, init, getLocaleFromNavigator, locale } from 'svelte-i18n';
+import { register, init, getLocaleFromNavigator, locale, t as originalT } from 'svelte-i18n';
 import { browser } from '$app/environment';
+import type { TranslationKey } from './types/i18n';
+import type { Readable } from 'svelte/store';
 
 register('en', () => import('./locales/en.json'));
 register('cs', () => import('./locales/cs.json'));
@@ -40,3 +42,7 @@ export function setLanguage(newLocale: string) {
 		document.documentElement.setAttribute('lang', newLocale);
 	}
 }
+
+export const t = originalT as unknown as Readable<
+	(key: TranslationKey, vars?: Record<string, unknown>) => string
+>;
