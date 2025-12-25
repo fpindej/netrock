@@ -1,4 +1,4 @@
-# Web API Template
+# Web APP Template
 
 This repository serves as a robust starting point for building modern full-stack applications with .NET and SvelteKit. It comes pre-configured with essential components to jumpstart your development, following Clean Architecture principles.
 
@@ -17,6 +17,7 @@ This repository serves as a robust starting point for building modern full-stack
 *   **UI Components:** Shadcn-svelte (using bits-ui@next) for accessible, customizable components.
 *   **BFF Pattern:** Backend-for-Frontend architecture using SvelteKit's server-side hooks and proxy routes to handle authentication securely.
 *   **Type Safety:** End-to-end type safety with `openapi-fetch` generated from the backend OpenAPI spec.
+*   **Localization:** Production-ready i18n system with type-safe keys, server-side detection, and cookie persistence.
 
 ### DevOps
 *   **Containerization:** Ready-to-use `Dockerfile` and `docker-compose` setup for the entire stack.
@@ -137,6 +138,24 @@ For a better developer experience (HMR, faster builds), you can run the frontend
     ```bash
     npm run dev
     ```
+
+## Localization
+
+The frontend includes a robust localization system built on `svelte-i18n`, designed for low-traffic SPAs.
+
+### Key Features
+*   **Type-Safe Keys:** TypeScript types are generated from the default locale (`en.json`), preventing missing key errors.
+*   **Auto-Detection:** Detects language from the browser (client-side) or `Accept-Language` header/cookies (server-side).
+*   **Persistence:** User preference is saved in a cookie (`locale`) for consistent experience across sessions.
+*   **SSR Support:** Injects the correct `lang` attribute into the HTML tag during server-side rendering to prevent hydration mismatches.
+
+### Adding a New Language
+1.  Create a new translation file in `src/frontend/src/lib/locales/` (e.g., `es.json`).
+2.  Register the new locale in `src/frontend/src/lib/i18n.ts`:
+    ```typescript
+    register('es', () => import('./locales/es.json'));
+    ```
+3.  Add the language code to the `supportedLocales` array in `src/frontend/src/lib/i18n.ts`.
 
 ## License
 
