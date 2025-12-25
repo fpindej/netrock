@@ -1,0 +1,25 @@
+import type { Handle } from '@sveltejs/kit';
+import { createApiClient } from '$lib/api/client';
+
+export const handle: Handle = async ({ event, resolve }) => {
+	// Skip auth check for API routes to avoid infinite loops
+	if (event.url.pathname.startsWith('/api')) {
+		return resolve(event);
+	}
+
+	const client = createApiClient(event.fetch, event.url.origin);
+
+	try {
+		const { data: user, response } = await client.GET('/api/Auth/me');
+		if (response.ok && user) {
+			event.locals.user = user;
+		} else {
+			event.locals.user = null;
+		}
+	} catch (e) {
+		console.error('Failed to fetch user:', e);
+		event.locals.user = null;
+	}
+
+	return resolve(event);
+};

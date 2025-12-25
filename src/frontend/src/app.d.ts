@@ -1,0 +1,13 @@
+// See https://svelte.dev/docs/kit/types#app.d.ts
+// for information about these interfaces
+import type { components } from '$lib/api/v1';
+
+declare global {
+	namespace App {
+		interface Locals {
+			user: components['schemas']['MeResponse'] | null;
+		}
+	}
+}
+
+export {};

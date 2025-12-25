@@ -21,7 +21,7 @@ x-common-settings: &common-settings
 services:
   api:
     build:
-      context: ./src
+      context: ./src/backend
       dockerfile: MyProject.WebApi/Dockerfile
     container_name: myproject-local-api
     environment: *api-environment
@@ -42,6 +42,23 @@ services:
       - db_data:/var/lib/postgresql/data
     ports:
       - "13004:5432"
+
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: myproject-local-frontend
+    environment:
+      - API_URL=http://api:8080
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./src/frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host
+    depends_on:
+      - api
+    <<: *common-settings
 
 networks:
   application_network:

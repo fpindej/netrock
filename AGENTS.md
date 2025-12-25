@@ -18,42 +18,44 @@ This document provides AI agents with context about the codebase structure, conv
 
 ```
 src/
-├── MyProject.Domain/           # Core domain entities, value objects
-│   ├── Entities/               # Base entities with soft delete
-│   └── Result.cs               # Result pattern implementation
-│
-├── MyProject.Application/      # Application contracts
-│   ├── Features/               # Feature-based organization
-│   │   └── {Feature}/
-│   │       ├── I{Service}.cs   # Service interface
-│   │       └── Dtos/           # Input/Output DTOs
-│   └── Persistence/            # Repository interfaces
-│
-├── MyProject.Infrastructure/   # Implementation layer
-│   ├── Features/
-│   │   └── {Feature}/
-│   │       ├── Services/       # Service implementations
-│   │       ├── Models/         # EF entities (if different from domain)
-│   │       ├── Configurations/ # EF type configurations
-│   │       ├── Extensions/     # DI registration
-│   │       └── Options/        # Configuration options
-│   ├── Persistence/
-│   │   ├── MyProjectDbContext.cs
-│   │   ├── Extensions/         # EF helpers, query extensions
-│   │   └── Configurations/     # Shared EF configurations
-│   └── Logging/                # Serilog configuration
-│
-└── MyProject.WebApi/           # API entry point
-    ├── Features/
-    │   └── {Feature}/
-    │       ├── {Feature}Controller.cs
-    │       ├── {Feature}Mapper.cs    # Optional mapping
-    │       └── Dtos/
-    │           └── {Operation}/      # Request/Response per operation
-    ├── Shared/                 # Base classes, common DTOs
-    ├── Middlewares/            # Custom middleware
-    ├── Extensions/             # App configuration extensions
-    └── Program.cs              # Application entry point
+├── backend/
+│   ├── MyProject.Domain/           # Core domain entities, value objects
+│   │   ├── Entities/               # Base entities with soft delete
+│   │   └── Result.cs               # Result pattern implementation
+│   │
+│   ├── MyProject.Application/      # Application contracts
+│   │   ├── Features/               # Feature-based organization
+│   │   │   └── {Feature}/
+│   │   │       ├── I{Service}.cs   # Service interface
+│   │   │       └── Dtos/           # Input/Output DTOs
+│   │   └── Persistence/            # Repository interfaces
+│   │
+│   ├── MyProject.Infrastructure/   # Implementation layer
+│   │   ├── Features/
+│   │   │   └── {Feature}/
+│   │   │       ├── Services/       # Service implementations
+│   │   │       ├── Models/         # EF entities (if different from domain)
+│   │   │       ├── Configurations/ # EF type configurations
+│   │   │       ├── Extensions/     # DI registration
+│   │   │       └── Options/        # Configuration options
+│   │   ├── Persistence/
+│   │   │   ├── MyProjectDbContext.cs
+│   │   │   ├── Extensions/         # EF helpers, query extensions
+│   │   │   └── Configurations/     # Shared EF configurations
+│   │   └── Logging/                # Serilog configuration
+│   │
+│   └── MyProject.WebApi/           # API entry point
+│       ├── Features/
+│       │   └── {Feature}/
+│       │       ├── {Feature}Controller.cs
+│       │       ├── {Feature}Mapper.cs    # Optional mapping
+│       │       └── Dtos/
+│       │           └── {Operation}/      # Request/Response per operation
+│       ├── Shared/                 # Base classes, common DTOs
+│       ├── Middlewares/            # Custom middleware
+│       ├── Extensions/             # App configuration extensions
+│       └── Program.cs              # Application entry point
+├── frontend/                   # Frontend application (TBD)
 ```
 
 ## Key Conventions

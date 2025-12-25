@@ -60,21 +60,24 @@ chmod +x init.sh
 
 ### 3. Run the Application
 
-Once initialized, you can start the entire infrastructure (API + Database) using Docker Compose:
+Once initialized, you can start the entire infrastructure (API + Database + Frontend) using Docker Compose:
 
 ```bash
 docker compose -f docker-compose.local.yml up -d
 ```
 
-The API will be available at `http://localhost:<API_PORT>` (e.g., `http://localhost:13002`).
-The Swagger UI can be accessed at `http://localhost:<API_PORT>/swagger` (if configured in development).
+*   **Frontend:** `http://localhost:5173`
+*   **API:** `http://localhost:<API_PORT>` (e.g., `http://localhost:13002`)
+*   **Swagger UI:** `http://localhost:<API_PORT>/swagger`
 
 ## Project Structure
 
-*   **src/MyProject.Domain**: Contains enterprise logic and entities.
-*   **src/MyProject.Application**: Contains application logic, interfaces, and DTOs.
-*   **src/MyProject.Infrastructure**: Contains implementation of interfaces (EF Core, external services).
-*   **src/MyProject.WebApi**: The entry point of the application (Controllers, Middleware).
+*   **src/backend**: .NET Web API solution.
+    *   **MyProject.Domain**: Contains enterprise logic and entities.
+    *   **MyProject.Application**: Contains application logic, interfaces, and DTOs.
+    *   **MyProject.Infrastructure**: Contains implementation of interfaces (EF Core, external services).
+    *   **MyProject.WebApi**: The entry point of the application (Controllers, Middleware).
+*   **src/frontend**: SvelteKit application.
 
 ## Database Migrations
 
@@ -90,8 +93,8 @@ If you chose not to run migrations during initialization, or need to add new one
 3.  Run the following command from the root directory:
 
 ```bash
-dotnet ef migrations add <MigrationName> --project src/<YourProjectName>.Infrastructure --startup-project src/<YourProjectName>.WebApi --output-dir Features/Postgres/Migrations
-dotnet ef database update --project src/<YourProjectName>.Infrastructure --startup-project src/<YourProjectName>.WebApi
+dotnet ef migrations add <MigrationName> --project src/backend/<YourProjectName>.Infrastructure --startup-project src/backend/<YourProjectName>.WebApi --output-dir Features/Postgres/Migrations
+dotnet ef database update --project src/backend/<YourProjectName>.Infrastructure --startup-project src/backend/<YourProjectName>.WebApi
 ```
 
 ## License
