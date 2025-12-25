@@ -43,10 +43,10 @@
 				// eslint-disable-next-line svelte/no-navigation-without-resolve
 				await goto('/');
 			} else {
-				error = apiError?.detail || apiError?.title || 'Login failed';
+				error = apiError?.detail || apiError?.title || 'common.login.failed';
 			}
 		} catch {
-			error = 'An error occurred';
+			error = 'common.login.error';
 		}
 	}
 </script>
@@ -70,7 +70,7 @@
 							class={cn('h-1.5 w-1.5 rounded-full', isApiOnline ? 'bg-success' : 'bg-destructive')}
 						></div>
 						<span class="group-hover:hidden"
-							>{isApiOnline ? 'API is online' : 'API is offline'}</span
+							>{isApiOnline ? $t('common.login.apiOnline') : $t('common.login.apiOffline')}</span
 						>
 						<span class="hidden group-hover:block">{apiUrl}</span>
 					</div>
@@ -97,12 +97,14 @@
 					{#if error}
 						<Alert.Root variant="destructive">
 							<CircleAlert class="h-4 w-4" />
-							<Alert.Title>Error</Alert.Title>
-							<Alert.Description>{error}</Alert.Description>
+							<Alert.Title>{$t('dashboard.clientSideAuth.error')}</Alert.Title>
+							<Alert.Description>{$t(error)}</Alert.Description>
 						</Alert.Root>
 					{/if}
 
-					<Button type="submit" class="w-full">{$t('common.login.submit')}</Button>
+					<Button type="submit" class="w-full" disabled={!isApiOnline}>
+						{isApiOnline ? $t('common.login.submit') : $t('common.login.apiOffline')}
+					</Button>
 				</form>
 			</Card.Content>
 		</Card.Root>

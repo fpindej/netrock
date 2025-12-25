@@ -34,7 +34,7 @@
 								await goto('/login');
 							}}
 						>
-							Logout
+							{$t('navbar.logout')}
 						</Button>
 					</div>
 				{/if}
