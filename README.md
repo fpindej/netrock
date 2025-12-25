@@ -140,4 +140,4 @@ For a better developer experience (HMR, faster builds), you can run the frontend
 
 ## License
 
-[MIT](LICENSE)
+This project is licensed under the [GNU Affero General Public License v3.0 (AGPLv3)](LICENSE).
