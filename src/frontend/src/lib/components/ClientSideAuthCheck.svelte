@@ -11,7 +11,7 @@
 
 	onMount(async () => {
 		try {
-			const { data, response } = await client.GET('/api/Auth/me');
+			const { data, response } = await client.GET('/api/auth/me');
 			if (response.ok && data) {
 				clientUser = data;
 			} else {

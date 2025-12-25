@@ -10,7 +10,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const client = createApiClient(event.fetch, event.url.origin);
 
 	try {
-		const { data: user, response } = await client.GET('/api/Auth/me');
+		const { data: user, response } = await client.GET('/api/auth/me');
 		if (response.ok && user) {
 			event.locals.user = user;
 		} else {
