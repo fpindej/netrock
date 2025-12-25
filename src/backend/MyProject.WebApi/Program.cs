@@ -44,6 +44,9 @@ try
     Log.Debug("Adding Cors Feature");
     builder.Services.AddCors(builder.Configuration);
 
+    Log.Debug("Adding Routing => LowercaseUrls");
+    builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
     Log.Debug("Adding Controllers");
     builder.Services.AddControllers();
 
