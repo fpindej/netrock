@@ -6,9 +6,9 @@ register('cs', () => import('./locales/cs.json'));
 
 const defaultLocale = 'en';
 
-export function initI18n() {
+export function initI18n(serverLocale?: string) {
 	if (!browser) {
-		init({ fallbackLocale: defaultLocale, initialLocale: defaultLocale });
+		init({ fallbackLocale: defaultLocale, initialLocale: serverLocale || defaultLocale });
 		return;
 	}
 
@@ -17,7 +17,7 @@ export function initI18n() {
 
 	// Simple logic: if it starts with 'cs', use 'cs', otherwise default to 'en'
 	// You can expand this logic if you add more languages
-	let initialLocale = savedLocale;
+	let initialLocale = savedLocale || serverLocale;
 
 	if (!initialLocale) {
 		if (browserLocale?.startsWith('cs')) {

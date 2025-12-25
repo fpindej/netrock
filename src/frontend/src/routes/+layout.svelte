@@ -7,9 +7,9 @@
 	import { initI18n } from '$lib/i18n';
 	import { isLoading } from 'svelte-i18n';
 
-	let { children } = $props();
+	let { children, data } = $props();
 
-	initI18n();
+	initI18n(data.locale);
 
 	onMount(() => {
 		initTheme();
