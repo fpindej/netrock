@@ -14,12 +14,8 @@ export function initI18n(serverLocale?: string) {
 		return;
 	}
 
-	const savedLocale = localStorage.getItem('locale');
 	const browserLocale = getLocaleFromNavigator();
-
-	// Simple logic: if it starts with 'cs', use 'cs', otherwise default to 'en'
-	// You can expand this logic if you add more languages
-	let initialLocale = savedLocale || serverLocale;
+	let initialLocale = serverLocale;
 
 	if (!initialLocale) {
 		if (browserLocale?.startsWith('cs')) {
@@ -38,7 +34,6 @@ export function initI18n(serverLocale?: string) {
 export function setLanguage(newLocale: string) {
 	locale.set(newLocale);
 	if (browser) {
-		localStorage.setItem('locale', newLocale);
 		document.cookie = `locale=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
 		document.documentElement.setAttribute('lang', newLocale);
 	}
