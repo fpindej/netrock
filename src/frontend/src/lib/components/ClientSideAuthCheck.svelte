@@ -27,7 +27,7 @@
 
 <Card.Root>
 	<Card.Header>
-		<Card.Title>Client-Side Auth Check</Card.Title>
+		<Card.Title class="text-lg">Client-Side Auth Check</Card.Title>
 		<Card.Description>Verifying authentication from the browser.</Card.Description>
 	</Card.Header>
 	<Card.Content>

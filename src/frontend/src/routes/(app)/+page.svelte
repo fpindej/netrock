@@ -20,7 +20,7 @@
 	<!-- Server Side Auth Card -->
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Server-Side Auth Check</Card.Title>
+			<Card.Title class="text-lg">Server-Side Auth Check</Card.Title>
 			<Card.Description>Data fetched during SSR (Server-Side Rendering).</Card.Description>
 		</Card.Header>
 		<Card.Content>

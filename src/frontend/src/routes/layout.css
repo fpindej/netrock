@@ -119,6 +119,6 @@
 		@apply bg-background text-foreground;
 	}
 	:focus-visible {
-		@apply outline-ring/50 outline-2;
+		@apply outline-2 outline-ring/50;
 	}
 }

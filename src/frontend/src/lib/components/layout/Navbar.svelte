@@ -18,7 +18,9 @@
 			</div>
 			<div class="flex items-center">
 				{#if user}
-					<span class="mr-4 text-sm text-muted-foreground">Hello, {user.username || 'User'}</span>
+					<span class="mr-4 hidden text-sm text-muted-foreground sm:inline-block"
+						>Hello, {user.username || 'User'}</span
+					>
 					<div class="w-24">
 						<Button
 							onclick={async () => {
