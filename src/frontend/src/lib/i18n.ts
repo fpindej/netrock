@@ -6,7 +6,8 @@ import type { Readable } from 'svelte/store';
 register('en', () => import('./locales/en.json'));
 register('cs', () => import('./locales/cs.json'));
 
-const defaultLocale = 'en';
+export const defaultLocale = 'en';
+export const supportedLocales = ['en', 'cs'];
 
 export function initI18n(serverLocale?: string) {
 	if (!browser) {
@@ -18,11 +19,8 @@ export function initI18n(serverLocale?: string) {
 	let initialLocale = serverLocale;
 
 	if (!initialLocale) {
-		if (browserLocale?.startsWith('cs')) {
-			initialLocale = 'cs';
-		} else {
-			initialLocale = 'en';
-		}
+		const foundLocale = supportedLocales.find((l) => browserLocale?.startsWith(l));
+		initialLocale = foundLocale || defaultLocale;
 	}
 
 	init({

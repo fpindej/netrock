@@ -14,6 +14,9 @@
 		>
 			{$t('dashboard.title')}
 		</h2>
+		<p class="mt-1 text-sm text-muted-foreground">
+			{$t('dashboard.currentDate', { date: new Date() })}
+		</p>
 	</div>
 </div>
 
