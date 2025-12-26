@@ -14,7 +14,7 @@
 </script>
 
 <div class={cn('flex h-full flex-col gap-2', className)}>
-	<div class="flex-1 py-4">
+	<div class="flex-1 overflow-auto py-4">
 		<div class="px-3 py-2">
 			<div class="mb-2 px-4">
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->

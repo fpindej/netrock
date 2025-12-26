@@ -5,13 +5,13 @@
 	let { children, data } = $props();
 </script>
 
-<div class="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+<div class="grid h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
 	<div class="hidden border-r bg-muted/40 md:block">
 		<Sidebar class="h-full" user={data.user} />
 	</div>
-	<div class="flex flex-col">
+	<div class="flex flex-col overflow-hidden">
 		<Header user={data.user} />
-		<main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+		<main class="flex flex-1 flex-col gap-4 overflow-y-auto p-4 lg:gap-6 lg:p-6">
 			{@render children()}
 		</main>
 	</div>

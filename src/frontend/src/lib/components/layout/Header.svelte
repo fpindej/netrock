@@ -18,7 +18,7 @@
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <header
-	class="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 md:hidden lg:h-[60px] lg:px-6"
+	class="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 md:hidden"
 >
 	<Sheet.Root bind:open>
 		<Sheet.Trigger>
