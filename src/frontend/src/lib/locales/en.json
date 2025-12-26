@@ -5,6 +5,9 @@
 		"language": "Language",
 		"theme": "Theme",
 		"loading": "Loading...",
+		"profile": "Profile",
+		"settings": "Settings",
+		"dashboard": "Dashboard",
 		"login": {
 			"title": "Welcome back",
 			"subtitle": "Sign in to your account",

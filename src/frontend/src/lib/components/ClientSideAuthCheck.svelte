@@ -66,7 +66,7 @@
 						{$t('dashboard.clientSideAuth.errorDetails')}
 					</dt>
 					<dd class="mt-1 text-sm text-destructive sm:col-span-2 sm:mt-0">
-						{#if error !== ''}{$t(error)}{/if}
+						{#if error}{$t(error)}{/if}
 					</dd>
 				</div>
 			{/if}

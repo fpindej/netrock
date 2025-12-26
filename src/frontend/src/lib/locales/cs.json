@@ -5,6 +5,9 @@
 		"language": "Jazyk",
 		"theme": "Motiv",
 		"loading": "Načítání...",
+		"profile": "Profil",
+		"settings": "Nastavení",
+		"dashboard": "Nástěnka",
 		"login": {
 			"title": "Vítejte zpět",
 			"subtitle": "Přihlaste se ke svému účtu",

@@ -5,8 +5,15 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Ghost, Ban, TriangleAlert, Home, SearchX } from 'lucide-svelte';
 	import { t } from '$lib/i18n';
+	import type { TranslationKey } from '$lib/types/i18n';
+	import type { ComponentType } from 'svelte';
 
-	function getErrorContent(status: number) {
+	function getErrorContent(status: number): {
+		title: TranslationKey;
+		description: TranslationKey;
+		icon: ComponentType;
+		iconColor: string;
+	} {
 		switch (status) {
 			case 404:
 				return {
