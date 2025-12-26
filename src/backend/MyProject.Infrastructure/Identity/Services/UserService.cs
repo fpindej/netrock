@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Identity;
+using MyProject.Application.Caching;
+using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity;
 using MyProject.Domain;
@@ -8,7 +10,8 @@ namespace MyProject.Infrastructure.Identity.Services;
 
 internal class UserService(
     UserManager<ApplicationUser> userManager,
-    IUserContext userContext) : IUserService
+    IUserContext userContext,
+    ICacheService cacheService) : IUserService
 {
     public async Task<Result<UserOutput>> GetCurrentUserAsync()
     {
@@ -19,6 +22,14 @@ internal class UserService(
             return Result<UserOutput>.Failure("User is not authenticated.");
         }
 
+        var cacheKey = CacheKeys.User(userId.Value);
+        var cachedUser = await cacheService.GetAsync<UserOutput>(cacheKey);
+
+        if (cachedUser is not null)
+        {
+            return Result<UserOutput>.Success(cachedUser);
+        }
+
         var user = await userManager.FindByIdAsync(userId.Value.ToString());
 
         if (user is null)
@@ -26,9 +37,13 @@ internal class UserService(
             return Result<UserOutput>.Failure("User not found.");
         }
 
-        return Result<UserOutput>.Success(new UserOutput(
+        var output = new UserOutput(
             Id: user.Id,
-            UserName: user.UserName!));
+            UserName: user.UserName!);
+
+        await cacheService.SetAsync(cacheKey, output, TimeSpan.FromMinutes(10));
+
+        return Result<UserOutput>.Success(output);
     }
 
     public async Task<IList<string>> GetUserRolesAsync(Guid userId)
