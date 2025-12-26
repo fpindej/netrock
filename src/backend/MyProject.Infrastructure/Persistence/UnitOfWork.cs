@@ -1,5 +1,4 @@
-﻿using MyProject.Application;
-using Microsoft.EntityFrameworkCore.Storage;
+﻿using Microsoft.EntityFrameworkCore.Storage;
 using MyProject.Application.Persistence;
 
 namespace MyProject.Infrastructure.Persistence;

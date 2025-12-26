@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using MyProject.Application;
 using MyProject.Application.Persistence;
 using MyProject.Infrastructure.Features.Authentication.Extensions;
 
