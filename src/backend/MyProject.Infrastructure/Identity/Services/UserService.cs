@@ -37,9 +37,12 @@ internal class UserService(
             return Result<UserOutput>.Failure("User not found.");
         }
 
+        var roles = await userManager.GetRolesAsync(user);
+
         var output = new UserOutput(
             Id: user.Id,
-            UserName: user.UserName!);
+            UserName: user.UserName!,
+            Roles: roles);
 
         await cacheService.SetAsync(cacheKey, output, TimeSpan.FromMinutes(10));
 

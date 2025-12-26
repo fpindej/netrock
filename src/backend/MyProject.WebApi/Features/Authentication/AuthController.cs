@@ -103,13 +103,12 @@ public class AuthController(
         }
 
         var user = userResult.Value!;
-        var roles = await userService.GetUserRolesAsync(user.Id);
 
         return Ok(new MeResponse
         {
             Id = user.Id,
             Username = user.UserName,
-            Roles = roles
+            Roles = user.Roles
         });
     }
 

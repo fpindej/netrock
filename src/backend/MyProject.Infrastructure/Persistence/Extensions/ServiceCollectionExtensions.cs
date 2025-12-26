@@ -30,11 +30,14 @@ public static class ServiceCollectionExtensions
         private IServiceCollection ConfigureDbContext(IConfiguration configuration)
         {
             services.AddScoped<AuditingInterceptor>();
+            services.AddScoped<UserCacheInvalidationInterceptor>();
             services.AddDbContext<MyProjectDbContext>((sp, opt) =>
             {
                 var connectionString = configuration.GetConnectionString("Database");
                 opt.UseNpgsql(connectionString);
-                opt.AddInterceptors(sp.GetRequiredService<AuditingInterceptor>());
+                opt.AddInterceptors(
+                    sp.GetRequiredService<AuditingInterceptor>(),
+                    sp.GetRequiredService<UserCacheInvalidationInterceptor>());
             });
             return services;
         }
