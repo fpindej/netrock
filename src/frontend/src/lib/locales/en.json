@@ -32,6 +32,32 @@
 		"description": "Manage your application preferences and configurations.",
 		"wipDescription": "We are working on a comprehensive settings panel to give you full control over your experience."
 	},
+	"profile": {
+		"title": "Profile",
+		"description": "This is how others will see you on the site.",
+		"personalInfo": {
+			"title": "Personal Information",
+			"description": "Update your personal details here.",
+			"changeAvatar": "Change Avatar",
+			"username": "Username",
+			"usernameDescription": "This is your public display name. It can be your real name or a pseudonym.",
+			"fullName": "Full Name",
+			"fullNamePlaceholder": "Your full name",
+			"email": "Email",
+			"emailPlaceholder": "Your email address",
+			"bio": "Bio",
+			"bioPlaceholder": "Tell us a little bit about yourself",
+			"saving": "Saving...",
+			"saveChanges": "Save Changes"
+		},
+		"accountDetails": {
+			"title": "Account Details",
+			"description": "Manage your account settings.",
+			"userId": "User ID",
+			"roles": "Roles",
+			"noRoles": "No roles assigned"
+		}
+	},
 	"dashboard": {
 		"title": "Dashboard",
 		"serverSideAuth": {
