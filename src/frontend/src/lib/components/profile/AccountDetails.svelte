@@ -22,7 +22,7 @@
 
 		<InfoItem icon={Shield} label="Roles">
 			<div class="mt-1 flex flex-wrap gap-2">
-				{#each user?.roles || [] as role}
+				{#each user?.roles || [] as role (role)}
 					<Badge variant="secondary">{role}</Badge>
 				{:else}
 					<span>No roles assigned</span>
