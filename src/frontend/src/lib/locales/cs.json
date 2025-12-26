@@ -1,8 +1,8 @@
 {
 	"common": {
-		"appName": "MůjProjekt",
+		"appName": "MyProject",
 		"meta": {
-			"titleTemplate": "%s | MůjProjekt",
+			"titleTemplate": "%s | MyProject",
 			"description": "Šablona webové aplikace připravená pro produkci.",
 			"login": {
 				"title": "Přihlášení",
