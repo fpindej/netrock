@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ClientSideAuthCheck from '$lib/components/ClientSideAuthCheck.svelte';
+	import ClientSideAuthCheck from '$lib/components/dashboard/ClientSideAuthCheck.svelte';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { t } from '$lib/i18n';

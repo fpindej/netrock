@@ -1,5 +1,5 @@
 <script lang="ts">
-	import WorkInProgress from '$lib/components/WorkInProgress.svelte';
+	import WorkInProgress from '$lib/components/common/WorkInProgress.svelte';
 	import { t } from '$lib/i18n';
 </script>
 
