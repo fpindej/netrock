@@ -16,7 +16,7 @@
 	});
 
 	onMount(() => {
-		initTheme();
+		return initTheme();
 	});
 </script>
 
