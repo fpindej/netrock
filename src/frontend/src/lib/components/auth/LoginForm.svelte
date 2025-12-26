@@ -8,17 +8,23 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
-	import * as Alert from '$lib/components/ui/alert';
-	import { CircleAlert } from 'lucide-svelte';
 	import { ThemeToggle, LanguageSelector } from '$lib/components/layout';
 	import { t } from '$lib/i18n';
+	import { fly, scale } from 'svelte/transition';
+	import { Check } from 'lucide-svelte';
+	import LoginBackground from './LoginBackground.svelte';
+	import { toast } from '$lib/components/ui/sonner';
 
 	let { apiUrl } = $props();
 
 	let email = $state('');
 	let password = $state('');
-	let error = $state('');
 	let isApiOnline = $state(false);
+	let isSuccess = $state(false);
+	let isRedirecting = $state(false);
+	let shake = $state(false);
+
+	const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 	onMount(async () => {
 		try {
@@ -29,9 +35,15 @@
 		}
 	});
 
+	function triggerShake() {
+		shake = true;
+		setTimeout(() => {
+			shake = false;
+		}, 500);
+	}
+
 	async function login(e: Event) {
 		e.preventDefault();
-		error = '';
 
 		try {
 			const { response, error: apiError } = await browserClient.POST('/api/auth/login', {
@@ -39,74 +51,140 @@
 			});
 
 			if (response.ok) {
+				isSuccess = true;
+				await delay(1500);
+				isRedirecting = true;
+				await delay(500);
 				await invalidateAll();
 				// eslint-disable-next-line svelte/no-navigation-without-resolve
 				await goto('/');
 			} else {
-				error = apiError?.detail || apiError?.title || get(t)('common.login.failed');
+				let errorMessage = '';
+				if (response.status === 401) {
+					errorMessage = get(t)('common.login.invalidCredentials');
+				} else {
+					errorMessage = apiError?.detail || apiError?.title || get(t)('common.login.error');
+				}
+				toast.error(get(t)('common.login.failed'), {
+					description: errorMessage
+				});
+				triggerShake();
 			}
 		} catch {
-			error = get(t)('common.login.error');
+			toast.error(get(t)('common.login.failed'), {
+				description: get(t)('common.login.error')
+			});
+			triggerShake();
 		}
 	}
 </script>
 
-<div class="flex min-h-screen flex-col justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+<LoginBackground>
 	<div class="absolute top-4 right-4 flex gap-2">
 		<LanguageSelector />
 		<ThemeToggle />
 	</div>
-	<div class="sm:mx-auto sm:w-full sm:max-w-md">
-		<Card.Root>
-			<Card.Header>
-				<Card.Title class="text-center text-2xl">{$t('common.login.title')}</Card.Title>
-				<Card.Description class="text-center">{$t('common.login.subtitle')}</Card.Description>
+	{#if !isSuccess}
+		<div
+			class="sm:mx-auto sm:w-full sm:max-w-md"
+			in:fly={{ y: 20, duration: 600, delay: 100 }}
+			out:scale={{ duration: 400, start: 1, opacity: 0 }}
+		>
+			<Card.Root
+				class={cn(
+					'border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm transition-colors duration-300',
+					shake && 'animate-shake border-destructive'
+				)}
+			>
+				<Card.Header>
+					<Card.Title class="text-center text-2xl">{$t('common.login.title')}</Card.Title>
+					<Card.Description class="text-center">{$t('common.login.subtitle')}</Card.Description>
 
-				<div class="mt-4 flex justify-center">
-					<div
-						class="group flex items-center gap-x-2 rounded-full bg-secondary px-4 py-1 text-sm font-medium text-secondary-foreground shadow-sm ring-1 ring-border hover:bg-secondary/80"
-					>
+					<div class="mt-4 flex justify-center">
 						<div
-							class={cn('h-1.5 w-1.5 rounded-full', isApiOnline ? 'bg-success' : 'bg-destructive')}
-						></div>
-						<span class="group-hover:hidden"
-							>{isApiOnline ? $t('common.login.apiOnline') : $t('common.login.apiOffline')}</span
+							class="group flex items-center gap-x-2 rounded-full bg-secondary/50 px-4 py-1 text-sm font-medium text-secondary-foreground shadow-sm ring-1 ring-border hover:bg-secondary/80"
 						>
-						<span class="hidden group-hover:block">{apiUrl}</span>
+							<div
+								class={cn(
+									'h-1.5 w-1.5 rounded-full',
+									isApiOnline ? 'bg-success' : 'bg-destructive'
+								)}
+							></div>
+							<span class="group-hover:hidden"
+								>{isApiOnline ? $t('common.login.apiOnline') : $t('common.login.apiOffline')}</span
+							>
+							<span class="hidden group-hover:block">{apiUrl}</span>
+						</div>
 					</div>
-				</div>
-			</Card.Header>
-			<Card.Content>
-				<form class="space-y-6" onsubmit={login}>
-					<div class="grid gap-2">
-						<Label for="email">{$t('common.login.email')}</Label>
-						<Input id="email" type="email" autocomplete="email" required bind:value={email} />
-					</div>
+				</Card.Header>
+				<Card.Content>
+					<form class="space-y-6" onsubmit={login}>
+						<div class="grid gap-2">
+							<Label for="email">{$t('common.login.email')}</Label>
+							<Input
+								id="email"
+								type="email"
+								autocomplete="email"
+								required
+								bind:value={email}
+								class="bg-background/50"
+							/>
+						</div>
 
-					<div class="grid gap-2">
-						<Label for="password">{$t('common.login.password')}</Label>
-						<Input
-							id="password"
-							type="password"
-							autocomplete="current-password"
-							required
-							bind:value={password}
-						/>
-					</div>
+						<div class="grid gap-2">
+							<Label for="password">{$t('common.login.password')}</Label>
+							<Input
+								id="password"
+								type="password"
+								autocomplete="current-password"
+								required
+								bind:value={password}
+								class="bg-background/50"
+							/>
+						</div>
 
-					{#if error}
-						<Alert.Root variant="destructive">
-							<CircleAlert class="h-4 w-4" />
-							<Alert.Title>{$t('common.login.error')}</Alert.Title>
-							<Alert.Description>{error}</Alert.Description>
-						</Alert.Root>
-					{/if}
+						<Button type="submit" class="w-full" disabled={!isApiOnline}>
+							{isApiOnline ? $t('common.login.submit') : $t('common.login.apiOffline')}
+						</Button>
+					</form>
+				</Card.Content>
+			</Card.Root>
+		</div>
+	{:else if !isRedirecting}
+		<div
+			class="flex flex-col items-center justify-center gap-4"
+			in:scale={{ duration: 500, delay: 400, start: 0.8, opacity: 0 }}
+			out:scale={{ duration: 500, start: 1.2, opacity: 0 }}
+		>
+			<div
+				class="flex h-24 w-24 items-center justify-center rounded-full bg-success text-success-foreground shadow-2xl"
+			>
+				<Check class="h-12 w-12" />
+			</div>
+			<h2 class="text-3xl font-bold tracking-tight text-foreground">
+				{$t('common.login.success')}
+			</h2>
+		</div>
+	{/if}
+</LoginBackground>
 
-					<Button type="submit" class="w-full" disabled={!isApiOnline}>
-						{isApiOnline ? $t('common.login.submit') : $t('common.login.apiOffline')}
-					</Button>
-				</form>
-			</Card.Content>
-		</Card.Root>
-	</div>
-</div>
+<style>
+	@keyframes shake {
+		0%,
+		100% {
+			transform: translateX(0);
+		}
+		25% {
+			transform: translateX(-8px);
+		}
+		50% {
+			transform: translateX(8px);
+		}
+		75% {
+			transform: translateX(-4px);
+		}
+	}
+	.animate-shake {
+		animation: shake 0.4s ease-in-out both;
+	}
+</style>

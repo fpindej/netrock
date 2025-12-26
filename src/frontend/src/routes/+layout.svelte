@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import { initTheme } from '$lib/theme.svelte';
 	import { t } from '$lib/i18n';
+	import { Toaster } from '$lib/components/ui/sonner';
 
 	let { children } = $props();
 
@@ -19,4 +20,5 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
+<Toaster />
 {@render children()}

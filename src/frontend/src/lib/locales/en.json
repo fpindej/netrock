@@ -42,8 +42,10 @@
 			"submit": "Sign in",
 			"failed": "Login failed",
 			"error": "An error occurred",
+			"invalidCredentials": "Invalid email or password",
 			"apiOnline": "API is online",
-			"apiOffline": "API is offline"
+			"apiOffline": "API is offline",
+			"success": "Login successful!"
 		}
 	},
 	"navbar": {

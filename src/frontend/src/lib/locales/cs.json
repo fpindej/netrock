@@ -42,8 +42,10 @@
 			"submit": "Přihlásit se",
 			"failed": "Přihlášení selhalo",
 			"error": "Došlo k chybě",
+			"invalidCredentials": "Nesprávný email nebo heslo",
 			"apiOnline": "API je online",
-			"apiOffline": "API je offline"
+			"apiOffline": "API je offline",
+			"success": "Přihlášení úspěšné!"
 		}
 	},
 	"navbar": {
