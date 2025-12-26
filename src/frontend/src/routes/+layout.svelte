@@ -2,35 +2,21 @@
 	import './layout.css';
 	import 'flag-icons/css/flag-icons.min.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import { onMount, untrack } from 'svelte';
+	import { onMount } from 'svelte';
 	import { initTheme } from '$lib/theme.svelte';
-	import { initI18n } from '$lib/i18n';
-	import { isLoading } from 'svelte-i18n';
+	import { t } from '$lib/i18n';
 
-	let { children, data } = $props();
-
-	initI18n(untrack(() => data.locale));
-
-	$effect(() => {
-		initI18n(data.locale);
-	});
+	let { children } = $props();
 
 	onMount(() => {
-		initTheme();
+		return initTheme();
 	});
 </script>
 
 <svelte:head>
+	<title>{$t('common.appName')}</title>
+	<meta name="description" content={$t('common.meta.description')} />
 	<link rel="icon" href={favicon} />
-	<title>MyProject</title>
 </svelte:head>
 
-{#if $isLoading}
-	<div class="flex h-screen w-full items-center justify-center">
-		<div
-			class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"
-		></div>
-	</div>
-{:else}
-	{@render children()}
-{/if}
+{@render children()}

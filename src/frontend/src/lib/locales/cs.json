@@ -1,10 +1,39 @@
 {
 	"common": {
+		"appName": "MyProject",
+		"meta": {
+			"titleTemplate": "%s | MyProject",
+			"description": "Šablona webové aplikace připravená pro produkci.",
+			"login": {
+				"title": "Přihlášení",
+				"description": "Přihlaste se ke svému účtu."
+			},
+			"dashboard": {
+				"title": "Nástěnka",
+				"description": "Přehled vaší aplikace."
+			},
+			"profile": {
+				"title": "Profil",
+				"description": "Spravujte svůj uživatelský profil."
+			},
+			"settings": {
+				"title": "Nastavení",
+				"description": "Nastavení aplikace."
+			}
+		},
+		"user": "Uživatel",
 		"hello": "Ahoj",
 		"welcome": "Vítejte v MyProject",
 		"language": "Jazyk",
 		"theme": "Motiv",
 		"loading": "Načítání...",
+		"profile": "Profil",
+		"settings": "Nastavení",
+		"wip": {
+			"title": "Již brzy",
+			"description": "Tato funkce je momentálně ve vývoji. Sledujte nás pro další aktualizace!"
+		},
+		"dashboard": "Nástěnka",
 		"login": {
 			"title": "Vítejte zpět",
 			"subtitle": "Přihlaste se ke svému účtu",
@@ -19,6 +48,37 @@
 	},
 	"navbar": {
 		"logout": "Odhlásit se"
+	},
+	"settings": {
+		"title": "Nastavení",
+		"description": "Spravujte předvolby a konfigurace aplikace.",
+		"wipDescription": "Pracujeme na komplexním panelu nastavení, který vám poskytne plnou kontrolu nad vaším zážitkem."
+	},
+	"profile": {
+		"title": "Profil",
+		"description": "Takto vás uvidí ostatní na webu.",
+		"personalInfo": {
+			"title": "Osobní informace",
+			"description": "Zde aktualizujte své osobní údaje.",
+			"changeAvatar": "Změnit avatar",
+			"username": "Uživatelské jméno",
+			"usernameDescription": "Toto je vaše veřejné zobrazované jméno. Může to být vaše skutečné jméno nebo pseudonym.",
+			"fullName": "Celé jméno",
+			"fullNamePlaceholder": "Vaše celé jméno",
+			"email": "Email",
+			"emailPlaceholder": "Vaše emailová adresa",
+			"bio": "Bio",
+			"bioPlaceholder": "Řekněte nám něco o sobě",
+			"saving": "Ukládání...",
+			"saveChanges": "Uložit změny"
+		},
+		"accountDetails": {
+			"title": "Detaily účtu",
+			"description": "Spravujte nastavení svého účtu.",
+			"userId": "ID uživatele",
+			"roles": "Role",
+			"noRoles": "Žádné role nepřiřazeny"
+		}
 	},
 	"dashboard": {
 		"title": "Nástěnka",

@@ -1,11 +1,16 @@
 <script lang="ts">
-	import ClientSideAuthCheck from '$lib/components/ClientSideAuthCheck.svelte';
+	import { ClientSideAuthCheck } from '$lib/components/auth';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { t } from '$lib/i18n';
 
 	let { data } = $props();
 </script>
+
+<svelte:head>
+	<title>{$t('common.meta.titleTemplate').replace('%s', $t('common.meta.dashboard.title'))}</title>
+	<meta name="description" content={$t('common.meta.dashboard.description')} />
+</svelte:head>
 
 <div class="md:flex md:items-center md:justify-between">
 	<div class="min-w-0 flex-1">

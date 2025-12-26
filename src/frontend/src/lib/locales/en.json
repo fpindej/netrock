@@ -1,10 +1,39 @@
 {
 	"common": {
+		"appName": "MyProject",
+		"meta": {
+			"titleTemplate": "%s | MyProject",
+			"description": "A production-ready web application template.",
+			"login": {
+				"title": "Login",
+				"description": "Sign in to your account."
+			},
+			"dashboard": {
+				"title": "Dashboard",
+				"description": "Overview of your application."
+			},
+			"profile": {
+				"title": "Profile",
+				"description": "Manage your user profile."
+			},
+			"settings": {
+				"title": "Settings",
+				"description": "Application settings."
+			}
+		},
+		"user": "User",
 		"hello": "Hello",
 		"welcome": "Welcome to MyProject",
 		"language": "Language",
 		"theme": "Theme",
 		"loading": "Loading...",
+		"profile": "Profile",
+		"settings": "Settings",
+		"wip": {
+			"title": "Coming Soon",
+			"description": "This feature is currently under development. Stay tuned for updates!"
+		},
+		"dashboard": "Dashboard",
 		"login": {
 			"title": "Welcome back",
 			"subtitle": "Sign in to your account",
@@ -19,6 +48,37 @@
 	},
 	"navbar": {
 		"logout": "Logout"
+	},
+	"settings": {
+		"title": "Settings",
+		"description": "Manage your application preferences and configurations.",
+		"wipDescription": "We are working on a comprehensive settings panel to give you full control over your experience."
+	},
+	"profile": {
+		"title": "Profile",
+		"description": "This is how others will see you on the site.",
+		"personalInfo": {
+			"title": "Personal Information",
+			"description": "Update your personal details here.",
+			"changeAvatar": "Change Avatar",
+			"username": "Username",
+			"usernameDescription": "This is your public display name. It can be your real name or a pseudonym.",
+			"fullName": "Full Name",
+			"fullNamePlaceholder": "Your full name",
+			"email": "Email",
+			"emailPlaceholder": "Your email address",
+			"bio": "Bio",
+			"bioPlaceholder": "Tell us a little bit about yourself",
+			"saving": "Saving...",
+			"saveChanges": "Save Changes"
+		},
+		"accountDetails": {
+			"title": "Account Details",
+			"description": "Manage your account settings.",
+			"userId": "User ID",
+			"roles": "Roles",
+			"noRoles": "No roles assigned"
+		}
 	},
 	"dashboard": {
 		"title": "Dashboard",

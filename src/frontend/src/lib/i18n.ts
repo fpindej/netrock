@@ -1,5 +1,6 @@
 import { register, init, getLocaleFromNavigator, locale, t as originalT } from 'svelte-i18n';
 import { browser } from '$app/environment';
+import { invalidateAll } from '$app/navigation';
 import type { TranslationKey } from './types/i18n';
 import type { Readable } from 'svelte/store';
 
@@ -11,9 +12,9 @@ export const supportedLocales = ['en', 'cs'];
 
 export { locale, date, time, number } from 'svelte-i18n';
 
-export function initI18n(serverLocale?: string) {
+export async function initI18n(serverLocale?: string) {
 	if (!browser) {
-		init({
+		await init({
 			fallbackLocale: defaultLocale,
 			initialLocale: serverLocale || defaultLocale,
 			loadingDelay: 0
@@ -29,18 +30,19 @@ export function initI18n(serverLocale?: string) {
 		initialLocale = foundLocale || defaultLocale;
 	}
 
-	init({
+	await init({
 		fallbackLocale: defaultLocale,
 		initialLocale: initialLocale,
 		loadingDelay: 0
 	});
 }
 
-export function setLanguage(newLocale: string) {
+export async function setLanguage(newLocale: string) {
 	locale.set(newLocale);
 	if (browser) {
 		document.cookie = `locale=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
 		document.documentElement.setAttribute('lang', newLocale);
+		await invalidateAll();
 	}
 }
 

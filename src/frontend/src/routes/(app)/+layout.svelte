@@ -1,15 +1,19 @@
 <script lang="ts">
-	import Navbar from '$lib/components/layout/Navbar.svelte';
+	import { Header, Sidebar } from '$lib/components/layout';
 
 	let { children, data } = $props();
 </script>
 
-<div class="min-h-screen bg-background">
-	<Navbar user={data.user} />
-
-	<main class="py-10">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<div
+	class="grid h-screen w-full md:grid-cols-[var(--sidebar-width-md)_1fr] lg:grid-cols-[var(--sidebar-width-lg)_1fr]"
+>
+	<div class="hidden border-r bg-muted/40 md:block">
+		<Sidebar class="h-full" user={data.user} />
+	</div>
+	<div class="flex flex-col overflow-hidden">
+		<Header user={data.user} />
+		<main class="flex flex-1 flex-col gap-4 overflow-y-auto p-4 lg:gap-6 lg:p-6">
 			{@render children()}
-		</div>
-	</main>
+		</main>
+	</div>
 </div>

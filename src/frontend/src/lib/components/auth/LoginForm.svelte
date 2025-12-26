@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { client } from '$lib/api/client';
+	import { browserClient } from '$lib/api/client';
 	import { cn } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
@@ -10,8 +10,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Alert from '$lib/components/ui/alert';
 	import { CircleAlert } from 'lucide-svelte';
-	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-	import LanguageSelector from '$lib/components/LanguageSelector.svelte';
+	import { ThemeToggle, LanguageSelector } from '$lib/components/layout';
 	import { t } from '$lib/i18n';
 
 	let { apiUrl } = $props();
@@ -35,7 +34,7 @@
 		error = '';
 
 		try {
-			const { response, error: apiError } = await client.POST('/api/auth/login', {
+			const { response, error: apiError } = await browserClient.POST('/api/auth/login', {
 				body: { username: email, password }
 			});
 
