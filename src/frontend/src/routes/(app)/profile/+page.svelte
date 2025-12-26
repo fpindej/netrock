@@ -6,6 +6,11 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
+<svelte:head>
+	<title>{$t('common.meta.titleTemplate').replace('%s', $t('common.meta.profile.title'))}</title>
+	<meta name="description" content={$t('common.meta.profile.description')} />
+</svelte:head>
+
 <div class="space-y-6">
 	<div>
 		<h3 class="text-lg font-medium">{$t('profile.title')}</h3>

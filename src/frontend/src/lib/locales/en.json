@@ -1,6 +1,26 @@
 {
 	"common": {
 		"appName": "MyProject",
+		"meta": {
+			"titleTemplate": "%s | MyProject",
+			"description": "A production-ready web application template.",
+			"login": {
+				"title": "Login",
+				"description": "Sign in to your account."
+			},
+			"dashboard": {
+				"title": "Dashboard",
+				"description": "Overview of your application."
+			},
+			"profile": {
+				"title": "Profile",
+				"description": "Manage your user profile."
+			},
+			"settings": {
+				"title": "Settings",
+				"description": "Application settings."
+			}
+		},
 		"user": "User",
 		"hello": "Hello",
 		"welcome": "Welcome to MyProject",

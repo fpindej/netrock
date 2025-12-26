@@ -1,6 +1,26 @@
 {
 	"common": {
 		"appName": "MůjProjekt",
+		"meta": {
+			"titleTemplate": "%s | MůjProjekt",
+			"description": "Šablona webové aplikace připravená pro produkci.",
+			"login": {
+				"title": "Přihlášení",
+				"description": "Přihlaste se ke svému účtu."
+			},
+			"dashboard": {
+				"title": "Nástěnka",
+				"description": "Přehled vaší aplikace."
+			},
+			"profile": {
+				"title": "Profil",
+				"description": "Spravujte svůj uživatelský profil."
+			},
+			"settings": {
+				"title": "Nastavení",
+				"description": "Nastavení aplikace."
+			}
+		},
 		"user": "Uživatel",
 		"hello": "Ahoj",
 		"welcome": "Vítejte v MyProject",

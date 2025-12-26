@@ -4,7 +4,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount, untrack } from 'svelte';
 	import { initTheme } from '$lib/theme.svelte';
-	import { initI18n } from '$lib/i18n';
+	import { initI18n, t } from '$lib/i18n';
 
 	let { children, data } = $props();
 
@@ -20,8 +20,9 @@
 </script>
 
 <svelte:head>
+	<title>{$t('common.appName')}</title>
+	<meta name="description" content={$t('common.meta.description')} />
 	<link rel="icon" href={favicon} />
-	<title>MyProject</title>
 </svelte:head>
 
 {@render children()}
