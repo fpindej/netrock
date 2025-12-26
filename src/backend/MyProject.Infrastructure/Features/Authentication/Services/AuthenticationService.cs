@@ -1,5 +1,4 @@
 using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -10,6 +9,7 @@ using MyProject.Infrastructure.Features.Authentication.Options;
 using MyProject.Infrastructure.Persistence;
 using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Authentication.Dtos;
+using MyProject.Application.Cookies;
 
 namespace MyProject.Infrastructure.Features.Authentication.Services;
 
@@ -18,7 +18,7 @@ internal class AuthenticationService(
     SignInManager<ApplicationUser> signInManager,
     ITokenProvider tokenProvider,
     TimeProvider timeProvider,
-    IHttpContextAccessor httpContextAccessor,
+    ICookieService cookieService,
     IOptions<JwtOptions> jwtOptions,
     MyProjectDbContext dbContext) : IAuthenticationService
 {
@@ -57,15 +57,15 @@ internal class AuthenticationService(
         dbContext.RefreshTokens.Add(refreshTokenEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        SetCookie(
-            cookieName: CookieNames.AccessToken,
-            content: accessToken,
-            options: CreateCookieOptions(expiresAt: utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes)));
+        cookieService.SetSecureCookie(
+            key: CookieNames.AccessToken,
+            value: accessToken,
+            expires: utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes));
 
-        SetCookie(
-            cookieName: CookieNames.RefreshToken,
-            content: refreshTokenString,
-            options: CreateCookieOptions(expiresAt: utcNow.AddDays(_jwtOptions.RefreshToken.ExpiresInDays)));
+        cookieService.SetSecureCookie(
+            key: CookieNames.RefreshToken,
+            value: refreshTokenString,
+            expires: utcNow.AddDays(_jwtOptions.RefreshToken.ExpiresInDays));
 
         return Result.Success();
     }
@@ -105,8 +105,8 @@ internal class AuthenticationService(
         // Get user ID before clearing cookies
         var userId = TryGetUserIdFromAccessToken();
 
-        DeleteCookie(CookieNames.AccessToken);
-        DeleteCookie(CookieNames.RefreshToken);
+        cookieService.DeleteCookie(CookieNames.AccessToken);
+        cookieService.DeleteCookie(CookieNames.RefreshToken);
 
         if (userId.HasValue)
         {
@@ -125,17 +125,10 @@ internal class AuthenticationService(
             .Include(rt => rt.User)
             .FirstOrDefaultAsync(rt => rt.Token == refreshToken, cancellationToken);
 
-        if (storedToken is null)
+        if (storedToken is null || storedToken.Invalidated)
         {
-            DeleteCookie(CookieNames.AccessToken);
-            DeleteCookie(CookieNames.RefreshToken);
-            return Result.Failure("Invalid refresh token.");
-        }
-
-        if (storedToken.Invalidated)
-        {
-            DeleteCookie(CookieNames.AccessToken);
-            DeleteCookie(CookieNames.RefreshToken);
+            cookieService.DeleteCookie(CookieNames.AccessToken);
+            cookieService.DeleteCookie(CookieNames.RefreshToken);
             return Result.Failure("Invalid refresh token.");
         }
 
@@ -144,8 +137,8 @@ internal class AuthenticationService(
             // Security alert: Token reuse! Revoke all tokens for this user.
             storedToken.Invalidated = true;
             await RevokeUserTokens(storedToken.UserId);
-            DeleteCookie(CookieNames.AccessToken);
-            DeleteCookie(CookieNames.RefreshToken);
+            cookieService.DeleteCookie(CookieNames.AccessToken);
+            cookieService.DeleteCookie(CookieNames.RefreshToken);
             return Result.Failure("Invalid refresh token.");
         }
 
@@ -153,8 +146,8 @@ internal class AuthenticationService(
         {
             storedToken.Invalidated = true;
             await dbContext.SaveChangesAsync(cancellationToken);
-            DeleteCookie(CookieNames.AccessToken);
-            DeleteCookie(CookieNames.RefreshToken);
+            cookieService.DeleteCookie(CookieNames.AccessToken);
+            cookieService.DeleteCookie(CookieNames.RefreshToken);
             return Result.Failure("Refresh token has expired.");
         }
 
@@ -185,24 +178,23 @@ internal class AuthenticationService(
         dbContext.RefreshTokens.Add(newRefreshTokenEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        SetCookie(
-            cookieName: CookieNames.AccessToken,
-            content: newAccessToken,
-            options: CreateCookieOptions(expiresAt: utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes)));
+        cookieService.SetSecureCookie(
+            key: CookieNames.AccessToken,
+            value: newAccessToken,
+            expires: utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes));
 
-        SetCookie(
-            cookieName: CookieNames.RefreshToken,
-            content: newRefreshTokenString,
-            options: CreateCookieOptions(expiresAt: utcNow.AddDays(_jwtOptions.RefreshToken.ExpiresInDays)));
+        cookieService.SetSecureCookie(
+            key: CookieNames.RefreshToken,
+            value: newRefreshTokenString,
+            expires: utcNow.AddDays(_jwtOptions.RefreshToken.ExpiresInDays));
 
         return Result.Success();
     }
 
     private Guid? TryGetUserIdFromAccessToken()
     {
-        if (httpContextAccessor.HttpContext?.Request.Cookies.TryGetValue(
-                key: CookieNames.AccessToken,
-                value: out var accessToken) is not true)
+        var accessToken = cookieService.GetCookie(CookieNames.AccessToken);
+        if (string.IsNullOrEmpty(accessToken))
         {
             return null;
         }
@@ -276,36 +268,5 @@ internal class AuthenticationService(
         }
         return await userManager.GetRolesAsync(user);
     }
-
-    /// <summary>
-    /// Sets the authentication cookie in the HTTP response
-    /// </summary>
-    /// <param name="cookieName">Name of the cookie</param>
-    /// <param name="content">Content to be stored in the cookie</param>
-    /// <param name="options">Cookie options</param>
-    private void SetCookie(string cookieName, string content, CookieOptions options)
-        => httpContextAccessor.HttpContext?.Response.Cookies.Append(key: cookieName, value: content, options: options);
-
-    /// <summary>
-    /// Deletes a specific cookie from the HTTP response
-    /// </summary>
-    /// <param name="cookieName">Name of the cookie to delete</param>
-    private void DeleteCookie(string cookieName)
-        => httpContextAccessor.HttpContext?.Response.Cookies.Delete(
-            cookieName,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None
-            });
-
-    private static CookieOptions CreateCookieOptions(DateTimeOffset expiresAt)
-        => new()
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Expires = expiresAt
-        };
 }
+
