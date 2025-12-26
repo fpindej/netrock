@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using MyProject.Infrastructure.Features.Authentication.Extensions;
 using MyProject.Infrastructure.Persistence.Extensions;
 using MyProject.Infrastructure.Cookies.Extensions;
+using MyProject.Infrastructure.Identity.Extensions;
 using MyProject.WebApi.Extensions;
 using MyProject.WebApi.Middlewares;
 using Scalar.AspNetCore;
@@ -35,6 +36,9 @@ try
 
         Log.Debug("Adding identity services");
         builder.Services.AddIdentityServices(builder.Configuration);
+
+        Log.Debug("Adding user context");
+        builder.Services.AddUserContext();
 
         Log.Debug("Adding cookie services");
         builder.Services.AddCookieServices();

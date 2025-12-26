@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyProject.Application.Persistence;
 using MyProject.Infrastructure.Features.Authentication.Extensions;
+using MyProject.Infrastructure.Persistence.Interceptors;
 
 namespace MyProject.Infrastructure.Persistence.Extensions;
 
@@ -28,10 +29,12 @@ public static class ServiceCollectionExtensions
 
         private IServiceCollection ConfigureDbContext(IConfiguration configuration)
         {
+            services.AddScoped<AuditingInterceptor>();
             services.AddDbContext<MyProjectDbContext>((sp, opt) =>
             {
                 var connectionString = configuration.GetConnectionString("Database");
                 opt.UseNpgsql(connectionString);
+                opt.AddInterceptors(sp.GetRequiredService<AuditingInterceptor>());
             });
             return services;
         }

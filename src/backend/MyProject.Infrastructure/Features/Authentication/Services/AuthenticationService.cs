@@ -10,6 +10,7 @@ using MyProject.Infrastructure.Persistence;
 using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Cookies;
+using MyProject.Application.Identity;
 
 namespace MyProject.Infrastructure.Features.Authentication.Services;
 
@@ -19,6 +20,7 @@ internal class AuthenticationService(
     ITokenProvider tokenProvider,
     TimeProvider timeProvider,
     ICookieService cookieService,
+    IUserContext userContext,
     IOptions<JwtOptions> jwtOptions,
     MyProjectDbContext dbContext) : IAuthenticationService
 {
@@ -103,7 +105,7 @@ internal class AuthenticationService(
     public async Task Logout()
     {
         // Get user ID before clearing cookies
-        var userId = TryGetUserIdFromAccessToken();
+        var userId = userContext.UserId;
 
         cookieService.DeleteCookie(CookieNames.AccessToken);
         cookieService.DeleteCookie(CookieNames.RefreshToken);
@@ -191,33 +193,6 @@ internal class AuthenticationService(
         return Result.Success();
     }
 
-    private Guid? TryGetUserIdFromAccessToken()
-    {
-        var accessToken = cookieService.GetCookie(CookieNames.AccessToken);
-        if (string.IsNullOrEmpty(accessToken))
-        {
-            return null;
-        }
-
-        try
-        {
-            var handler = new JwtSecurityTokenHandler();
-            if (!handler.CanReadToken(accessToken))
-            {
-                return null;
-            }
-
-            var jwtToken = handler.ReadJwtToken(accessToken);
-
-            var userIdString = jwtToken.Claims.FirstOrDefault(c => c.Type is JwtRegisteredClaimNames.Sub)?.Value;
-            return Guid.TryParse(userIdString, out var userId) ? userId : null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
     private async Task RevokeUserTokens(Guid userId)
     {
         var tokens = await dbContext.RefreshTokens
@@ -240,7 +215,7 @@ internal class AuthenticationService(
 
     public async Task<Result<UserOutput>> GetCurrentUserAsync()
     {
-        var userId = TryGetUserIdFromAccessToken();
+        var userId = userContext.UserId;
 
         if (!userId.HasValue)
         {
