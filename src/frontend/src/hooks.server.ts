@@ -1,5 +1,4 @@
 import type { Handle } from '@sveltejs/kit';
-import { createApiClient } from '$lib/api/client';
 import { defaultLocale, supportedLocales } from '$lib/i18n';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -15,20 +14,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const foundLocale = supportedLocales.find((l) => lang?.startsWith(l));
 	const locale = foundLocale || defaultLocale;
 	event.locals.locale = locale;
-
-	const client = createApiClient(event.fetch, event.url.origin);
-
-	try {
-		const { data: user, response } = await client.GET('/api/auth/me');
-		if (response.ok && user) {
-			event.locals.user = user;
-		} else {
-			event.locals.user = null;
-		}
-	} catch (e) {
-		console.error('Failed to fetch user:', e);
-		event.locals.user = null;
-	}
+	event.locals.user = null;
 
 	return resolve(event, {
 		transformPageChunk: ({ html }) => html.replace('%lang%', event.locals.locale)
