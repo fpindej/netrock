@@ -5,7 +5,9 @@
 	let { children, data } = $props();
 </script>
 
-<div class="grid h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+<div
+	class="grid h-screen w-full md:grid-cols-[var(--sidebar-width-md)_1fr] lg:grid-cols-[var(--sidebar-width-lg)_1fr]"
+>
 	<div class="hidden border-r bg-muted/40 md:block">
 		<Sidebar class="h-full" user={data.user} />
 	</div>
