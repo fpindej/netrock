@@ -25,12 +25,3 @@ export const handle: Handle = async ({ event, resolve }) => {
 		});
 	});
 };
-
-		event.locals.locale = locale;
-		event.locals.user = null;
-
-		return resolve(event, {
-			transformPageChunk: ({ html }) => html.replace('%lang%', locale)
-		});
-	});
-};
