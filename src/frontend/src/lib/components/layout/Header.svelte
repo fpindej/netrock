@@ -38,9 +38,7 @@
 		</Sheet.Content>
 	</Sheet.Root>
 
-	<div class="w-full flex-1">
-		<!-- Search or other items could go here -->
-	</div>
+	<div class="w-full flex-1"></div>
 	<nav class="flex items-center gap-2">
 		<LanguageSelector />
 		<ThemeToggle />
