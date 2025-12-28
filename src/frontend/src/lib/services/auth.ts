@@ -1,6 +1,27 @@
 import { goto, invalidateAll } from '$app/navigation';
 import { base } from '$app/paths';
-import { browserClient } from '$lib/api/client';
+import { browserClient, createApiClient } from '$lib/api/client';
+import type { components } from '$lib/api/v1';
+
+type User = components['schemas']['MeResponse'];
+
+export async function getUser(
+	fetch: typeof globalThis.fetch,
+	origin: string
+): Promise<User | null> {
+	const client = createApiClient(fetch, origin);
+
+	try {
+		const { data: user, response } = await client.GET('/api/auth/me');
+		if (response.ok && user) {
+			return user;
+		}
+	} catch (e) {
+		console.error('Failed to fetch user:', e);
+	}
+
+	return null;
+}
 
 export async function logout() {
 	await browserClient.POST('/api/auth/logout');
