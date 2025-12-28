@@ -3,7 +3,7 @@
 	import 'flag-icons/css/flag-icons.min.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
-	import { initTheme } from '$lib/theme.svelte';
+	import { initTheme } from '$lib/state/theme.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { globalShortcuts } from '$lib/state/shortcuts.svelte';

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Sun, Moon } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { toggleTheme, getTheme } from '$lib/theme.svelte';
+	import { toggleTheme, getTheme } from '$lib/state/theme.svelte';
 	import * as m from '$lib/paraglide/messages';
 </script>
 
