@@ -6,7 +6,7 @@
 	import { base } from '$app/paths';
 	import * as m from '$lib/paraglide/messages';
 	import type { components } from '$lib/api/v1';
-	import { getShortcutSymbol, ShortcutAction } from '$lib/stores/shortcuts.svelte';
+	import { getShortcutSymbol, ShortcutAction } from '$lib/state/shortcuts.svelte';
 	import { logout } from '$lib/services/auth';
 
 	type User = components['schemas']['MeResponse'];

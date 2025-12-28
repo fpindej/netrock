@@ -6,7 +6,7 @@
 	import { initTheme } from '$lib/theme.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { Toaster } from '$lib/components/ui/sonner';
-	import { globalShortcuts } from '$lib/stores/shortcuts.svelte';
+	import { globalShortcuts } from '$lib/state/shortcuts.svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { logout } from '$lib/services/auth';

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as m from '$lib/paraglide/messages';
-	import { shortcutsState, getAllShortcuts, getShortcutSymbol } from '$lib/stores/shortcuts.svelte';
+	import { shortcutsState, getAllShortcuts, getShortcutSymbol } from '$lib/state/shortcuts.svelte';
 </script>
 
 <Dialog.Root bind:open={shortcutsState.isHelpOpen}>
