@@ -4,7 +4,8 @@
 </script>
 
 <svelte:head>
-	<title>{m.common_meta_titleTemplate({ title: m.common_reports() })}</title>
+	<title>{m.common_meta_titleTemplate({ title: m.common_meta_reports_title() })}</title>
+	<meta name="description" content={m.common_meta_reports_description()} />
 </svelte:head>
 
 <WorkInProgress
