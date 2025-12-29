@@ -11,11 +11,7 @@
 	import { browserClient } from '$lib/api/client';
 	import { toast } from 'svelte-sonner';
 	import { invalidateAll } from '$app/navigation';
-	import {
-		isValidationProblemDetails,
-		mapFieldErrors,
-		getErrorMessage
-	} from '$lib/api';
+	import { isValidationProblemDetails, mapFieldErrors, getErrorMessage } from '$lib/api';
 	import { createFieldShakes } from '$lib/state';
 
 	interface Props {
