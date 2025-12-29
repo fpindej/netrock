@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { SERVER_CONFIG } from '$lib/server/config';
+import { SERVER_CONFIG } from '$lib/config/server';
 
 export const fallback: RequestHandler = async ({ request, params, url, fetch }) => {
 	const targetUrl = `${SERVER_CONFIG.API_URL}/api/${params.path}${url.search}`;

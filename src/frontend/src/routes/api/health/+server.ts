@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { SERVER_CONFIG } from '$lib/server/config';
+import { SERVER_CONFIG } from '$lib/config/server';
 
 export const GET: RequestHandler = async ({ fetch }) => {
 	try {
