@@ -5,11 +5,9 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import * as m from '$lib/paraglide/messages';
-	import type { components } from '$lib/api/v1';
+	import type { User } from '$lib/types';
 	import { getShortcutSymbol, ShortcutAction } from '$lib/state/shortcuts.svelte';
 	import { logout } from '$lib/services/auth';
-
-	type User = components['schemas']['MeResponse'];
 
 	let { user }: { user: User | null | undefined } = $props();
 

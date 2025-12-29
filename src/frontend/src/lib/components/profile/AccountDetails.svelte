@@ -1,14 +1,12 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
-	import { User, Shield } from '@lucide/svelte';
+	import { User as UserIcon, Shield } from '@lucide/svelte';
 	import InfoItem from './InfoItem.svelte';
-	import type { components } from '$lib/api/v1';
+	import type { User } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
 
-	type UserType = components['schemas']['MeResponse'];
-
-	let { user }: { user: UserType | null | undefined } = $props();
+	let { user }: { user: User | null | undefined } = $props();
 </script>
 
 <Card.Root>
@@ -17,7 +15,7 @@
 		<Card.Description>{m.profile_accountDetails_description()}</Card.Description>
 	</Card.Header>
 	<Card.Content class="space-y-6">
-		<InfoItem icon={User} label={m.profile_accountDetails_userId()}>
+		<InfoItem icon={UserIcon} label={m.profile_accountDetails_userId()}>
 			{user?.id}
 		</InfoItem>
 

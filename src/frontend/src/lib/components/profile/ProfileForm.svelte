@@ -5,12 +5,10 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Label } from '$lib/components/ui/label';
 	import * as Avatar from '$lib/components/ui/avatar';
-	import type { components } from '$lib/api/v1';
+	import type { User } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
 
-	type UserType = components['schemas']['MeResponse'];
-
-	let { user }: { user: UserType | null | undefined } = $props();
+	let { user }: { user: User | null | undefined } = $props();
 
 	// Mock data for placeholders
 	let fullName = $state('John Doe');

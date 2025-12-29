@@ -7,10 +7,7 @@
 	import LanguageSelector from './LanguageSelector.svelte';
 	import UserNav from './UserNav.svelte';
 	import { base } from '$app/paths';
-	import type { components } from '$lib/api/v1';
-
-	type User = components['schemas']['MeResponse'];
-
+	import type { User } from '$lib/types';
 	let { user }: { user: User | null | undefined } = $props();
 	let open = $state(false);
 </script>

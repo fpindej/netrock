@@ -6,10 +6,8 @@
 	import ThemeToggle from './ThemeToggle.svelte';
 	import LanguageSelector from './LanguageSelector.svelte';
 	import UserNav from './UserNav.svelte';
-	import type { components } from '$lib/api/v1';
+	import type { User } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
-
-	type User = components['schemas']['MeResponse'];
 
 	let { class: className, user }: { class?: string; user: User | null | undefined } = $props();
 </script>

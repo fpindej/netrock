@@ -1,9 +1,7 @@
 import { goto, invalidateAll } from '$app/navigation';
 import { base } from '$app/paths';
 import { browserClient, createApiClient } from '$lib/api/client';
-import type { components } from '$lib/api/v1';
-
-type User = components['schemas']['MeResponse'];
+import type { User } from '$lib/types';
 
 export async function getUser(
 	fetch: typeof globalThis.fetch,
