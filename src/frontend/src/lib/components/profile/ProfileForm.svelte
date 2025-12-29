@@ -15,6 +15,18 @@
 		user: User | null | undefined;
 	}
 
+	/**
+	 * Extended ProblemDetails with validation errors.
+	 * ASP.NET Core returns field-level errors in an `errors` object.
+	 */
+	interface ValidationProblemDetails {
+		type?: string | null;
+		title?: string | null;
+		status?: number | null;
+		detail?: string | null;
+		errors?: Record<string, string[]>;
+	}
+
 	let { user }: Props = $props();
 
 	// Form state
@@ -24,6 +36,9 @@
 	let bio = $state('');
 	let isLoading = $state(false);
 
+	// Field-level errors from backend validation
+	let fieldErrors = $state<Record<string, string>>({});
+
 	// Sync form state when user prop changes (e.g., after invalidateAll)
 	$effect(() => {
 		firstName = user?.firstName ?? '';
@@ -32,17 +47,38 @@
 		bio = user?.bio ?? '';
 	});
 
+	/**
+	 * Maps backend field names (PascalCase) to form field names (camelCase).
+	 */
+	function mapFieldErrors(errors: Record<string, string[]>): Record<string, string> {
+		const fieldMap: Record<string, string> = {
+			FirstName: 'firstName',
+			LastName: 'lastName',
+			PhoneNumber: 'phoneNumber',
+			Bio: 'bio',
+			AvatarUrl: 'avatarUrl'
+		};
+
+		const mapped: Record<string, string> = {};
+		for (const [key, messages] of Object.entries(errors)) {
+			const fieldName = fieldMap[key] ?? key.toLowerCase();
+			mapped[fieldName] = messages[0] ?? ''; // Take first error message
+		}
+		return mapped;
+	}
+
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		isLoading = true;
+		fieldErrors = {};
 
 		try {
 			const { response, error: apiError } = await browserClient.PATCH('/api/users/me', {
 				body: {
-					firstName: firstName || null,
-					lastName: lastName || null,
-					phoneNumber: phoneNumber || null,
-					bio: bio || null
+					firstName: firstName.trim() || null,
+					lastName: lastName.trim() || null,
+					phoneNumber: phoneNumber.trim() || null,
+					bio: bio.trim() || null
 				}
 			});
 
@@ -50,9 +86,17 @@
 				toast.success(m.profile_personalInfo_updateSuccess());
 				await invalidateAll();
 			} else {
-				const errorMessage =
-					apiError?.detail || apiError?.title || m.profile_personalInfo_updateError();
-				toast.error(m.profile_personalInfo_updateError(), { description: errorMessage });
+				const errorData = apiError as ValidationProblemDetails | undefined;
+
+				// Handle field-level validation errors
+				if (errorData?.errors) {
+					fieldErrors = mapFieldErrors(errorData.errors);
+					toast.error(errorData.title || m.profile_personalInfo_updateError());
+				} else {
+					const errorMessage =
+						errorData?.detail || errorData?.title || m.profile_personalInfo_updateError();
+					toast.error(m.profile_personalInfo_updateError(), { description: errorMessage });
+				}
 			}
 		} catch {
 			toast.error(m.profile_personalInfo_updateError());
@@ -88,7 +132,11 @@
 							autocomplete="given-name"
 							bind:value={firstName}
 							placeholder={m.profile_personalInfo_firstNamePlaceholder()}
+							aria-invalid={!!fieldErrors.firstName}
 						/>
+						{#if fieldErrors.firstName}
+							<p class="text-xs text-destructive">{fieldErrors.firstName}</p>
+						{/if}
 					</div>
 					<div class="grid gap-2">
 						<Label for="lastName">{m.profile_personalInfo_lastName()}</Label>
@@ -97,7 +145,11 @@
 							autocomplete="family-name"
 							bind:value={lastName}
 							placeholder={m.profile_personalInfo_lastNamePlaceholder()}
+							aria-invalid={!!fieldErrors.lastName}
 						/>
+						{#if fieldErrors.lastName}
+							<p class="text-xs text-destructive">{fieldErrors.lastName}</p>
+						{/if}
 					</div>
 				</div>
 
@@ -109,7 +161,11 @@
 						autocomplete="tel"
 						bind:value={phoneNumber}
 						placeholder={m.profile_personalInfo_phoneNumberPlaceholder()}
+						aria-invalid={!!fieldErrors.phoneNumber}
 					/>
+					{#if fieldErrors.phoneNumber}
+						<p class="text-xs text-destructive">{fieldErrors.phoneNumber}</p>
+					{/if}
 				</div>
 
 				<div class="grid gap-2">
@@ -118,7 +174,11 @@
 						id="bio"
 						bind:value={bio}
 						placeholder={m.profile_personalInfo_bioPlaceholder()}
+						aria-invalid={!!fieldErrors.bio}
 					/>
+					{#if fieldErrors.bio}
+						<p class="text-xs text-destructive">{fieldErrors.bio}</p>
+					{/if}
 				</div>
 
 				<div class="flex justify-end">
