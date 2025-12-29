@@ -15,7 +15,7 @@
 		isValidationProblemDetails,
 		mapFieldErrors,
 		getErrorMessage
-	} from '$lib/utils';
+	} from '$lib/api';
 	import { createFieldShakes } from '$lib/state';
 
 	interface Props {
