@@ -5,7 +5,7 @@ using MyProject.Application.Identity;
 using MyProject.Infrastructure.Features.Authentication.Constants;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Me;
-
+using MyProject.WebApi.Features.Authentication.Dtos.Profile;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
 
 namespace MyProject.WebApi.Features.Authentication;
@@ -108,6 +108,50 @@ public class AuthController(
         {
             Id = user.Id,
             Username = user.UserName,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            PhoneNumber = user.PhoneNumber,
+            Bio = user.Bio,
+            AvatarUrl = user.AvatarUrl,
+            Roles = user.Roles
+        });
+    }
+
+    /// <summary>
+    /// Updates the current authenticated user's profile information
+    /// </summary>
+    /// <param name="request">The profile update request</param>
+    /// <returns>Updated user information</returns>
+    /// <response code="200">Returns updated user information</response>
+    /// <response code="400">If the request is invalid</response>
+    /// <response code="401">If the user is not authenticated</response>
+    [HttpPatch("profile")]
+    [Authorize]
+    [ProducesResponseType(typeof(MeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<MeResponse>> UpdateProfile([FromBody] UpdateProfileRequest request)
+    {
+        var result = await userService.UpdateProfileAsync(request.ToInput());
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result.Error);
+        }
+
+        var user = result.Value!;
+
+        return Ok(new MeResponse
+        {
+            Id = user.Id,
+            Username = user.UserName,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            PhoneNumber = user.PhoneNumber,
+            Bio = user.Bio,
+            AvatarUrl = user.AvatarUrl,
             Roles = user.Roles
         });
     }

@@ -12,6 +12,13 @@ public interface IUserService
     Task<Result<UserOutput>> GetCurrentUserAsync();
 
     /// <summary>
+    /// Updates the current user's profile information.
+    /// </summary>
+    /// <param name="input">The profile update input.</param>
+    /// <returns>A Result containing the updated user if successful, or failure if not.</returns>
+    Task<Result<UserOutput>> UpdateProfileAsync(UpdateProfileInput input);
+
+    /// <summary>
     /// Gets the roles for a specific user.
     /// </summary>
     /// <param name="userId">The user ID to get roles for.</param>
