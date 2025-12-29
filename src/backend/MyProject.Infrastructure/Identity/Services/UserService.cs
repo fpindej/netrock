@@ -93,6 +93,11 @@ internal class UserService(
             user.LastName = input.LastName;
         }
 
+        if (input.PhoneNumber is not null)
+        {
+            user.PhoneNumber = input.PhoneNumber;
+        }
+
         if (input.Bio is not null)
         {
             user.Bio = input.Bio;

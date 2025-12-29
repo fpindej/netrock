@@ -26,6 +26,14 @@ public class UpdateProfileRequest
     public string? LastName { get; init; }
 
     /// <summary>
+    /// The phone number of the user.
+    /// </summary>
+    [RegularExpression(@"^(\+\d{1,3})? ?\d{6,14}$",
+        ErrorMessage = "Phone number must be a valid format (e.g. +420123456789)")]
+    [Description("The phone number of the user (optional), must be a valid format")]
+    public string? PhoneNumber { get; init; }
+
+    /// <summary>
     /// A short biography or description of the user.
     /// </summary>
     [MaxLength(1000)]
@@ -43,5 +51,5 @@ public class UpdateProfileRequest
     /// <summary>
     /// Converts the request to an application layer input.
     /// </summary>
-    public UpdateProfileInput ToInput() => new(FirstName, LastName, Bio, AvatarUrl);
+    public UpdateProfileInput ToInput() => new(FirstName, LastName, PhoneNumber, Bio, AvatarUrl);
 }
