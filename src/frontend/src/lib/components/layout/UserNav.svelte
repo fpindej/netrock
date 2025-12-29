@@ -7,7 +7,7 @@
 	import * as m from '$lib/paraglide/messages';
 	import type { User } from '$lib/types';
 	import { getShortcutSymbol, ShortcutAction } from '$lib/state/shortcuts.svelte';
-	import { logout } from '$lib/services/auth';
+	import { logout } from '$lib/auth';
 
 	let { user }: { user: User | null | undefined } = $props();
 

@@ -9,7 +9,7 @@
 	import { globalShortcuts } from '$lib/state/shortcuts.svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
-	import { logout } from '$lib/services/auth';
+	import { logout } from '$lib/auth';
 	import { ShortcutsHelp } from '$lib/components/layout';
 
 	let { children } = $props();
