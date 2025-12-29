@@ -15,8 +15,7 @@
 		isValidationProblemDetails,
 		mapFieldErrors,
 		getErrorMessage,
-		createShake,
-		cn
+		createFieldShakes
 	} from '$lib/utils';
 
 	interface Props {
@@ -35,8 +34,8 @@
 	// Field-level errors from backend validation
 	let fieldErrors = $state<Record<string, string>>({});
 
-	// Shake animation for error feedback
-	const shake = createShake();
+	// Field-level shake animation for error feedback
+	const fieldShakes = createFieldShakes();
 
 	// Sync form state when user prop changes (e.g., after invalidateAll)
 	$effect(() => {
@@ -66,24 +65,22 @@
 				await invalidateAll();
 			} else if (isValidationProblemDetails(apiError)) {
 				fieldErrors = mapFieldErrors(apiError.errors);
+				fieldShakes.triggerFields(Object.keys(fieldErrors));
 				toast.error(apiError.title || m.profile_personalInfo_updateError());
-				shake.trigger();
 			} else {
 				toast.error(m.profile_personalInfo_updateError(), {
 					description: getErrorMessage(apiError, m.profile_personalInfo_updateError())
 				});
-				shake.trigger();
 			}
 		} catch {
 			toast.error(m.profile_personalInfo_updateError());
-			shake.trigger();
 		} finally {
 			isLoading = false;
 		}
 	}
 </script>
 
-<Card.Root class={cn(shake.active && 'animate-shake')}>
+<Card.Root>
 	<Card.Header>
 		<Card.Title>{m.profile_personalInfo_title()}</Card.Title>
 		<Card.Description>{m.profile_personalInfo_description()}</Card.Description>
@@ -109,6 +106,7 @@
 							autocomplete="given-name"
 							bind:value={firstName}
 							placeholder={m.profile_personalInfo_firstNamePlaceholder()}
+							class={fieldShakes.class('firstName')}
 							aria-invalid={!!fieldErrors.firstName}
 						/>
 						{#if fieldErrors.firstName}
@@ -122,6 +120,7 @@
 							autocomplete="family-name"
 							bind:value={lastName}
 							placeholder={m.profile_personalInfo_lastNamePlaceholder()}
+							class={fieldShakes.class('lastName')}
 							aria-invalid={!!fieldErrors.lastName}
 						/>
 						{#if fieldErrors.lastName}
@@ -136,6 +135,7 @@
 						id="phoneNumber"
 						bind:value={phoneNumber}
 						placeholder="123 456 789"
+						class={fieldShakes.class('phoneNumber')}
 						aria-invalid={!!fieldErrors.phoneNumber}
 					/>
 					{#if fieldErrors.phoneNumber}
@@ -149,6 +149,7 @@
 						id="bio"
 						bind:value={bio}
 						placeholder={m.profile_personalInfo_bioPlaceholder()}
+						class={fieldShakes.class('bio')}
 						aria-invalid={!!fieldErrors.bio}
 					/>
 					{#if fieldErrors.bio}

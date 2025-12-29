@@ -8,7 +8,7 @@
 	import * as m from '$lib/paraglide/messages';
 	import { toast } from '$lib/components/ui/sonner';
 	import { Loader2 } from '@lucide/svelte';
-	import { createShake, cn, isValidationProblemDetails } from '$lib/utils';
+	import { createFieldShakes, isValidationProblemDetails, mapFieldErrors } from '$lib/utils';
 
 	let { open = $bindable(false), onSuccess } = $props<{
 		open?: boolean;
@@ -23,7 +23,8 @@
 	let phoneNumber = $state('');
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
-	const shake = createShake();
+	let fieldErrors = $state<Record<string, string>>({});
+	const fieldShakes = createFieldShakes();
 
 	function resetForm() {
 		email = '';
@@ -33,6 +34,7 @@
 		lastName = '';
 		phoneNumber = '';
 		error = null;
+		fieldErrors = {};
 	}
 
 	function handleOpenChange(isOpen: boolean) {
@@ -45,10 +47,11 @@
 		e.preventDefault();
 		isLoading = true;
 		error = null;
+		fieldErrors = {};
 
 		if (password !== confirmPassword) {
-			error = m.auth_register_passwordMismatch();
-			shake.trigger();
+			fieldErrors = { confirmPassword: m.auth_register_passwordMismatch() };
+			fieldShakes.trigger('confirmPassword');
 			isLoading = false;
 			return;
 		}
@@ -72,19 +75,16 @@
 			} else if (apiError) {
 				// Extract validation errors from the errors object if present
 				if (isValidationProblemDetails(apiError)) {
-					const errorMessages = Object.values(apiError.errors).flat();
-					error = errorMessages.join('. ') || m.auth_register_failed();
+					fieldErrors = mapFieldErrors(apiError.errors);
+					fieldShakes.triggerFields(Object.keys(fieldErrors));
 				} else {
 					error = apiError.detail || apiError.title || m.auth_register_failed();
 				}
-				shake.trigger();
 			} else {
 				error = m.auth_register_failed();
-				shake.trigger();
 			}
 		} catch {
 			error = m.auth_register_failed();
-			shake.trigger();
 		} finally {
 			isLoading = false;
 		}
@@ -92,7 +92,7 @@
 </script>
 
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>
-	<Dialog.Content class={cn('sm:max-w-[425px]', shake.active && 'animate-shake')}>
+	<Dialog.Content class="sm:max-w-[425px]">
 		<Dialog.Header>
 			<Dialog.Title>{m.auth_register_title()}</Dialog.Title>
 			<Dialog.Description>
@@ -117,7 +117,12 @@
 						autocomplete="given-name"
 						bind:value={firstName}
 						disabled={isLoading}
+						class={fieldShakes.class('firstName')}
+						aria-invalid={!!fieldErrors.firstName}
 					/>
+					{#if fieldErrors.firstName}
+						<p class="text-xs text-destructive">{fieldErrors.firstName}</p>
+					{/if}
 				</div>
 				<div class="grid gap-2">
 					<Label for="lastName">{m.auth_register_lastName()}</Label>
@@ -126,7 +131,12 @@
 						autocomplete="family-name"
 						bind:value={lastName}
 						disabled={isLoading}
+						class={fieldShakes.class('lastName')}
+						aria-invalid={!!fieldErrors.lastName}
 					/>
+					{#if fieldErrors.lastName}
+						<p class="text-xs text-destructive">{fieldErrors.lastName}</p>
+					{/if}
 				</div>
 			</div>
 			<div class="grid gap-2">
@@ -138,11 +148,24 @@
 					bind:value={email}
 					required
 					disabled={isLoading}
+					class={fieldShakes.class('email')}
+					aria-invalid={!!fieldErrors.email}
 				/>
+				{#if fieldErrors.email}
+					<p class="text-xs text-destructive">{fieldErrors.email}</p>
+				{/if}
 			</div>
 			<div class="grid gap-2">
 				<Label for="phone">{m.auth_register_phone()}</Label>
-				<PhoneInput id="phone" bind:value={phoneNumber} disabled={isLoading} />
+				<PhoneInput
+					id="phone"
+					bind:value={phoneNumber}
+					disabled={isLoading}
+					class={fieldShakes.class('phoneNumber')}
+				/>
+				{#if fieldErrors.phoneNumber}
+					<p class="text-xs text-destructive">{fieldErrors.phoneNumber}</p>
+				{/if}
 			</div>
 			<div class="grid gap-2">
 				<Label for="password">{m.auth_register_password()}</Label>
@@ -154,7 +177,12 @@
 					required
 					minlength={6}
 					disabled={isLoading}
+					class={fieldShakes.class('password')}
+					aria-invalid={!!fieldErrors.password}
 				/>
+				{#if fieldErrors.password}
+					<p class="text-xs text-destructive">{fieldErrors.password}</p>
+				{/if}
 			</div>
 			<div class="grid gap-2">
 				<Label for="confirmPassword">{m.auth_register_confirmPassword()}</Label>
@@ -166,7 +194,12 @@
 					required
 					minlength={6}
 					disabled={isLoading}
+					class={fieldShakes.class('confirmPassword')}
+					aria-invalid={!!fieldErrors.confirmPassword}
 				/>
+				{#if fieldErrors.confirmPassword}
+					<p class="text-xs text-destructive">{fieldErrors.confirmPassword}</p>
+				{/if}
 			</div>
 			<Dialog.Footer>
 				<Button type="submit" disabled={isLoading} class="w-full">

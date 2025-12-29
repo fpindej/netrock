@@ -8,7 +8,7 @@
 	import { browserClient } from '$lib/api/client';
 	import { toast } from 'svelte-sonner';
 	import { invalidateAll } from '$app/navigation';
-	import { createShake, cn } from '$lib/utils';
+	import { createFieldShakes } from '$lib/utils';
 
 	interface Props {
 		open: boolean;
@@ -22,7 +22,7 @@
 	let avatarUrl = $state('');
 	let avatarUrlError = $state('');
 	let isLoading = $state(false);
-	const shake = createShake();
+	const fieldShakes = createFieldShakes();
 
 	// Sync avatarUrl when dialog opens or currentAvatarUrl changes
 	$effect(() => {
@@ -51,7 +51,7 @@
 		avatarUrl = value;
 		if (value && !isValidAvatarUrl(value)) {
 			avatarUrlError = m.profile_avatar_urlInvalid();
-			shake.trigger();
+			fieldShakes.trigger('avatarUrl');
 		} else {
 			avatarUrlError = '';
 		}
@@ -60,7 +60,7 @@
 	async function handleSubmit() {
 		if (avatarUrl && !isValidAvatarUrl(avatarUrl)) {
 			avatarUrlError = m.profile_avatar_urlInvalid();
-			shake.trigger();
+			fieldShakes.trigger('avatarUrl');
 			return;
 		}
 
@@ -88,11 +88,11 @@
 			} else {
 				const errorMessage = apiError?.detail || apiError?.title || m.profile_avatar_updateError();
 				toast.error(m.profile_avatar_updateError(), { description: errorMessage });
-				shake.trigger();
+				fieldShakes.trigger('avatarUrl');
 			}
 		} catch {
 			toast.error(m.profile_avatar_updateError());
-			shake.trigger();
+			fieldShakes.trigger('avatarUrl');
 		} finally {
 			isLoading = false;
 		}
@@ -107,7 +107,7 @@
 			</Button>
 		{/snippet}
 	</Dialog.Trigger>
-	<Dialog.Content class={cn('sm:max-w-md', shake.active && 'animate-shake')}>
+	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
 			<Dialog.Title>{m.profile_avatar_dialogTitle()}</Dialog.Title>
 			<Dialog.Description>
@@ -133,6 +133,7 @@
 					value={avatarUrl}
 					oninput={(e) => handleUrlChange(e.currentTarget.value)}
 					placeholder={m.profile_avatar_urlPlaceholder()}
+					class={fieldShakes.class('avatarUrl')}
 				/>
 				{#if avatarUrlError}
 					<p class="text-xs text-destructive">{avatarUrlError}</p>

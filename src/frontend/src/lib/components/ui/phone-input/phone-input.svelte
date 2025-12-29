@@ -4,6 +4,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { ChevronDown, Check } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
+	import { cn } from '$lib/utils';
 	import {
 		COUNTRY_CODES,
 		parsePhoneNumber,
@@ -22,6 +23,8 @@
 		disabled?: boolean;
 		/** Whether the field has an error */
 		'aria-invalid'?: boolean;
+		/** Additional CSS classes for the input */
+		class?: string;
 	}
 
 	let {
@@ -29,7 +32,8 @@
 		placeholder = '123 456 789',
 		id,
 		disabled = false,
-		'aria-invalid': ariaInvalid
+		'aria-invalid': ariaInvalid,
+		class: className
 	}: Props = $props();
 
 	// Parse the initial value to extract country and national number
@@ -124,6 +128,6 @@
 		{placeholder}
 		{disabled}
 		aria-invalid={ariaInvalid}
-		class="flex-1"
+		class={cn('flex-1', className)}
 	/>
 </div>
