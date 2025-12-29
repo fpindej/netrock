@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
@@ -20,12 +21,19 @@
 	let bio = $state('');
 	let isLoading = $state(false);
 
+	// Avatar dialog state
+	let avatarDialogOpen = $state(false);
+	let avatarUrl = $state('');
+	let avatarUrlError = $state('');
+	let isAvatarLoading = $state(false);
+
 	// Sync form state when user prop changes (e.g., after invalidateAll)
 	$effect(() => {
 		firstName = user?.firstName ?? '';
 		lastName = user?.lastName ?? '';
 		phoneNumber = user?.phoneNumber ?? '';
 		bio = user?.bio ?? '';
+		avatarUrl = user?.avatarUrl ?? '';
 	});
 
 	// Computed display name
@@ -46,6 +54,65 @@
 		}
 		return user?.username?.substring(0, 2).toUpperCase() ?? 'ME';
 	});
+
+	/**
+	 * Validates a URL string for avatar usage.
+	 * Accepts http/https URLs with common image extensions.
+	 */
+	function isValidAvatarUrl(url: string): boolean {
+		if (!url.trim()) return true; // Empty is valid (clears avatar)
+
+		try {
+			const parsed = new URL(url);
+			// Only allow http/https protocols
+			if (!['http:', 'https:'].includes(parsed.protocol)) {
+				return false;
+			}
+			return true;
+		} catch {
+			return false;
+		}
+	}
+
+	function handleAvatarUrlChange(value: string) {
+		avatarUrl = value;
+		if (value && !isValidAvatarUrl(value)) {
+			avatarUrlError = m.profile_personalInfo_avatarUrlInvalid();
+		} else {
+			avatarUrlError = '';
+		}
+	}
+
+	async function handleAvatarSubmit() {
+		if (avatarUrl && !isValidAvatarUrl(avatarUrl)) {
+			avatarUrlError = m.profile_personalInfo_avatarUrlInvalid();
+			return;
+		}
+
+		isAvatarLoading = true;
+
+		try {
+			const { response, error: apiError } = await browserClient.PATCH('/api/users/me', {
+				body: {
+					avatarUrl: avatarUrl || null
+				}
+			});
+
+			if (response.ok) {
+				toast.success(m.profile_personalInfo_avatarUpdateSuccess());
+				avatarDialogOpen = false;
+				await invalidateAll();
+			} else {
+				const errorMessage =
+					apiError?.detail || apiError?.title || m.profile_personalInfo_avatarUpdateError();
+				toast.error(m.profile_personalInfo_avatarUpdateError(), { description: errorMessage });
+			}
+		} catch {
+			toast.error(m.profile_personalInfo_avatarUpdateError());
+		} finally {
+			isAvatarLoading = false;
+		}
+	}
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
@@ -98,9 +165,66 @@
 				<div class="flex flex-col gap-1 text-center sm:text-start">
 					<h3 class="text-lg font-medium">{displayName}</h3>
 					<p class="text-sm text-muted-foreground">{user?.email ?? ''}</p>
-					<Button variant="outline" size="sm" class="mt-2 w-full sm:w-auto">
-						{m.profile_personalInfo_changeAvatar()}
-					</Button>
+					<Dialog.Root bind:open={avatarDialogOpen}>
+						<Dialog.Trigger>
+							{#snippet child({ props })}
+								<Button {...props} variant="outline" size="sm" class="mt-2 w-full sm:w-auto">
+									{m.profile_personalInfo_changeAvatar()}
+								</Button>
+							{/snippet}
+						</Dialog.Trigger>
+						<Dialog.Content class="sm:max-w-md">
+							<Dialog.Header>
+								<Dialog.Title>{m.profile_personalInfo_avatarDialogTitle()}</Dialog.Title>
+								<Dialog.Description>
+									{m.profile_personalInfo_avatarDialogDescription()}
+								</Dialog.Description>
+							</Dialog.Header>
+							<div class="grid gap-4 py-4">
+								<div class="flex justify-center">
+									<Avatar.Root class="h-24 w-24">
+										{#if avatarUrl && isValidAvatarUrl(avatarUrl)}
+											<Avatar.Image src={avatarUrl} alt={displayName} />
+										{/if}
+										<Avatar.Fallback class="text-lg">
+											{initials}
+										</Avatar.Fallback>
+									</Avatar.Root>
+								</div>
+								<div class="grid gap-2">
+									<Label for="avatarUrl">{m.profile_personalInfo_avatarUrl()}</Label>
+									<Input
+										id="avatarUrl"
+										type="url"
+										value={avatarUrl}
+										oninput={(e) => handleAvatarUrlChange(e.currentTarget.value)}
+										placeholder={m.profile_personalInfo_avatarUrlPlaceholder()}
+									/>
+									{#if avatarUrlError}
+										<p class="text-xs text-destructive">{avatarUrlError}</p>
+									{:else}
+										<p class="text-xs text-muted-foreground">
+											{m.profile_personalInfo_avatarUrlHint()}
+										</p>
+									{/if}
+								</div>
+							</div>
+							<Dialog.Footer>
+								<Dialog.Close>
+									{#snippet child({ props })}
+										<Button {...props} variant="outline">
+											{m.profile_personalInfo_avatarCancel()}
+										</Button>
+									{/snippet}
+								</Dialog.Close>
+								<Button onclick={handleAvatarSubmit} disabled={isAvatarLoading || !!avatarUrlError}>
+									{isAvatarLoading
+										? m.profile_personalInfo_saving()
+										: m.profile_personalInfo_avatarSave()}
+								</Button>
+							</Dialog.Footer>
+						</Dialog.Content>
+					</Dialog.Root>
 				</div>
 			</div>
 
