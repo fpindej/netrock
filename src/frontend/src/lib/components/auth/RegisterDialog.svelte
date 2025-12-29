@@ -8,7 +8,7 @@
 	import * as m from '$lib/paraglide/messages';
 	import { toast } from '$lib/components/ui/sonner';
 	import { Loader2 } from '@lucide/svelte';
-	import { createShake, cn } from '$lib/utils';
+	import { createShake, cn, isValidationProblemDetails } from '$lib/utils';
 
 	let { open = $bindable(false), onSuccess } = $props<{
 		open?: boolean;
@@ -70,7 +70,13 @@
 				open = false;
 				onSuccess?.(registeredEmail);
 			} else if (apiError) {
-				error = apiError.detail || apiError.title || m.auth_register_failed();
+				// Extract validation errors from the errors object if present
+				if (isValidationProblemDetails(apiError)) {
+					const errorMessages = Object.values(apiError.errors).flat();
+					error = errorMessages.join('. ') || m.auth_register_failed();
+				} else {
+					error = apiError.detail || apiError.title || m.auth_register_failed();
+				}
 				shake.trigger();
 			} else {
 				error = m.auth_register_failed();
