@@ -65,8 +65,6 @@
 	"profile_personalInfo_title": "Osobní údaje",
 	"profile_personalInfo_description": "Zde můžete aktualizovat své osobní údaje.",
 	"profile_personalInfo_changeAvatar": "Změnit avatar",
-	"profile_personalInfo_username": "Uživatelské jméno",
-	"profile_personalInfo_usernameDescription": "Toto je vaše veřejné jméno. Může to být vaše skutečné jméno nebo přezdívka.",
 	"profile_personalInfo_firstName": "Jméno",
 	"profile_personalInfo_firstNamePlaceholder": "Vaše jméno",
 	"profile_personalInfo_lastName": "Příjmení",

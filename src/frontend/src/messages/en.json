@@ -65,8 +65,6 @@
 	"profile_personalInfo_title": "Personal Information",
 	"profile_personalInfo_description": "Update your personal details here.",
 	"profile_personalInfo_changeAvatar": "Change Avatar",
-	"profile_personalInfo_username": "Username",
-	"profile_personalInfo_usernameDescription": "This is your public display name. It can be your real name or a pseudonym.",
 	"profile_personalInfo_firstName": "First Name",
 	"profile_personalInfo_firstNamePlaceholder": "Your first name",
 	"profile_personalInfo_lastName": "Last Name",
