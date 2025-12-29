@@ -82,31 +82,11 @@ internal class UserService(
             return Result<UserOutput>.Failure("User not found.");
         }
 
-        // Update only provided fields
-        if (input.FirstName is not null)
-        {
-            user.FirstName = input.FirstName;
-        }
-
-        if (input.LastName is not null)
-        {
-            user.LastName = input.LastName;
-        }
-
-        if (input.PhoneNumber is not null)
-        {
-            user.PhoneNumber = input.PhoneNumber;
-        }
-
-        if (input.Bio is not null)
-        {
-            user.Bio = input.Bio;
-        }
-
-        if (input.AvatarUrl is not null)
-        {
-            user.AvatarUrl = input.AvatarUrl;
-        }
+        user.FirstName = input.FirstName;
+        user.LastName = input.LastName;
+        user.PhoneNumber = input.PhoneNumber;
+        user.Bio = input.Bio;
+        user.AvatarUrl = input.AvatarUrl;
 
         var result = await userManager.UpdateAsync(user);
 
