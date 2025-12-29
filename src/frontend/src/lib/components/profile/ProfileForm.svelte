@@ -4,27 +4,17 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Label } from '$lib/components/ui/label';
+	import { PhoneInput } from '$lib/components/ui/phone-input';
 	import { ProfileHeader } from '$lib/components/profile';
 	import type { User } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
 	import { browserClient } from '$lib/api/client';
 	import { toast } from 'svelte-sonner';
 	import { invalidateAll } from '$app/navigation';
+	import { isValidationProblemDetails, mapFieldErrors, getErrorMessage } from '$lib/utils';
 
 	interface Props {
 		user: User | null | undefined;
-	}
-
-	/**
-	 * Extended ProblemDetails with validation errors.
-	 * ASP.NET Core returns field-level errors in an `errors` object.
-	 */
-	interface ValidationProblemDetails {
-		type?: string | null;
-		title?: string | null;
-		status?: number | null;
-		detail?: string | null;
-		errors?: Record<string, string[]>;
 	}
 
 	let { user }: Props = $props();
@@ -47,26 +37,6 @@
 		bio = user?.bio ?? '';
 	});
 
-	/**
-	 * Maps backend field names (PascalCase) to form field names (camelCase).
-	 */
-	function mapFieldErrors(errors: Record<string, string[]>): Record<string, string> {
-		const fieldMap: Record<string, string> = {
-			FirstName: 'firstName',
-			LastName: 'lastName',
-			PhoneNumber: 'phoneNumber',
-			Bio: 'bio',
-			AvatarUrl: 'avatarUrl'
-		};
-
-		const mapped: Record<string, string> = {};
-		for (const [key, messages] of Object.entries(errors)) {
-			const fieldName = fieldMap[key] ?? key.toLowerCase();
-			mapped[fieldName] = messages[0] ?? ''; // Take first error message
-		}
-		return mapped;
-	}
-
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		isLoading = true;
@@ -85,18 +55,13 @@
 			if (response.ok) {
 				toast.success(m.profile_personalInfo_updateSuccess());
 				await invalidateAll();
+			} else if (isValidationProblemDetails(apiError)) {
+				fieldErrors = mapFieldErrors(apiError.errors);
+				toast.error(apiError.title || m.profile_personalInfo_updateError());
 			} else {
-				const errorData = apiError as ValidationProblemDetails | undefined;
-
-				// Handle field-level validation errors
-				if (errorData?.errors) {
-					fieldErrors = mapFieldErrors(errorData.errors);
-					toast.error(errorData.title || m.profile_personalInfo_updateError());
-				} else {
-					const errorMessage =
-						errorData?.detail || errorData?.title || m.profile_personalInfo_updateError();
-					toast.error(m.profile_personalInfo_updateError(), { description: errorMessage });
-				}
+				toast.error(m.profile_personalInfo_updateError(), {
+					description: getErrorMessage(apiError, m.profile_personalInfo_updateError())
+				});
 			}
 		} catch {
 			toast.error(m.profile_personalInfo_updateError());
@@ -155,12 +120,10 @@
 
 				<div class="grid gap-2">
 					<Label for="phoneNumber">{m.profile_personalInfo_phoneNumber()}</Label>
-					<Input
+					<PhoneInput
 						id="phoneNumber"
-						type="tel"
-						autocomplete="tel"
 						bind:value={phoneNumber}
-						placeholder={m.profile_personalInfo_phoneNumberPlaceholder()}
+						placeholder="123 456 789"
 						aria-invalid={!!fieldErrors.phoneNumber}
 					/>
 					{#if fieldErrors.phoneNumber}
