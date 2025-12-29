@@ -11,7 +11,13 @@
 	import { browserClient } from '$lib/api/client';
 	import { toast } from 'svelte-sonner';
 	import { invalidateAll } from '$app/navigation';
-	import { isValidationProblemDetails, mapFieldErrors, getErrorMessage } from '$lib/utils';
+	import {
+		isValidationProblemDetails,
+		mapFieldErrors,
+		getErrorMessage,
+		createShake,
+		cn
+	} from '$lib/utils';
 
 	interface Props {
 		user: User | null | undefined;
@@ -28,6 +34,9 @@
 
 	// Field-level errors from backend validation
 	let fieldErrors = $state<Record<string, string>>({});
+
+	// Shake animation for error feedback
+	const shake = createShake();
 
 	// Sync form state when user prop changes (e.g., after invalidateAll)
 	$effect(() => {
@@ -58,20 +67,23 @@
 			} else if (isValidationProblemDetails(apiError)) {
 				fieldErrors = mapFieldErrors(apiError.errors);
 				toast.error(apiError.title || m.profile_personalInfo_updateError());
+				shake.trigger();
 			} else {
 				toast.error(m.profile_personalInfo_updateError(), {
 					description: getErrorMessage(apiError, m.profile_personalInfo_updateError())
 				});
+				shake.trigger();
 			}
 		} catch {
 			toast.error(m.profile_personalInfo_updateError());
+			shake.trigger();
 		} finally {
 			isLoading = false;
 		}
 	}
 </script>
 
-<Card.Root>
+<Card.Root class={cn(shake.active && 'animate-shake')}>
 	<Card.Header>
 		<Card.Title>{m.profile_personalInfo_title()}</Card.Title>
 		<Card.Description>{m.profile_personalInfo_description()}</Card.Description>

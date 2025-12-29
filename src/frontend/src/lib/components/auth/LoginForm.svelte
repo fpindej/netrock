@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browserClient } from '$lib/api/client';
-	import { cn } from '$lib/utils';
+	import { cn, createShake } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
@@ -22,7 +22,7 @@
 	let isApiOnline = $state(false);
 	let isSuccess = $state(false);
 	let isRedirecting = $state(false);
-	let shake = $state(false);
+	const shake = createShake();
 	let isRegisterOpen = $state(false);
 
 	const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -35,13 +35,6 @@
 			isApiOnline = false;
 		}
 	});
-
-	function triggerShake() {
-		shake = true;
-		setTimeout(() => {
-			shake = false;
-		}, 500);
-	}
 
 	function onRegisterSuccess(newEmail: string) {
 		email = newEmail;
@@ -74,13 +67,13 @@
 				toast.error(m.auth_login_failed(), {
 					description: errorMessage
 				});
-				triggerShake();
+				shake.trigger();
 			}
 		} catch {
 			toast.error(m.auth_login_failed(), {
 				description: m.auth_login_error()
 			});
-			triggerShake();
+			shake.trigger();
 		}
 	}
 </script>
@@ -99,7 +92,7 @@
 			<Card.Root
 				class={cn(
 					'border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm transition-colors duration-300',
-					shake && 'animate-shake border-destructive'
+					shake.active && 'animate-shake border-destructive'
 				)}
 			>
 				<Card.Header>
@@ -185,24 +178,3 @@
 </LoginBackground>
 
 <RegisterDialog bind:open={isRegisterOpen} onSuccess={onRegisterSuccess} />
-
-<style>
-	@keyframes shake {
-		0%,
-		100% {
-			transform: translateX(0);
-		}
-		25% {
-			transform: translateX(-8px);
-		}
-		50% {
-			transform: translateX(8px);
-		}
-		75% {
-			transform: translateX(-4px);
-		}
-	}
-	.animate-shake {
-		animation: shake 0.4s ease-in-out both;
-	}
-</style>

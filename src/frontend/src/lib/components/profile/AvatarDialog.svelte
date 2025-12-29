@@ -8,6 +8,7 @@
 	import { browserClient } from '$lib/api/client';
 	import { toast } from 'svelte-sonner';
 	import { invalidateAll } from '$app/navigation';
+	import { createShake, cn } from '$lib/utils';
 
 	interface Props {
 		open: boolean;
@@ -21,6 +22,7 @@
 	let avatarUrl = $state('');
 	let avatarUrlError = $state('');
 	let isLoading = $state(false);
+	const shake = createShake();
 
 	// Sync avatarUrl when dialog opens or currentAvatarUrl changes
 	$effect(() => {
@@ -49,6 +51,7 @@
 		avatarUrl = value;
 		if (value && !isValidAvatarUrl(value)) {
 			avatarUrlError = m.profile_avatar_urlInvalid();
+			shake.trigger();
 		} else {
 			avatarUrlError = '';
 		}
@@ -57,6 +60,7 @@
 	async function handleSubmit() {
 		if (avatarUrl && !isValidAvatarUrl(avatarUrl)) {
 			avatarUrlError = m.profile_avatar_urlInvalid();
+			shake.trigger();
 			return;
 		}
 
@@ -84,9 +88,11 @@
 			} else {
 				const errorMessage = apiError?.detail || apiError?.title || m.profile_avatar_updateError();
 				toast.error(m.profile_avatar_updateError(), { description: errorMessage });
+				shake.trigger();
 			}
 		} catch {
 			toast.error(m.profile_avatar_updateError());
+			shake.trigger();
 		} finally {
 			isLoading = false;
 		}
@@ -101,7 +107,7 @@
 			</Button>
 		{/snippet}
 	</Dialog.Trigger>
-	<Dialog.Content class="sm:max-w-md">
+	<Dialog.Content class={cn('sm:max-w-md', shake.active && 'animate-shake')}>
 		<Dialog.Header>
 			<Dialog.Title>{m.profile_avatar_dialogTitle()}</Dialog.Title>
 			<Dialog.Description>

@@ -8,6 +8,7 @@
 	import * as m from '$lib/paraglide/messages';
 	import { toast } from '$lib/components/ui/sonner';
 	import { Loader2 } from '@lucide/svelte';
+	import { createShake, cn } from '$lib/utils';
 
 	let { open = $bindable(false), onSuccess } = $props<{
 		open?: boolean;
@@ -22,6 +23,7 @@
 	let phoneNumber = $state('');
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
+	const shake = createShake();
 
 	function resetForm() {
 		email = '';
@@ -46,6 +48,7 @@
 
 		if (password !== confirmPassword) {
 			error = m.auth_register_passwordMismatch();
+			shake.trigger();
 			isLoading = false;
 			return;
 		}
@@ -68,11 +71,14 @@
 				onSuccess?.(registeredEmail);
 			} else if (apiError) {
 				error = apiError.detail || apiError.title || m.auth_register_failed();
+				shake.trigger();
 			} else {
 				error = m.auth_register_failed();
+				shake.trigger();
 			}
 		} catch {
 			error = m.auth_register_failed();
+			shake.trigger();
 		} finally {
 			isLoading = false;
 		}
@@ -80,7 +86,7 @@
 </script>
 
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>
-	<Dialog.Content class="sm:max-w-[425px]">
+	<Dialog.Content class={cn('sm:max-w-[425px]', shake.active && 'animate-shake')}>
 		<Dialog.Header>
 			<Dialog.Title>{m.auth_register_title()}</Dialog.Title>
 			<Dialog.Description>
