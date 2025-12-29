@@ -6,10 +6,8 @@
  */
 
 export interface CountryCode {
-	/** ISO 3166-1 alpha-2 country code (for flag) */
+	/** ISO 3166-1 alpha-2 country code (for flag and translation key) */
 	code: string;
-	/** Country name for display */
-	name: string;
 	/** International dialing code (with +) */
 	dialCode: string;
 }
@@ -17,24 +15,25 @@ export interface CountryCode {
 /**
  * Common European and international country codes.
  * Ordered by likely usage frequency for European users.
+ * Country names are localized via the `common_country_{code}` translation keys.
  */
 export const COUNTRY_CODES: CountryCode[] = [
-	{ code: 'cz', name: 'Czech Republic', dialCode: '+420' },
-	{ code: 'sk', name: 'Slovakia', dialCode: '+421' },
-	{ code: 'de', name: 'Germany', dialCode: '+49' },
-	{ code: 'at', name: 'Austria', dialCode: '+43' },
-	{ code: 'pl', name: 'Poland', dialCode: '+48' },
-	{ code: 'gb', name: 'United Kingdom', dialCode: '+44' },
-	{ code: 'us', name: 'United States', dialCode: '+1' },
-	{ code: 'fr', name: 'France', dialCode: '+33' },
-	{ code: 'it', name: 'Italy', dialCode: '+39' },
-	{ code: 'es', name: 'Spain', dialCode: '+34' },
-	{ code: 'nl', name: 'Netherlands', dialCode: '+31' },
-	{ code: 'be', name: 'Belgium', dialCode: '+32' },
-	{ code: 'ch', name: 'Switzerland', dialCode: '+41' },
-	{ code: 'hu', name: 'Hungary', dialCode: '+36' },
-	{ code: 'ro', name: 'Romania', dialCode: '+40' },
-	{ code: 'ua', name: 'Ukraine', dialCode: '+380' }
+	{ code: 'cz', dialCode: '+420' },
+	{ code: 'sk', dialCode: '+421' },
+	{ code: 'de', dialCode: '+49' },
+	{ code: 'at', dialCode: '+43' },
+	{ code: 'pl', dialCode: '+48' },
+	{ code: 'gb', dialCode: '+44' },
+	{ code: 'us', dialCode: '+1' },
+	{ code: 'fr', dialCode: '+33' },
+	{ code: 'it', dialCode: '+39' },
+	{ code: 'es', dialCode: '+34' },
+	{ code: 'nl', dialCode: '+31' },
+	{ code: 'be', dialCode: '+32' },
+	{ code: 'ch', dialCode: '+41' },
+	{ code: 'hu', dialCode: '+36' },
+	{ code: 'ro', dialCode: '+40' },
+	{ code: 'ua', dialCode: '+380' }
 ];
 
 /**

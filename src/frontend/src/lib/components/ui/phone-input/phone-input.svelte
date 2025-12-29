@@ -3,6 +3,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { ChevronDown, Check } from '@lucide/svelte';
+	import * as m from '$lib/paraglide/messages';
 	import {
 		COUNTRY_CODES,
 		parsePhoneNumber,
@@ -44,6 +45,31 @@
 		nationalNumber = parsed.nationalNumber;
 	});
 
+	/**
+	 * Gets the localized country name for a given country code.
+	 */
+	function getCountryName(code: string): string {
+		const countryNames: Record<string, () => string> = {
+			cz: m.common_country_cz,
+			sk: m.common_country_sk,
+			de: m.common_country_de,
+			at: m.common_country_at,
+			pl: m.common_country_pl,
+			gb: m.common_country_gb,
+			us: m.common_country_us,
+			fr: m.common_country_fr,
+			it: m.common_country_it,
+			es: m.common_country_es,
+			nl: m.common_country_nl,
+			be: m.common_country_be,
+			ch: m.common_country_ch,
+			hu: m.common_country_hu,
+			ro: m.common_country_ro,
+			ua: m.common_country_ua
+		};
+		return countryNames[code]?.() ?? code.toUpperCase();
+	}
+
 	function handleCountrySelect(country: CountryCode) {
 		selectedCountry = country;
 		updateValue();
@@ -79,7 +105,7 @@
 			{#each COUNTRY_CODES as country (country.code)}
 				<DropdownMenu.Item onclick={() => handleCountrySelect(country)}>
 					<span class={`fi fi-${country.code} me-2 h-3 w-4 rounded-sm`}></span>
-					<span class="flex-1 truncate">{country.name}</span>
+					<span class="flex-1 truncate">{getCountryName(country.code)}</span>
 					<span class="ms-2 text-xs text-muted-foreground">{country.dialCode}</span>
 					{#if selectedCountry.code === country.code}
 						<Check class="ms-2 h-4 w-4 shrink-0" />
