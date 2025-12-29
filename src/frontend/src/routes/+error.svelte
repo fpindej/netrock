@@ -3,14 +3,14 @@
 	import { base } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
-	import { Ghost, Ban, TriangleAlert, Home, SearchX } from 'lucide-svelte';
+	import { Ghost, Ban, TriangleAlert, Home, SearchX, type IconProps } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
-	import type { ComponentType } from 'svelte';
+	import type { Component } from 'svelte';
 
 	function getErrorContent(status: number): {
 		title: () => string;
 		description: () => string;
-		icon: ComponentType;
+		icon: Component<IconProps>;
 		iconColor: string;
 	} {
 		switch (status) {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Construction } from 'lucide-svelte';
+	import { Construction } from '@lucide/svelte';
 	import * as Card from '$lib/components/ui/card';
 	import * as m from '$lib/paraglide/messages';
 

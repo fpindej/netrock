@@ -10,7 +10,7 @@
 	import { ThemeToggle, LanguageSelector } from '$lib/components/layout';
 	import * as m from '$lib/paraglide/messages';
 	import { fly, scale } from 'svelte/transition';
-	import { Check } from 'lucide-svelte';
+	import { Check } from '@lucide/svelte';
 	import LoginBackground from './LoginBackground.svelte';
 	import { toast } from '$lib/components/ui/sonner';
 	import RegisterDialog from './RegisterDialog.svelte';

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
 	import SidebarNav from './SidebarNav.svelte';
-	import { Package2 } from 'lucide-svelte';
+	import { Package2 } from '@lucide/svelte';
 	import { base } from '$app/paths';
 	import ThemeToggle from './ThemeToggle.svelte';
 	import LanguageSelector from './LanguageSelector.svelte';

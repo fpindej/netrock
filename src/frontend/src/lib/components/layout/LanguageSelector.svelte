@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { getLocale, setLocale, locales, baseLocale } from '$lib/paraglide/runtime';
-	import { Check } from 'lucide-svelte';
+	import { Check } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 
 	type AvailableLanguageTag = (typeof locales)[number];

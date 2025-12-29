@@ -3,11 +3,11 @@
 	import { base } from '$app/paths';
 	import { cn } from '$lib/utils';
 	import { buttonVariants } from '$lib/components/ui/button';
-	import { LayoutDashboard, ChartPie, FileText } from 'lucide-svelte';
+	import { LayoutDashboard, ChartPie, FileText, type IconProps } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
-	import type { ComponentType } from 'svelte';
+	import type { Component } from 'svelte';
 
-	let items: { title: () => string; href: string; icon: ComponentType }[] = [
+	let items: { title: () => string; href: string; icon: Component<IconProps> }[] = [
 		{
 			title: m.common_dashboard,
 			href: `${base}/`,

@@ -6,7 +6,7 @@
 	import { browserClient } from '$lib/api/client';
 	import * as m from '$lib/paraglide/messages';
 	import { toast } from '$lib/components/ui/sonner';
-	import { Loader2 } from 'lucide-svelte';
+	import { Loader2 } from '@lucide/svelte';
 
 	let { open = $bindable(false), onSuccess } = $props<{
 		open?: boolean;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
-	import { User, Shield } from 'lucide-svelte';
+	import { User, Shield } from '@lucide/svelte';
 	import InfoItem from './InfoItem.svelte';
 	import type { components } from '$lib/api/v1';
 	import * as m from '$lib/paraglide/messages';

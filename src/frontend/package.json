@@ -50,7 +50,6 @@
 		"bits-ui": "^2.14.4",
 		"clsx": "^2.1.1",
 		"flag-icons": "^7.5.0",
-		"lucide-svelte": "^0.562.0",
 		"openapi-fetch": "^0.15.0",
 		"svelte-sonner": "^1.0.7",
 		"tailwind-merge": "^3.4.0",

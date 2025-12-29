@@ -1,13 +1,13 @@
 <script lang="ts">
-	import type { ComponentType, Snippet } from 'svelte';
-	import type { Icon } from 'lucide-svelte';
+	import type { Component, Snippet } from 'svelte';
+	import type { IconProps } from '@lucide/svelte';
 
 	let {
 		icon: IconComponent,
 		label,
 		children
 	}: {
-		icon: ComponentType<Icon>;
+		icon: Component<IconProps>;
 		label: string;
 		children: Snippet;
 	} = $props();

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import * as m from '$lib/paraglide/messages';
-	import { ShieldCheck, Globe, Layout, FileCode } from 'lucide-svelte';
+	import { ShieldCheck, Globe, Layout, FileCode } from '@lucide/svelte';
 
 	let { data } = $props();
 
