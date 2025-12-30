@@ -69,6 +69,20 @@ type User = components['schemas']['UserResponse'];
 type UpdateUserRequest = components['schemas']['UpdateUserRequest'];
 ```
 
+### Missing API Endpoints or Data
+
+If the backend doesn't provide an endpoint or data you need, **don't work around it**. Since we control the full stack:
+
+1. **Ask first**: "The backend doesn't expose X. Should I request this feature from the backend team?"
+2. **Propose the endpoint**: Describe what you need (HTTP method, path, request/response shape)
+3. **Wait for confirmation** before implementing frontend workarounds
+
+Example request:
+
+> "The profile page needs to display the user's notification preferences, but `/api/users/me` doesn't include this data. Should I request a `GET /api/users/me/preferences` endpoint or extend the existing response?"
+
+This ensures the API evolves properly rather than accumulating frontend hacks.
+
 ---
 
 ## Adding New UI Components
