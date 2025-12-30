@@ -6,7 +6,6 @@ x-api-environment: &api-environment
   BackgroundJobs__Quartz__Postgres__ConnectionString: Host=db;Port=5432;Database=myproject;Username=admin;Password=pwd
   Authentication__Jwt__ExpiresInMinutes: 100
   Authentication__Jwt__RefreshTokenExpiresInDays: 7
-  FileStorage__UploadPath: /app/attachments
 
 x-db-environment: &db-environment
   POSTGRES_DB: myproject
@@ -29,8 +28,6 @@ services:
     container_name: myproject-local-api
     environment: *api-environment
     <<: *common-settings
-    volumes:
-      - ./data/attachments:/app/attachments
     ports:
       - "13002:8080"
     depends_on:
