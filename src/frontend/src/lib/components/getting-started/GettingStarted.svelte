@@ -143,11 +143,11 @@
 	];
 </script>
 
-<div class="relative space-y-8 pb-8">
+<div class="relative space-y-6 pb-6 sm:space-y-8 sm:pb-8">
 	<!-- Hero Section -->
 	{#if mounted}
 		<div
-			class="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-background via-background to-muted/50 p-8 md:p-12"
+			class="relative overflow-hidden rounded-xl border bg-gradient-to-br from-background via-background to-muted/50 p-4 sm:rounded-2xl sm:p-6 md:p-8 lg:p-12"
 			in:fly={{ y: 30, duration: 600, easing: cubicOut }}
 		>
 			<!-- Decorative Elements -->
@@ -157,8 +157,8 @@
 				<div class="h-3 w-3 rounded-full bg-green-500"></div>
 			</div>
 
-			<div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-				<div class="space-y-4">
+			<div class="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
+				<div class="space-y-3 sm:space-y-4">
 					<div
 						class="inline-flex items-center gap-2 rounded-full border bg-muted/50 px-4 py-1.5 text-sm"
 						in:scale={{ duration: 400, delay: 200, easing: elasticOut }}
@@ -168,7 +168,7 @@
 					</div>
 
 					<h1
-						class="text-4xl font-bold tracking-tight md:text-5xl"
+						class="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl"
 						in:fly={{ y: 20, duration: 500, delay: 100, easing: cubicOut }}
 					>
 						<span
@@ -179,7 +179,7 @@
 					</h1>
 
 					<p
-						class="max-w-xl text-lg text-muted-foreground"
+						class="max-w-xl text-sm text-muted-foreground sm:text-base md:text-lg"
 						in:fly={{ y: 20, duration: 500, delay: 200, easing: cubicOut }}
 					>
 						{m.dashboard_welcome_description()}
@@ -227,16 +227,16 @@
 
 	<!-- Features Grid -->
 	{#if mounted}
-		<div class="space-y-4">
+		<div class="space-y-3 sm:space-y-4">
 			<h2
-				class="flex items-center gap-2 text-xl font-semibold"
+				class="flex items-center gap-2 text-lg font-semibold sm:text-xl"
 				in:fly={{ y: 20, duration: 500, delay: 500, easing: cubicOut }}
 			>
-				<Rocket class="h-5 w-5 text-primary" />
+				<Rocket class="h-4 w-4 text-primary sm:h-5 sm:w-5" />
 				{m.gettingStarted_features_title()}
 			</h2>
 
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			<div class="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
 				{#each features as feature (feature.gradient)}
 					<div in:fly={{ y: 30, duration: 500, delay: 600 + feature.delay, easing: cubicOut }}>
 						<Card.Root
@@ -269,21 +269,24 @@
 
 	<!-- Quick Commands Section -->
 	{#if mounted}
-		<div class="space-y-4" in:fly={{ y: 30, duration: 500, delay: 1000, easing: cubicOut }}>
-			<h2 class="flex items-center gap-2 text-xl font-semibold">
-				<Terminal class="h-5 w-5 text-primary" />
+		<div
+			class="space-y-3 sm:space-y-4"
+			in:fly={{ y: 30, duration: 500, delay: 1000, easing: cubicOut }}
+		>
+			<h2 class="flex items-center gap-2 text-lg font-semibold sm:text-xl">
+				<Terminal class="h-4 w-4 text-primary sm:h-5 sm:w-5" />
 				{m.gettingStarted_commands_title()}
 			</h2>
 
-			<div class="grid gap-3 sm:grid-cols-2">
+			<div class="grid gap-2 sm:gap-3 md:grid-cols-2">
 				{#each quickCommands as command (command.id)}
 					<button
 						onclick={() => copyToClipboard(command.cmd, command.id)}
-						class="group relative flex items-center justify-between gap-4 rounded-lg border bg-muted/30 p-4 text-start transition-all hover:border-primary/50 hover:bg-muted/50"
+						class="group relative flex items-center justify-between gap-2 rounded-lg border bg-muted/30 p-3 text-start transition-all hover:border-primary/50 hover:bg-muted/50 sm:gap-4 sm:p-4"
 					>
-						<div class="space-y-1 overflow-hidden">
-							<div class="text-sm text-muted-foreground">{command.label()}</div>
-							<code class="block truncate font-mono text-sm">{command.cmd}</code>
+						<div class="min-w-0 flex-1 space-y-1">
+							<div class="text-xs text-muted-foreground sm:text-sm">{command.label()}</div>
+							<code class="block truncate font-mono text-xs sm:text-sm">{command.cmd}</code>
 						</div>
 						<div class="shrink-0">
 							{#if copiedCommand === command.id}
@@ -313,45 +316,49 @@
 				></div>
 
 				<Card.Header class="relative">
-					<div class="flex items-center gap-3">
-						<div class="rounded-lg bg-destructive/10 p-2">
-							<Trash2 class="h-5 w-5 text-destructive" />
+					<div class="flex items-start gap-3 sm:items-center">
+						<div class="shrink-0 rounded-lg bg-destructive/10 p-2">
+							<Trash2 class="h-4 w-4 text-destructive sm:h-5 sm:w-5" />
 						</div>
-						<div>
-							<Card.Title>{m.gettingStarted_removal_title()}</Card.Title>
-							<Card.Description>{m.gettingStarted_removal_subtitle()}</Card.Description>
+						<div class="min-w-0">
+							<Card.Title class="text-base sm:text-lg"
+								>{m.gettingStarted_removal_title()}</Card.Title
+							>
+							<Card.Description class="text-xs sm:text-sm"
+								>{m.gettingStarted_removal_subtitle()}</Card.Description
+							>
 						</div>
 					</div>
 				</Card.Header>
 
-				<Card.Content class="relative space-y-6">
-					<div class="grid gap-4 md:grid-cols-3">
+				<Card.Content class="relative space-y-4 sm:space-y-6">
+					<div class="grid gap-3 sm:gap-4 lg:grid-cols-3">
 						{#each removalSteps as step, i (i)}
 							<div
-								class="space-y-2 rounded-lg border border-destructive/20 bg-background/50 p-4"
+								class="space-y-2 rounded-lg border border-destructive/20 bg-background/50 p-3 sm:p-4"
 								in:fly={{ y: 20, duration: 400, delay: 1300 + i * 100, easing: cubicOut }}
 							>
 								<div class="flex items-center gap-2">
 									<div
-										class="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/10 text-xs font-bold text-destructive"
+										class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-xs font-bold text-destructive sm:h-6 sm:w-6"
 									>
 										{i + 1}
 									</div>
-									<step.icon class="h-4 w-4 text-destructive/70" />
+									<step.icon class="h-3.5 w-3.5 text-destructive/70 sm:h-4 sm:w-4" />
 								</div>
-								<h3 class="font-medium">{step.title()}</h3>
-								<p class="text-sm text-muted-foreground">{step.desc()}</p>
+								<h3 class="text-sm font-medium sm:text-base">{step.title()}</h3>
+								<p class="text-xs text-muted-foreground sm:text-sm">{step.desc()}</p>
 							</div>
 						{/each}
 					</div>
 
 					<!-- Code Snippet -->
-					<div class="rounded-lg border bg-zinc-950 p-4 dark:bg-zinc-900">
+					<div class="rounded-lg border bg-zinc-950 p-3 sm:p-4 dark:bg-zinc-900">
 						<div class="mb-2 flex items-center gap-2 text-xs text-zinc-500">
 							<div class="h-2 w-2 rounded-full bg-zinc-600"></div>
 							<span>{m.gettingStarted_removal_i18nKeys()}</span>
 						</div>
-						<pre class="overflow-x-auto text-sm"><code class="text-zinc-300"
+						<pre class="overflow-x-auto text-xs sm:text-sm"><code class="text-zinc-300"
 								>{`// src/messages/en.json & cs.json
 // Remove these key patterns:
 "dashboard_*"         // All dashboard keys
@@ -366,24 +373,29 @@
 	<!-- Documentation Link -->
 	{#if mounted}
 		<div
-			class="flex flex-col items-center justify-center gap-4 rounded-xl border bg-muted/30 p-8 text-center"
+			class="flex flex-col items-center justify-center gap-3 rounded-xl border bg-muted/30 p-4 text-center sm:gap-4 sm:p-6 md:p-8"
 			in:fly={{ y: 30, duration: 500, delay: 1400, easing: cubicOut }}
 		>
-			<BookOpen class="h-8 w-8 text-muted-foreground" />
+			<BookOpen class="h-6 w-6 text-muted-foreground sm:h-8 sm:w-8" />
 			<div class="space-y-1">
-				<h3 class="font-semibold">{m.gettingStarted_docs_title()}</h3>
-				<p class="text-sm text-muted-foreground">
+				<h3 class="text-sm font-semibold sm:text-base">{m.gettingStarted_docs_title()}</h3>
+				<p class="text-xs text-muted-foreground sm:text-sm">
 					{m.gettingStarted_docs_description()}
 				</p>
 			</div>
-			<div class="flex flex-wrap justify-center gap-3">
-				<Button variant="outline" class="gap-2" onclick={() => (readmeDialogOpen = true)}>
+			<div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
+				<Button variant="outline" class="gap-2" size="sm" onclick={() => (readmeDialogOpen = true)}>
 					<code class="text-xs">README.md</code>
-					<ExternalLink class="h-4 w-4" />
+					<ExternalLink class="h-3.5 w-3.5" />
 				</Button>
-				<Button variant="outline" class="gap-2" onclick={() => (copilotDialogOpen = true)}>
+				<Button
+					variant="outline"
+					class="gap-2"
+					size="sm"
+					onclick={() => (copilotDialogOpen = true)}
+				>
 					<code class="text-xs">copilot-instructions.md</code>
-					<ExternalLink class="h-4 w-4" />
+					<ExternalLink class="h-3.5 w-3.5" />
 				</Button>
 			</div>
 		</div>
