@@ -21,6 +21,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
+	import { StatusIndicator } from '$lib/components/common';
 	import * as m from '$lib/paraglide/messages';
 	import {
 		ShieldCheck,
@@ -145,12 +146,8 @@
 <div class="relative space-y-8 pb-8">
 	<!-- Animated Background Gradient -->
 	<div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-		<div
-			class="animate-pulse-slow absolute -end-40 -top-40 h-80 w-80 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 blur-3xl"
-		></div>
-		<div
-			class="animate-pulse-slow animation-delay-1000 absolute -start-40 -bottom-40 h-80 w-80 rounded-full bg-gradient-to-tr from-blue-500/20 to-cyan-500/20 blur-3xl"
-		></div>
+		<div class="glow-xl-top-end animate-pulse-slow"></div>
+		<div class="glow-xl-bottom-start animate-pulse-slow animation-delay-1000"></div>
 	</div>
 
 	<!-- Hero Section -->
@@ -214,23 +211,15 @@
 				<!-- User Status Card -->
 				<div class="shrink-0" in:scale={{ duration: 400, delay: 400, easing: backOut }}>
 					<div
-						class="relative overflow-hidden rounded-xl border bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-6 backdrop-blur-sm"
+						class="relative overflow-hidden rounded-xl border border-success/30 bg-gradient-to-br from-success/10 to-emerald-500/10 p-6 backdrop-blur-sm"
 					>
-						<div
-							class="absolute -end-4 -top-4 h-20 w-20 rounded-full bg-green-500/20 blur-2xl"
-						></div>
+						<div class="glow-success"></div>
 						<div class="relative space-y-3">
-							<div class="flex items-center gap-2">
-								<div class="relative">
-									<CheckCircle2 class="h-5 w-5 text-green-500" />
-									<div class="absolute inset-0 animate-ping">
-										<CheckCircle2 class="h-5 w-5 text-green-500 opacity-50" />
-									</div>
-								</div>
+							<StatusIndicator status="online" icon={CheckCircle2} size="lg">
 								<span class="font-semibold text-green-600 dark:text-green-400">
 									{m.dashboard_authenticated()}
 								</span>
-							</div>
+							</StatusIndicator>
 							<div class="text-sm text-muted-foreground">
 								{m.nav_loggedInAs()}
 							</div>
@@ -448,23 +437,3 @@
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
-
-<style>
-	:global(.animate-pulse-slow) {
-		animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-	}
-
-	:global(.animation-delay-1000) {
-		animation-delay: 1s;
-	}
-
-	@keyframes pulse-slow {
-		0%,
-		100% {
-			opacity: 0.2;
-		}
-		50% {
-			opacity: 0.4;
-		}
-	}
-</style>

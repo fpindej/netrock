@@ -9,9 +9,10 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import { ThemeToggle, LanguageSelector } from '$lib/components/layout';
+	import { StatusIndicator } from '$lib/components/common';
 	import * as m from '$lib/paraglide/messages';
 	import { fly, scale } from 'svelte/transition';
-	import { Check } from '@lucide/svelte';
+	import { Check, Wifi, WifiOff } from '@lucide/svelte';
 	import { LoginBackground, RegisterDialog } from '$lib/components/auth';
 	import { toast } from '$lib/components/ui/sonner';
 
@@ -101,18 +102,27 @@
 
 					<div class="mt-4 flex justify-center">
 						<div
-							class="group flex items-center gap-x-2 rounded-full bg-secondary/50 px-4 py-1 text-sm font-medium text-secondary-foreground shadow-sm ring-1 ring-border hover:bg-secondary/80"
+							class={cn(
+								'group relative flex items-center overflow-hidden rounded-xl border px-4 py-2.5 text-sm font-medium shadow-sm transition-all duration-300',
+								isApiOnline
+									? 'border-success/30 bg-gradient-to-br from-success/5 to-emerald-500/5'
+									: 'border-destructive/30 bg-gradient-to-br from-destructive/5 to-red-500/5'
+							)}
 						>
-							<div
-								class={cn(
-									'h-1.5 w-1.5 rounded-full',
-									isApiOnline ? 'bg-success' : 'bg-destructive'
-								)}
-							></div>
-							<span class="group-hover:hidden"
-								>{isApiOnline ? m.auth_login_apiOnline() : m.auth_login_apiOffline()}</span
-							>
-							<span class="hidden group-hover:block">{apiUrl}</span>
+							<!-- Glow effect -->
+							<div class={isApiOnline ? 'glow-success' : 'glow-destructive'}></div>
+
+							<div class="relative flex items-center gap-2.5">
+								<StatusIndicator
+									status={isApiOnline ? 'online' : 'offline'}
+									icon={isApiOnline ? Wifi : WifiOff}
+									size="md"
+								/>
+								<span class="group-hover:hidden">
+									{isApiOnline ? m.auth_login_apiOnline() : m.auth_login_apiOffline()}
+								</span>
+								<span class="hidden font-mono text-xs group-hover:block">{apiUrl}</span>
+							</div>
 						</div>
 					</div>
 				</Card.Header>
