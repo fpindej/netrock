@@ -24,8 +24,8 @@
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
-			<Button variant="ghost" class="relative h-8 w-8 rounded-full" {...props}>
-				<Avatar.Root class="h-8 w-8">
+			<Button variant="ghost" size="icon" class="rounded-full" {...props}>
+				<Avatar.Root class="h-7 w-7">
 					{#if user?.avatarUrl}
 						<Avatar.Image src={user.avatarUrl} alt={user.username || m.common_user()} />
 					{/if}

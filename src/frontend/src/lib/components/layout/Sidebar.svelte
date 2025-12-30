@@ -24,8 +24,8 @@
 		</div>
 	</div>
 	<div class="border-t p-4">
-		<div class="flex items-center justify-between gap-2">
-			<div class="flex items-center gap-2">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-1">
 				<LanguageSelector />
 				<ThemeToggle />
 			</div>

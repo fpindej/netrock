@@ -19,7 +19,7 @@
 		{#snippet child({ props })}
 			<Button variant="ghost" size="icon" {...props} aria-label={m.common_language()}>
 				<span
-					class={`fi fi-${languages.find((l) => l.code === getLocale())?.flag ?? LANGUAGE_METADATA[baseLocale as AvailableLanguageTag].flag} h-4 w-6 rounded-sm`}
+					class={`fi fi-${languages.find((l) => l.code === getLocale())?.flag ?? LANGUAGE_METADATA[baseLocale as AvailableLanguageTag].flag} rounded-sm`}
 				></span>
 			</Button>
 		{/snippet}
