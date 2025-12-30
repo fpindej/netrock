@@ -23,9 +23,7 @@
 			<p class="text-sm text-muted-foreground">{description}</p>
 		{/if}
 	</div>
-	<Card.Root
-		class="flex min-h-96 flex-col items-center justify-center p-16 text-center duration-500 animate-in fade-in zoom-in-95"
-	>
+	<Card.Root class="flex min-h-96 flex-col items-center justify-center p-16 text-center">
 		<div
 			class="mb-6 flex h-20 w-20 animate-bounce items-center justify-center rounded-full bg-muted"
 		>
