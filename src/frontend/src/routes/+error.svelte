@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
-	import { Ghost, Ban, TriangleAlert, Home, SearchX } from 'lucide-svelte';
+	import { Ghost, Ban, TriangleAlert, Home, SearchX, type IconProps } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
-	import type { ComponentType } from 'svelte';
+	import type { Component } from 'svelte';
 
 	function getErrorContent(status: number): {
 		title: () => string;
 		description: () => string;
-		icon: ComponentType;
+		icon: Component<IconProps>;
 		iconColor: string;
 	} {
 		switch (status) {
@@ -71,7 +71,7 @@
 				</p>
 			</Card.Content>
 			<Card.Footer class="flex justify-center pb-8">
-				<Button href="{base}/" variant="default" size="lg" class="gap-2">
+				<Button href={resolve('/')} variant="default" size="lg" class="gap-2">
 					<Home class="h-4 w-4" />
 					{m.error_goHome()}
 				</Button>

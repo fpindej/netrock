@@ -3,10 +3,13 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { browserClient } from '$lib/api/client';
+	import { PhoneInput } from '$lib/components/ui/phone-input';
+	import { browserClient } from '$lib/api';
 	import * as m from '$lib/paraglide/messages';
 	import { toast } from '$lib/components/ui/sonner';
-	import { Loader2 } from 'lucide-svelte';
+	import { Loader2 } from '@lucide/svelte';
+	import { isValidationProblemDetails, mapFieldErrors } from '$lib/api';
+	import { createFieldShakes } from '$lib/state';
 
 	let { open = $bindable(false), onSuccess } = $props<{
 		open?: boolean;
@@ -21,6 +24,8 @@
 	let phoneNumber = $state('');
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
+	let fieldErrors = $state<Record<string, string>>({});
+	const fieldShakes = createFieldShakes();
 
 	function resetForm() {
 		email = '';
@@ -30,6 +35,7 @@
 		lastName = '';
 		phoneNumber = '';
 		error = null;
+		fieldErrors = {};
 	}
 
 	function handleOpenChange(isOpen: boolean) {
@@ -42,9 +48,11 @@
 		e.preventDefault();
 		isLoading = true;
 		error = null;
+		fieldErrors = {};
 
 		if (password !== confirmPassword) {
-			error = m.common_register_passwordMismatch();
+			fieldErrors = { confirmPassword: m.auth_register_passwordMismatch() };
+			fieldShakes.trigger('confirmPassword');
 			isLoading = false;
 			return;
 		}
@@ -61,18 +69,23 @@
 			});
 
 			if (response.ok) {
-				toast.success(m.common_register_success());
+				toast.success(m.auth_register_success());
 				const registeredEmail = email;
 				open = false;
 				onSuccess?.(registeredEmail);
 			} else if (apiError) {
-				error = apiError.detail || apiError.title || m.common_register_failed();
+				// Extract validation errors from the errors object if present
+				if (isValidationProblemDetails(apiError)) {
+					fieldErrors = mapFieldErrors(apiError.errors);
+					fieldShakes.triggerFields(Object.keys(fieldErrors));
+				} else {
+					error = apiError.detail || apiError.title || m.auth_register_failed();
+				}
 			} else {
-				error = m.common_register_failed();
+				error = m.auth_register_failed();
 			}
-		} catch (err) {
-			console.error(err);
-			error = m.common_register_failed();
+		} catch {
+			error = m.auth_register_failed();
 		} finally {
 			isLoading = false;
 		}
@@ -82,9 +95,9 @@
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>
 	<Dialog.Content class="sm:max-w-[425px]">
 		<Dialog.Header>
-			<Dialog.Title>{m.common_register_title()}</Dialog.Title>
+			<Dialog.Title>{m.auth_register_title()}</Dialog.Title>
 			<Dialog.Description>
-				{m.common_register_description()}
+				{m.auth_register_description()}
 			</Dialog.Description>
 		</Dialog.Header>
 		<form
@@ -99,26 +112,36 @@
 			{/if}
 			<div class="grid grid-cols-2 gap-4">
 				<div class="grid gap-2">
-					<Label for="firstName">{m.common_register_firstName()}</Label>
+					<Label for="firstName">{m.auth_register_firstName()}</Label>
 					<Input
 						id="firstName"
 						autocomplete="given-name"
 						bind:value={firstName}
 						disabled={isLoading}
+						class={fieldShakes.class('firstName')}
+						aria-invalid={!!fieldErrors.firstName}
 					/>
+					{#if fieldErrors.firstName}
+						<p class="text-xs text-destructive">{fieldErrors.firstName}</p>
+					{/if}
 				</div>
 				<div class="grid gap-2">
-					<Label for="lastName">{m.common_register_lastName()}</Label>
+					<Label for="lastName">{m.auth_register_lastName()}</Label>
 					<Input
 						id="lastName"
 						autocomplete="family-name"
 						bind:value={lastName}
 						disabled={isLoading}
+						class={fieldShakes.class('lastName')}
+						aria-invalid={!!fieldErrors.lastName}
 					/>
+					{#if fieldErrors.lastName}
+						<p class="text-xs text-destructive">{fieldErrors.lastName}</p>
+					{/if}
 				</div>
 			</div>
 			<div class="grid gap-2">
-				<Label for="email">{m.common_register_email()}</Label>
+				<Label for="email">{m.auth_register_email()}</Label>
 				<Input
 					id="email"
 					type="email"
@@ -126,20 +149,27 @@
 					bind:value={email}
 					required
 					disabled={isLoading}
+					class={fieldShakes.class('email')}
+					aria-invalid={!!fieldErrors.email}
 				/>
+				{#if fieldErrors.email}
+					<p class="text-xs text-destructive">{fieldErrors.email}</p>
+				{/if}
 			</div>
 			<div class="grid gap-2">
-				<Label for="phone">{m.common_register_phone()}</Label>
-				<Input
+				<Label for="phone">{m.auth_register_phone()}</Label>
+				<PhoneInput
 					id="phone"
-					type="tel"
-					autocomplete="tel"
 					bind:value={phoneNumber}
 					disabled={isLoading}
+					class={fieldShakes.class('phoneNumber')}
 				/>
+				{#if fieldErrors.phoneNumber}
+					<p class="text-xs text-destructive">{fieldErrors.phoneNumber}</p>
+				{/if}
 			</div>
 			<div class="grid gap-2">
-				<Label for="password">{m.common_register_password()}</Label>
+				<Label for="password">{m.auth_register_password()}</Label>
 				<Input
 					id="password"
 					type="password"
@@ -148,10 +178,15 @@
 					required
 					minlength={6}
 					disabled={isLoading}
+					class={fieldShakes.class('password')}
+					aria-invalid={!!fieldErrors.password}
 				/>
+				{#if fieldErrors.password}
+					<p class="text-xs text-destructive">{fieldErrors.password}</p>
+				{/if}
 			</div>
 			<div class="grid gap-2">
-				<Label for="confirmPassword">{m.common_register_confirmPassword()}</Label>
+				<Label for="confirmPassword">{m.auth_register_confirmPassword()}</Label>
 				<Input
 					id="confirmPassword"
 					type="password"
@@ -160,14 +195,19 @@
 					required
 					minlength={6}
 					disabled={isLoading}
+					class={fieldShakes.class('confirmPassword')}
+					aria-invalid={!!fieldErrors.confirmPassword}
 				/>
+				{#if fieldErrors.confirmPassword}
+					<p class="text-xs text-destructive">{fieldErrors.confirmPassword}</p>
+				{/if}
 			</div>
 			<Dialog.Footer>
 				<Button type="submit" disabled={isLoading} class="w-full">
 					{#if isLoading}
 						<Loader2 class="me-2 h-4 w-4 animate-spin" />
 					{/if}
-					{m.common_register_submit()}
+					{m.auth_register_submit()}
 				</Button>
 			</Dialog.Footer>
 		</form>

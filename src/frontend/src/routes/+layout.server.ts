@@ -1,6 +1,6 @@
 import type { LayoutServerLoad } from './$types';
-import { SERVER_CONFIG } from '$lib/server/config';
-import { getUser } from '$lib/services/auth';
+import { SERVER_CONFIG } from '$lib/config/server';
+import { getUser } from '$lib/auth';
 
 export const load: LayoutServerLoad = async ({ locals, fetch, url }) => {
 	const user = await getUser(fetch, url.origin);

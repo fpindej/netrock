@@ -1,5 +1,3 @@
-import LoginForm from './LoginForm.svelte';
-import LoginBackground from './LoginBackground.svelte';
-import RegisterDialog from './RegisterDialog.svelte';
-
-export { LoginForm, LoginBackground, RegisterDialog };
+export { default as LoginForm } from './LoginForm.svelte';
+export { default as LoginBackground } from './LoginBackground.svelte';
+export { default as RegisterDialog } from './RegisterDialog.svelte';

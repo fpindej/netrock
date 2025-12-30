@@ -7,8 +7,8 @@
 </script>
 
 <svelte:head>
-	<title>{m.common_meta_titleTemplate({ title: m.common_meta_profile_title() })}</title>
-	<meta name="description" content={m.common_meta_profile_description()} />
+	<title>{m.meta_titleTemplate({ title: m.meta_profile_title() })}</title>
+	<meta name="description" content={m.meta_profile_description()} />
 </svelte:head>
 
 <div class="space-y-6">
@@ -17,7 +17,7 @@
 		<p class="text-sm text-muted-foreground">{m.profile_description()}</p>
 	</div>
 	<div class="h-px w-full bg-border"></div>
-	<div class="grid gap-6 md:grid-cols-2">
+	<div class="grid gap-6 lg:grid-cols-2">
 		<ProfileForm user={data.user} />
 		<AccountDetails user={data.user} />
 	</div>

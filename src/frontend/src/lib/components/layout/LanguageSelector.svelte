@@ -2,28 +2,24 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { getLocale, setLocale, locales, baseLocale } from '$lib/paraglide/runtime';
-	import { Check } from 'lucide-svelte';
+	import { Check } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
+	import { LANGUAGE_METADATA } from '$lib/config';
 
 	type AvailableLanguageTag = (typeof locales)[number];
 
-	const languageMetadata: Record<AvailableLanguageTag, { label: string; flag: string }> = {
-		en: { label: 'English', flag: 'gb' },
-		cs: { label: 'Čeština', flag: 'cz' }
-	};
-
 	const languages = locales.map((code) => ({
 		code,
-		...languageMetadata[code]
+		...LANGUAGE_METADATA[code]
 	}));
 </script>
 
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
-			<Button variant="ghost" size="icon" {...props} aria-label={m.common_language()}>
+			<Button variant="ghost" size="icon" aria-label={m.common_language()} {...props}>
 				<span
-					class={`fi fi-${languages.find((l) => l.code === getLocale())?.flag ?? languageMetadata[baseLocale as AvailableLanguageTag].flag} h-4 w-6 rounded-sm`}
+					class={`fi fi-${languages.find((l) => l.code === getLocale())?.flag ?? LANGUAGE_METADATA[baseLocale as AvailableLanguageTag].flag} rounded-sm`}
 				></span>
 			</Button>
 		{/snippet}

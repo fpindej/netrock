@@ -4,82 +4,139 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Label } from '$lib/components/ui/label';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import type { components } from '$lib/api/v1';
+	import { PhoneInput } from '$lib/components/ui/phone-input';
+	import { ProfileHeader } from '$lib/components/profile';
+	import type { User } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
+	import { browserClient } from '$lib/api';
+	import { toast } from '$lib/components/ui/sonner';
+	import { invalidateAll } from '$app/navigation';
+	import { isValidationProblemDetails, mapFieldErrors, getErrorMessage } from '$lib/api';
+	import { createFieldShakes } from '$lib/state';
 
-	type UserType = components['schemas']['MeResponse'];
+	interface Props {
+		user: User | null | undefined;
+	}
 
-	let { user }: { user: UserType | null | undefined } = $props();
+	let { user }: Props = $props();
 
-	// Mock data for placeholders
-	let fullName = $state('John Doe');
-	let email = $state('john.doe@example.com');
-	let bio = $state('Software Engineer based in San Francisco.');
+	// Form state
+	let firstName = $state('');
+	let lastName = $state('');
+	let phoneNumber = $state('');
+	let bio = $state('');
 	let isLoading = $state(false);
 
-	function handleSubmit(e: Event) {
+	// Field-level errors from backend validation
+	let fieldErrors = $state<Record<string, string>>({});
+
+	// Field-level shake animation for error feedback
+	const fieldShakes = createFieldShakes();
+
+	// Sync form state when user prop changes (e.g., after invalidateAll)
+	$effect(() => {
+		firstName = user?.firstName ?? '';
+		lastName = user?.lastName ?? '';
+		phoneNumber = user?.phoneNumber ?? '';
+		bio = user?.bio ?? '';
+	});
+
+	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		isLoading = true;
-		// TODO: Implement actual API call to update profile
-		setTimeout(() => {
+		fieldErrors = {};
+
+		try {
+			const { response, error: apiError } = await browserClient.PATCH('/api/users/me', {
+				body: {
+					firstName: firstName.trim() || null,
+					lastName: lastName.trim() || null,
+					phoneNumber: phoneNumber.trim() || null,
+					bio: bio.trim() || null
+				}
+			});
+
+			if (response.ok) {
+				toast.success(m.profile_personalInfo_updateSuccess());
+				await invalidateAll();
+			} else if (isValidationProblemDetails(apiError)) {
+				fieldErrors = mapFieldErrors(apiError.errors);
+				fieldShakes.triggerFields(Object.keys(fieldErrors));
+				toast.error(apiError.title || m.profile_personalInfo_updateError());
+			} else {
+				toast.error(m.profile_personalInfo_updateError(), {
+					description: getErrorMessage(apiError, m.profile_personalInfo_updateError())
+				});
+			}
+		} catch {
+			toast.error(m.profile_personalInfo_updateError());
+		} finally {
 			isLoading = false;
-		}, 1000);
+		}
 	}
 </script>
 
-<Card.Root>
+<Card.Root class="card-hover">
 	<Card.Header>
 		<Card.Title>{m.profile_personalInfo_title()}</Card.Title>
 		<Card.Description>{m.profile_personalInfo_description()}</Card.Description>
 	</Card.Header>
 	<Card.Content>
 		<form onsubmit={handleSubmit} class="space-y-6">
-			<div class="flex flex-col items-center gap-4 sm:flex-row">
-				<div class="relative h-24 w-24">
-					<Avatar.Root class="h-24 w-24">
-						<Avatar.Fallback class="text-lg">
-							{user?.username?.substring(0, 2).toUpperCase() ?? 'ME'}
-						</Avatar.Fallback>
-					</Avatar.Root>
-				</div>
-				<div class="flex flex-col gap-1 text-center sm:text-left">
-					<h3 class="text-lg font-medium">{fullName}</h3>
-					<p class="text-sm text-muted-foreground">{email}</p>
-					<Button variant="outline" size="sm" class="mt-2 w-full sm:w-auto">
-						{m.profile_personalInfo_changeAvatar()}
-					</Button>
-				</div>
-			</div>
+			<ProfileHeader {user} />
 
 			<div class="grid gap-4">
 				<div class="grid gap-2">
-					<Label for="username">{m.profile_personalInfo_username()}</Label>
-					<Input id="username" autocomplete="username" value={user?.username} disabled />
+					<Label for="email">{m.profile_personalInfo_email()}</Label>
+					<Input id="email" type="email" autocomplete="email" value={user?.email} disabled />
 					<p class="text-xs text-muted-foreground">
-						{m.profile_personalInfo_usernameDescription()}
+						{m.profile_personalInfo_emailDescription()}
 					</p>
 				</div>
 
-				<div class="grid gap-2">
-					<Label for="fullName">{m.profile_personalInfo_fullName()}</Label>
-					<Input
-						id="fullName"
-						autocomplete="name"
-						bind:value={fullName}
-						placeholder={m.profile_personalInfo_fullNamePlaceholder()}
-					/>
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<div class="grid gap-2">
+						<Label for="firstName">{m.profile_personalInfo_firstName()}</Label>
+						<Input
+							id="firstName"
+							autocomplete="given-name"
+							bind:value={firstName}
+							placeholder={m.profile_personalInfo_firstNamePlaceholder()}
+							class={fieldShakes.class('firstName')}
+							aria-invalid={!!fieldErrors.firstName}
+						/>
+						{#if fieldErrors.firstName}
+							<p class="text-xs text-destructive">{fieldErrors.firstName}</p>
+						{/if}
+					</div>
+					<div class="grid gap-2">
+						<Label for="lastName">{m.profile_personalInfo_lastName()}</Label>
+						<Input
+							id="lastName"
+							autocomplete="family-name"
+							bind:value={lastName}
+							placeholder={m.profile_personalInfo_lastNamePlaceholder()}
+							class={fieldShakes.class('lastName')}
+							aria-invalid={!!fieldErrors.lastName}
+						/>
+						{#if fieldErrors.lastName}
+							<p class="text-xs text-destructive">{fieldErrors.lastName}</p>
+						{/if}
+					</div>
 				</div>
 
 				<div class="grid gap-2">
-					<Label for="email">{m.profile_personalInfo_email()}</Label>
-					<Input
-						id="email"
-						type="email"
-						autocomplete="email"
-						bind:value={email}
-						placeholder={m.profile_personalInfo_emailPlaceholder()}
+					<Label for="phoneNumber">{m.profile_personalInfo_phoneNumber()}</Label>
+					<PhoneInput
+						id="phoneNumber"
+						bind:value={phoneNumber}
+						placeholder="123 456 789"
+						class={fieldShakes.class('phoneNumber')}
+						aria-invalid={!!fieldErrors.phoneNumber}
 					/>
+					{#if fieldErrors.phoneNumber}
+						<p class="text-xs text-destructive">{fieldErrors.phoneNumber}</p>
+					{/if}
 				</div>
 
 				<div class="grid gap-2">
@@ -88,7 +145,12 @@
 						id="bio"
 						bind:value={bio}
 						placeholder={m.profile_personalInfo_bioPlaceholder()}
+						class={fieldShakes.class('bio')}
+						aria-invalid={!!fieldErrors.bio}
 					/>
+					{#if fieldErrors.bio}
+						<p class="text-xs text-destructive">{fieldErrors.bio}</p>
+					{/if}
 				</div>
 
 				<div class="flex justify-end">

@@ -5,5 +5,8 @@ yarn.lock
 bun.lock
 bun.lockb
 
+# Generated Files
+/src/lib/paraglide/
+
 # Miscellaneous
 /static/

@@ -1,9 +1,7 @@
-import Header from './Header.svelte';
-import LanguageSelector from './LanguageSelector.svelte';
-import Sidebar from './Sidebar.svelte';
-import SidebarNav from './SidebarNav.svelte';
-import ThemeToggle from './ThemeToggle.svelte';
-import UserNav from './UserNav.svelte';
-import ShortcutsHelp from './ShortcutsHelp.svelte';
-
-export { Header, LanguageSelector, Sidebar, SidebarNav, ThemeToggle, UserNav, ShortcutsHelp };
+export { default as Header } from './Header.svelte';
+export { default as LanguageSelector } from './LanguageSelector.svelte';
+export { default as Sidebar } from './Sidebar.svelte';
+export { default as SidebarNav } from './SidebarNav.svelte';
+export { default as ThemeToggle } from './ThemeToggle.svelte';
+export { default as UserNav } from './UserNav.svelte';
+export { default as ShortcutsHelp } from './ShortcutsHelp.svelte';

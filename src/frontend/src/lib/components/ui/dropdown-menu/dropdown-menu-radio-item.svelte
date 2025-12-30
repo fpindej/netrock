@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { DropdownMenu as DropdownMenuPrimitive } from 'bits-ui';
-	import { Circle } from 'lucide-svelte';
+	import { Circle } from '@lucide/svelte';
 	import { cn, type WithoutChild } from '$lib/utils';
 
 	let {

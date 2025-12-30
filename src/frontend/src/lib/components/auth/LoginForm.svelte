@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { browserClient } from '$lib/api/client';
+	import { browserClient } from '$lib/api';
 	import { cn } from '$lib/utils';
+	import { createShake } from '$lib/state';
 	import { onMount } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
@@ -8,12 +9,12 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import { ThemeToggle, LanguageSelector } from '$lib/components/layout';
+	import { StatusIndicator } from '$lib/components/common';
 	import * as m from '$lib/paraglide/messages';
 	import { fly, scale } from 'svelte/transition';
-	import { Check } from 'lucide-svelte';
-	import LoginBackground from './LoginBackground.svelte';
+	import { Check } from '@lucide/svelte';
+	import { LoginBackground, RegisterDialog } from '$lib/components/auth';
 	import { toast } from '$lib/components/ui/sonner';
-	import RegisterDialog from './RegisterDialog.svelte';
 
 	let { apiUrl } = $props();
 
@@ -22,7 +23,7 @@
 	let isApiOnline = $state(false);
 	let isSuccess = $state(false);
 	let isRedirecting = $state(false);
-	let shake = $state(false);
+	const shake = createShake();
 	let isRegisterOpen = $state(false);
 
 	const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -35,13 +36,6 @@
 			isApiOnline = false;
 		}
 	});
-
-	function triggerShake() {
-		shake = true;
-		setTimeout(() => {
-			shake = false;
-		}, 500);
-	}
 
 	function onRegisterSuccess(newEmail: string) {
 		email = newEmail;
@@ -67,29 +61,39 @@
 			} else {
 				let errorMessage = '';
 				if (response.status === 401) {
-					errorMessage = m.common_login_invalidCredentials();
+					errorMessage = m.auth_login_invalidCredentials();
 				} else {
-					errorMessage = apiError?.detail || apiError?.title || m.common_login_error();
+					errorMessage = apiError?.detail || apiError?.title || m.auth_login_error();
 				}
-				toast.error(m.common_login_failed(), {
+				toast.error(m.auth_login_failed(), {
 					description: errorMessage
 				});
-				triggerShake();
+				shake.trigger();
 			}
 		} catch {
-			toast.error(m.common_login_failed(), {
-				description: m.common_login_error()
+			toast.error(m.auth_login_failed(), {
+				description: m.auth_login_error()
 			});
-			triggerShake();
+			shake.trigger();
 		}
 	}
 </script>
 
 <LoginBackground>
-	<div class="absolute top-4 right-4 flex gap-2">
+	<div class="absolute end-4 top-4 flex gap-2">
 		<LanguageSelector />
 		<ThemeToggle />
 	</div>
+
+	<!-- Subtle API status indicator for debugging -->
+	<div
+		class="group absolute start-4 bottom-4 flex cursor-default items-center gap-2 rounded-lg px-2 py-1 text-xs text-muted-foreground/60 transition-all hover:bg-muted/50 hover:text-muted-foreground"
+		title={apiUrl}
+	>
+		<StatusIndicator status={isApiOnline ? 'online' : 'offline'} size="sm" />
+		<span class="hidden group-hover:inline">{apiUrl}</span>
+	</div>
+
 	{#if !isSuccess}
 		<div
 			class="sm:mx-auto sm:w-full sm:max-w-md"
@@ -99,34 +103,17 @@
 			<Card.Root
 				class={cn(
 					'border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm transition-colors duration-300',
-					shake && 'animate-shake border-destructive'
+					shake.active && 'animate-shake border-destructive'
 				)}
 			>
 				<Card.Header>
-					<Card.Title class="text-center text-2xl">{m.common_login_title()}</Card.Title>
-					<Card.Description class="text-center">{m.common_login_subtitle()}</Card.Description>
-
-					<div class="mt-4 flex justify-center">
-						<div
-							class="group flex items-center gap-x-2 rounded-full bg-secondary/50 px-4 py-1 text-sm font-medium text-secondary-foreground shadow-sm ring-1 ring-border hover:bg-secondary/80"
-						>
-							<div
-								class={cn(
-									'h-1.5 w-1.5 rounded-full',
-									isApiOnline ? 'bg-success' : 'bg-destructive'
-								)}
-							></div>
-							<span class="group-hover:hidden"
-								>{isApiOnline ? m.common_login_apiOnline() : m.common_login_apiOffline()}</span
-							>
-							<span class="hidden group-hover:block">{apiUrl}</span>
-						</div>
-					</div>
+					<Card.Title class="text-center text-2xl">{m.auth_login_title()}</Card.Title>
+					<Card.Description class="text-center">{m.auth_login_subtitle()}</Card.Description>
 				</Card.Header>
 				<Card.Content>
 					<form class="space-y-6" onsubmit={login}>
 						<div class="grid gap-2">
-							<Label for="email">{m.common_login_email()}</Label>
+							<Label for="email">{m.auth_login_email()}</Label>
 							<Input
 								id="email"
 								type="email"
@@ -138,7 +125,7 @@
 						</div>
 
 						<div class="grid gap-2">
-							<Label for="password">{m.common_login_password()}</Label>
+							<Label for="password">{m.auth_login_password()}</Label>
 							<Input
 								id="password"
 								type="password"
@@ -150,17 +137,17 @@
 						</div>
 
 						<Button type="submit" class="w-full" disabled={!isApiOnline}>
-							{isApiOnline ? m.common_login_submit() : m.common_login_apiOffline()}
+							{isApiOnline ? m.auth_login_submit() : m.auth_login_apiOffline()}
 						</Button>
 					</form>
 					<div class="mt-4 text-center text-sm">
-						<span class="text-muted-foreground">{m.common_login_noAccount()}</span>
+						<span class="text-muted-foreground">{m.auth_login_noAccount()}</span>
 						<button
 							type="button"
 							class="ms-1 font-medium text-primary hover:underline"
 							onclick={() => (isRegisterOpen = true)}
 						>
-							{m.common_login_signUp()}
+							{m.auth_login_signUp()}
 						</button>
 					</div>
 				</Card.Content>
@@ -178,31 +165,10 @@
 				<Check class="h-12 w-12" />
 			</div>
 			<h2 class="text-3xl font-bold tracking-tight text-foreground">
-				{m.common_login_success()}
+				{m.auth_login_success()}
 			</h2>
 		</div>
 	{/if}
 </LoginBackground>
 
 <RegisterDialog bind:open={isRegisterOpen} onSuccess={onRegisterSuccess} />
-
-<style>
-	@keyframes shake {
-		0%,
-		100% {
-			transform: translateX(0);
-		}
-		25% {
-			transform: translateX(-8px);
-		}
-		50% {
-			transform: translateX(8px);
-		}
-		75% {
-			transform: translateX(-4px);
-		}
-	}
-	.animate-shake {
-		animation: shake 0.4s ease-in-out both;
-	}
-</style>

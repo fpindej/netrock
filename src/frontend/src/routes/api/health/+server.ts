@@ -1,11 +1,9 @@
-import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
-
-const API_URL = env.API_URL || 'http://localhost:13002';
+import { SERVER_CONFIG } from '$lib/config/server';
 
 export const GET: RequestHandler = async ({ fetch }) => {
 	try {
-		const response = await fetch(`${API_URL}/health`);
+		const response = await fetch(`${SERVER_CONFIG.API_URL}/health`);
 		return new Response(response.body, {
 			status: response.status,
 			headers: {
