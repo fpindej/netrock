@@ -2,7 +2,6 @@
 	import * as Avatar from '$lib/components/ui/avatar';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import * as m from '$lib/paraglide/messages';
@@ -12,13 +11,9 @@
 
 	interface Props {
 		user: User | null | undefined;
-		collapsed?: boolean;
 	}
 
-	let { user, collapsed = false }: Props = $props();
-
-	// Track dropdown state to hide tooltip when open
-	let dropdownOpen = $state(false);
+	let { user }: Props = $props();
 
 	function getInitials(name: string) {
 		return name
@@ -30,28 +25,19 @@
 	}
 </script>
 
-<DropdownMenu.Root bind:open={dropdownOpen}>
-	<Tooltip.Root open={dropdownOpen ? false : undefined}>
-		<Tooltip.Trigger>
-			{#snippet child({ props: tooltipProps })}
-				<DropdownMenu.Trigger>
-					{#snippet child({ props })}
-						<Button variant="ghost" size="icon" class="rounded-full" {...tooltipProps} {...props}>
-							<Avatar.Root class="h-7 w-7">
-								{#if user?.avatarUrl}
-									<Avatar.Image src={user.avatarUrl} alt={user.username || m.common_user()} />
-								{/if}
-								<Avatar.Fallback>{getInitials(user?.username || m.common_user())}</Avatar.Fallback>
-							</Avatar.Root>
-						</Button>
-					{/snippet}
-				</DropdownMenu.Trigger>
-			{/snippet}
-		</Tooltip.Trigger>
-		<Tooltip.Content side={collapsed ? 'right' : 'top'}>
-			{user?.username || m.common_user()}
-		</Tooltip.Content>
-	</Tooltip.Root>
+<DropdownMenu.Root>
+	<DropdownMenu.Trigger>
+		{#snippet child({ props })}
+			<Button variant="ghost" size="icon" class="rounded-full" {...props}>
+				<Avatar.Root class="h-7 w-7">
+					{#if user?.avatarUrl}
+						<Avatar.Image src={user.avatarUrl} alt={user.username || m.common_user()} />
+					{/if}
+					<Avatar.Fallback>{getInitials(user?.username || m.common_user())}</Avatar.Fallback>
+				</Avatar.Root>
+			</Button>
+		{/snippet}
+	</DropdownMenu.Trigger>
 	<DropdownMenu.Content class="w-56" align="end">
 		<DropdownMenu.Label class="font-normal">
 			<div class="flex flex-col space-y-1">

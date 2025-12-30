@@ -1,17 +1,10 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { getLocale, setLocale, locales, baseLocale } from '$lib/paraglide/runtime';
 	import { Check } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { LANGUAGE_METADATA } from '$lib/config';
-
-	interface Props {
-		collapsed?: boolean;
-	}
-
-	let { collapsed = false }: Props = $props();
 
 	type AvailableLanguageTag = (typeof locales)[number];
 
@@ -19,36 +12,18 @@
 		code,
 		...LANGUAGE_METADATA[code]
 	}));
-
-	// Track dropdown state to hide tooltip when open
-	let dropdownOpen = $state(false);
 </script>
 
-<DropdownMenu.Root bind:open={dropdownOpen}>
-	<Tooltip.Root open={dropdownOpen ? false : undefined}>
-		<Tooltip.Trigger>
-			{#snippet child({ props: tooltipProps })}
-				<DropdownMenu.Trigger>
-					{#snippet child({ props })}
-						<Button
-							variant="ghost"
-							size="icon"
-							aria-label={m.common_language()}
-							{...tooltipProps}
-							{...props}
-						>
-							<span
-								class={`fi fi-${languages.find((l) => l.code === getLocale())?.flag ?? LANGUAGE_METADATA[baseLocale as AvailableLanguageTag].flag} rounded-sm`}
-							></span>
-						</Button>
-					{/snippet}
-				</DropdownMenu.Trigger>
-			{/snippet}
-		</Tooltip.Trigger>
-		<Tooltip.Content side={collapsed ? 'right' : 'top'}>
-			{m.common_language()}
-		</Tooltip.Content>
-	</Tooltip.Root>
+<DropdownMenu.Root>
+	<DropdownMenu.Trigger>
+		{#snippet child({ props })}
+			<Button variant="ghost" size="icon" aria-label={m.common_language()} {...props}>
+				<span
+					class={`fi fi-${languages.find((l) => l.code === getLocale())?.flag ?? LANGUAGE_METADATA[baseLocale as AvailableLanguageTag].flag} rounded-sm`}
+				></span>
+			</Button>
+		{/snippet}
+	</DropdownMenu.Trigger>
 	<DropdownMenu.Content align="end">
 		{#each languages as lang (lang.code)}
 			<DropdownMenu.Item

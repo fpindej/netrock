@@ -40,10 +40,10 @@
 		<div class={cn('flex items-center gap-1', collapsed ? 'flex-col' : 'flex-row justify-between')}>
 			{#if collapsed}
 				<!-- Collapsed: stack vertically -->
-				<LanguageSelector {collapsed} />
-				<ThemeToggle {collapsed} />
+				<LanguageSelector />
+				<ThemeToggle collapsed />
 				{#if user}
-					<UserNav {user} {collapsed} />
+					<UserNav {user} />
 				{/if}
 				<Tooltip.Root>
 					<Tooltip.Trigger>
@@ -67,12 +67,12 @@
 			{:else}
 				<!-- Expanded: row layout -->
 				<div class="flex items-center gap-1">
-					<LanguageSelector {collapsed} />
-					<ThemeToggle {collapsed} />
+					<LanguageSelector />
+					<ThemeToggle />
 				</div>
 				<div class="flex items-center gap-1">
 					{#if user}
-						<UserNav {user} {collapsed} />
+						<UserNav {user} />
 					{/if}
 					<Tooltip.Root>
 						<Tooltip.Trigger>
