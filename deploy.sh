@@ -249,6 +249,76 @@ check_docker() {
     fi
 }
 
+check_docker_login() {
+    local registry=$1
+    
+    # Docker config file location
+    local config_path="$HOME/.docker/config.json"
+    
+    if [ ! -f "$config_path" ]; then
+        return 1
+    fi
+    
+    # Check for Docker Hub auth (simple username = Docker Hub)
+    if [[ "$registry" != *"/"* ]]; then
+        # Docker Hub stores auth as "https://index.docker.io/v1/"
+        if grep -q "index.docker.io" "$config_path" 2>/dev/null; then
+            return 0
+        fi
+    else
+        # Custom registry (e.g., ghcr.io/user)
+        local registry_host="${registry%%/*}"
+        if grep -q "$registry_host" "$config_path" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    
+    return 1
+}
+
+request_docker_login() {
+    local registry=$1
+    
+    echo ""
+    print_warning "Not logged in to Docker registry"
+    echo ""
+    
+    # Determine which registry to login to
+    if [[ "$registry" != *"/"* ]]; then
+        # Simple username = Docker Hub
+        echo -e "  You need to login to Docker Hub to push images."
+        echo ""
+        echo -e "  ${DIM}Run this command:${NC}"
+        echo -e "    ${CYAN}docker login${NC}"
+    elif [[ "$registry" == ghcr.io/* ]]; then
+        # GitHub Container Registry
+        echo -e "  You need to login to GitHub Container Registry."
+        echo ""
+        echo -e "  ${DIM}1. Create a Personal Access Token at:${NC}"
+        echo -e "     ${CYAN}https://github.com/settings/tokens${NC}"
+        echo -e "     ${DIM}(with 'write:packages' scope)${NC}"
+        echo ""
+        echo -e "  ${DIM}2. Run this command:${NC}"
+        echo -e "     ${CYAN}docker login ghcr.io -u YOUR_GITHUB_USERNAME${NC}"
+    else
+        # Other registry
+        local registry_host="${registry%%/*}"
+        echo -e "  You need to login to: ${BOLD}$registry_host${NC}"
+        echo ""
+        echo -e "  ${DIM}Run this command:${NC}"
+        echo -e "    ${CYAN}docker login $registry_host${NC}"
+    fi
+    
+    echo ""
+    read -p "Press Enter after logging in to continue (or 'q' to quit): " retry
+    
+    if [[ "$retry" == "q" ]]; then
+        return 1
+    fi
+    
+    check_docker_login "$registry"
+}
+
 build_backend() {
     local version=$1
     local push=$2
@@ -285,13 +355,15 @@ build_backend() {
         build_args="$build_args --load"
     fi
     
-    cd src/backend
-    if ! docker buildx build $build_args -f "$(basename "$webapi_dir")/Dockerfile" . 2>&1; then
-        cd ../..
+    pushd src/backend > /dev/null
+    local build_result=0
+    docker buildx build $build_args -f "$(basename "$webapi_dir")/Dockerfile" . 2>&1 || build_result=$?
+    popd > /dev/null
+    
+    if [ $build_result -ne 0 ]; then
         print_error "Backend build failed"
         return 1
     fi
-    cd ../..
     
     if [[ "$push" == "true" ]]; then
         print_success "Backend pushed: $full_image:$version"
@@ -328,13 +400,15 @@ build_frontend() {
         build_args="$build_args --load"
     fi
     
-    cd src/frontend
-    if ! docker buildx build $build_args . 2>&1; then
-        cd ../..
+    pushd src/frontend > /dev/null
+    local build_result=0
+    docker buildx build $build_args . 2>&1 || build_result=$?
+    popd > /dev/null
+    
+    if [ $build_result -ne 0 ]; then
         print_error "Frontend build failed"
         return 1
     fi
-    cd ../..
     
     if [[ "$push" == "true" ]]; then
         print_success "Frontend pushed: $full_image:$version"
@@ -419,6 +493,17 @@ if [ "$REGISTRY" = "myusername" ]; then
     print_warning "Registry is set to default 'myusername'"
     configure_registry
     read_config
+fi
+
+# Check Docker login (only if pushing)
+if [[ "$DO_PUSH" == "true" ]]; then
+    if ! check_docker_login "$REGISTRY"; then
+        if ! request_docker_login "$REGISTRY"; then
+            print_error "Docker login required to push images"
+            exit 1
+        fi
+        print_success "Docker login verified"
+    fi
 fi
 
 # Interactive target selection if not specified

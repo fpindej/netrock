@@ -463,40 +463,65 @@ if [[ "$CREATE_MIGRATION" == "y" ]]; then
     fi
     
     print_substep "Restoring dotnet tools..."
-    # Use explicit config file since root may not have NuGet sources
-    dotnet tool restore --configfile "src/backend/NuGet.Config" >/dev/null 2>&1 || dotnet tool restore >/dev/null 2>&1
+    # Use explicit config file since root may not have NuGet sources, fallback to default
+    if ! dotnet tool restore --configfile "src/backend/NuGet.Config" >/dev/null 2>&1; then
+        dotnet tool restore >/dev/null 2>&1 || true
+    fi
     
     print_substep "Restoring dependencies..."
-    dotnet restore "src/backend/$NEW_NAME.WebApi" >/dev/null 2>&1
+    if ! dotnet restore "src/backend/$NEW_NAME.WebApi" >/dev/null 2>&1; then
+        print_error "Failed to restore dependencies"
+        print_info "You can run manually: dotnet restore src/backend/$NEW_NAME.WebApi"
+    fi
     
     print_substep "Building project..."
-    dotnet build "src/backend/$NEW_NAME.WebApi" --no-restore -v q >/dev/null 2>&1
-    
-    print_substep "Running ef migrations add..."
-    dotnet ef migrations add Initial \
-        --project "src/backend/$NEW_NAME.Infrastructure" \
-        --startup-project "src/backend/$NEW_NAME.WebApi" \
-        --output-dir Features/Postgres/Migrations \
-        --no-build >/dev/null 2>&1
-    
-    print_success "Migration 'Initial' created"
-    
-    # Commit migration
-    if [[ "$DO_COMMIT" == "y" ]]; then
-        print_substep "Committing migration..."
-        git add . >/dev/null 2>&1
-        git commit -m "chore: add initial database migration" >/dev/null 2>&1
-        print_success "Migration committed"
+    if ! dotnet build "src/backend/$NEW_NAME.WebApi" --no-restore -v q >/dev/null 2>&1; then
+        print_error "Build failed. Migration will be skipped."
+        print_info "Fix build errors and run manually:"
+        print_info "  dotnet ef migrations add Initial \\"
+        print_info "    --project src/backend/$NEW_NAME.Infrastructure \\"
+        print_info "    --startup-project src/backend/$NEW_NAME.WebApi \\"
+        print_info "    --output-dir Features/Postgres/Migrations"
+    else
+        print_substep "Running ef migrations add..."
+        if dotnet ef migrations add Initial \
+            --project "src/backend/$NEW_NAME.Infrastructure" \
+            --startup-project "src/backend/$NEW_NAME.WebApi" \
+            --output-dir Features/Postgres/Migrations \
+            --no-build >/dev/null 2>&1; then
+            
+            print_success "Migration 'Initial' created"
+            
+            # Commit migration
+            if [[ "$DO_COMMIT" == "y" ]]; then
+                print_substep "Committing migration..."
+                git add . >/dev/null 2>&1
+                git commit -m "chore: add initial database migration" >/dev/null 2>&1
+                print_success "Migration committed"
+            fi
+        else
+            print_error "Migration creation failed"
+            print_info "Run manually after fixing any issues:"
+            print_info "  dotnet ef migrations add Initial \\"
+            print_info "    --project src/backend/$NEW_NAME.Infrastructure \\"
+            print_info "    --startup-project src/backend/$NEW_NAME.WebApi \\"
+            print_info "    --output-dir Features/Postgres/Migrations"
+        fi
     fi
 fi
 
 # Step 5: Delete init scripts
 if [[ "$DELETE_SCRIPTS" == "y" ]]; then
     print_step "Cleaning up init scripts..."
-    rm -f init.sh init.ps1
+    
+    # Use git rm to properly stage deletions
+    if git rev-parse --git-dir > /dev/null 2>&1; then
+        git rm -f init.sh init.ps1 >/dev/null 2>&1 || rm -f init.sh init.ps1
+    else
+        rm -f init.sh init.ps1
+    fi
     
     if [[ "$DO_COMMIT" == "y" ]]; then
-        git add . >/dev/null 2>&1
         git commit -m "chore: remove initialization scripts" >/dev/null 2>&1
     fi
     
