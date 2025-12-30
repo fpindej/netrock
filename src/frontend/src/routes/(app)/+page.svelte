@@ -78,7 +78,7 @@
 			<Card.Title>{m.dashboard_guide_title()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
-			<div class="grid gap-4 md:grid-cols-2">
+			<div class="grid gap-4 lg:grid-cols-2">
 				<div class="space-y-4">
 					{#each steps as step, i (i)}
 						<div class="flex items-start gap-3">
