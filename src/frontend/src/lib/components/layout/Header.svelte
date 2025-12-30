@@ -30,7 +30,7 @@
 					<Package2 class="h-6 w-6" />
 					<span class="sr-only">MyProject</span>
 				</a>
-				<SidebarNav />
+				<SidebarNav onNavigate={() => (open = false)} />
 			</nav>
 		</Sheet.Content>
 	</Sheet.Root>

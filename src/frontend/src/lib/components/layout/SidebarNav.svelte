@@ -10,9 +10,10 @@
 
 	interface Props {
 		collapsed?: boolean;
+		onNavigate?: () => void;
 	}
 
-	let { collapsed = false }: Props = $props();
+	let { collapsed = false, onNavigate }: Props = $props();
 
 	let items: { title: () => string; href: string; icon: Component<IconProps> }[] = [
 		{
@@ -60,6 +61,7 @@
 							)}
 							aria-current={active ? 'page' : undefined}
 							aria-label={item.title()}
+							onclick={onNavigate}
 							{...props}
 						>
 							<item.icon class="h-4 w-4" />
@@ -82,6 +84,7 @@
 					'justify-start'
 				)}
 				aria-current={active ? 'page' : undefined}
+				onclick={onNavigate}
 			>
 				<item.icon class="me-2 h-4 w-4" />
 				{item.title()}
