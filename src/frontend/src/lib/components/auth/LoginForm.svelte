@@ -12,7 +12,7 @@
 	import { StatusIndicator } from '$lib/components/common';
 	import * as m from '$lib/paraglide/messages';
 	import { fly, scale } from 'svelte/transition';
-	import { Check, Wifi, WifiOff } from '@lucide/svelte';
+	import { Check } from '@lucide/svelte';
 	import { LoginBackground, RegisterDialog } from '$lib/components/auth';
 	import { toast } from '$lib/components/ui/sonner';
 
@@ -80,10 +80,20 @@
 </script>
 
 <LoginBackground>
-	<div class="absolute top-4 right-4 flex gap-2">
+	<div class="absolute end-4 top-4 flex gap-2">
 		<LanguageSelector />
 		<ThemeToggle />
 	</div>
+
+	<!-- Subtle API status indicator for debugging -->
+	<div
+		class="group absolute start-4 bottom-4 flex cursor-default items-center gap-2 rounded-lg px-2 py-1 text-xs text-muted-foreground/60 transition-all hover:bg-muted/50 hover:text-muted-foreground"
+		title={apiUrl}
+	>
+		<StatusIndicator status={isApiOnline ? 'online' : 'offline'} size="sm" />
+		<span class="hidden group-hover:inline">{apiUrl}</span>
+	</div>
+
 	{#if !isSuccess}
 		<div
 			class="sm:mx-auto sm:w-full sm:max-w-md"
@@ -99,32 +109,6 @@
 				<Card.Header>
 					<Card.Title class="text-center text-2xl">{m.auth_login_title()}</Card.Title>
 					<Card.Description class="text-center">{m.auth_login_subtitle()}</Card.Description>
-
-					<div class="mt-4 flex justify-center">
-						<div
-							class={cn(
-								'group relative flex items-center overflow-hidden rounded-xl border px-4 py-2.5 text-sm font-medium shadow-sm transition-all duration-300',
-								isApiOnline
-									? 'border-success/30 bg-gradient-to-br from-success/5 to-emerald-500/5'
-									: 'border-destructive/30 bg-gradient-to-br from-destructive/5 to-red-500/5'
-							)}
-						>
-							<!-- Glow effect -->
-							<div class={isApiOnline ? 'glow-success' : 'glow-destructive'}></div>
-
-							<div class="relative flex items-center gap-2.5">
-								<StatusIndicator
-									status={isApiOnline ? 'online' : 'offline'}
-									icon={isApiOnline ? Wifi : WifiOff}
-									size="md"
-								/>
-								<span class="group-hover:hidden">
-									{isApiOnline ? m.auth_login_apiOnline() : m.auth_login_apiOffline()}
-								</span>
-								<span class="hidden font-mono text-xs group-hover:block">{apiUrl}</span>
-							</div>
-						</div>
-					</div>
 				</Card.Header>
 				<Card.Content>
 					<form class="space-y-6" onsubmit={login}>
