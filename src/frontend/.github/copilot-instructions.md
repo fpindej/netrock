@@ -18,6 +18,31 @@ You are an expert SvelteKit developer working on a production-grade application.
 
 ---
 
+## Adding New UI Components
+
+When you need a UI component that doesn't exist yet, check [shadcn-svelte](https://shadcn-svelte.com/) first:
+
+```bash
+# Generate a new shadcn component
+npx shadcn-svelte@next add <component-name>
+
+# Examples:
+npx shadcn-svelte@next add tooltip
+npx shadcn-svelte@next add tabs
+npx shadcn-svelte@next add accordion
+```
+
+After generating:
+
+1. Review the generated files in `src/lib/components/ui/<component>/`
+2. Ensure styles match our conventions (logical properties, CSS variables)
+3. Update the component if needed to follow Svelte 5 patterns
+4. Test the component works correctly
+
+**Do not** manually create UI components that shadcn already provides.
+
+---
+
 ## Project Structure
 
 ```
@@ -342,6 +367,19 @@ docs: improve README
 ```
 
 Keep commits atomic and focused on a single change.
+
+### Before Every Commit
+
+**Always verify** the solution works before committing:
+
+```bash
+npm run format   # Fix formatting
+npm run lint     # Check for lint errors
+npm run check    # TypeScript/Svelte type check
+npm run build    # Verify production build succeeds
+```
+
+If any command fails, fix the issues before committing. This prevents broken commits from entering the repository.
 
 ---
 
