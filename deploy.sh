@@ -177,7 +177,8 @@ create_default_config() {
   "registry": "myusername",
   "backendImage": "${detected_lower}-api",
   "frontendImage": "${detected_lower}-frontend",
-  "version": "0.1.0",
+  "backendVersion": "0.1.0",
+  "frontendVersion": "0.1.0",
   "platform": "linux/amd64"
 }
 EOF
@@ -193,7 +194,8 @@ read_config() {
     REGISTRY=$(grep -o '"registry"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*: *"\([^"]*\)"/\1/')
     BACKEND_IMAGE=$(grep -o '"backendImage"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*: *"\([^"]*\)"/\1/')
     FRONTEND_IMAGE=$(grep -o '"frontendImage"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*: *"\([^"]*\)"/\1/')
-    VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*: *"\([^"]*\)"/\1/')
+    BACKEND_VERSION=$(grep -o '"backendVersion"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*: *"\([^"]*\)"/\1/')
+    FRONTEND_VERSION=$(grep -o '"frontendVersion"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*: *"\([^"]*\)"/\1/')
     PLATFORM=$(grep -o '"platform"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*: *"\([^"]*\)"/\1/')
 }
 
@@ -203,7 +205,8 @@ save_config() {
   "registry": "$REGISTRY",
   "backendImage": "$BACKEND_IMAGE",
   "frontendImage": "$FRONTEND_IMAGE",
-  "version": "$VERSION",
+  "backendVersion": "$BACKEND_VERSION",
+  "frontendVersion": "$FRONTEND_VERSION",
   "platform": "$PLATFORM"
 }
 EOF
@@ -214,11 +217,12 @@ configure_registry() {
     
     echo ""
     print_info "Current configuration:"
-    echo -e "  Registry:       ${CYAN}$REGISTRY${NC}"
-    echo -e "  Backend Image:  ${CYAN}$BACKEND_IMAGE${NC}"
-    echo -e "  Frontend Image: ${CYAN}$FRONTEND_IMAGE${NC}"
-    echo -e "  Platform:       ${CYAN}$PLATFORM${NC}"
-    echo -e "  Version:        ${CYAN}$VERSION${NC}"
+    echo -e "  Registry:         ${CYAN}$REGISTRY${NC}"
+    echo -e "  Backend Image:    ${CYAN}$BACKEND_IMAGE${NC}"
+    echo -e "  Backend Version:  ${CYAN}$BACKEND_VERSION${NC}"
+    echo -e "  Frontend Image:   ${CYAN}$FRONTEND_IMAGE${NC}"
+    echo -e "  Frontend Version: ${CYAN}$FRONTEND_VERSION${NC}"
+    echo -e "  Platform:         ${CYAN}$PLATFORM${NC}"
     echo ""
     
     local reconfigure=$(prompt_yn "Reconfigure settings?" "n")
@@ -232,6 +236,26 @@ configure_registry() {
         save_config
         print_success "Configuration saved"
     fi
+}
+
+prompt_bump_type() {
+    echo ""
+    echo -e "${BOLD}Version bump type:${NC}"
+    echo ""
+    echo "  [1] Patch  (0.1.0 → 0.1.1) - bug fixes"
+    echo "  [2] Minor  (0.1.0 → 0.2.0) - new features"
+    echo "  [3] Major  (0.1.0 → 1.0.0) - breaking changes"
+    echo "  [4] None   (rebuild current version)"
+    echo ""
+    read -p "$(echo -e "${BOLD}Choose [1-4]${NC} (default: 1): ")" choice
+    
+    case ${choice:-1} in
+        1) echo "patch" ;;
+        2) echo "minor" ;;
+        3) echo "major" ;;
+        4) echo "none" ;;
+        *) echo "patch" ;;
+    esac
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -421,10 +445,11 @@ build_frontend() {
 # Parse Command Line Arguments
 # ─────────────────────────────────────────────────────────────────────────────
 TARGET=""
-BUMP_TYPE="patch"
+BUMP_TYPE=""
 DO_PUSH="true"
 TAG_LATEST="true"
 YES_TO_ALL="false"
+INTERACTIVE_MODE="false"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -508,6 +533,7 @@ fi
 
 # Interactive target selection if not specified
 if [ -z "$TARGET" ]; then
+    INTERACTIVE_MODE="true"
     configure_registry
     
     echo ""
@@ -530,10 +556,26 @@ if [ -z "$TARGET" ]; then
     esac
 fi
 
-# Calculate new version
-NEW_VERSION=$VERSION
+# Interactive version bump selection if not specified via CLI
+if [ -z "$BUMP_TYPE" ]; then
+    if [[ "$INTERACTIVE_MODE" == "true" ]]; then
+        BUMP_TYPE=$(prompt_bump_type)
+    else
+        BUMP_TYPE="patch"
+    fi
+fi
+
+# Calculate new versions based on target
+NEW_BACKEND_VERSION=$BACKEND_VERSION
+NEW_FRONTEND_VERSION=$FRONTEND_VERSION
+
 if [[ "$BUMP_TYPE" != "none" ]]; then
-    NEW_VERSION=$(bump_version "$VERSION" "$BUMP_TYPE")
+    if [[ "$TARGET" == "backend" || "$TARGET" == "all" ]]; then
+        NEW_BACKEND_VERSION=$(bump_version "$BACKEND_VERSION" "$BUMP_TYPE")
+    fi
+    if [[ "$TARGET" == "frontend" || "$TARGET" == "all" ]]; then
+        NEW_FRONTEND_VERSION=$(bump_version "$FRONTEND_VERSION" "$BUMP_TYPE")
+    fi
 fi
 
 # Summary
@@ -548,10 +590,14 @@ case $TARGET in
     all)      echo -e "  Target:   ${CYAN}Backend + Frontend${NC}" ;;
 esac
 echo ""
-echo -e "  ${BOLD}Version${NC}"
+echo -e "  ${BOLD}Versions${NC}"
 echo -e "  ─────────────────────────────────────"
-echo -e "  Current:  ${DIM}$VERSION${NC}"
-echo -e "  New:      ${GREEN}$NEW_VERSION${NC}"
+if [[ "$TARGET" == "backend" || "$TARGET" == "all" ]]; then
+    echo -e "  Backend:  ${DIM}$BACKEND_VERSION${NC} → ${GREEN}$NEW_BACKEND_VERSION${NC}"
+fi
+if [[ "$TARGET" == "frontend" || "$TARGET" == "all" ]]; then
+    echo -e "  Frontend: ${DIM}$FRONTEND_VERSION${NC} → ${GREEN}$NEW_FRONTEND_VERSION${NC}"
+fi
 echo ""
 echo -e "  ${BOLD}Options${NC}"
 echo -e "  ─────────────────────────────────────"
@@ -572,13 +618,13 @@ print_header "Building"
 FAILED="false"
 
 if [[ "$TARGET" == "backend" || "$TARGET" == "all" ]]; then
-    if ! build_backend "$NEW_VERSION" "$DO_PUSH" "$TAG_LATEST"; then
+    if ! build_backend "$NEW_BACKEND_VERSION" "$DO_PUSH" "$TAG_LATEST"; then
         FAILED="true"
     fi
 fi
 
 if [[ "$TARGET" == "frontend" || "$TARGET" == "all" ]]; then
-    if ! build_frontend "$NEW_VERSION" "$DO_PUSH" "$TAG_LATEST"; then
+    if ! build_frontend "$NEW_FRONTEND_VERSION" "$DO_PUSH" "$TAG_LATEST"; then
         FAILED="true"
     fi
 fi
@@ -589,19 +635,36 @@ if [[ "$FAILED" == "true" ]]; then
     exit 1
 fi
 
-# Update version in config and commit
+# Update versions in config and commit
 if [[ "$BUMP_TYPE" != "none" && "$DO_PUSH" == "true" ]]; then
     print_step "Updating version..."
-    VERSION=$NEW_VERSION
+    
+    # Update only the versions that were deployed
+    if [[ "$TARGET" == "backend" || "$TARGET" == "all" ]]; then
+        BACKEND_VERSION=$NEW_BACKEND_VERSION
+    fi
+    if [[ "$TARGET" == "frontend" || "$TARGET" == "all" ]]; then
+        FRONTEND_VERSION=$NEW_FRONTEND_VERSION
+    fi
     save_config
+    
+    # Build commit message
+    local commit_msg="chore: bump"
+    if [[ "$TARGET" == "backend" ]]; then
+        commit_msg="$commit_msg backend to $NEW_BACKEND_VERSION"
+    elif [[ "$TARGET" == "frontend" ]]; then
+        commit_msg="$commit_msg frontend to $NEW_FRONTEND_VERSION"
+    else
+        commit_msg="$commit_msg backend to $NEW_BACKEND_VERSION, frontend to $NEW_FRONTEND_VERSION"
+    fi
     
     # Commit the version bump
     if git rev-parse --git-dir > /dev/null 2>&1; then
         git add "$CONFIG_FILE" > /dev/null 2>&1
-        git commit -m "chore: bump version to $NEW_VERSION" > /dev/null 2>&1 || true
-        print_success "Version bumped to $NEW_VERSION (committed)"
+        git commit -m "$commit_msg" > /dev/null 2>&1 || true
+        print_success "Version updated (committed)"
     else
-        print_success "Version bumped to $NEW_VERSION"
+        print_success "Version updated"
     fi
 fi
 
@@ -612,9 +675,9 @@ echo ""
 echo -e "  ${BOLD}Deployed Images${NC}"
 echo -e "  ─────────────────────────────────────"
 if [[ "$TARGET" == "backend" || "$TARGET" == "all" ]]; then
-    echo -e "  ${CYAN}$REGISTRY/$BACKEND_IMAGE:$NEW_VERSION${NC}"
+    echo -e "  ${CYAN}$REGISTRY/$BACKEND_IMAGE:$NEW_BACKEND_VERSION${NC}"
 fi
 if [[ "$TARGET" == "frontend" || "$TARGET" == "all" ]]; then
-    echo -e "  ${CYAN}$REGISTRY/$FRONTEND_IMAGE:$NEW_VERSION${NC}"
+    echo -e "  ${CYAN}$REGISTRY/$FRONTEND_IMAGE:$NEW_FRONTEND_VERSION${NC}"
 fi
 echo ""

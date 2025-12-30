@@ -2,6 +2,7 @@
   "registry": "myusername",
   "backendImage": "myproject-api",
   "frontendImage": "myproject-frontend",
-  "version": "0.1.0",
+  "backendVersion": "0.1.0",
+  "frontendVersion": "0.1.0",
   "platform": "linux/amd64"
 }

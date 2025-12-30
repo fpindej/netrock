@@ -200,7 +200,8 @@ function Get-Config {
             registry = "myusername"
             backendImage = "$detectedName-api"
             frontendImage = "$detectedName-frontend"
-            version = "0.1.0"
+            backendVersion = "0.1.0"
+            frontendVersion = "0.1.0"
             platform = "linux/amd64"
         }
         
@@ -222,11 +223,12 @@ function Show-ConfigureRegistry {
     
     Write-Host ""
     Write-Info "Current configuration:"
-    Write-Host "  Registry:       " -NoNewline; Write-Host $Config.registry -ForegroundColor Cyan
-    Write-Host "  Backend Image:  " -NoNewline; Write-Host $Config.backendImage -ForegroundColor Cyan
-    Write-Host "  Frontend Image: " -NoNewline; Write-Host $Config.frontendImage -ForegroundColor Cyan
-    Write-Host "  Platform:       " -NoNewline; Write-Host $Config.platform -ForegroundColor Cyan
-    Write-Host "  Version:        " -NoNewline; Write-Host $Config.version -ForegroundColor Cyan
+    Write-Host "  Registry:         " -NoNewline; Write-Host $Config.registry -ForegroundColor Cyan
+    Write-Host "  Backend Image:    " -NoNewline; Write-Host $Config.backendImage -ForegroundColor Cyan
+    Write-Host "  Backend Version:  " -NoNewline; Write-Host $Config.backendVersion -ForegroundColor Cyan
+    Write-Host "  Frontend Image:   " -NoNewline; Write-Host $Config.frontendImage -ForegroundColor Cyan
+    Write-Host "  Frontend Version: " -NoNewline; Write-Host $Config.frontendVersion -ForegroundColor Cyan
+    Write-Host "  Platform:         " -NoNewline; Write-Host $Config.platform -ForegroundColor Cyan
     Write-Host ""
     
     $reconfigure = Read-YesNo "Reconfigure settings?" $false
@@ -242,6 +244,25 @@ function Show-ConfigureRegistry {
     }
     
     return $Config
+}
+
+function Read-BumpType {
+    Write-Host ""
+    Write-Host "Version bump type:" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  [1] Patch  (0.1.0 -> 0.1.1) - bug fixes"
+    Write-Host "  [2] Minor  (0.1.0 -> 0.2.0) - new features"
+    Write-Host "  [3] Major  (0.1.0 -> 1.0.0) - breaking changes"
+    Write-Host "  [4] None   (rebuild current version)"
+    Write-Host ""
+    $choice = Read-Host "Choose [1-4] (default: 1)"
+    
+    switch ($choice) {
+        "2" { return "minor" }
+        "3" { return "major" }
+        "4" { return "none" }
+        default { return "patch" }
+    }
 }
 
 # -----------------------------------------------------------------------------
@@ -498,18 +519,16 @@ if ($Config.registry -eq "myusername") {
     $Config = Show-ConfigureRegistry $Config
 }
 
-# Determine bump type
-$BumpType = "patch"
-if ($Major) { $BumpType = "major" }
-elseif ($Minor) { $BumpType = "minor" }
-elseif ($NoBump) { $BumpType = "none" }
-
 # Determine push and latest flags
 $DoPush = -not $NoPush
 $TagLatest = -not $NoLatest
 
+# Track if we're in interactive mode
+$InteractiveMode = $false
+
 # Interactive target selection if not specified
 if ([string]::IsNullOrWhiteSpace($Target)) {
+    $InteractiveMode = $true
     $Config = Show-ConfigureRegistry $Config
     
     Write-Host ""
@@ -532,10 +551,33 @@ if ([string]::IsNullOrWhiteSpace($Target)) {
     }
 }
 
-# Calculate new version
-$NewVersion = $Config.version
+# Determine bump type - interactive if not specified via CLI
+$BumpType = $null
+if ($Major) { $BumpType = "major" }
+elseif ($Minor) { $BumpType = "minor" }
+elseif ($Patch) { $BumpType = "patch" }
+elseif ($NoBump) { $BumpType = "none" }
+
+if ($null -eq $BumpType) {
+    if ($InteractiveMode) {
+        $BumpType = Read-BumpType
+    }
+    else {
+        $BumpType = "patch"
+    }
+}
+
+# Calculate new versions based on target
+$NewBackendVersion = $Config.backendVersion
+$NewFrontendVersion = $Config.frontendVersion
+
 if ($BumpType -ne "none") {
-    $NewVersion = Get-BumpedVersion $Config.version $BumpType
+    if ($Target -eq "backend" -or $Target -eq "all") {
+        $NewBackendVersion = Get-BumpedVersion $Config.backendVersion $BumpType
+    }
+    if ($Target -eq "frontend" -or $Target -eq "all") {
+        $NewFrontendVersion = Get-BumpedVersion $Config.frontendVersion $BumpType
+    }
 }
 
 # Summary
@@ -550,10 +592,20 @@ switch ($Target) {
     "all" { Write-Host "  Target:   " -NoNewline; Write-Host "Backend + Frontend" -ForegroundColor Cyan }
 }
 Write-Host ""
-Write-Host "  Version" -ForegroundColor White
+Write-Host "  Versions" -ForegroundColor White
 Write-Host "  -------------------------------------"
-Write-Host "  Current:  " -NoNewline; Write-Host $Config.version -ForegroundColor DarkGray
-Write-Host "  New:      " -NoNewline; Write-Host $NewVersion -ForegroundColor Green
+if ($Target -eq "backend" -or $Target -eq "all") {
+    Write-Host "  Backend:  " -NoNewline
+    Write-Host $Config.backendVersion -ForegroundColor DarkGray -NoNewline
+    Write-Host " -> " -NoNewline
+    Write-Host $NewBackendVersion -ForegroundColor Green
+}
+if ($Target -eq "frontend" -or $Target -eq "all") {
+    Write-Host "  Frontend: " -NoNewline
+    Write-Host $Config.frontendVersion -ForegroundColor DarkGray -NoNewline
+    Write-Host " -> " -NoNewline
+    Write-Host $NewFrontendVersion -ForegroundColor Green
+}
 Write-Host ""
 Write-Host "  Options" -ForegroundColor White
 Write-Host "  -------------------------------------"
@@ -588,13 +640,13 @@ Write-Header "Building"
 $Failed = $false
 
 if ($Target -eq "backend" -or $Target -eq "all") {
-    if (-not (Build-Backend $NewVersion $DoPush $TagLatest $Config)) {
+    if (-not (Build-Backend $NewBackendVersion $DoPush $TagLatest $Config)) {
         $Failed = $true
     }
 }
 
 if ($Target -eq "frontend" -or $Target -eq "all") {
-    if (-not (Build-Frontend $NewVersion $DoPush $TagLatest $Config)) {
+    if (-not (Build-Frontend $NewFrontendVersion $DoPush $TagLatest $Config)) {
         $Failed = $true
     }
 }
@@ -605,24 +657,43 @@ if ($Failed) {
     exit 1
 }
 
-# Update version in config and commit
+# Update versions in config and commit
 if ($BumpType -ne "none" -and $DoPush) {
     Write-Step "Updating version..."
-    $Config.version = $NewVersion
+    
+    # Update only the versions that were deployed
+    if ($Target -eq "backend" -or $Target -eq "all") {
+        $Config.backendVersion = $NewBackendVersion
+    }
+    if ($Target -eq "frontend" -or $Target -eq "all") {
+        $Config.frontendVersion = $NewFrontendVersion
+    }
     Save-Config $Config
+    
+    # Build commit message
+    $commitMsg = "chore: bump"
+    if ($Target -eq "backend") {
+        $commitMsg = "$commitMsg backend to $NewBackendVersion"
+    }
+    elseif ($Target -eq "frontend") {
+        $commitMsg = "$commitMsg frontend to $NewFrontendVersion"
+    }
+    else {
+        $commitMsg = "$commitMsg backend to $NewBackendVersion, frontend to $NewFrontendVersion"
+    }
     
     # Commit the version bump
     $ErrorActionPreference = "Continue"
     git rev-parse --git-dir 2>&1 | Out-Null
     if ($LASTEXITCODE -eq 0) {
         git add $ConfigFile 2>&1 | Out-Null
-        git commit -m "chore: bump version to $NewVersion" 2>&1 | Out-Null
+        git commit -m $commitMsg 2>&1 | Out-Null
         $ErrorActionPreference = "Stop"
-        Write-Success "Version bumped to $NewVersion (committed)"
+        Write-Success "Version updated (committed)"
     }
     else {
         $ErrorActionPreference = "Stop"
-        Write-Success "Version bumped to $NewVersion"
+        Write-Success "Version updated"
     }
 }
 
@@ -633,10 +704,10 @@ Write-Host ""
 Write-Host "  Deployed Images" -ForegroundColor White
 Write-Host "  -------------------------------------"
 if ($Target -eq "backend" -or $Target -eq "all") {
-    Write-Host "  $($Config.registry)/$($Config.backendImage):$NewVersion" -ForegroundColor Cyan
+    Write-Host "  $($Config.registry)/$($Config.backendImage):$NewBackendVersion" -ForegroundColor Cyan
 }
 if ($Target -eq "frontend" -or $Target -eq "all") {
-    Write-Host "  $($Config.registry)/$($Config.frontendImage):$NewVersion" -ForegroundColor Cyan
+    Write-Host "  $($Config.registry)/$($Config.frontendImage):$NewFrontendVersion" -ForegroundColor Cyan
 }
 Write-Host ""
 
