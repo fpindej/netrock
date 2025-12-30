@@ -282,9 +282,9 @@
 				{#each quickCommands as command (command.id)}
 					<button
 						onclick={() => copyToClipboard(command.cmd, command.id)}
-						class="group relative flex items-center justify-between gap-2 rounded-lg border bg-muted/30 p-3 text-start transition-all hover:border-primary/50 hover:bg-muted/50 sm:gap-4 sm:p-4"
+						class="group relative flex items-center justify-between gap-2 overflow-hidden rounded-lg border bg-muted/30 p-3 text-start transition-all hover:border-primary/50 hover:bg-muted/50 sm:gap-4 sm:p-4"
 					>
-						<div class="min-w-0 flex-1 space-y-1">
+						<div class="min-w-0 flex-1 space-y-1 overflow-hidden">
 							<div class="text-xs text-muted-foreground sm:text-sm">{command.label()}</div>
 							<code class="block truncate font-mono text-xs sm:text-sm">{command.cmd}</code>
 						</div>
