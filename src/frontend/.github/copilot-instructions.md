@@ -18,6 +18,59 @@ You are an expert SvelteKit developer working on a production-grade application.
 
 ---
 
+## API Type Generation
+
+The API client types are auto-generated from the backend's OpenAPI specification.
+
+### Regenerating Types
+
+Whenever the backend API changes, regenerate the types:
+
+```bash
+npm run api:generate
+```
+
+This fetches the OpenAPI spec from the backend and generates `src/lib/api/v1.d.ts`.
+
+### Prerequisites
+
+- Backend must be running (serves OpenAPI spec at `/swagger/v1/swagger.json`)
+- Check `package.json` for the exact endpoint URL
+
+### After Regenerating
+
+1. Review changes in `v1.d.ts` for breaking changes
+2. Update any affected API calls
+3. Run `npm run check` to catch type errors
+
+### Type Usage
+
+Types are automatically available through the API client:
+
+```typescript
+import { browserClient } from '$lib/api';
+
+// Response types are inferred automatically
+const { data } = await browserClient.GET('/api/users/me');
+// data is typed as UserResponse | undefined
+
+// Request body types are enforced
+await browserClient.PATCH('/api/users/me', {
+	body: { firstName: 'John' } // TypeScript validates this
+});
+```
+
+For explicit type imports:
+
+```typescript
+import type { components } from '$lib/api/v1';
+
+type User = components['schemas']['UserResponse'];
+type UpdateUserRequest = components['schemas']['UpdateUserRequest'];
+```
+
+---
+
 ## Adding New UI Components
 
 When you need a UI component that doesn't exist yet, check [shadcn-svelte](https://shadcn-svelte.com/) first:
@@ -335,6 +388,89 @@ src/routes/
 │
 ├── +layout.svelte      # Root layout
 └── +error.svelte       # Error page
+```
+
+---
+
+## Data Fetching Patterns
+
+### Server-Side (Recommended for Initial Load)
+
+Use `+page.server.ts` for data needed on page load:
+
+```typescript
+// src/routes/(app)/profile/+page.server.ts
+import { createApiClient } from '$lib/api';
+import type { PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ cookies, fetch }) => {
+	const client = createApiClient(fetch, cookies);
+	const { data } = await client.GET('/api/users/me');
+
+	return {
+		user: data
+	};
+};
+```
+
+```svelte
+<!-- src/routes/(app)/profile/+page.svelte -->
+<script lang="ts">
+	let { data } = $props(); // Typed automatically from load function
+</script>
+
+<h1>Welcome, {data.user?.firstName}</h1>
+```
+
+**When to use server-side:**
+
+- Initial page data (SEO-friendly, no loading spinners)
+- Data that requires authentication cookies
+- Data that should be available before hydration
+
+### Client-Side (For User Interactions)
+
+Use `browserClient` for actions triggered by user interaction:
+
+```svelte
+<script lang="ts">
+	import { browserClient } from '$lib/api';
+
+	let isLoading = $state(false);
+
+	async function handleSave() {
+		isLoading = true;
+		const { response, error } = await browserClient.PATCH('/api/users/me', {
+			body: { firstName, lastName }
+		});
+		isLoading = false;
+	}
+</script>
+```
+
+**When to use client-side:**
+
+- Form submissions
+- User-triggered actions (delete, update, create)
+- Polling or real-time updates
+- Data that changes frequently after page load
+
+### Combining Both
+
+Load initial data server-side, then update client-side:
+
+```svelte
+<script lang="ts">
+	import { browserClient } from '$lib/api';
+
+	let { data } = $props();
+	let user = $state(data.user); // Initialize from server data
+
+	async function refresh() {
+		const { data: updated } = await browserClient.GET('/api/users/me');
+		if (updated) user = updated;
+	}
+</script>
 ```
 
 ---
