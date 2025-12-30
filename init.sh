@@ -89,7 +89,7 @@ prompt_yn() {
     
     read -p "$(echo -e "${BOLD}$question${NC} $prompt_hint: ")" answer
     answer=${answer:-$default}
-    echo "${answer,,}"  # lowercase
+    echo "$answer" | tr '[:upper:]' '[:lower:]'
 }
 
 prompt_value() {
