@@ -24,9 +24,9 @@
 			<Button
 				variant="ghost"
 				size="icon"
-				onclick={toggleTheme}
 				aria-label={`${m.common_theme()} (${themeLabels[getTheme()]()})`}
 				{...props}
+				onclick={toggleTheme}
 			>
 				<Sun class="h-5 w-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
 				<Moon

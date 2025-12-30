@@ -25,7 +25,7 @@
 </script>
 
 <DropdownMenu.Root bind:open={dropdownOpen}>
-	<Tooltip.Root>
+	<Tooltip.Root open={dropdownOpen ? false : undefined}>
 		<Tooltip.Trigger>
 			{#snippet child({ props: tooltipProps })}
 				<DropdownMenu.Trigger>
@@ -33,9 +33,9 @@
 						<Button
 							variant="ghost"
 							size="icon"
-							{...props}
-							{...tooltipProps}
 							aria-label={m.common_language()}
+							{...tooltipProps}
+							{...props}
 						>
 							<span
 								class={`fi fi-${languages.find((l) => l.code === getLocale())?.flag ?? LANGUAGE_METADATA[baseLocale as AvailableLanguageTag].flag} rounded-sm`}
@@ -45,11 +45,9 @@
 				</DropdownMenu.Trigger>
 			{/snippet}
 		</Tooltip.Trigger>
-		{#if !dropdownOpen}
-			<Tooltip.Content side={collapsed ? 'right' : 'top'}>
-				{m.common_language()}
-			</Tooltip.Content>
-		{/if}
+		<Tooltip.Content side={collapsed ? 'right' : 'top'}>
+			{m.common_language()}
+		</Tooltip.Content>
 	</Tooltip.Root>
 	<DropdownMenu.Content align="end">
 		{#each languages as lang (lang.code)}

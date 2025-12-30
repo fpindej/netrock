@@ -31,12 +31,12 @@
 </script>
 
 <DropdownMenu.Root bind:open={dropdownOpen}>
-	<Tooltip.Root>
+	<Tooltip.Root open={dropdownOpen ? false : undefined}>
 		<Tooltip.Trigger>
 			{#snippet child({ props: tooltipProps })}
 				<DropdownMenu.Trigger>
 					{#snippet child({ props })}
-						<Button variant="ghost" size="icon" class="rounded-full" {...props} {...tooltipProps}>
+						<Button variant="ghost" size="icon" class="rounded-full" {...tooltipProps} {...props}>
 							<Avatar.Root class="h-7 w-7">
 								{#if user?.avatarUrl}
 									<Avatar.Image src={user.avatarUrl} alt={user.username || m.common_user()} />
@@ -48,11 +48,9 @@
 				</DropdownMenu.Trigger>
 			{/snippet}
 		</Tooltip.Trigger>
-		{#if !dropdownOpen}
-			<Tooltip.Content side={collapsed ? 'right' : 'top'}>
-				{user?.username || m.common_user()}
-			</Tooltip.Content>
-		{/if}
+		<Tooltip.Content side={collapsed ? 'right' : 'top'}>
+			{user?.username || m.common_user()}
+		</Tooltip.Content>
 	</Tooltip.Root>
 	<DropdownMenu.Content class="w-56" align="end">
 		<DropdownMenu.Label class="font-normal">
