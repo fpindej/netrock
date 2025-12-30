@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { cn } from '$lib/utils';
 	import { buttonVariants } from '$lib/components/ui/button';
@@ -43,7 +43,7 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -- hrefs are pre-resolved using resolve() in items array -->
 <nav class={cn('grid gap-1', collapsed ? 'justify-center px-2' : 'px-2')}>
 	{#each items as item (item.href)}
-		{@const active = isActive(item.href, $page.url.pathname)}
+		{@const active = isActive(item.href, page.url.pathname)}
 		{#if collapsed}
 			<Tooltip.Root>
 				<Tooltip.Trigger>
