@@ -5,26 +5,35 @@
 
 const STORAGE_KEY = 'sidebar-collapsed';
 
-function getInitialState(): boolean {
-	if (typeof window === 'undefined') return false;
+function getStoredState(): boolean {
+	if (typeof window === 'undefined') return true;
 	const stored = localStorage.getItem(STORAGE_KEY);
-	return stored === 'true';
+	// Default to collapsed if no preference stored
+	return stored !== 'false';
 }
 
 /**
  * Sidebar state object with reactive collapsed property.
  * Use `sidebarState.collapsed` to read and trigger reactivity.
+ * Starts collapsed to avoid jarring expand-then-collapse on refresh.
  */
 export const sidebarState = $state({
-	collapsed: false
+	collapsed: true
 });
 
 /**
  * Initialize sidebar state from localStorage.
  * Call this in onMount to avoid SSR hydration mismatch.
+ * If user prefers expanded, animates open smoothly.
  */
 export function initSidebar(): void {
-	sidebarState.collapsed = getInitialState();
+	const shouldCollapse = getStoredState();
+	if (!shouldCollapse) {
+		// Animate to expanded if that's the stored preference
+		requestAnimationFrame(() => {
+			sidebarState.collapsed = false;
+		});
+	}
 }
 
 /**
