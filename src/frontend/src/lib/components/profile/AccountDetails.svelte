@@ -2,7 +2,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { User as UserIcon, Shield } from '@lucide/svelte';
-	import InfoItem from './InfoItem.svelte';
+	import { InfoItem } from '$lib/components/profile';
 	import type { User } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
 

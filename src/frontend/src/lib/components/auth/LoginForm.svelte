@@ -12,9 +12,8 @@
 	import * as m from '$lib/paraglide/messages';
 	import { fly, scale } from 'svelte/transition';
 	import { Check } from '@lucide/svelte';
-	import LoginBackground from './LoginBackground.svelte';
+	import { LoginBackground, RegisterDialog } from '$lib/components/auth';
 	import { toast } from '$lib/components/ui/sonner';
-	import RegisterDialog from './RegisterDialog.svelte';
 
 	let { apiUrl } = $props();
 

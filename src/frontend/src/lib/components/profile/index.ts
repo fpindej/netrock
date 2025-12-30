@@ -1,7 +1,5 @@
-import AccountDetails from './AccountDetails.svelte';
-import AvatarDialog from './AvatarDialog.svelte';
-import InfoItem from './InfoItem.svelte';
-import ProfileForm from './ProfileForm.svelte';
-import ProfileHeader from './ProfileHeader.svelte';
-
-export { AccountDetails, AvatarDialog, InfoItem, ProfileForm, ProfileHeader };
+export { default as AccountDetails } from './AccountDetails.svelte';
+export { default as AvatarDialog } from './AvatarDialog.svelte';
+export { default as InfoItem } from './InfoItem.svelte';
+export { default as ProfileForm } from './ProfileForm.svelte';
+export { default as ProfileHeader } from './ProfileHeader.svelte';

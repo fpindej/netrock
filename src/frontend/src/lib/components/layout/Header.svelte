@@ -2,10 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import { Menu, Package2 } from '@lucide/svelte';
-	import SidebarNav from './SidebarNav.svelte';
-	import ThemeToggle from './ThemeToggle.svelte';
-	import LanguageSelector from './LanguageSelector.svelte';
-	import UserNav from './UserNav.svelte';
+	import { SidebarNav, ThemeToggle, LanguageSelector, UserNav } from '$lib/components/layout';
 	import { base } from '$app/paths';
 	import type { User } from '$lib/types';
 	let { user }: { user: User | null | undefined } = $props();

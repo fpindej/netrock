@@ -1,3 +1,1 @@
-import WorkInProgress from './WorkInProgress.svelte';
-
-export { WorkInProgress };
+export { default as WorkInProgress } from './WorkInProgress.svelte';

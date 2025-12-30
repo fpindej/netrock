@@ -520,20 +520,7 @@ Keep commits atomic and focused on a single change.
 
 ### Before Every Commit
 
-**Always verify** the solution works before committing:
-
-```bash
-npm run format   # Fix formatting
-npm run lint     # Check for lint errors
-npm run check    # TypeScript/Svelte type check
-npm run build    # Verify production build succeeds
-```
-
-If any command fails, fix the issues before committing. This prevents broken commits from entering the repository.
-
-### Review Before Committing
-
-Before running the pre-commit checks, review your changes:
+Review your changes:
 
 1. **Consistency**: Do the changes align with existing patterns in the codebase?
 2. **Completeness**: Are all related files updated (components, types, translations)?
@@ -544,7 +531,16 @@ Before running the pre-commit checks, review your changes:
    - Orphaned type definitions
 4. **Naming**: Do new files/functions follow existing conventions?
 
----
+5. **Always verify** the solution works before committing:
+
+```bash
+npm run format   # Fix formatting
+npm run lint     # Check for lint errors
+npm run check    # TypeScript/Svelte type check
+npm run build    # Verify production build succeeds
+```
+
+If any command fails, fix the issues before committing. This prevents broken commits from entering the repository.
 
 ## Common Patterns
 

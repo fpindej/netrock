@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import SidebarNav from './SidebarNav.svelte';
+	import { SidebarNav, ThemeToggle, LanguageSelector, UserNav } from '$lib/components/layout';
 	import { Package2 } from '@lucide/svelte';
 	import { base } from '$app/paths';
-	import ThemeToggle from './ThemeToggle.svelte';
-	import LanguageSelector from './LanguageSelector.svelte';
-	import UserNav from './UserNav.svelte';
 	import type { User } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
 
