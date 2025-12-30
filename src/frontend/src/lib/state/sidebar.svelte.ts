@@ -11,30 +11,29 @@ function getInitialState(): boolean {
 	return stored === 'true';
 }
 
-let collapsed = $state(false);
+/**
+ * Sidebar state object with reactive collapsed property.
+ * Use `sidebarState.collapsed` to read and trigger reactivity.
+ */
+export const sidebarState = $state({
+	collapsed: false
+});
 
 /**
  * Initialize sidebar state from localStorage.
  * Call this in onMount to avoid SSR hydration mismatch.
  */
 export function initSidebar(): void {
-	collapsed = getInitialState();
-}
-
-/**
- * Check if the sidebar is currently collapsed.
- */
-export function isCollapsed(): boolean {
-	return collapsed;
+	sidebarState.collapsed = getInitialState();
 }
 
 /**
  * Toggle the sidebar collapsed state.
  */
 export function toggleSidebar(): void {
-	collapsed = !collapsed;
+	sidebarState.collapsed = !sidebarState.collapsed;
 	if (typeof window !== 'undefined') {
-		localStorage.setItem(STORAGE_KEY, String(collapsed));
+		localStorage.setItem(STORAGE_KEY, String(sidebarState.collapsed));
 	}
 }
 
@@ -42,8 +41,8 @@ export function toggleSidebar(): void {
  * Set the sidebar collapsed state explicitly.
  */
 export function setSidebarCollapsed(value: boolean): void {
-	collapsed = value;
+	sidebarState.collapsed = value;
 	if (typeof window !== 'undefined') {
-		localStorage.setItem(STORAGE_KEY, String(collapsed));
+		localStorage.setItem(STORAGE_KEY, String(sidebarState.collapsed));
 	}
 }

@@ -2,9 +2,11 @@
 	import { Header, Sidebar } from '$lib/components/layout';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { initSidebar, isCollapsed } from '$lib/state';
+	import { initSidebar, sidebarState } from '$lib/state';
 
 	let { children, data } = $props();
+
+	let collapsed = $derived(sidebarState.collapsed);
 
 	onMount(() => {
 		initSidebar();
@@ -13,7 +15,7 @@
 
 <div
 	class="grid h-dvh w-full transition-[grid-template-columns] duration-300 md:grid-cols-[var(--sidebar-width)_1fr]"
-	style="--sidebar-width: {isCollapsed()
+	style="--sidebar-width: {collapsed
 		? 'var(--sidebar-width-collapsed)'
 		: 'var(--sidebar-width-md)'};"
 >
