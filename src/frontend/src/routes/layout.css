@@ -394,3 +394,32 @@
 .window-dots::after {
 	background-color: hsl(120 60% 50%);
 }
+
+/* -----------------------------------------------------------------------------
+   Dialog & Modal Enhancements
+   Subtle glow effects for dialogs and modals.
+   ----------------------------------------------------------------------------- */
+[data-slot='dialog-content'] {
+	box-shadow:
+		0 25px 50px -12px hsl(var(--primary) / 0.08),
+		0 0 0 1px hsl(var(--border));
+}
+
+[data-slot='dialog-content']::before {
+	content: '';
+	position: absolute;
+	inset: -1px;
+	border-radius: inherit;
+	padding: 1px;
+	background: linear-gradient(
+		135deg,
+		hsl(var(--primary) / 0.15),
+		transparent 50%,
+		hsl(280 70% 50% / 0.1)
+	);
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
+	mask-composite: exclude;
+	pointer-events: none;
+}

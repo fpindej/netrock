@@ -37,8 +37,14 @@
 </script>
 
 <div class="flex flex-col items-center gap-4 sm:flex-row">
-	<div class="relative h-24 w-24">
-		<Avatar.Root class="h-24 w-24">
+	<div class="group relative h-24 w-24">
+		<!-- Subtle glow on hover -->
+		<div
+			class="absolute inset-0 rounded-full bg-primary/20 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100"
+		></div>
+		<Avatar.Root
+			class="relative h-24 w-24 ring-2 ring-border transition-all group-hover:ring-primary/50"
+		>
 			{#if user?.avatarUrl}
 				<Avatar.Image src={user.avatarUrl} alt={displayName} />
 			{/if}

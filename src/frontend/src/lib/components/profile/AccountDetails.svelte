@@ -9,7 +9,7 @@
 	let { user }: { user: User | null | undefined } = $props();
 </script>
 
-<Card.Root>
+<Card.Root class="card-hover">
 	<Card.Header>
 		<Card.Title>{m.profile_account_title()}</Card.Title>
 		<Card.Description>{m.profile_account_description()}</Card.Description>

@@ -76,7 +76,7 @@
 	}
 </script>
 
-<Card.Root>
+<Card.Root class="card-hover">
 	<Card.Header>
 		<Card.Title>{m.profile_personalInfo_title()}</Card.Title>
 		<Card.Description>{m.profile_personalInfo_description()}</Card.Description>
