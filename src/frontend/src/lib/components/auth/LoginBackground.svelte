@@ -9,10 +9,10 @@
 </script>
 
 <div class="relative min-h-screen overflow-hidden bg-background" role="presentation">
-	<!-- Subtle Ambient Glows -->
+	<!-- Pulsing Ambient Glows -->
 	<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-		<div class="glow-xl-top-end"></div>
-		<div class="glow-xl-bottom-start"></div>
+		<div class="glow-xl-top-end animate-glow-pulse"></div>
+		<div class="glow-xl-bottom-start animate-glow-pulse animation-delay-2000"></div>
 	</div>
 
 	<div

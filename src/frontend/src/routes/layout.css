@@ -156,35 +156,55 @@
 }
 
 /* -----------------------------------------------------------------------------
+   Glow Pulse Animation
+   Slow, ambient pulsing for background glows on specific pages (login, etc).
+   ----------------------------------------------------------------------------- */
+@keyframes glow-pulse {
+	0%,
+	100% {
+		opacity: 0.4;
+	}
+	50% {
+		opacity: 0.7;
+	}
+}
+
+.animate-glow-pulse {
+	animation: glow-pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animation-delay-2000 {
+	animation-delay: 2s;
+}
+
+/* -----------------------------------------------------------------------------
+   Pulse Ring Animation
+   Expanding ring effect for attention-drawing elements (work in progress, etc).
+   ----------------------------------------------------------------------------- */
+@keyframes pulse-ring {
+	0% {
+		transform: scale(1);
+		opacity: 0.6;
+	}
+	50% {
+		transform: scale(1.15);
+		opacity: 0.3;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 0.6;
+	}
+}
+
+.animate-pulse-ring {
+	animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* -----------------------------------------------------------------------------
    Glow Effects
-   Static ambient lighting effects for corners and backgrounds.
+   Ambient lighting effects for corners and backgrounds.
    Usage: Add to a positioned container with overflow-hidden.
    ----------------------------------------------------------------------------- */
-.glow-top-end {
-	position: absolute;
-	top: -5rem;
-	inset-inline-end: -5rem;
-	width: 12rem;
-	height: 12rem;
-	border-radius: 9999px;
-	background: linear-gradient(to bottom left, hsl(var(--primary) / 0.15), hsl(280 70% 50% / 0.1));
-	filter: blur(48px);
-	pointer-events: none;
-}
-
-.glow-bottom-start {
-	position: absolute;
-	bottom: -5rem;
-	inset-inline-start: -5rem;
-	width: 12rem;
-	height: 12rem;
-	border-radius: 9999px;
-	background: linear-gradient(to top right, hsl(200 70% 50% / 0.15), hsl(180 70% 50% / 0.1));
-	filter: blur(48px);
-	pointer-events: none;
-}
-
-/* Larger glow for page backgrounds */
 .glow-xl-top-end {
 	position: absolute;
 	top: -10rem;
@@ -260,26 +280,6 @@
 		0 8px 10px -6px hsl(var(--primary) / 0.05);
 }
 
-/* Card with gradient overlay on hover */
-.card-gradient-hover {
-	position: relative;
-	overflow: hidden;
-}
-
-.card-gradient-hover::before {
-	content: '';
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(to bottom right, hsl(var(--primary) / 0.05), hsl(280 70% 50% / 0.03));
-	opacity: 0;
-	transition: opacity 0.3s ease;
-	pointer-events: none;
-}
-
-.card-gradient-hover:hover::before {
-	opacity: 1;
-}
-
 /* -----------------------------------------------------------------------------
    Status Indicator Animations
    Pulsing effects for online/offline and status indicators.
@@ -342,36 +342,6 @@
 	position: absolute;
 	inset: 0;
 	animation: status-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-/* -----------------------------------------------------------------------------
-   Decorative Elements
-   macOS-style window dots and other decorative patterns.
-   ----------------------------------------------------------------------------- */
-.window-dots {
-	display: flex;
-	gap: 0.5rem;
-}
-
-.window-dots::before,
-.window-dots::after,
-.window-dots span {
-	content: '';
-	width: 0.75rem;
-	height: 0.75rem;
-	border-radius: 9999px;
-}
-
-.window-dots::before {
-	background-color: hsl(0 80% 60%);
-}
-
-.window-dots span {
-	background-color: hsl(45 80% 55%);
-}
-
-.window-dots::after {
-	background-color: hsl(120 60% 50%);
 }
 
 /* -----------------------------------------------------------------------------

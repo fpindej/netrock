@@ -144,12 +144,6 @@
 </script>
 
 <div class="relative space-y-8 pb-8">
-	<!-- Ambient Background Glows -->
-	<div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-		<div class="glow-xl-top-end"></div>
-		<div class="glow-xl-bottom-start"></div>
-	</div>
-
 	<!-- Hero Section -->
 	{#if mounted}
 		<div

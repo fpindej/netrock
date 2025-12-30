@@ -23,11 +23,7 @@
 	<Card.Root
 		class="relative flex min-h-96 flex-col items-center justify-center overflow-hidden p-16 text-center"
 	>
-		<!-- Ambient glow -->
-		<div class="glow-xl-top-end opacity-50"></div>
-		<div class="glow-xl-bottom-start opacity-50"></div>
-
-		<!-- Icon container with warning theme -->
+		<!-- Icon container with pulsing ring -->
 		<div class="relative mb-6">
 			<div class="glow-warning"></div>
 			<div
@@ -35,6 +31,10 @@
 			>
 				<Construction class="h-10 w-10 text-warning" />
 			</div>
+			<!-- Pulsing ring effect -->
+			<div
+				class="animate-pulse-ring absolute inset-0 rounded-full border-2 border-warning/40"
+			></div>
 		</div>
 
 		<h2 class="relative text-2xl font-bold tracking-tight">{wipTitle ?? m.wip_title()}</h2>
