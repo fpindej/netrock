@@ -1,27 +1,7 @@
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace MyProject.WebApi.Extensions;
-
-internal static class OpenApiExtensions
-{
-    public static IServiceCollection AddApiDefinition(this IServiceCollection services)
-    {
-        services.AddOpenApi("v1", opt =>
-        {
-            opt.AddDocumentTransformer((document, _, _) =>
-            {
-                document.Info.Title = "MyProject API";
-                document.Info.Version = "v1";
-                return Task.CompletedTask;
-            });
-
-            opt.AddDocumentTransformer<CookieAuthDocumentTransformer>();
-        });
-
-        return services;
-    }
-}
+namespace MyProject.WebApi.Features.OpenApi.Transformers;
 
 internal sealed class CookieAuthDocumentTransformer : IOpenApiDocumentTransformer
 {
