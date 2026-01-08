@@ -25,6 +25,9 @@ internal static class WebApplicationBuilderExtensions
             opt.WithTitle("MyProject API");
             opt.WithTheme(ScalarTheme.Mars);
             opt.WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+            opt.WithOperationTitleSource(OperationTitleSource.Path);
+            opt.SortTagsAlphabetically();
+            opt.WithSearchHotKey("k");
         });
     }
 }
