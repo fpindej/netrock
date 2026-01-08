@@ -1,35 +1,17 @@
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace MyProject.WebApi.Extensions;
+namespace MyProject.WebApi.Features.OpenApi.Transformers;
 
-internal static class OpenApiExtensions
-{
-    public static IServiceCollection AddApiDefinition(this IServiceCollection services)
-    {
-        services.AddOpenApi("v1", opt =>
-        {
-            opt.AddDocumentTransformer((document, _, _) =>
-            {
-                document.Info.Title = "MyProject API";
-                document.Info.Version = "v1";
-                return Task.CompletedTask;
-            });
-
-            opt.AddDocumentTransformer<CookieAuthDocumentTransformer>();
-        });
-
-        return services;
-    }
-}
-
-internal sealed class CookieAuthDocumentTransformer : IOpenApiDocumentTransformer
+internal sealed class ProjectDocumentTransformer : IOpenApiDocumentTransformer
 {
     public Task TransformAsync(
         OpenApiDocument document,
         OpenApiDocumentTransformerContext context,
         CancellationToken cancellationToken)
     {
+        document.Info.Title = "MyProject API";
+        document.Info.Version = "v1";
         document.Info.Description = """
                                     API uses cookie-based authentication.
 
