@@ -248,6 +248,13 @@ $FrontendPort = $Port
 $ApiPort = $Port + 2
 $DbPort = $Port + 4
 
+# Convert PascalCase to kebab-case (MyAwesomeApi -> my-awesome-api)
+function ConvertTo-KebabCase {
+    param([string]$Text)
+    ($Text -creplace '([a-z])([A-Z])', '$1-$2').ToLower()
+}
+$ProjectSlug = ConvertTo-KebabCase $Name
+
 # Additional options
 Write-Host ""
 Write-Info "Additional options:"
@@ -266,6 +273,7 @@ Write-Host ""
 Write-Host "  Project Configuration" -ForegroundColor White
 Write-Host "  -------------------------------------"
 Write-Host "  Project Name:     " -NoNewline; Write-Host $Name -ForegroundColor Green
+Write-Host "  Docker Slug:      " -NoNewline; Write-Host $ProjectSlug -ForegroundColor Green
 Write-Host ""
 Write-Host "  Port Allocation" -ForegroundColor White
 Write-Host "  -------------------------------------"
@@ -327,10 +335,11 @@ foreach ($file in $files) {
         $content = [System.IO.File]::ReadAllText($file.FullName)
         $originalContent = $content
 
-        if ($content -match "\{INIT_FRONTEND_PORT\}|\{INIT_API_PORT\}|\{INIT_DB_PORT\}") {
+        if ($content -match "\{INIT_FRONTEND_PORT\}|\{INIT_API_PORT\}|\{INIT_DB_PORT\}|\{INIT_PROJECT_SLUG\}") {
             $content = $content -replace "\{INIT_FRONTEND_PORT\}", $FrontendPort
             $content = $content -replace "\{INIT_API_PORT\}", $ApiPort
             $content = $content -replace "\{INIT_DB_PORT\}", $DbPort
+            $content = $content -replace "\{INIT_PROJECT_SLUG\}", $ProjectSlug
 
             if ($content -ne $originalContent) {
                 Set-FileContent $file.FullName $content
@@ -342,15 +351,6 @@ foreach ($file in $files) {
     }
 }
 
-$deployConfig = Join-Path $ScriptDir "deploy.config.json"
-if ((Test-Path $deployConfig) -and ($NewName -ne "MyProject")) {
-    $content = Get-Content $deployConfig -Raw
-    $content = $content -replace "myproject-api", "$NewNameLower-api"
-    $content = $content -replace "myproject-frontend", "$NewNameLower-frontend"
-    Set-FileContent $deployConfig $content
-    Write-SubStep "Updated deploy.config.json"
-}
-
 Write-Success "Port configuration complete"
 
 # Commit port configuration changes
@@ -358,7 +358,7 @@ if ($DoCommit) {
     Write-Step "Committing port configuration..."
     $ErrorActionPreference = "Continue"
     $null = git add . 2>&1
-    $null = git commit -m "chore: configure ports (frontend: $FrontendPort, api: $ApiPort, db: $DbPort)" 2>&1
+    $null = git commit -m "chore: configure project (slug: $ProjectSlug, ports: $FrontendPort/$ApiPort/$DbPort)" 2>&1
     $ErrorActionPreference = "Stop"
     Write-Success "Port configuration committed"
 }

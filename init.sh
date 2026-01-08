@@ -281,6 +281,12 @@ FRONTEND_PORT=$BASE_PORT
 API_PORT=$((BASE_PORT + 2))
 DB_PORT=$((BASE_PORT + 4))
 
+# Convert PascalCase to kebab-case (MyAwesomeApi -> my-awesome-api)
+to_kebab_case() {
+    echo "$1" | sed 's/\([a-z]\)\([A-Z]\)/\1-\2/g' | tr '[:upper:]' '[:lower:]'
+}
+PROJECT_SLUG=$(to_kebab_case "$PROJECT_NAME")
+
 # Additional options (with sensible defaults)
 echo ""
 print_info "Additional options:"
@@ -310,6 +316,7 @@ echo -e "
   ${BOLD}Project Configuration${NC}
   ─────────────────────────────────────
   Project Name:     ${GREEN}$PROJECT_NAME${NC}
+  Docker Slug:      ${GREEN}$PROJECT_SLUG${NC}
   
   ${BOLD}Port Allocation${NC}
   ─────────────────────────────────────
@@ -361,24 +368,18 @@ fi
 print_substep "Replacing port placeholders..."
 if [ "$OS" = "Darwin" ]; then
     # macOS
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_PROJECT_SLUG}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
-        -e "s/{INIT_DB_PORT}/$DB_PORT/g" 2>/dev/null || true
+        -e "s/{INIT_DB_PORT}/$DB_PORT/g" \
+        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" 2>/dev/null || true
 else
     # Linux
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_PROJECT_SLUG}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
-        -e "s/{INIT_DB_PORT}/$DB_PORT/g" 2>/dev/null || true
-fi
-
-# Update deploy.config.json with new project name (skip if MyProject)
-if [ -f "deploy.config.json" ] && [ "$PROJECT_NAME" != "MyProject" ]; then
-    NEW_NAME_LOWER=$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]')
-    sed_inplace "s/myproject-api/${NEW_NAME_LOWER}-api/g" deploy.config.json
-    sed_inplace "s/myproject-frontend/${NEW_NAME_LOWER}-frontend/g" deploy.config.json
-    print_substep "Updated deploy.config.json"
+        -e "s/{INIT_DB_PORT}/$DB_PORT/g" \
+        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" 2>/dev/null || true
 fi
 
 print_success "Port configuration complete"
@@ -387,7 +388,7 @@ print_success "Port configuration complete"
 if [[ "$DO_COMMIT" == "y" ]]; then
     print_step "Committing port configuration..."
     git add . >/dev/null 2>&1
-    git commit -m "chore: configure ports (frontend: $FRONTEND_PORT, api: $API_PORT, db: $DB_PORT)" >/dev/null 2>&1
+    git commit -m "chore: configure project (slug: $PROJECT_SLUG, ports: $FRONTEND_PORT/$API_PORT/$DB_PORT)" >/dev/null 2>&1
     print_success "Port configuration committed"
 fi
 
