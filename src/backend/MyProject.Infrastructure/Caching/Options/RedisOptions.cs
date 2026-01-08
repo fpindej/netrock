@@ -13,15 +13,72 @@ public sealed class RedisOptions : IValidatableObject
     public bool Enabled { get; init; }
 
     /// <summary>
-    /// Gets or sets the Redis connection string.
+    /// Gets or sets the Redis connection string (host:port format).
     /// Required when Enabled is true.
+    /// Example: "localhost:6379" or "redis-server.example.com:6380"
     /// </summary>
     public string ConnectionString { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the Redis authentication password.
+    /// Required for production environments.
+    /// </summary>
+    public string? Password { get; init; }
+
+    /// <summary>
+    /// Gets or sets whether SSL/TLS should be used for the Redis connection.
+    /// Should be true for production, especially cloud-hosted Redis.
+    /// </summary>
+    public bool UseSsl { get; init; }
+
+    /// <summary>
+    /// Gets or sets the default Redis database number (0-15).
+    /// </summary>
+    public int DefaultDatabase { get; init; }
+
+    /// <summary>
     /// Gets or sets the instance name prefix for cache keys.
+    /// Helps namespace keys when multiple apps share Redis.
     /// </summary>
     public string InstanceName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the default cache entry expiration.
+    /// Used when no explicit expiration is provided.
+    /// </summary>
+    public TimeSpan DefaultExpiration { get; init; } = TimeSpan.FromMinutes(10);
+
+    /// <summary>
+    /// Gets or sets the connection timeout in milliseconds.
+    /// </summary>
+    public int ConnectTimeoutMs { get; init; } = 5000;
+
+    /// <summary>
+    /// Gets or sets the synchronous operation timeout in milliseconds.
+    /// </summary>
+    public int SyncTimeoutMs { get; init; } = 5000;
+
+    /// <summary>
+    /// Gets or sets the asynchronous operation timeout in milliseconds.
+    /// </summary>
+    public int AsyncTimeoutMs { get; init; } = 5000;
+
+    /// <summary>
+    /// Gets or sets whether to abort connection if initial connect fails.
+    /// Set to false for production to allow retry in background.
+    /// </summary>
+    public bool AbortOnConnectFail { get; init; } = true;
+
+    /// <summary>
+    /// Gets or sets the number of times to retry connection.
+    /// </summary>
+    public int ConnectRetry { get; init; } = 3;
+
+    /// <summary>
+    /// Gets or sets the keepalive interval in seconds.
+    /// Sends periodic pings to keep connection alive.
+    /// </summary>
+    public int KeepAliveSeconds { get; init; } = 60;
 
     /// <summary>
     /// Gets or sets the size limit for in-memory cache (when Redis is disabled).
@@ -36,6 +93,34 @@ public sealed class RedisOptions : IValidatableObject
             yield return new ValidationResult(
                 "ConnectionString is required when Redis is enabled.",
                 [nameof(ConnectionString)]);
+        }
+
+        if (DefaultDatabase is < 0 or > 15)
+        {
+            yield return new ValidationResult(
+                "DefaultDatabase must be between 0 and 15.",
+                [nameof(DefaultDatabase)]);
+        }
+
+        if (ConnectTimeoutMs <= 0)
+        {
+            yield return new ValidationResult(
+                "ConnectTimeoutMs must be greater than 0.",
+                [nameof(ConnectTimeoutMs)]);
+        }
+
+        if (SyncTimeoutMs <= 0)
+        {
+            yield return new ValidationResult(
+                "SyncTimeoutMs must be greater than 0.",
+                [nameof(SyncTimeoutMs)]);
+        }
+
+        if (AsyncTimeoutMs <= 0)
+        {
+            yield return new ValidationResult(
+                "AsyncTimeoutMs must be greater than 0.",
+                [nameof(AsyncTimeoutMs)]);
         }
     }
 }
