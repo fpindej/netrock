@@ -13,7 +13,11 @@ internal class CacheService(IDistributedCache distributedCache) : ICacheService
         return string.IsNullOrEmpty(cachedValue) ? default : JsonSerializer.Deserialize<T>(cachedValue);
     }
 
-    public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
+    public async Task SetAsync<T>(
+        string key,
+        T value,
+        TimeSpan? expiration = null,
+        CancellationToken cancellationToken = default)
     {
         var options = new DistributedCacheEntryOptions
         {
