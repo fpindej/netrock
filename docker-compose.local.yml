@@ -1,14 +1,13 @@
-name: myproject-local
+name: {INIT_PROJECT_SLUG}-local
 
 x-api-environment: &api-environment
   ASPNETCORE_ENVIRONMENT: Development
-  ConnectionStrings__Database: Host=db;Port=5432;Database=myproject;Username=admin;Password=pwd
-  BackgroundJobs__Quartz__Postgres__ConnectionString: Host=db;Port=5432;Database=myproject;Username=admin;Password=pwd
+  ConnectionStrings__Database: Host=db;Port=5432;Database={INIT_PROJECT_SLUG};Username=admin;Password=pwd
   Authentication__Jwt__ExpiresInMinutes: 100
   Authentication__Jwt__RefreshTokenExpiresInDays: 7
 
 x-db-environment: &db-environment
-  POSTGRES_DB: myproject
+  POSTGRES_DB: {INIT_PROJECT_SLUG}
   POSTGRES_USER: admin
   POSTGRES_PASSWORD: pwd
 
@@ -25,46 +24,46 @@ services:
     build:
       context: ./src/backend
       dockerfile: MyProject.WebApi/Dockerfile
-    container_name: myproject-local-api
+    container_name: {INIT_PROJECT_SLUG}-local-api
     environment: *api-environment
     <<: *common-settings
     ports:
-      - "13002:8080"
+      - "{INIT_API_PORT}:8080"
     depends_on:
         - db
 
   db:
     image: postgres:15-alpine
-    container_name: myproject-local-db
+    container_name: {INIT_PROJECT_SLUG}-local-db
     environment: *db-environment
     <<: *common-settings
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
-      - "13004:5432"
+      - "{INIT_DB_PORT}:5432"
 
   frontend:
     build:
       context: ./src/frontend
       dockerfile: Dockerfile.local
-    container_name: myproject-local-frontend
+    container_name: {INIT_PROJECT_SLUG}-local-frontend
     environment: *frontend-environment
     volumes:
       - ./src/frontend:/app
       - frontend_node_modules:/app/node_modules
     ports:
-      - "13000:5173"
+      - "{INIT_FRONTEND_PORT}:5173"
     depends_on:
       - api
     <<: *common-settings
 
 volumes:
   db_data:
-    name: myproject-local-db-data
+    name: {INIT_PROJECT_SLUG}-local-db-data
   frontend_node_modules:
-    name: myproject-local-frontend-node-modules
+    name: {INIT_PROJECT_SLUG}-local-frontend-node-modules
 
 networks:
   application_network:
-    name: myproject-local-network
+    name: {INIT_PROJECT_SLUG}-local-network
     driver: bridge

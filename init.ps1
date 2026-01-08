@@ -180,11 +180,6 @@ function Test-ProjectName {
         return $false
     }
 
-    if ($ProjectName -eq "MyProject") {
-        Write-ErrorMessage "Please choose a different name than 'MyProject'"
-        return $false
-    }
-
     return $true
 }
 
@@ -253,6 +248,13 @@ $FrontendPort = $Port
 $ApiPort = $Port + 2
 $DbPort = $Port + 4
 
+# Convert PascalCase to kebab-case (MyAwesomeApi -> my-awesome-api)
+function ConvertTo-KebabCase {
+    param([string]$Text)
+    ($Text -creplace '([a-z])([A-Z])', '$1-$2').ToLower()
+}
+$ProjectSlug = ConvertTo-KebabCase $Name
+
 # Additional options
 Write-Host ""
 Write-Info "Additional options:"
@@ -271,6 +273,7 @@ Write-Host ""
 Write-Host "  Project Configuration" -ForegroundColor White
 Write-Host "  -------------------------------------"
 Write-Host "  Project Name:     " -NoNewline; Write-Host $Name -ForegroundColor Green
+Write-Host "  Docker Slug:      " -NoNewline; Write-Host $ProjectSlug -ForegroundColor Green
 Write-Host ""
 Write-Host "  Port Allocation" -ForegroundColor White
 Write-Host "  -------------------------------------"
@@ -306,60 +309,17 @@ $OldNameLower = "myproject"
 $NewName = $Name
 $NewNameLower = $Name.ToLower()
 
-# Step 1: Update Docker Ports
+# Step 1: Update Ports (substitute placeholders across all files)
 Write-Step "Updating port configuration..."
-
-$dockerFile = Join-Path $ScriptDir "docker-compose.local.yml"
-if (Test-Path $dockerFile) {
-    $content = Get-Content $dockerFile -Raw
-    $content = $content -replace "13000:5173", "${FrontendPort}:5173"
-    $content = $content -replace "13002:8080", "${ApiPort}:8080"
-    $content = $content -replace "13004:5432", "${DbPort}:5432"
-    Set-FileContent $dockerFile $content
-    Write-SubStep "Updated docker-compose.local.yml"
-}
-
-$appSettingsDev = Join-Path $ScriptDir "src\backend\MyProject.WebApi\appsettings.Development.json"
-if (Test-Path $appSettingsDev) {
-    $content = Get-Content $appSettingsDev -Raw
-    $content = $content -replace "Port=13004", "Port=$DbPort"
-    Set-FileContent $appSettingsDev $content
-    Write-SubStep "Updated appsettings.Development.json"
-}
-
-$httpClientEnv = Join-Path $ScriptDir "src\backend\MyProject.WebApi\http-client.env.json"
-if (Test-Path $httpClientEnv) {
-    $content = Get-Content $httpClientEnv -Raw
-    $content = $content -replace "localhost:13002", "localhost:$ApiPort"
-    Set-FileContent $httpClientEnv $content
-    Write-SubStep "Updated http-client.env.json"
-}
 
 $frontendEnvExample = Join-Path $ScriptDir "src\frontend\.env.example"
 $frontendEnvLocal = Join-Path $ScriptDir "src\frontend\.env.local"
 if (Test-Path $frontendEnvExample) {
     Copy-Item $frontendEnvExample $frontendEnvLocal -Force
-    $content = Get-Content $frontendEnvLocal -Raw
-    $content = $content -replace "localhost:13002", "localhost:$ApiPort"
-    Set-FileContent $frontendEnvLocal $content
-    Write-SubStep "Created frontend .env.local"
+    Write-SubStep "Created frontend .env.local from .env.example"
 }
 
-$deployConfig = Join-Path $ScriptDir "deploy.config.json"
-if (Test-Path $deployConfig) {
-    $content = Get-Content $deployConfig -Raw
-    $content = $content -replace "myproject-api", "$NewNameLower-api"
-    $content = $content -replace "myproject-frontend", "$NewNameLower-frontend"
-    Set-FileContent $deployConfig $content
-    Write-SubStep "Updated deploy.config.json"
-}
-
-Write-Success "Port configuration complete"
-
-# Step 2: Rename Project
-Write-Step "Renaming project..."
-
-Write-SubStep "Replacing text content..."
+Write-SubStep "Replacing port placeholders..."
 $files = Get-ChildItem -Path $ScriptDir -Recurse -File | Where-Object {
     $_.FullName -notmatch "[\\/]\.git[\\/]" -and
     $_.FullName -notmatch "[\\/]bin[\\/]" -and
@@ -375,9 +335,11 @@ foreach ($file in $files) {
         $content = [System.IO.File]::ReadAllText($file.FullName)
         $originalContent = $content
 
-        if ($content -match $OldName -or $content -match $OldNameLower) {
-            $content = $content -replace $OldName, $NewName
-            $content = $content -replace $OldNameLower, $NewNameLower
+        if ($content -match "\{INIT_FRONTEND_PORT\}|\{INIT_API_PORT\}|\{INIT_DB_PORT\}|\{INIT_PROJECT_SLUG\}") {
+            $content = $content -replace "\{INIT_FRONTEND_PORT\}", $FrontendPort
+            $content = $content -replace "\{INIT_API_PORT\}", $ApiPort
+            $content = $content -replace "\{INIT_DB_PORT\}", $DbPort
+            $content = $content -replace "\{INIT_PROJECT_SLUG\}", $ProjectSlug
 
             if ($content -ne $originalContent) {
                 Set-FileContent $file.FullName $content
@@ -385,45 +347,94 @@ foreach ($file in $files) {
         }
     }
     catch {
-        # Skip files that can't be read (binary, locked, etc.)
+        # Skip files that can't be read
     }
 }
 
-Write-SubStep "Renaming files and directories..."
-$items = Get-ChildItem -Path $ScriptDir -Recurse | Where-Object {
-    $_.FullName -notmatch "[\\/]\.git[\\/]" -and
-    $_.FullName -notmatch "[\\/]bin[\\/]" -and
-    $_.FullName -notmatch "[\\/]obj[\\/]" -and
-    $_.FullName -notmatch "[\\/]node_modules[\\/]" -and
-    $_.Name -ne "init.ps1" -and
-    $_.Name -ne "init.sh" -and
-    ($_.Name -match $OldName -or $_.Name -match $OldNameLower)
-} | Sort-Object { $_.FullName.Length } -Descending
+Write-Success "Port configuration complete"
 
-foreach ($item in $items) {
-    $newItemName = $item.Name -replace $OldName, $NewName
-    $newItemName = $newItemName -replace $OldNameLower, $NewNameLower
-
-    if ($newItemName -ne $item.Name) {
-        try {
-            Rename-Item -Path $item.FullName -NewName $newItemName -ErrorAction Stop
-        }
-        catch {
-            # Item may have already been moved as part of parent directory rename
-        }
-    }
-}
-
-Write-Success "Project renamed to $NewName"
-
-# Step 3: Git Commit (Rename)
+# Commit port configuration changes
 if ($DoCommit) {
-    Write-Step "Committing rename changes..."
+    Write-Step "Committing port configuration..."
     $ErrorActionPreference = "Continue"
     $null = git add . 2>&1
-    $null = git commit -m "chore: rename project from $OldName to $NewName" 2>&1
+    $null = git commit -m "chore: configure project (slug: $ProjectSlug, ports: $FrontendPort/$ApiPort/$DbPort)" 2>&1
     $ErrorActionPreference = "Stop"
-    Write-Success "Changes committed"
+    Write-Success "Port configuration committed"
+}
+
+# Step 2: Rename Project (skip if name is already MyProject)
+if ($NewName -eq "MyProject") {
+    Write-Step "Skipping rename (project name is already MyProject)"
+} else {
+    Write-Step "Renaming project..."
+
+    Write-SubStep "Replacing text content..."
+    $files = Get-ChildItem -Path $ScriptDir -Recurse -File | Where-Object {
+        $_.FullName -notmatch "[\\/]\.git[\\/]" -and
+        $_.FullName -notmatch "[\\/]bin[\\/]" -and
+        $_.FullName -notmatch "[\\/]obj[\\/]" -and
+        $_.FullName -notmatch "[\\/]node_modules[\\/]" -and
+        $_.Name -ne "init.ps1" -and
+        $_.Name -ne "init.sh" -and
+        $_.Extension -notmatch "\.(png|jpg|jpeg|ico|gif|woff|woff2|ttf|eot)$"
+    }
+
+    foreach ($file in $files) {
+        try {
+            $content = [System.IO.File]::ReadAllText($file.FullName)
+            $originalContent = $content
+
+            if ($content -match $OldName -or $content -match $OldNameLower) {
+                $content = $content -replace $OldName, $NewName
+                $content = $content -replace $OldNameLower, $NewNameLower
+
+                if ($content -ne $originalContent) {
+                    Set-FileContent $file.FullName $content
+                }
+            }
+        }
+        catch {
+            # Skip files that can't be read (binary, locked, etc.)
+        }
+    }
+
+    Write-SubStep "Renaming files and directories..."
+    $items = Get-ChildItem -Path $ScriptDir -Recurse | Where-Object {
+        $_.FullName -notmatch "[\\/]\.git[\\/]" -and
+        $_.FullName -notmatch "[\\/]bin[\\/]" -and
+        $_.FullName -notmatch "[\\/]obj[\\/]" -and
+        $_.FullName -notmatch "[\\/]node_modules[\\/]" -and
+        $_.Name -ne "init.ps1" -and
+        $_.Name -ne "init.sh" -and
+        ($_.Name -match $OldName -or $_.Name -match $OldNameLower)
+    } | Sort-Object { $_.FullName.Length } -Descending
+
+    foreach ($item in $items) {
+        $newItemName = $item.Name -replace $OldName, $NewName
+        $newItemName = $newItemName -replace $OldNameLower, $NewNameLower
+
+        if ($newItemName -ne $item.Name) {
+            try {
+                Rename-Item -Path $item.FullName -NewName $newItemName -ErrorAction Stop
+            }
+            catch {
+                # Item may have already been moved as part of parent directory rename
+            }
+        }
+    }
+
+    Write-Success "Project renamed to $NewName"
+
+    # Step 3: Git Commit (Rename)
+    if ($DoCommit) {
+        Write-Step "Committing rename changes..."
+        $ErrorActionPreference = "Continue"
+        $null = git add . 2>&1
+        $null = git commit -m "chore: rename project from $OldName to $NewName" 2>&1
+        $ErrorActionPreference = "Stop"
+        Write-Success "Changes committed"
+    }
 }
 
 # Step 4: Create Migration

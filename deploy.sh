@@ -169,14 +169,15 @@ create_default_config() {
     if [ -d "src/backend" ]; then
         detected_name=$(find src/backend -maxdepth 1 -type d -name "*.WebApi" 2>/dev/null | head -1 | xargs basename 2>/dev/null | sed 's/.WebApi//' || echo "")
     fi
-    detected_name=${detected_name:-"myproject"}
-    local detected_lower=$(echo "$detected_name" | tr '[:upper:]' '[:lower:]')
+    detected_name=${detected_name:-"MyProject"}
+    # Convert PascalCase to kebab-case
+    local detected_slug=$(echo "$detected_name" | sed 's/\([a-z]\)\([A-Z]\)/\1-\2/g' | tr '[:upper:]' '[:lower:]')
     
     cat > "$CONFIG_FILE" << EOF
 {
   "registry": "myusername",
-  "backendImage": "${detected_lower}-api",
-  "frontendImage": "${detected_lower}-frontend",
+  "backendImage": "${detected_slug}-api",
+  "frontendImage": "${detected_slug}-frontend",
   "backendVersion": "0.1.0",
   "frontendVersion": "0.1.0",
   "platform": "linux/amd64"
@@ -232,10 +233,38 @@ configure_registry() {
         REGISTRY=$(prompt_value "Docker registry (e.g., myusername, ghcr.io/myuser)" "$REGISTRY")
         BACKEND_IMAGE=$(prompt_value "Backend image name" "$BACKEND_IMAGE")
         FRONTEND_IMAGE=$(prompt_value "Frontend image name" "$FRONTEND_IMAGE")
-        PLATFORM=$(prompt_value "Target platform" "$PLATFORM")
+        PLATFORM=$(prompt_platform "$PLATFORM")
         save_config
         print_success "Configuration saved"
     fi
+}
+
+prompt_platform() {
+    local current=$1
+    echo "" >&2
+    echo -e "${BOLD}Target platform:${NC}" >&2
+    echo "" >&2
+    echo "  [1] linux/amd64    - Intel/AMD servers, most cloud VMs, WSL2" >&2
+    echo "  [2] linux/arm64    - Apple Silicon (M1/M2/M3), AWS Graviton" >&2
+    echo "  [3] linux/arm64/v8 - Raspberry Pi 4/5 (64-bit)" >&2
+    echo "  [4] linux/arm/v7   - Raspberry Pi 2/3, older ARM devices (32-bit)" >&2
+    echo "  [5] Custom         - Enter manually" >&2
+    echo "" >&2
+    echo -e "  ${DIM}Current: $current${NC}" >&2
+    echo "" >&2
+    read -p "$(echo -e "${BOLD}Choose [1-5]${NC} (default: keep current): ")" choice
+    
+    case ${choice} in
+        1) echo "linux/amd64" ;;
+        2) echo "linux/arm64" ;;
+        3) echo "linux/arm64/v8" ;;
+        4) echo "linux/arm/v7" ;;
+        5) 
+            read -p "$(echo -e "${BOLD}Enter platform${NC}: ")" custom_platform
+            echo "${custom_platform:-$current}"
+            ;;
+        *) echo "$current" ;;
+    esac
 }
 
 prompt_bump_type() {

@@ -165,11 +165,6 @@ validate_project_name() {
         return 1
     fi
     
-    if [[ "$name" == "MyProject" ]]; then
-        print_error "Please choose a different name than 'MyProject'"
-        return 1
-    fi
-    
     return 0
 }
 
@@ -286,6 +281,12 @@ FRONTEND_PORT=$BASE_PORT
 API_PORT=$((BASE_PORT + 2))
 DB_PORT=$((BASE_PORT + 4))
 
+# Convert PascalCase to kebab-case (MyAwesomeApi -> my-awesome-api)
+to_kebab_case() {
+    echo "$1" | sed 's/\([a-z]\)\([A-Z]\)/\1-\2/g' | tr '[:upper:]' '[:lower:]'
+}
+PROJECT_SLUG=$(to_kebab_case "$PROJECT_NAME")
+
 # Additional options (with sensible defaults)
 echo ""
 print_info "Additional options:"
@@ -315,6 +316,7 @@ echo -e "
   ${BOLD}Project Configuration${NC}
   ─────────────────────────────────────
   Project Name:     ${GREEN}$PROJECT_NAME${NC}
+  Docker Slug:      ${GREEN}$PROJECT_SLUG${NC}
   
   ${BOLD}Port Allocation${NC}
   ─────────────────────────────────────
@@ -352,101 +354,101 @@ sed_inplace() {
     fi
 }
 
-# Step 1: Update Docker Ports
+# Files to exclude from content replacement (binary files, init scripts, git)
+EXCLUDE_PATTERNS="--exclude-dir=.git --exclude-dir=bin --exclude-dir=obj --exclude-dir=node_modules --exclude=*.png --exclude=*.jpg --exclude=*.ico --exclude=*.woff --exclude=*.woff2 --exclude=init.sh --exclude=init.ps1"
+
+# Step 1: Update Ports (substitute placeholders across all files)
 print_step "Updating port configuration..."
-
-if [ -f "docker-compose.local.yml" ]; then
-    sed_inplace "s/13000:5173/$FRONTEND_PORT:5173/g" docker-compose.local.yml
-    sed_inplace "s/13002:8080/$API_PORT:8080/g" docker-compose.local.yml
-    sed_inplace "s/13004:5432/$DB_PORT:5432/g" docker-compose.local.yml
-    print_substep "Updated docker-compose.local.yml"
-fi
-
-if [ -f "src/backend/MyProject.WebApi/appsettings.Development.json" ]; then
-    sed_inplace "s/Port=13004/Port=$DB_PORT/g" src/backend/MyProject.WebApi/appsettings.Development.json
-    print_substep "Updated appsettings.Development.json"
-fi
-
-if [ -f "src/backend/MyProject.WebApi/http-client.env.json" ]; then
-    sed_inplace "s/localhost:13002/localhost:$API_PORT/g" src/backend/MyProject.WebApi/http-client.env.json
-    print_substep "Updated http-client.env.json"
-fi
 
 if [ -f "src/frontend/.env.example" ]; then
     cp src/frontend/.env.example src/frontend/.env.local
-    sed_inplace "s/localhost:13002/localhost:$API_PORT/g" src/frontend/.env.local
-    print_substep "Created frontend .env.local"
+    print_substep "Created frontend .env.local from .env.example"
 fi
 
-# Update deploy.config.json with new project name
-if [ -f "deploy.config.json" ]; then
-    NEW_NAME_LOWER=$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]')
-    sed_inplace "s/myproject-api/${NEW_NAME_LOWER}-api/g" deploy.config.json
-    sed_inplace "s/myproject-frontend/${NEW_NAME_LOWER}-frontend/g" deploy.config.json
-    print_substep "Updated deploy.config.json"
+print_substep "Replacing port placeholders..."
+if [ "$OS" = "Darwin" ]; then
+    # macOS
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_PROJECT_SLUG}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
+        -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
+        -e "s/{INIT_API_PORT}/$API_PORT/g" \
+        -e "s/{INIT_DB_PORT}/$DB_PORT/g" \
+        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" 2>/dev/null || true
+else
+    # Linux
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_PROJECT_SLUG}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
+        -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
+        -e "s/{INIT_API_PORT}/$API_PORT/g" \
+        -e "s/{INIT_DB_PORT}/$DB_PORT/g" \
+        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" 2>/dev/null || true
 fi
 
 print_success "Port configuration complete"
 
-# Step 2: Rename Project
-print_step "Renaming project..."
+# Commit port configuration changes
+if [[ "$DO_COMMIT" == "y" ]]; then
+    print_step "Committing port configuration..."
+    git add . >/dev/null 2>&1
+    git commit -m "chore: configure project (slug: $PROJECT_SLUG, ports: $FRONTEND_PORT/$API_PORT/$DB_PORT)" >/dev/null 2>&1
+    print_success "Port configuration committed"
+fi
 
+# Project name variables (needed throughout the script)
 OLD_NAME="MyProject"
 OLD_NAME_LOWER="myproject"
 NEW_NAME="$PROJECT_NAME"
 NEW_NAME_LOWER=$(echo "$NEW_NAME" | tr '[:upper:]' '[:lower:]')
 
-# Files to exclude from content replacement (binary files, init scripts, git)
-EXCLUDE_PATTERNS="--exclude-dir=.git --exclude-dir=bin --exclude-dir=obj --exclude-dir=node_modules --exclude=*.png --exclude=*.jpg --exclude=*.ico --exclude=*.woff --exclude=*.woff2 --exclude=init.sh --exclude=init.ps1"
-
-# Replace text content in files
-print_substep "Replacing text content..."
-if [ "$OS" = "Darwin" ]; then
-    # macOS
-    grep -rIl --null "$OLD_NAME" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' "s/$OLD_NAME/$NEW_NAME/g" 2>/dev/null || true
-    grep -rIl --null "$OLD_NAME_LOWER" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' "s/$OLD_NAME_LOWER/$NEW_NAME_LOWER/g" 2>/dev/null || true
+# Step 2: Rename Project (skip if name is already MyProject)
+if [[ "$PROJECT_NAME" == "MyProject" ]]; then
+    print_step "Skipping rename (project name is already MyProject)"
 else
-    # Linux
-    grep -rIl --null "$OLD_NAME" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i "s/$OLD_NAME/$NEW_NAME/g" 2>/dev/null || true
-    grep -rIl --null "$OLD_NAME_LOWER" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i "s/$OLD_NAME_LOWER/$NEW_NAME_LOWER/g" 2>/dev/null || true
-fi
+    print_step "Renaming project..."
 
-# Rename files and directories (deepest first)
-print_substep "Renaming files and directories..."
-find . -depth -name "*$OLD_NAME*" \
-    -not -path "./.git/*" \
-    -not -path "./bin/*" \
-    -not -path "./obj/*" \
-    -not -path "./node_modules/*" \
-    -not -name "init.sh" \
-    -not -name "init.ps1" \
-    2>/dev/null | while IFS= read -r path; do
-    dir=$(dirname "$path")
-    filename=$(basename "$path")
-    new_filename=$(echo "$filename" | sed "s/$OLD_NAME/$NEW_NAME/g")
-    mv "$path" "$dir/$new_filename" 2>/dev/null || true
-done
+    print_substep "Replacing text content..."
+    if [ "$OS" = "Darwin" ]; then
+        grep -rIl --null "$OLD_NAME" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' "s/$OLD_NAME/$NEW_NAME/g" 2>/dev/null || true
+        grep -rIl --null "$OLD_NAME_LOWER" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' "s/$OLD_NAME_LOWER/$NEW_NAME_LOWER/g" 2>/dev/null || true
+    else
+        grep -rIl --null "$OLD_NAME" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i "s/$OLD_NAME/$NEW_NAME/g" 2>/dev/null || true
+        grep -rIl --null "$OLD_NAME_LOWER" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i "s/$OLD_NAME_LOWER/$NEW_NAME_LOWER/g" 2>/dev/null || true
+    fi
 
-find . -depth -name "*$OLD_NAME_LOWER*" \
-    -not -path "./.git/*" \
-    -not -path "./bin/*" \
-    -not -path "./obj/*" \
-    -not -path "./node_modules/*" \
-    2>/dev/null | while IFS= read -r path; do
-    dir=$(dirname "$path")
-    filename=$(basename "$path")
-    new_filename=$(echo "$filename" | sed "s/$OLD_NAME_LOWER/$NEW_NAME_LOWER/g")
-    mv "$path" "$dir/$new_filename" 2>/dev/null || true
-done
+    print_substep "Renaming files and directories..."
+    find . -depth -name "*$OLD_NAME*" \
+        -not -path "./.git/*" \
+        -not -path "./bin/*" \
+        -not -path "./obj/*" \
+        -not -path "./node_modules/*" \
+        -not -name "init.sh" \
+        -not -name "init.ps1" \
+        2>/dev/null | while IFS= read -r path; do
+        dir=$(dirname "$path")
+        filename=$(basename "$path")
+        new_filename=$(echo "$filename" | sed "s/$OLD_NAME/$NEW_NAME/g")
+        mv "$path" "$dir/$new_filename" 2>/dev/null || true
+    done
 
-print_success "Project renamed to $NEW_NAME"
+    find . -depth -name "*$OLD_NAME_LOWER*" \
+        -not -path "./.git/*" \
+        -not -path "./bin/*" \
+        -not -path "./obj/*" \
+        -not -path "./node_modules/*" \
+        2>/dev/null | while IFS= read -r path; do
+        dir=$(dirname "$path")
+        filename=$(basename "$path")
+        new_filename=$(echo "$filename" | sed "s/$OLD_NAME_LOWER/$NEW_NAME_LOWER/g")
+        mv "$path" "$dir/$new_filename" 2>/dev/null || true
+    done
 
-# Step 3: Git Commit (Rename)
-if [[ "$DO_COMMIT" == "y" ]]; then
-    print_step "Committing rename changes..."
-    git add . >/dev/null 2>&1
-    git commit -m "chore: rename project from $OLD_NAME to $NEW_NAME" >/dev/null 2>&1
-    print_success "Changes committed"
+    print_success "Project renamed to $NEW_NAME"
+
+    # Step 3: Git Commit (Rename)
+    if [[ "$DO_COMMIT" == "y" ]]; then
+        print_step "Committing rename changes..."
+        git add . >/dev/null 2>&1
+        git commit -m "chore: rename project from $OLD_NAME to $NEW_NAME" >/dev/null 2>&1
+        print_success "Changes committed"
+    fi
 fi
 
 # Step 4: Create Migration
