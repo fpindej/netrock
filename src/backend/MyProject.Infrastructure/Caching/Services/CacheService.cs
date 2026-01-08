@@ -1,14 +1,18 @@
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 using MyProject.Application.Caching;
+using MyProject.Infrastructure.Caching.Options;
 
 namespace MyProject.Infrastructure.Caching.Services;
 
-internal class CacheService(IDistributedCache distributedCache) : ICacheService
+internal class CacheService(
+    IDistributedCache distributedCache,
+    IOptions<RedisOptions> redisOptions) : ICacheService
 {
-    private static readonly DistributedCacheEntryOptions DefaultOptions = new()
+    private readonly DistributedCacheEntryOptions _defaultOptions = new()
     {
-        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+        AbsoluteExpirationRelativeToNow = redisOptions.Value.DefaultExpiration
     };
 
     public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
@@ -54,11 +58,11 @@ internal class CacheService(IDistributedCache distributedCache) : ICacheService
         await distributedCache.RemoveAsync(key, cancellationToken);
     }
 
-    private static DistributedCacheEntryOptions ToDistributedOptions(CacheEntryOptions? options)
+    private DistributedCacheEntryOptions ToDistributedOptions(CacheEntryOptions? options)
     {
         if (options is null)
         {
-            return DefaultOptions;
+            return _defaultOptions;
         }
 
         return new DistributedCacheEntryOptions
