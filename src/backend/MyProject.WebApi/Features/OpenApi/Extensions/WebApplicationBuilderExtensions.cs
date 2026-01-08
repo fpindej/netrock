@@ -10,7 +10,6 @@ internal static class WebApplicationBuilderExtensions
         builder.Services.AddOpenApi("v1", opt =>
         {
             opt.AddDocumentTransformer<ProjectDocumentTransformer>();
-            opt.AddDocumentTransformer<CookieAuthDocumentTransformer>();
             opt.AddSchemaTransformer<EnumSchemaTransformer>();
             opt.AddSchemaTransformer<NumericSchemaTransformer>(); });
 
