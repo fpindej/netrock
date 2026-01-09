@@ -8,11 +8,11 @@ namespace MyProject.Infrastructure.Caching.Services;
 
 internal class CacheService(
     IDistributedCache distributedCache,
-    IOptions<RedisOptions> redisOptions) : ICacheService
+    IOptions<CachingOptions> cachingOptions) : ICacheService
 {
     private readonly DistributedCacheEntryOptions _defaultOptions = new()
     {
-        AbsoluteExpirationRelativeToNow = redisOptions.Value.DefaultExpiration
+        AbsoluteExpirationRelativeToNow = cachingOptions.Value.DefaultExpiration
     };
 
     public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)

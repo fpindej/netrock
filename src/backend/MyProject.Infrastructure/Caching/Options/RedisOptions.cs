@@ -2,10 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MyProject.Infrastructure.Caching.Options;
 
+/// <summary>
+/// Configuration options for Redis distributed cache.
+/// Validated only when Enabled is true.
+/// </summary>
 public sealed class RedisOptions : IValidatableObject
 {
-    public const string SectionName = "Redis";
-
     /// <summary>
     /// Gets or sets a value indicating whether Redis caching is enabled.
     /// When false, falls back to in-memory distributed cache.
@@ -43,12 +45,6 @@ public sealed class RedisOptions : IValidatableObject
     public string InstanceName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the default cache entry expiration.
-    /// Used when no explicit expiration is provided.
-    /// </summary>
-    public TimeSpan DefaultExpiration { get; init; } = TimeSpan.FromMinutes(10);
-
-    /// <summary>
     /// Gets or sets the connection timeout in milliseconds.
     /// </summary>
     public int ConnectTimeoutMs { get; init; } = 5000;
@@ -81,14 +77,11 @@ public sealed class RedisOptions : IValidatableObject
     public int KeepAliveSeconds { get; init; } = 60;
 
     /// <summary>
-    /// Gets or sets the size limit for in-memory cache (when Redis is disabled).
-    /// Set to null for no limit (not recommended for production).
+    /// Validates Redis options. Only called when Redis is enabled.
     /// </summary>
-    public int? InMemorySizeLimit { get; init; } = 1024;
-
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (Enabled && string.IsNullOrWhiteSpace(ConnectionString))
+        if (string.IsNullOrWhiteSpace(ConnectionString))
         {
             yield return new ValidationResult(
                 "ConnectionString is required when Redis is enabled.",
@@ -121,6 +114,20 @@ public sealed class RedisOptions : IValidatableObject
             yield return new ValidationResult(
                 "AsyncTimeoutMs must be greater than 0.",
                 [nameof(AsyncTimeoutMs)]);
+        }
+
+        if (ConnectRetry < 0)
+        {
+            yield return new ValidationResult(
+                "ConnectRetry must be non-negative.",
+                [nameof(ConnectRetry)]);
+        }
+
+        if (KeepAliveSeconds <= 0)
+        {
+            yield return new ValidationResult(
+                "KeepAliveSeconds must be greater than 0.",
+                [nameof(KeepAliveSeconds)]);
         }
     }
 }

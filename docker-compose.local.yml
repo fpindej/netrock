@@ -3,13 +3,13 @@ name: {INIT_PROJECT_SLUG}-local
 x-api-environment: &api-environment
   ASPNETCORE_ENVIRONMENT: Development
   ConnectionStrings__Database: Host=db;Port=5432;Database={INIT_PROJECT_SLUG};Username=admin;Password=pwd
-  Redis__Enabled: true
-  Redis__ConnectionString: redis:6379
-  Redis__Password: redis-dev-password
-  Redis__UseSsl: false
-  Redis__DefaultDatabase: 0
-  Redis__InstanceName: "{INIT_PROJECT_SLUG}:"
-  Redis__AbortOnConnectFail: false
+  Caching__Redis__Enabled: true
+  Caching__Redis__ConnectionString: redis:6379
+  Caching__Redis__Password: redis-dev-password
+  Caching__Redis__UseSsl: false
+  Caching__Redis__DefaultDatabase: 0
+  Caching__Redis__InstanceName: "{INIT_PROJECT_SLUG}:"
+  Caching__Redis__AbortOnConnectFail: false
   Authentication__Jwt__ExpiresInMinutes: 100
   Authentication__Jwt__RefreshTokenExpiresInDays: 7
 

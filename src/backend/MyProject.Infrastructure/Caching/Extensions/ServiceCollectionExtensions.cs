@@ -11,28 +11,31 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddCaching(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddOptions<RedisOptions>()
-            .BindConfiguration(RedisOptions.SectionName)
+        services.AddOptions<CachingOptions>()
+            .BindConfiguration(CachingOptions.SectionName)
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        var redisOptions = configuration.GetSection(RedisOptions.SectionName).Get<RedisOptions>();
+        var cachingOptions = configuration.GetSection(CachingOptions.SectionName).Get<CachingOptions>();
 
-        if (redisOptions?.Enabled is true)
+        if (cachingOptions?.Redis.Enabled is true)
         {
-            var configurationOptions = BuildConfigurationOptions(redisOptions);
+            var configurationOptions = BuildConfigurationOptions(cachingOptions.Redis);
 
             services.AddStackExchangeRedisCache(options =>
             {
                 options.ConfigurationOptions = configurationOptions;
-                options.InstanceName = redisOptions.InstanceName;
+                options.InstanceName = cachingOptions.Redis.InstanceName;
             });
         }
         else
         {
+            var inMemoryOptions = cachingOptions?.InMemory ?? new InMemoryOptions();
             services.AddDistributedMemoryCache(options =>
             {
-                options.SizeLimit = redisOptions?.InMemorySizeLimit;
+                options.SizeLimit = inMemoryOptions.SizeLimit;
+                options.ExpirationScanFrequency = inMemoryOptions.ExpirationScanFrequency;
+                options.CompactionPercentage = inMemoryOptions.CompactionPercentage;
             });
         }
 
