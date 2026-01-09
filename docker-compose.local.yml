@@ -26,9 +26,6 @@ x-common-settings: &common-settings
   networks:
     - application_network
 
-x-redis-environment: &redis-environment
-  REDIS_PASSWORD: redis-dev-password
-
 services:
   api:
     build:
@@ -46,7 +43,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: {INIT_PROJECT_SLUG}-local-redis
-    environment: *redis-environment
     <<: *common-settings
     ports:
       - "{INIT_REDIS_PORT}:6379"
