@@ -12,6 +12,7 @@ x-api-environment: &api-environment
   Caching__Redis__AbortOnConnectFail: false
   Authentication__Jwt__ExpiresInMinutes: 100
   Authentication__Jwt__RefreshTokenExpiresInDays: 7
+  Serilog__Seq__ServerUrl: http://seq:80
 
 x-db-environment: &db-environment
   POSTGRES_DB: {INIT_PROJECT_SLUG}
@@ -39,6 +40,19 @@ services:
     depends_on:
       - db
       - redis
+      - seq
+
+  seq:
+    image: datalust/seq:latest
+    container_name: {INIT_PROJECT_SLUG}-local-seq
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_NOAUTHENTICATION=true
+    ports:
+      - "{INIT_SEQ_PORT}:80"
+    <<: *common-settings
+    volumes:
+      - seq_data:/data
 
   redis:
     image: redis:7-alpine
@@ -75,11 +89,15 @@ services:
       - api
     <<: *common-settings
 
+    
+
 volumes:
   db_data:
     name: {INIT_PROJECT_SLUG}-local-db-data
   redis_data:
     name: {INIT_PROJECT_SLUG}-local-redis-data
+  seq_data:
+    name: {INIT_PROJECT_SLUG}-local-seq-data
   frontend_node_modules:
     name: {INIT_PROJECT_SLUG}-local-frontend-node-modules
 

@@ -316,6 +316,7 @@ chmod +x init.sh
 | Web API | `BasePort + 2` | 13002 |
 | PostgreSQL | `BasePort + 4` | 13004 |
 | Redis | `BasePort + 6` | 13006 |
+| Seq | `BasePort + 8` | 13008 |
 
 ### Files Modified by Init Script
 
