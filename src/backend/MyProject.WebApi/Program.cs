@@ -118,8 +118,11 @@ try
     Log.Debug("Setting UseMiddleware => ExceptionHandlingMiddleware");
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-    Log.Debug("Setting UseHttpsRedirection");
-    app.UseHttpsRedirection();
+    if (!app.Environment.IsDevelopment())
+    {
+        Log.Debug("Setting UseHttpsRedirection");
+        app.UseHttpsRedirection();
+    }
 
     Log.Debug("Setting UseRateLimiter");
     app.UseRateLimiter();
