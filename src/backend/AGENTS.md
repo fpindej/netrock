@@ -552,6 +552,106 @@ public static class QueryableExtensions
 public static IQueryable<T> ConditionalWhere<T>(this IQueryable<T> query, ...) => ...
 ```
 
+## Enum Handling
+
+Enums are **always strings** across the entire stack — in JSON responses, in the OpenAPI spec, in the database, and in generated TypeScript types. Never serialize enums as integers.
+
+### Declaration
+
+Define enums in the **Domain** layer alongside the entity that uses them:
+
+```csharp
+// Domain/Entities/OrderStatus.cs
+public enum OrderStatus
+{
+    Pending,
+    Processing,
+    Shipped,
+    Delivered,
+    Cancelled
+}
+```
+
+Rules:
+- **PascalCase** member names (C# convention) — these become the string values everywhere
+- Place in `Domain/Entities/` next to the entity, or in `Domain/Enums/` if shared across entities
+- Keep enums small and focused — if an enum grows beyond ~10 members, reconsider the modeling
+
+### Runtime JSON Serialization
+
+`JsonStringEnumConverter` is registered globally in `Program.cs` via `AddJsonOptions`:
+
+```csharp
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+```
+
+This ensures all API responses serialize enums as `"Shipped"` not `2`. This is non-negotiable — never remove this converter.
+
+### OpenAPI Spec
+
+`EnumSchemaTransformer` handles enum schemas in the OAS output. It does three things:
+
+1. Sets `type: string` (not `integer`)
+2. **Lists every enum member** in the `enum` array — so consumers see all valid values
+3. **Handles nullable enums** (`MyEnum?`) by preserving the null flag → `type: [string, null]`
+
+The transformer uses `Nullable.GetUnderlyingType()` to unwrap nullable enums, so both `OrderStatus` and `OrderStatus?` properties produce correct schemas.
+
+**OAS output for a non-nullable enum:**
+```yaml
+Status:
+  type: string
+  enum: [Pending, Processing, Shipped, Delivered, Cancelled]
+```
+
+**OAS output for a nullable enum:**
+```yaml
+Status:
+  type:
+    - string
+    - "null"
+  enum: [Pending, Processing, Shipped, Delivered, Cancelled]
+```
+
+### Generated TypeScript Types
+
+The frontend runs `npm run api:generate` which produces TypeScript types from the OAS. With the above setup:
+
+```typescript
+// Non-nullable enum → union of literal strings
+status: "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
+
+// Nullable enum → union of literal strings + undefined
+status?: "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
+```
+
+**No `unknown`, no numeric values, no type pollution.** If you see `unknown` in the generated types for an enum field, something is wrong with the transformer or annotations.
+
+### EF Core Storage
+
+Store enums as strings in the database using `HasConversion<string>()` in the entity configuration:
+
+```csharp
+builder.Property(e => e.Status).HasConversion<string>();
+```
+
+This creates a `text` column in PostgreSQL (or `varchar` with `.HasMaxLength()`). Never store enums as integers — string storage is self-documenting and survives member reordering.
+
+### Enum Conventions Summary
+
+| Layer | Mechanism | Result |
+|---|---|---|
+| **Domain** | `public enum OrderStatus { ... }` | PascalCase members |
+| **JSON serialization** | `JsonStringEnumConverter` in `Program.cs` | `"Shipped"` not `2` |
+| **OpenAPI spec** | `EnumSchemaTransformer` | `type: string`, all values in `enum` array |
+| **Nullable OpenAPI** | `EnumSchemaTransformer` | `type: [string, null]`, values still listed |
+| **TypeScript types** | `openapi-typescript` generation | `"Shipped" \| "Delivered" \| ...` |
+| **Database** | `HasConversion<string>()` in EF config | `text` column, human-readable |
+
 ## OpenAPI Specification — The API Contract
 
 The OpenAPI spec at `/openapi/v1.json` is **the single source of truth** for the entire frontend. Every controller action, every DTO property, every status code directly generates the TypeScript types the frontend consumes via `openapi-typescript`. A sloppy spec means a sloppy frontend. Treat the OAS output as a first-class deliverable.
@@ -562,7 +662,7 @@ The OpenAPI spec at `/openapi/v1.json` is **the single source of truth** for the
 |---|---|---|
 | Spec generation | `AddOpenApiSpecification()` | Registers OAS v1 with transformers |
 | Document transformer | `ProjectDocumentTransformer` | Sets API title, version, auth description |
-| Enum transformer | `EnumSchemaTransformer` | Serializes enums as `string` (not `int`) |
+| Enum transformer | `EnumSchemaTransformer` | String enums with all members listed; handles nullable enums |
 | Numeric transformer | `NumericSchemaTransformer` | Ensures numeric types aren't serialized as strings |
 | Scalar UI | `/scalar/v1` (dev only) | Interactive API documentation |
 
@@ -655,7 +755,7 @@ Before adding or modifying any endpoint, verify:
 - [ ] Data annotations (`[MaxLength]`, `[Range]`, etc.) on request DTOs for spec constraints
 - [ ] `CancellationToken` as the last parameter on all async endpoints
 - [ ] Route uses lowercase (`[Route("api/[controller]")]` + `LowercaseUrls = true`)
-- [ ] Enums serialize as strings (handled by `EnumSchemaTransformer`, but verify in Scalar)
+- [ ] Enums serialize as strings with all members listed (handled by `JsonStringEnumConverter` + `EnumSchemaTransformer` — verify in Scalar)
 
 ## Adding a New Feature — Checklist
 
