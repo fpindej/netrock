@@ -17,20 +17,24 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 {
     /// <summary>
     /// Authenticates a user and returns JWT tokens.
-    /// Tokens are returned both in the response body (for mobile/API clients) and as HttpOnly cookies (for web clients).
+    /// Tokens are always returned in the response body. When useCookies is true (default), tokens are also set as HttpOnly cookies.
     /// </summary>
     /// <param name="request">The login credentials</param>
+    /// <param name="useCookies">When true (default), sets tokens in HttpOnly cookies for web clients. Set to false for mobile/API clients.</param>
     /// <returns>Authentication response containing access and refresh tokens</returns>
-    /// <response code="200">Returns authentication tokens (also set in HttpOnly cookies)</response>
+    /// <response code="200">Returns authentication tokens (optionally also set in HttpOnly cookies)</response>
     /// <response code="400">If the credentials are improperly formatted</response>
     /// <response code="401">If the credentials are invalid</response>
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<AuthenticationResponse>> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<AuthenticationResponse>> Login(
+        [FromBody] LoginRequest request,
+        [FromQuery] bool useCookies = true,
+        CancellationToken cancellationToken = default)
     {
-        var result = await authenticationService.Login(request.Username, request.Password, cancellationToken);
+        var result = await authenticationService.Login(request.Username, request.Password, useCookies, cancellationToken);
 
         if (!result.IsSuccess)
         {
@@ -43,16 +47,20 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     /// <summary>
     /// Refreshes the authentication tokens using a refresh token.
     /// For web clients, the refresh token is read from cookies. For mobile/API clients, pass it in the request body.
-    /// Tokens are returned both in the response body and as HttpOnly cookies.
+    /// When useCookies is true (default), new tokens are also set as HttpOnly cookies.
     /// </summary>
     /// <param name="request">Optional request body containing the refresh token (for mobile/API clients)</param>
+    /// <param name="useCookies">When true (default), sets tokens in HttpOnly cookies for web clients. Set to false for mobile/API clients.</param>
     /// <returns>Authentication response containing new access and refresh tokens</returns>
-    /// <response code="200">Returns new authentication tokens (also set in HttpOnly cookies)</response>
+    /// <response code="200">Returns new authentication tokens (optionally also set in HttpOnly cookies)</response>
     /// <response code="401">If the refresh token is invalid, expired, or missing</response>
     [HttpPost("refresh")]
     [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<AuthenticationResponse>> Refresh([FromBody] RefreshRequest? request, CancellationToken cancellationToken)
+    public async Task<ActionResult<AuthenticationResponse>> Refresh(
+        [FromBody] RefreshRequest? request,
+        [FromQuery] bool useCookies = true,
+        CancellationToken cancellationToken = default)
     {
         // Priority 1: Request body (mobile/API clients)
         // Priority 2: Cookie (web clients)
@@ -67,7 +75,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
             return Unauthorized(new ErrorResponse { Message = "Refresh token is missing." });
         }
 
-        var result = await authenticationService.RefreshTokenAsync(refreshToken, cancellationToken);
+        var result = await authenticationService.RefreshTokenAsync(refreshToken, useCookies, cancellationToken);
 
         if (!result.IsSuccess)
         {

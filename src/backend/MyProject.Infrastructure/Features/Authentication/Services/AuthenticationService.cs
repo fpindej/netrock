@@ -25,7 +25,7 @@ internal class AuthenticationService(
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
 
-    public async Task<Result<AuthenticationOutput>> Login(string username, string password, CancellationToken cancellationToken = default)
+    public async Task<Result<AuthenticationOutput>> Login(string username, string password, bool useCookies = true, CancellationToken cancellationToken = default)
     {
         var user = await userManager.FindByNameAsync(username);
 
@@ -58,15 +58,18 @@ internal class AuthenticationService(
         dbContext.RefreshTokens.Add(refreshTokenEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        cookieService.SetSecureCookie(
-            key: CookieNames.AccessToken,
-            value: accessToken,
-            expires: utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes));
+        if (useCookies)
+        {
+            cookieService.SetSecureCookie(
+                key: CookieNames.AccessToken,
+                value: accessToken,
+                expires: utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes));
 
-        cookieService.SetSecureCookie(
-            key: CookieNames.RefreshToken,
-            value: refreshTokenString,
-            expires: utcNow.AddDays(_jwtOptions.RefreshToken.ExpiresInDays));
+            cookieService.SetSecureCookie(
+                key: CookieNames.RefreshToken,
+                value: refreshTokenString,
+                expires: utcNow.AddDays(_jwtOptions.RefreshToken.ExpiresInDays));
+        }
 
         var output = new AuthenticationOutput(
             AccessToken: accessToken,
@@ -120,7 +123,7 @@ internal class AuthenticationService(
         }
     }
 
-    public async Task<Result<AuthenticationOutput>> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
+    public async Task<Result<AuthenticationOutput>> RefreshTokenAsync(string refreshToken, bool useCookies = true, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(refreshToken))
         {
@@ -183,15 +186,18 @@ internal class AuthenticationService(
         dbContext.RefreshTokens.Add(newRefreshTokenEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        cookieService.SetSecureCookie(
-            key: CookieNames.AccessToken,
-            value: newAccessToken,
-            expires: utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes));
+        if (useCookies)
+        {
+            cookieService.SetSecureCookie(
+                key: CookieNames.AccessToken,
+                value: newAccessToken,
+                expires: utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes));
 
-        cookieService.SetSecureCookie(
-            key: CookieNames.RefreshToken,
-            value: newRefreshTokenString,
-            expires: utcNow.AddDays(_jwtOptions.RefreshToken.ExpiresInDays));
+            cookieService.SetSecureCookie(
+                key: CookieNames.RefreshToken,
+                value: newRefreshTokenString,
+                expires: utcNow.AddDays(_jwtOptions.RefreshToken.ExpiresInDays));
+        }
 
         var output = new AuthenticationOutput(
             AccessToken: newAccessToken,
@@ -202,8 +208,11 @@ internal class AuthenticationService(
 
         Result<AuthenticationOutput> Fail(string message)
         {
-            cookieService.DeleteCookie(CookieNames.AccessToken);
-            cookieService.DeleteCookie(CookieNames.RefreshToken);
+            if (useCookies)
+            {
+                cookieService.DeleteCookie(CookieNames.AccessToken);
+                cookieService.DeleteCookie(CookieNames.RefreshToken);
+            }
             return Result<AuthenticationOutput>.Failure(message);
         }
     }
