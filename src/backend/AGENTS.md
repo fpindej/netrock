@@ -67,6 +67,54 @@ src/backend/
     └── Options/                   # CorsOptions, RateLimitingOptions
 ```
 
+## C# Conventions
+
+### Access Modifiers — Minimal Scope
+
+Always use the **most restrictive** access modifier that works:
+
+| Modifier | Use When |
+|---|---|
+| `private` | Only used within the same class (default for fields, helpers) |
+| `protected` | Needed by derived classes (e.g., EF Core parameterless constructors) |
+| `internal` | Used within the same assembly but not exposed outside (service implementations, mappers, EF configs) |
+| `public` | Part of the assembly's public API (interfaces, DTOs, controllers, domain entities) |
+
+Quick reference by layer:
+
+| Item | Modifier | Why |
+|---|---|---|
+| Domain entities | `public` | Referenced by all layers |
+| Application interfaces | `public` | Consumed across assemblies |
+| Application DTOs | `public` | Passed across layer boundaries |
+| Infrastructure services | `internal` | Only exposed via their interface |
+| Infrastructure EF configs | `internal` | Auto-discovered, never referenced directly |
+| WebApi controllers | `public` | ASP.NET Core requires it for routing |
+| WebApi mappers | `internal` | Only used within WebApi assembly |
+| WebApi request/response DTOs | `public` | Serialized by framework |
+
+### Nullable Reference Types
+
+Nullable reference types are **enabled project-wide** (`<Nullable>enable</Nullable>` in `Directory.Build.props`). Be explicit and intentional:
+
+```csharp
+// ✅ Explicit nullability — make intent clear
+public string Email { get; init; } = string.Empty;    // Required — never null
+public string? PhoneNumber { get; init; }              // Optional — may be null
+public Task<TEntity?> GetByIdAsync(Guid id, ...);     // May not exist
+
+// ❌ Wrong — lazy defaults that hide intent
+public string Email { get; init; } = null!;            // Lying to the compiler
+public string Email { get; init; }                     // Warning: uninitialized
+```
+
+Rules:
+- **`string` properties** → initialize with `string.Empty` if required, mark `string?` if optional
+- **Return types** → use `T?` when the value legitimately might not exist (e.g., `GetByIdAsync` returns `TEntity?`)
+- **Parameters** → use `T?` for optional parameters, `T` for required ones
+- **Never use `null!`** (the null-forgiving operator) — it defeats the purpose of NRT. If you need it, the design is wrong.
+- **DTOs**: match nullability to whether the field is required in the API contract — this flows through to the OpenAPI spec and generated TypeScript types
+
 ## Entity Definition
 
 All domain entities extend `BaseEntity`, which provides audit fields and soft delete:
