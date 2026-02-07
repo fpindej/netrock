@@ -28,4 +28,5 @@ Read these files for detailed conventions:
 ### Workflow
 - Conventional Commits, atomic commits after each logical change
 - Pre-commit: `dotnet build` (backend), `npm run format && npm run lint && npm run check` (frontend)
-- Session docs in `docs/sessions/` with Mermaid diagrams at end of each session
+- Session docs in `docs/sessions/` — create when asked, not automatically
+- PRs via `gh pr create` — create when asked, not automatically

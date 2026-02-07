@@ -110,11 +110,13 @@ Never commit code that doesn't compile, has lint errors, or fails type checks.
 
 ### Session Documentation
 
-At the **end of every working session**, generate a documentation file:
+When the user asks to wrap up or create session docs, generate a documentation file:
 
 - **Location**: `docs/sessions/{YYYY-MM-DD}-{topic-slug}.md`
 - **Template**: See [`docs/sessions/README.md`](docs/sessions/README.md) for the required structure
 - **Commit**: As the final commit of the session: `docs: add session notes for {topic}`
+
+Do **not** generate session docs automatically — only when explicitly requested.
 
 #### When to Use Mermaid Diagrams
 
@@ -133,6 +135,16 @@ Keep diagrams focused — one concern per diagram, prefer a few clear diagrams o
 ### Branch Hygiene
 
 Work on the current branch unless instructed otherwise. For new branches: `feat/{name}` or `fix/{description}`.
+
+### Pull Requests
+
+When the user asks to create a PR, use `gh pr create` with:
+
+- **Title**: Conventional Commit format matching the branch scope
+- **Body**: Summary of changes, linked issues if applicable
+- **Base**: `master` (unless instructed otherwise)
+
+Do **not** create PRs automatically — only when explicitly requested.
 
 ---
 

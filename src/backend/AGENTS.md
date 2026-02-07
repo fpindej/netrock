@@ -1,6 +1,6 @@
 # Backend Conventions (.NET 10 / C# 13)
 
-> Follow the **Agent Workflow** in the root [`AGENTS.md`](../../AGENTS.md) — commit atomically, run `dotnet build` before each commit, and write session docs at the end of each session.
+> Follow the **Agent Workflow** in the root [`AGENTS.md`](../../AGENTS.md) — commit atomically, run `dotnet build` before each commit, and write session docs when asked.
 
 ## Project Structure
 
