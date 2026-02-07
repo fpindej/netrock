@@ -552,9 +552,110 @@ public static class QueryableExtensions
 public static IQueryable<T> ConditionalWhere<T>(this IQueryable<T> query, ...) => ...
 ```
 
-## OpenAPI Specification
+## OpenAPI Specification — The API Contract
 
-The API serves its OpenAPI spec at `/openapi/v1.json` (development only). Scalar UI is available at `/scalar/v1`. The frontend generates TypeScript types from this spec — XML docs on controllers and `[ProducesResponseType]` attributes directly affect the quality of generated frontend types.
+The OpenAPI spec at `/openapi/v1.json` is **the single source of truth** for the entire frontend. Every controller action, every DTO property, every status code directly generates the TypeScript types the frontend consumes via `openapi-typescript`. A sloppy spec means a sloppy frontend. Treat the OAS output as a first-class deliverable.
+
+### Spec Infrastructure
+
+| Component | Location | Purpose |
+|---|---|---|
+| Spec generation | `AddOpenApiSpecification()` | Registers OAS v1 with transformers |
+| Document transformer | `ProjectDocumentTransformer` | Sets API title, version, auth description |
+| Enum transformer | `EnumSchemaTransformer` | Serializes enums as `string` (not `int`) |
+| Numeric transformer | `NumericSchemaTransformer` | Ensures numeric types aren't serialized as strings |
+| Scalar UI | `/scalar/v1` (dev only) | Interactive API documentation |
+
+### Mandatory Annotations on Every Controller Action
+
+Every endpoint **must** have all of these — no exceptions:
+
+```csharp
+/// <summary>
+/// Updates the current authenticated user's profile information.
+/// </summary>
+/// <param name="request">The profile update request</param>
+/// <returns>Updated user information</returns>
+/// <response code="200">Returns updated user information</response>
+/// <response code="400">If the request is invalid</response>
+/// <response code="401">If the user is not authenticated</response>
+[HttpPatch("me")]
+[ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status400BadRequest)]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+public async Task<ActionResult<UserResponse>> UpdateCurrentUser(...)
+```
+
+| Annotation | Why It Matters |
+|---|---|
+| `/// <summary>` | Becomes the operation description in the spec |
+| `/// <param>` | Documents request parameters |
+| `/// <response code="...">` | Documents what each status code means |
+| `[ProducesResponseType(typeof(T), StatusCode)]` | Generates the response schema — **without `typeof(T)`, the spec has no response body type** |
+| `[ProducesResponseType(StatusCode)]` | For status codes with no body (401, 404, 204) |
+| `ActionResult<T>` return type | Reinforces the 200-response schema |
+
+### DTO Documentation — Every Property Gets XML Docs
+
+Every property on every request/response DTO must have `/// <summary>`:
+
+```csharp
+/// <summary>
+/// Represents a request to update the user's profile information.
+/// </summary>
+public class UpdateUserRequest
+{
+    /// <summary>
+    /// The first name of the user.
+    /// </summary>
+    [MaxLength(255)]
+    public string? FirstName { get; [UsedImplicitly] init; }
+}
+```
+
+These `<summary>` tags become property descriptions in the OAS schema. Without them, the frontend developer (or agent) has no idea what a field means or expects.
+
+### Nullability → Required/Optional in OAS
+
+DTO nullability directly controls `required` in the generated spec:
+
+```csharp
+public string Email { get; init; } = string.Empty;  // → required in OAS, non-nullable in TypeScript
+public string? FirstName { get; init; }              // → optional in OAS, T | undefined in TypeScript
+```
+
+Get this wrong and the frontend types are wrong. See the [Nullable Reference Types](#nullable-reference-types) section.
+
+### Validation Annotations → OAS Constraints
+
+Data annotations on DTOs flow into the spec as schema constraints:
+
+```csharp
+[MaxLength(255)]           // → maxLength: 255
+[MinLength(6)]             // → minLength: 6
+[Range(1, 100)]            // → minimum: 1, maximum: 100
+[EmailAddress]             // → format: email
+[Required]                 // → required (in addition to non-nullable)
+```
+
+Use these alongside FluentValidation — data annotations feed the spec, FluentValidation handles complex rules at runtime.
+
+### OAS Compliance Checklist
+
+Before adding or modifying any endpoint, verify:
+
+- [ ] `/// <summary>` on the controller action describing what it does
+- [ ] `/// <param>` for every parameter
+- [ ] `/// <response code="...">` for every possible status code
+- [ ] `[ProducesResponseType]` for every status code, with `typeof(T)` for response bodies
+- [ ] `ActionResult<T>` return type (not bare `ActionResult`) when returning a body
+- [ ] `/// <summary>` on every DTO class
+- [ ] `/// <summary>` on every DTO property
+- [ ] Correct nullability (`string` vs `string?`) matching the API contract
+- [ ] Data annotations (`[MaxLength]`, `[Range]`, etc.) on request DTOs for spec constraints
+- [ ] `CancellationToken` as the last parameter on all async endpoints
+- [ ] Route uses lowercase (`[Route("api/[controller]")]` + `LowercaseUrls = true`)
+- [ ] Enums serialize as strings (handled by `EnumSchemaTransformer`, but verify in Scalar)
 
 ## Adding a New Feature — Checklist
 
