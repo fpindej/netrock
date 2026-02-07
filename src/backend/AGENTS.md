@@ -176,7 +176,7 @@ internal class OrderConfiguration : BaseEntityConfiguration<Order>
         builder.ToTable("orders");
         builder.Property(e => e.OrderNumber).HasMaxLength(50).IsRequired();
         builder.Property(e => e.TotalAmount).HasPrecision(18, 2);
-        builder.Property(e => e.Status).HasConversion<string>();
+        builder.Property(e => e.Status).HasComment("OrderStatus enum: Pending, Processing, Shipped, Delivered, Cancelled");
         builder.HasIndex(e => e.OrderNumber).IsUnique();
     }
 }
@@ -554,7 +554,7 @@ public static IQueryable<T> ConditionalWhere<T>(this IQueryable<T> query, ...) =
 
 ## Enum Handling
 
-Enums are **always strings** across the entire stack — in JSON responses, in the OpenAPI spec, in the database, and in generated TypeScript types. Never serialize enums as integers.
+Enums are **always strings** in the API layer — JSON responses, OpenAPI spec, and generated TypeScript types. In the **database**, enums are stored as **integers** (the EF Core default) for compact storage and index performance, with a `COMMENT ON COLUMN` documenting the valid values.
 
 ### Declaration
 
@@ -633,13 +633,16 @@ status?: "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
 
 ### EF Core Storage
 
-Store enums as strings in the database using `HasConversion<string>()` in the entity configuration:
+Store enums as **integers** (the default) — no `HasConversion` needed. Add `.HasComment()` to document the valid values in the database schema:
 
 ```csharp
-builder.Property(e => e.Status).HasConversion<string>();
+builder.Property(e => e.Status)
+    .HasComment("OrderStatus enum: Pending, Processing, Shipped, Delivered, Cancelled");
 ```
 
-This creates a `text` column in PostgreSQL (or `varchar` with `.HasMaxLength()`). Never store enums as integers — string storage is self-documenting and survives member reordering.
+This stores a compact `integer` column in PostgreSQL while the comment makes the column self-documenting. The comment generates `COMMENT ON COLUMN orders."Status" IS '...'` in the migration — pure metadata, zero runtime overhead.
+
+Do **not** use `HasConversion<string>()` — string storage bloats row size and indexes for no benefit when the application always works through the enum type.
 
 ### Enum Conventions Summary
 
@@ -650,7 +653,7 @@ This creates a `text` column in PostgreSQL (or `varchar` with `.HasMaxLength()`)
 | **OpenAPI spec** | `EnumSchemaTransformer` | `type: string`, all values in `enum` array |
 | **Nullable OpenAPI** | `EnumSchemaTransformer` | `type: [string, null]`, values still listed |
 | **TypeScript types** | `openapi-typescript` generation | `"Shipped" \| "Delivered" \| ...` |
-| **Database** | `HasConversion<string>()` in EF config | `text` column, human-readable |
+| **Database** | Integer (default) + `.HasComment()` | `integer` column, comment documents values |
 
 ## OpenAPI Specification — The API Contract
 
