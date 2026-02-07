@@ -5,7 +5,7 @@
 
 ## Summary
 
-Implemented dual authentication support allowing the API to serve both web clients (SvelteKit via HttpOnly cookies) and mobile clients (iOS/Android via Bearer tokens). Added a `useCookies` query parameter so mobile clients can opt out of cookie handling entirely. Updated OpenAPI spec with Bearer auth security scheme.
+Implemented dual authentication support allowing the API to serve both web clients (SvelteKit via HttpOnly cookies) and mobile clients (iOS/Android via Bearer tokens). Added a `useCookies` query parameter (defaults to `false` for stateless mobile clients, web clients explicitly opt-in with `?useCookies=true`). Updated OpenAPI spec with Bearer auth security scheme. Integrated frontend API proxy to append `useCookies=true` for auth endpoints automatically.
 
 ## Changes Made
 
@@ -21,6 +21,19 @@ Implemented dual authentication support allowing the API to serve both web clien
 | `WebApi/.../Dtos/Login/RefreshRequest.cs` | New request DTO with optional `RefreshToken` | Allow body-based refresh for mobile |
 | `WebApi/.../Transformers/ProjectDocumentTransformer.cs` | Added `bearerAuth` security scheme, updated API description | Document Bearer auth in OpenAPI spec |
 
+### Frontend Changes
+
+| File | Change | Reason |
+|------|--------|--------|
+| `src/routes/api/[...path]/+server.ts` | Append `?useCookies=true` for `auth/login` and `auth/refresh` endpoints | Web clients need cookies for auth |
+| `src/lib/api/v1.d.ts` | Regenerated from OpenAPI spec | Reflect new auth response types and `useCookies` parameter |
+| `src/lib/components/auth/LoginForm.svelte` | Use `getErrorMessage()` helper | Fix type errors with error handling |
+| `src/lib/components/auth/RegisterDialog.svelte` | Use `getErrorMessage()` helper | Fix type errors with error handling |
+| `src/lib/components/profile/AvatarDialog.svelte` | Use `getErrorMessage()` helper | Fix type errors with error handling |
+| `src/lib/components/getting-started/GettingStarted.svelte` | Replace `copilot-instructions.md` with `AGENTS.md` | Fix broken import (file doesn't exist) |
+| `src/messages/en.json`, `src/messages/cs.json` | Update references to `AGENTS.md` | Reflect correct file path |
+| `README.md` | Update reference to `AGENTS.md` | Reflect correct file path |
+
 ## Decisions & Reasoning
 
 ### Token Expiration in Response
@@ -31,9 +44,9 @@ Implemented dual authentication support allowing the API to serve both web clien
 
 ### `useCookies` Query Parameter
 
-- **Choice**: Add `?useCookies=false` query parameter (defaults to `true`)
+- **Choice**: Add `?useCookies=true` query parameter (defaults to `false` - stateless)
 - **Alternatives considered**: Separate endpoints (`/login/cookie`, `/login/token`), header-based detection, auto-detect from User-Agent
-- **Reasoning**: Follows ASP.NET Core Identity's established pattern. Explicit opt-out is cleaner than auto-detection. Single endpoint is simpler than duplication.
+- **Reasoning**: Mobile clients are the common case and shouldn't need to pass extra parameters. Web clients explicitly opt-in. Frontend API proxy handles this automatically.
 
 ### Auth Priority: Bearer First
 
@@ -53,8 +66,8 @@ flowchart TD
     end
 
     subgraph Login
-        Web -->|POST /api/auth/login| LoginEndpoint[AuthController.Login]
-        Mobile -->|POST /api/auth/login?useCookies=false| LoginEndpoint
+        Web -->|POST /api/auth/login?useCookies=true| LoginEndpoint[AuthController.Login]
+        Mobile -->|POST /api/auth/login| LoginEndpoint
     end
 
     LoginEndpoint --> AuthService[AuthenticationService.Login]
@@ -96,8 +109,8 @@ flowchart TD
 ### Web Client (Cookie-based)
 
 ```bash
-# Login - cookies are set automatically
-curl -X POST http://localhost:8080/api/auth/login \
+# Login - cookies are set automatically (via SvelteKit API proxy)
+curl -X POST "http://localhost:8080/api/auth/login?useCookies=true" \
   -H "Content-Type: application/json" \
   -d '{"username": "user@example.com", "password": "password"}' \
   -c cookies.txt
@@ -106,14 +119,14 @@ curl -X POST http://localhost:8080/api/auth/login \
 curl http://localhost:8080/api/v1/users/me -b cookies.txt
 
 # Refresh - reads token from cookie
-curl -X POST http://localhost:8080/api/auth/refresh -b cookies.txt -c cookies.txt
+curl -X POST "http://localhost:8080/api/auth/refresh?useCookies=true" -b cookies.txt -c cookies.txt
 ```
 
 ### Mobile Client (Bearer-based)
 
 ```bash
-# Login - no cookies
-curl -X POST "http://localhost:8080/api/auth/login?useCookies=false" \
+# Login - no cookies (default behavior)
+curl -X POST "http://localhost:8080/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"username": "user@example.com", "password": "password"}'
 # Response: {"accessToken": "eyJ...", "refreshToken": "abc123"}
@@ -123,7 +136,7 @@ curl http://localhost:8080/api/v1/users/me \
   -H "Authorization: Bearer eyJ..."
 
 # Refresh - pass token in body
-curl -X POST "http://localhost:8080/api/auth/refresh?useCookies=false" \
+curl -X POST "http://localhost:8080/api/auth/refresh" \
   -H "Content-Type: application/json" \
   -d '{"refreshToken": "abc123"}'
 ```
@@ -131,6 +144,6 @@ curl -X POST "http://localhost:8080/api/auth/refresh?useCookies=false" \
 ## Follow-Up Items
 
 - [ ] Add integration tests for Bearer token authentication flow
-- [ ] Add integration tests for `useCookies=false` behavior
+- [ ] Add integration tests for `useCookies=true` behavior
 - [ ] Consider adding rate limiting specific to auth endpoints
 - [ ] Document auth flows in API docs or README for mobile developers
