@@ -11,8 +11,8 @@ public interface IAuthenticationService
     /// <param name="username">The username.</param>
     /// <param name="password">The password.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>A result indicating success or failure.</returns>
-    Task<Result> Login(string username, string password, CancellationToken cancellationToken = default);
+    /// <returns>A result containing authentication tokens on success.</returns>
+    Task<Result<AuthenticationOutput>> Login(string username, string password, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Registers a new user.
@@ -34,6 +34,6 @@ public interface IAuthenticationService
     /// </summary>
     /// <param name="refreshToken">The refresh token.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>A result indicating success or failure.</returns>
-    Task<Result> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
+    /// <returns>A result containing new authentication tokens on success.</returns>
+    Task<Result<AuthenticationOutput>> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
 }
