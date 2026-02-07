@@ -70,9 +70,7 @@ internal class AuthenticationService(
 
         var output = new AuthenticationOutput(
             AccessToken: accessToken,
-            RefreshToken: refreshTokenString,
-            AccessTokenExpiresInSeconds: _jwtOptions.ExpiresInMinutes * 60,
-            RefreshTokenExpiresInSeconds: _jwtOptions.RefreshToken.ExpiresInDays * 24 * 60 * 60
+            RefreshToken: refreshTokenString
         );
 
         return Result<AuthenticationOutput>.Success(output);
@@ -197,9 +195,7 @@ internal class AuthenticationService(
 
         var output = new AuthenticationOutput(
             AccessToken: newAccessToken,
-            RefreshToken: newRefreshTokenString,
-            AccessTokenExpiresInSeconds: _jwtOptions.ExpiresInMinutes * 60,
-            RefreshTokenExpiresInSeconds: _jwtOptions.RefreshToken.ExpiresInDays * 24 * 60 * 60
+            RefreshToken: newRefreshTokenString
         );
 
         return Result<AuthenticationOutput>.Success(output);

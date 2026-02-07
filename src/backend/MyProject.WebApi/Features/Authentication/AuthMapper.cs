@@ -19,8 +19,6 @@ internal static class AuthMapper
         new()
         {
             AccessToken = output.AccessToken,
-            RefreshToken = output.RefreshToken,
-            AccessTokenExpiresInSeconds = output.AccessTokenExpiresInSeconds,
-            RefreshTokenExpiresInSeconds = output.RefreshTokenExpiresInSeconds
+            RefreshToken = output.RefreshToken
         };
 }

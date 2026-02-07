@@ -19,14 +19,4 @@ public class AuthenticationResponse
     /// Use this with the /api/auth/refresh endpoint when the access token expires.
     /// </summary>
     public string RefreshToken { [UsedImplicitly] get; [UsedImplicitly] init; } = string.Empty;
-
-    /// <summary>
-    /// The access token expiration time in seconds from the time of issuance.
-    /// </summary>
-    public int AccessTokenExpiresInSeconds { [UsedImplicitly] get; [UsedImplicitly] init; }
-
-    /// <summary>
-    /// The refresh token expiration time in seconds from the time of issuance.
-    /// </summary>
-    public int RefreshTokenExpiresInSeconds { [UsedImplicitly] get; [UsedImplicitly] init; }
 }
