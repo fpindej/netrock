@@ -3,6 +3,7 @@ namespace MyProject.Domain.Entities;
 /// <summary>
 /// Represents the base class for all entities in the domain, providing common properties and behavior.
 /// </summary>
+/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
 public abstract class BaseEntity
 {
     /// <summary>

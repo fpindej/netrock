@@ -5,6 +5,7 @@ using MyProject.WebApi.Shared;
 
 namespace MyProject.WebApi.Middlewares;
 
+/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
 public class ExceptionHandlingMiddleware(
     RequestDelegate next,
     ILogger<ExceptionHandlingMiddleware> logger,

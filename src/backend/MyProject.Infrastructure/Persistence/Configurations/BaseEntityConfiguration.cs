@@ -4,6 +4,11 @@ using MyProject.Domain.Entities;
 
 namespace MyProject.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Base EF Core configuration for all entities extending <see cref="BaseEntity"/>.
+/// Configures primary key, audit columns, and soft-delete index.
+/// </summary>
+/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
 public abstract class BaseEntityConfiguration<TEntity> : IEntityTypeConfiguration<TEntity> where TEntity : BaseEntity
 {
     public virtual void Configure(EntityTypeBuilder<TEntity> builder)

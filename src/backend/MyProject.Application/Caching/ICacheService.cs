@@ -1,5 +1,6 @@
 namespace MyProject.Application.Caching;
 
+/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
 public interface ICacheService
 {
     Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default);

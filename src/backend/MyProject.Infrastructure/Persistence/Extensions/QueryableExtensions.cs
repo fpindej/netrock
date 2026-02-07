@@ -3,8 +3,9 @@ using System.Linq.Expressions;
 namespace MyProject.Infrastructure.Persistence.Extensions;
 
 /// <summary>
-/// Extension methods for IQueryable to support conditional filtering
+/// Extension methods for IQueryable to support conditional filtering.
 /// </summary>
+/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
 public static class QueryableExtensions
 {
     /// <param name="query">The query to extend</param>

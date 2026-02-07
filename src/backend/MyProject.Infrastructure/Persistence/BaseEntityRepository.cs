@@ -7,6 +7,7 @@ using MyProject.Infrastructure.Persistence.Extensions;
 
 namespace MyProject.Infrastructure.Persistence;
 
+/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
 internal class BaseEntityRepository<TEntity>(MyProjectDbContext dbContext)
     : IBaseEntityRepository<TEntity>
     where TEntity : BaseEntity

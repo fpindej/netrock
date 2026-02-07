@@ -7,6 +7,7 @@ namespace MyProject.Application.Persistence;
 /// <summary>
 /// Generic repository interface for entities supporting soft delete and basic CRUD operations.
 /// </summary>
+/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
 /// <typeparam name="TEntity">The entity type.</typeparam>
 public interface IBaseEntityRepository<TEntity> where TEntity : BaseEntity
 {
