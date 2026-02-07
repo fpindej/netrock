@@ -212,9 +212,9 @@ return Result.Failure("Invalid credentials.");
 In controllers, map Result to HTTP responses:
 
 ```csharp
-var result = await service.CreateAsync(input);
+var result = await service.CreateAsync(input, cancellationToken);
 if (!result.IsSuccess)
-    return BadRequest(result.Error);
+    return BadRequest(new ErrorResponse { Message = result.Error });
 return CreatedAtAction(nameof(Get), new { id = result.Value });
 ```
 
@@ -227,8 +227,8 @@ return CreatedAtAction(nameof(Get), new { id = result.Value });
 public interface IAuthenticationService
 {
     Task<Result> Login(string username, string password, CancellationToken cancellationToken = default);
-    Task<Result<Guid>> Register(RegisterInput input);
-    Task Logout();
+    Task<Result<Guid>> Register(RegisterInput input, CancellationToken cancellationToken = default);
+    Task Logout(CancellationToken cancellationToken = default);
     Task<Result> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
 }
 ```
@@ -688,13 +688,14 @@ Every endpoint **must** have all of these — no exceptions:
 /// Updates the current authenticated user's profile information.
 /// </summary>
 /// <param name="request">The profile update request</param>
+/// <param name="cancellationToken">Cancellation token</param>
 /// <returns>Updated user information</returns>
 /// <response code="200">Returns updated user information</response>
 /// <response code="400">If the request is invalid</response>
 /// <response code="401">If the user is not authenticated</response>
 [HttpPatch("me")]
 [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
-[ProducesResponseType(StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
 [ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public async Task<ActionResult<UserResponse>> UpdateCurrentUser(...)
 ```
@@ -702,10 +703,10 @@ public async Task<ActionResult<UserResponse>> UpdateCurrentUser(...)
 | Annotation | Why It Matters |
 |---|---|
 | `/// <summary>` | Becomes the operation description in the spec |
-| `/// <param>` | Documents request parameters |
+| `/// <param>` | Documents request parameters (include `CancellationToken` to avoid `CS1573`) |
 | `/// <response code="...">` | Documents what each status code means |
-| `[ProducesResponseType(typeof(T), StatusCode)]` | Generates the response schema — **without `typeof(T)`, the spec has no response body type** |
-| `[ProducesResponseType(StatusCode)]` | For status codes with no body (401, 404, 204) |
+| `[ProducesResponseType(typeof(T), StatusCode)]` | Generates the response schema — use `typeof(UserResponse)` for success, `typeof(ErrorResponse)` for errors that return a body |
+| `[ProducesResponseType(StatusCode)]` | For status codes with **no body** (204, or 401 when the controller returns bare `Unauthorized()`) |
 | `ActionResult<T>` return type | Reinforces the 200-response schema |
 
 ### DTO Documentation — Every Property Gets XML Docs
