@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Web API Template - Project Initialization Script
 
@@ -321,6 +321,18 @@ $frontendEnvLocal = Join-Path $ScriptDir "src\frontend\.env.local"
 if (Test-Path $frontendEnvExample) {
     Copy-Item $frontendEnvExample $frontendEnvLocal -Force
     Write-SubStep "Created frontend .env.local from .env.example"
+}
+
+$rootEnvExample = Join-Path $ScriptDir ".env.example"
+$rootEnv = Join-Path $ScriptDir ".env"
+if (Test-Path $rootEnvExample) {
+    $jwtBytes = New-Object byte[] 48
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($jwtBytes)
+    $jwtSecret = [Convert]::ToBase64String($jwtBytes) -replace '[/+=]', '' | ForEach-Object { $_.Substring(0, [Math]::Min(64, $_.Length)) }
+    $envContent = [System.IO.File]::ReadAllText($rootEnvExample)
+    $envContent = $envContent -replace '<generate-a-random-secret-here>', $jwtSecret
+    Set-FileContent $rootEnv $envContent
+    Write-SubStep "Generated .env with random JWT secret"
 }
 
 Write-SubStep "Replacing port placeholders..."
