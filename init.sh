@@ -371,6 +371,15 @@ if [ -f "src/frontend/.env.example" ]; then
     print_substep "Created frontend .env.local from .env.example"
 fi
 
+if [ -f ".env.example" ]; then
+    JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n/+=' | cut -c1-64)
+    sed_inplace "s|<generate-a-random-secret-here>|$JWT_SECRET|g" .env.example
+    cp .env.example .env
+    # Restore the placeholder in .env.example so it stays generic in source control
+    sed_inplace "s|$JWT_SECRET|<generate-a-random-secret-here>|g" .env.example
+    print_substep "Generated .env with random JWT secret"
+fi
+
 print_substep "Replacing port placeholders..."
 if [ "$OS" = "Darwin" ]; then
     # macOS
