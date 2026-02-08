@@ -28,6 +28,7 @@ services:
       context: ./src/backend
       dockerfile: MyProject.WebApi/Dockerfile
     container_name: {INIT_PROJECT_SLUG}-local-api
+    env_file: .env
     environment: *api-environment
     <<: *common-settings
     ports:
