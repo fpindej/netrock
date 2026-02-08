@@ -162,6 +162,9 @@ Do **not** create PRs automatically — only when explicitly requested.
 ## Local Development
 
 ```bash
+# First time (or new machine where init script has already run):
+cp .env.example .env
+
 # Start all services
 docker compose -f docker-compose.local.yml up -d
 
@@ -174,7 +177,9 @@ open http://localhost:{INIT_SEQ_PORT}
 
 ### Environment Configuration
 
-All configurable values live in `.env` (copied from `.env.example`). The API container loads `.env` in two ways:
+`.env.example` contains working dev defaults for every variable. Copy it to `.env` and you're ready — no edits required. The init script does this automatically (and generates a random JWT secret), but a plain `cp` works too since `.env.example` includes a static dev key.
+
+The API container loads `.env` in two ways:
 
 1. **Variable interpolation** — `docker-compose.local.yml` references `${VAR}` / `${VAR:-default}` for values that need renaming or host-specific defaults (connection strings, secrets, ports).
 2. **`env_file: .env`** — every variable in `.env` is also injected into the API container directly. ASP.NET picks up any `Section__Key` variable (e.g. `Authentication__Jwt__ExpiresInMinutes`) automatically.
@@ -195,16 +200,26 @@ All configurable values live in `.env` (copied from `.env.example`). The API con
 
 | File | Purpose | Who edits it |
 |---|---|---|
-| `.env` | Secrets + optional overrides for Docker | Everyone |
+| `.env.example` | Working dev defaults — copy to `.env` to get started | Rarely edited |
+| `.env` | Local overrides (git-ignored) — copied from `.env.example` | Everyone |
 | `appsettings.json` | Base/production defaults | Backend devs |
 | `appsettings.Development.json` | Dev defaults (generous JWT expiry, debug logging, localhost URLs) | Backend devs |
 | `docker-compose.local.yml` | Docker service wiring (host-specific values only) | Rarely edited |
 
 ### Developer Workflows
 
+#### New machine setup
+
+```bash
+cp .env.example .env
+docker compose -f docker-compose.local.yml up -d
+```
+
+That's it. `.env.example` has working defaults for everything.
+
 #### Frontend dev — tweak backend config
 
-Open `.env`, uncomment and change what you need, restart Docker:
+Edit `.env` (not `.env.example`), uncomment and change what you need, restart Docker:
 
 ```bash
 # Example: longer JWT tokens, relaxed rate limit
