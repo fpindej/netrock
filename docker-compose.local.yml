@@ -3,16 +3,9 @@ name: {INIT_PROJECT_SLUG}-local
 x-api-environment: &api-environment
   ASPNETCORE_ENVIRONMENT: Development
   ConnectionStrings__Database: Host=db;Port=5432;Database={INIT_PROJECT_SLUG};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-  Caching__Redis__Enabled: true
   Caching__Redis__ConnectionString: redis:6379
   Caching__Redis__Password: ${REDIS_PASSWORD}
-  Caching__Redis__UseSsl: false
-  Caching__Redis__DefaultDatabase: 0
-  Caching__Redis__InstanceName: "{INIT_PROJECT_SLUG}:"
-  Caching__Redis__AbortOnConnectFail: false
-  Authentication__Jwt__ExpiresInMinutes: 100
   Authentication__Jwt__Key: ${JWT_SECRET_KEY}
-  Authentication__Jwt__RefreshTokenExpiresInDays: 7
   Serilog__WriteTo__0__Name: Seq
   Serilog__WriteTo__0__Args__serverUrl: http://seq:80
 
