@@ -16,9 +16,6 @@ internal class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken
             .IsRequired()
             .HasMaxLength(255);
 
-        builder.Property(x => x.JwtId)
-            .IsRequired();
-
         builder.Property(x => x.CreatedAt)
             .IsRequired();
 
