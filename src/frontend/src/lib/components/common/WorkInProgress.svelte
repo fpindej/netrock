@@ -21,7 +21,7 @@
 		{/if}
 	</div>
 	<Card.Root
-		class="relative flex min-h-96 flex-col items-center justify-center overflow-hidden p-16 text-center"
+		class="relative flex min-h-96 flex-col items-center justify-center overflow-hidden p-6 text-center sm:p-10 lg:p-16"
 	>
 		<!-- Icon container with pulsing ring -->
 		<div class="relative mb-6">
