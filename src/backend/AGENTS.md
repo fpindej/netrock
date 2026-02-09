@@ -115,6 +115,21 @@ Rules:
 - **Never use `null!`** (the null-forgiving operator) — it defeats the purpose of NRT. If you need it, the design is wrong.
 - **DTOs**: match nullability to whether the field is required in the API contract — this flows through to the OpenAPI spec and generated TypeScript types
 
+### XML Documentation
+
+All **public and internal API surface** must have `/// <summary>` XML docs. This includes interfaces, extension method classes, middleware, shared base classes, and service implementations — not just controllers and DTOs.
+
+| Item | What to document |
+|---|---|
+| **Interfaces** (`I{Feature}Service`) | Class-level summary of the contract; each method's purpose, parameters, and return semantics |
+| **Extension classes** (`CorsExtensions`, `SecurityHeaderExtensions`) | Class-level summary of what the extensions configure; method-level docs explaining behavior, parameters, and side effects |
+| **Middleware** (`ExceptionHandlingMiddleware`) | Class-level summary; document which exceptions map to which status codes |
+| **Shared base classes** (`ApiController`, `BaseEntityConfiguration<T>`) | Class-level summary of what inheritors get for free |
+| **Options classes** | Already covered in the [Options Pattern](#options-pattern) section — every class and property gets `/// <summary>` |
+| **Controllers and DTOs** | Already covered in the [OpenAPI](#openapi-specification--the-api-contract) section — `/// <summary>` on actions and every property |
+
+When adding or modifying any of these types, apply the boy-scout rule: leave the file better than you found it. If a class is missing docs, add them while you're there.
+
 ## Entity Definition
 
 All domain entities extend `BaseEntity`, which provides audit fields and soft delete:
