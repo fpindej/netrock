@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using MyProject.Domain;
 using MyProject.Infrastructure.Persistence.Exceptions;
 using MyProject.WebApi.Shared;
 
@@ -34,18 +35,21 @@ public class ExceptionHandlingMiddleware(
         catch (KeyNotFoundException keyNotFoundEx)
         {
             logger.LogWarning(keyNotFoundEx, "A KeyNotFoundException occurred.");
-            await HandleExceptionAsync(context, keyNotFoundEx, HttpStatusCode.NotFound);
+            await HandleExceptionAsync(context, keyNotFoundEx, HttpStatusCode.NotFound,
+                errorCode: ErrorCodes.Admin.UserNotFound);
         }
         catch (PaginationException paginationEx)
         {
             logger.LogWarning(paginationEx, "A PaginationException occurred.");
-            await HandleExceptionAsync(context, paginationEx, HttpStatusCode.BadRequest);
+            await HandleExceptionAsync(context, paginationEx, HttpStatusCode.BadRequest,
+                errorCode: paginationEx.ErrorCode);
         }
         catch (Exception e)
         {
             logger.LogError(e, "An unhandled exception occurred.");
             await HandleExceptionAsync(context, e, HttpStatusCode.InternalServerError,
-                customMessage: "An internal error occurred.");
+                customMessage: "An internal error occurred.",
+                errorCode: ErrorCodes.Server.InternalError);
         }
     }
 
@@ -53,10 +57,12 @@ public class ExceptionHandlingMiddleware(
         HttpContext context,
         Exception exception,
         HttpStatusCode statusCode,
-        string? customMessage = null)
+        string? customMessage = null,
+        string? errorCode = null)
     {
         var errorResponse = new ErrorResponse
         {
+            ErrorCode = errorCode,
             Message = customMessage ?? exception.Message,
             Details = env.IsDevelopment() ? exception.StackTrace : null
         };
