@@ -662,6 +662,35 @@ The app layout uses a mobile-first sidebar pattern:
 
 ## Route Structure & Data Fetching
 
+### Authentication Flow
+
+```
+Browser request
+    │
+    ▼
+hooks.server.ts          ← Security headers, locale detection
+    │
+    ▼
++layout.server.ts (root) ← Calls getUser() → GET /api/users/me
+    │                        Returns { user, locale, apiUrl }
+    │
+    ├─► (app)/+layout.server.ts    ← user is null? → redirect 303 /login
+    │                                  user exists?  → pass through { user }
+    │
+    └─► (public)/login/+page.server.ts ← user exists? → redirect 303 /
+                                          user is null? → show login page
+```
+
+The root layout fetches the user **once** via `getUser()`. All child layouts access the user through `parent()` — they never re-fetch.
+
+### Route Groups
+
+| Group      | Path                                   | Guard                                   | Purpose               |
+| ---------- | -------------------------------------- | --------------------------------------- | --------------------- |
+| `(app)`    | `/*` (dashboard, profile, settings...) | Requires authenticated user             | All protected pages   |
+| `(public)` | `/login`                               | Redirects away if already authenticated | Unauthenticated pages |
+| `api`      | `/api/*`                               | CSRF origin validation                  | API proxy to backend  |
+
 ### Authentication Guard
 
 The `(app)` layout checks for a user and redirects to `/login`:
@@ -674,6 +703,83 @@ export const load: LayoutServerLoad = async ({ parent }) => {
 	return { user };
 };
 ```
+
+### Adding a New Guarded Route Group
+
+To add a route group with additional access requirements (e.g., admin-only pages):
+
+1. **Create the route group directory** with its own layout server load:
+
+   ```
+   routes/
+   ├── (app)/           # Authenticated users
+   ├── (admin)/         # Admin-only (new)
+   │   ├── +layout.server.ts
+   │   ├── +layout.svelte
+   │   └── admin-panel/
+   └── (public)/        # Unauthenticated
+   ```
+
+2. **Add a layout guard** that checks both authentication and roles:
+
+   ```typescript
+   // routes/(admin)/+layout.server.ts
+   import { redirect } from '@sveltejs/kit';
+   import type { LayoutServerLoad } from './$types';
+
+   export const load: LayoutServerLoad = async ({ parent }) => {
+   	const { user } = await parent();
+   	if (!user) throw redirect(303, '/login');
+   	if (!user.roles?.includes('Admin')) throw redirect(303, '/');
+   	return { user };
+   };
+   ```
+
+3. **Keep authorization on the backend too.** Frontend guards are UX — they prevent users from seeing pages they can't use. The backend `[Authorize(Roles = "Admin")]` is the actual security boundary. Never rely on frontend-only role checks.
+
+### Role-Based Access
+
+**Current state:** The frontend has no role-based routing. Roles are only displayed as badges on the profile page (`AccountDetails.svelte`). The `UserResponse` from the backend includes `roles: string[]`.
+
+**Architecture:** Role-based access is enforced at two levels:
+
+| Level                       | Mechanism                                             | Purpose                                                        |
+| --------------------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
+| **Backend** (authoritative) | `[Authorize(Roles = "...")]` on controllers/endpoints | Security enforcement — rejects unauthorized API calls with 403 |
+| **Frontend** (UX)           | Layout guards + conditional rendering                 | Prevents users from seeing UI they can't use                   |
+
+The backend is always the source of truth. If a user manipulates the frontend to bypass a role check, the API call will still fail with 403.
+
+#### Conditional Rendering by Role
+
+To show/hide UI elements based on the current user's roles:
+
+```svelte
+<script lang="ts">
+	import type { User } from '$lib/types';
+
+	interface Props {
+		user: User;
+	}
+
+	let { user }: Props = $props();
+</script>
+
+{#if user.roles?.includes('Admin')}
+	<a href="/admin-panel">Admin Panel</a>
+{/if}
+```
+
+#### Future: Granular Permissions
+
+The current model is role-based (`roles: string[]`). If granular permissions are added later (e.g., `permissions: string[]` on the user response), the same patterns apply:
+
+- Backend enforces permissions via policy-based authorization
+- Frontend checks `user.permissions?.includes('orders:write')` for conditional rendering
+- Layout guards check permissions for route-level access
+- The backend remains the single source of truth
+
+Do **not** pre-build a permissions system. When the backend adds permissions to the user response, extend the frontend patterns above.
 
 ### Root Layout Data
 
