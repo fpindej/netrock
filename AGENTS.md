@@ -2,6 +2,8 @@
 
 Full-stack web application template: **.NET 10 API** (Clean Architecture) + **SvelteKit frontend** (Svelte 5), fully dockerized.
 
+> For explanations, rationale, and design decisions, see [`docs/`](docs/README.md).
+
 ## Tech Stack
 
 | | Backend | Frontend |
@@ -57,6 +59,8 @@ WebApi → Application ← Infrastructure
 | `src/lib/state/` | Reactive state (`.svelte.ts` files) |
 | `src/lib/config/` | App configuration (client-safe vs server-only split) |
 
+> For architecture rationale, data flow diagrams, and auth flow details, see [`docs/architecture.md`](docs/architecture.md).
+
 ## Detailed Conventions
 
 | Area | Reference |
@@ -70,70 +74,63 @@ Read the relevant file before working in that area. Both are self-contained with
 
 ## Code Quality Principles
 
-These apply across the entire codebase — backend and frontend alike.
+> For rationale and examples, see [`docs/backend-conventions.md` — Code Quality Principles](docs/backend-conventions.md#code-quality-principles).
 
-### Keep Structures Clean
-
-Public methods should read like a table of contents — delegate implementation details to well-named private methods. If a method does three things, it should call three methods, not contain three inline blocks.
-
-### Deduplicate When It Improves Clarity
-
-When the same pattern appears more than once, extract it. But don't abstract prematurely — duplication is cheaper than the wrong abstraction. Extract when:
-
-- The duplicated logic is **identical in intent**, not just similar in shape
-- A change to one copy would always require the same change to the others
-- The extracted method has a **clear, descriptive name** that improves readability
-
-If the "shared" code would need parameters, flags, or conditionals to handle different callers, it's not real duplication — leave it inline.
-
-### Design for Testability
-
-Write code that is naturally testable through good structure, not by over-abstracting for the sake of mocking:
-
-- **Small, focused methods** — easier to test in isolation
-- **Constructor injection** — dependencies are explicit and swappable
-- **Pure logic where possible** — methods that take inputs and return outputs without side effects are trivially testable
-- **Don't wrap framework types just to mock them** — if testing requires mocking `HttpContext` or `DbContext`, use integration tests instead of creating abstraction layers that exist only for unit tests
+- **Keep structures clean** — public methods read like a table of contents; delegate details to well-named private methods.
+- **Deduplicate when identical in intent** — extract when a change to one copy would always require the same change to the others. If the "shared" code needs flags or conditionals, it's not real duplication.
+- **Design for testability** — small focused methods, constructor injection, pure logic where possible. Don't wrap framework types just to mock them.
 
 ---
 
 ## Security-First Development
 
-**Security is the highest priority in every development decision.** When faced with a trade-off between convenience and security, always choose security. When unsure whether something is safe, assume it isn't and investigate.
+**Security is the highest priority in every development decision.** When in doubt, choose the more restrictive option.
 
-### Guiding Principles
+> For full security architecture (cookie design, CSP rationale, header explanations), see [`docs/security.md`](docs/security.md).
 
-| Principle | What it means in practice |
+| Principle | Rule |
 |---|---|
-| **Restrictive by default** | Deny access, disable features, block origins, strip headers — then selectively open what's needed. Never start permissive and try to lock down later. |
-| **Defense in depth** | Don't rely on a single layer. Validate on both frontend and backend. Check auth in middleware *and* controllers. Use security headers *and* CSP. |
-| **Least privilege** | Services, tokens, cookies, and API responses should expose the minimum data and permissions required. |
-| **Fail closed** | If validation fails, token parsing fails, or an origin check fails — reject the request. Never fall through to a permissive default. |
-| **Secrets never in code** | Connection strings, API keys, JWT secrets — always in `.env` or environment variables, never in source. Rotate compromised secrets immediately. |
-| **Audit new dependencies** | Before adding a NuGet package or npm module, consider its attack surface. Prefer well-maintained, minimal-dependency libraries. |
+| **Restrictive by default** | Deny access, block origins, strip headers — then selectively open |
+| **Defense in depth** | Validate on both frontend and backend; use headers *and* CSP |
+| **Least privilege** | Expose minimum data and permissions |
+| **Fail closed** | Reject on validation/parsing/origin failure — never fall through |
+| **Secrets never in code** | `.env` or environment variables only |
+| **Audit dependencies** | Consider attack surface before adding packages |
 
-### When Building Features
+When building features:
 
-1. **Think about abuse first.** Before implementing, ask: how could this be exploited? What happens if the input is malicious? What if the user is unauthenticated?
-2. **Validate all input.** Never trust client data — validate on the backend even if the frontend already validates. Use FluentValidation for complex rules, Data Annotations for simple constraints.
-3. **Sanitize all output.** Prevent XSS by escaping user-generated content. Never render raw HTML from user input. Validate URLs to block `javascript:` schemes.
-4. **Protect state-changing operations.** All mutations (POST/PUT/DELETE) must verify authentication, authorization, and CSRF protection. The SvelteKit API proxy validates Origin headers; the backend validates JWT tokens.
-5. **Log security events.** Failed login attempts, token refresh failures, authorization denials — these should be logged at Warning/Error level for monitoring.
+1. **Think about abuse first** — how could this be exploited? What if the input is malicious?
+2. **Validate all input** — never trust client data, validate on backend even if frontend validates
+3. **Sanitize all output** — prevent XSS, never render raw HTML from user input, validate URLs
+4. **Protect state-changing operations** — POST/PUT/DELETE must verify auth, authorization, and CSRF
+5. **Log security events** — failed logins, token refresh failures, authorization denials at Warning/Error level
 
-### Layer-Specific Security
+Layer-specific security rules:
+- **Backend**: [`src/backend/AGENTS.md` — Security section](src/backend/AGENTS.md#security)
+- **Frontend**: [`src/frontend/AGENTS.md` — Security section](src/frontend/AGENTS.md#security)
 
-Detailed security conventions (headers, CSRF, Permissions-Policy, HSTS) are documented in each layer's AGENTS.md:
+---
 
-- **Backend**: [`src/backend/AGENTS.md` — Security section](src/backend/AGENTS.md)
-- **Frontend**: [`src/frontend/AGENTS.md` — Security section](src/frontend/AGENTS.md)
+## Error Handling
+
+| Layer | Strategy |
+|---|---|
+| **Backend services** | Return `Result` / `Result<T>` for expected failures |
+| **Backend exceptions** | `KeyNotFoundException` → 404, `PaginationException` → 400, unhandled → 500 |
+| **Backend middleware** | `ExceptionHandlingMiddleware` catches all, returns `ErrorResponse` JSON |
+| **Frontend API errors** | `isValidationProblemDetails()` → field-level errors with shake animation |
+| **Frontend generic errors** | `getErrorMessage()` → toast notification |
+| **Frontend network errors** | `isFetchErrorWithCode('ECONNREFUSED')` → 503 "Backend unavailable" |
 
 ---
 
 ## Agent Workflow
 
+> For detailed explanations, sub-issues API examples, and session doc templates, see [`docs/workflow.md`](docs/workflow.md).
+
 ### Git Discipline
 
-**Commit continuously and atomically.** Every logically complete unit of work gets its own commit immediately — do not accumulate changes and commit at the end.
+**Commit continuously and atomically.** Every logically complete unit of work gets its own commit immediately.
 
 #### Conventional Commits
 
@@ -146,7 +143,7 @@ docs: add session notes for orders feature
 test(auth): add login integration tests
 ```
 
-Format: `type(scope): lowercase imperative description` — max 72 chars, no period. Scope is optional but encouraged. Add a body to explain *why* when the reason isn't obvious.
+Format: `type(scope): lowercase imperative description` — max 72 chars, no period.
 
 #### Atomic Commit Strategy
 
@@ -157,12 +154,10 @@ One commit = one logical change that could be reverted independently.
 | `feat(orders): add Order entity and EF config` | `feat: add entire orders feature` |
 | `feat(orders): add IOrderService and DTOs` | (entity + service + controller + frontend |
 | `feat(orders): implement OrderService` | all in one massive commit) |
-| `feat(orders): add OrdersController with endpoints` | |
-| `feat(orders): add order list page in frontend` | |
 
 #### Pre-Commit Checks
 
-Before **every** commit, verify the code compiles and passes checks:
+Before **every** commit:
 
 - **Backend**: `dotnet build src/backend/MyProject.slnx`
 - **Frontend**: `cd src/frontend && npm run format && npm run lint && npm run check`
@@ -171,11 +166,11 @@ Never commit code that doesn't compile, has lint errors, or fails type checks.
 
 ### Session Documentation
 
-When the user asks to wrap up or create session docs, generate a documentation file:
+When the user asks to wrap up or create session docs:
 
 - **Location**: `docs/sessions/{YYYY-MM-DD}-{topic-slug}.md`
 - **Template**: See [`docs/sessions/README.md`](docs/sessions/README.md) for the required structure
-- **Commit**: As the final commit of the session: `docs: add session notes for {topic}`
+- **Commit**: `docs: add session notes for {topic}`
 
 Do **not** generate session docs automatically — only when explicitly requested.
 
@@ -230,8 +225,6 @@ gh api --method POST /repos/{owner}/{repo}/issues/{parent_number}/sub_issues \
   --field sub_issue_id={sub_issue_id}
 ```
 
-This gives GitHub native progress tracking on the parent issue (completion count and percentage) rather than relying on markdown task lists.
-
 > **Do not** use markdown checkbox task lists (`- [ ] #101`) to track sub-issues. Always use the Sub-Issues API so GitHub tracks hierarchy and progress natively.
 
 **When to split:**
@@ -257,155 +250,35 @@ When the user asks to create a PR, use `gh pr create` with:
 - **Title**: Conventional Commit format matching the branch scope
 - **Body**: Summary of changes, linked issues if applicable
 - **Base**: `master` (unless instructed otherwise)
-- **Labels**: Apply all relevant labels from the table below
+- **Labels**: Apply all relevant labels
 
 Do **not** create PRs automatically — only when explicitly requested.
 
 ### Labels
 
-Always label issues and PRs. Use the project labels below — apply **all** that fit (they are not mutually exclusive). If a new label would genuinely help categorize work and none of the existing ones cover it, create it with `gh label create` before applying.
+Always label issues and PRs. Apply **all** that fit.
 
 | Label | Color | Description | Use when |
 |---|---|---|---|
 | `backend` | `#0E8A16` | Backend (.NET) | Changes touch `src/backend/` |
 | `frontend` | `#1D76DB` | Frontend (SvelteKit) | Changes touch `src/frontend/` |
 | `security` | `#D93F0B` | Security-related | Fixes vulnerabilities, hardens config, adds auth features |
-| `feature` | `#5319E7` | New feature or enhancement | Adding new capabilities (not just fixing existing ones) |
+| `feature` | `#5319E7` | New feature or enhancement | Adding new capabilities |
 | `bug` | `#d73a4a` | Something isn't working | Fixing incorrect behavior |
 | `documentation` | `#0075ca` | Documentation | Changes to docs, AGENTS.md, session notes |
 
-Unused GitHub default labels (`enhancement`, `good first issue`, `help wanted`, `invalid`, `question`, `wontfix`, `duplicate`) can be ignored — they add noise for a small team. Delete them if they accumulate.
-
 ---
-
-## Error Handling Philosophy
-
-| Layer | Strategy |
-|---|---|
-| **Backend services** | Return `Result` / `Result<T>` for expected failures |
-| **Backend exceptions** | `KeyNotFoundException` → 404, `PaginationException` → 400, unhandled → 500 |
-| **Backend middleware** | `ExceptionHandlingMiddleware` catches all, returns `ErrorResponse` JSON |
-| **Frontend API errors** | `isValidationProblemDetails()` → field-level errors with shake animation |
-| **Frontend generic errors** | `getErrorMessage()` → toast notification |
-| **Frontend network errors** | `isFetchErrorWithCode('ECONNREFUSED')` → 503 "Backend unavailable" |
 
 ## Local Development
 
-```bash
-# First time (or new machine where init script has already run):
-cp .env.example .env
+> For full setup instructions, developer workflows (Docker, IDE debugging, phone testing), and environment configuration, see [`docs/getting-started.md`](docs/getting-started.md).
 
-# Start all services
-docker compose -f docker-compose.local.yml up -d
-
-# API docs (development only)
-open http://localhost:{INIT_API_PORT}/scalar/v1
-
-# Seq logs
-open http://localhost:{INIT_SEQ_PORT}
-```
-
-### Environment Configuration
-
-`.env.example` contains working dev defaults for every variable. Copy it to `.env` and you're ready — no edits required. The init script does this automatically (and generates a random JWT secret), but a plain `cp` works too since `.env.example` includes a static dev key.
-
-The API container loads `.env` in two ways:
-
-1. **Variable interpolation** — `docker-compose.local.yml` references `${VAR}` / `${VAR:-default}` for values that need renaming or host-specific defaults (connection strings, secrets, ports).
-2. **`env_file: .env`** — every variable in `.env` is also injected into the API container directly. ASP.NET picks up any `Section__Key` variable (e.g. `Authentication__Jwt__ExpiresInMinutes`) automatically.
-
-#### Precedence (highest to lowest)
-
-| Priority | Source | Example |
-|---|---|---|
-| 1 | `docker compose run --env` | CLI override (rare) |
-| 2 | Compose `environment` block | `Authentication__Jwt__Key: ${JWT_SECRET_KEY}` — interpolated from `.env`, set via `environment` |
-| 3 | Compose `env_file: .env` | `Authentication__Jwt__ExpiresInMinutes=100` — passes through directly |
-| 4 | `appsettings.{Environment}.json` | `ExpiresInMinutes: 100` in `appsettings.Development.json` |
-| 5 | `appsettings.json` | Base defaults (e.g. `ExpiresInMinutes: 10`) |
-
-**In practice:** variables in the compose `environment` block (connection strings, secrets, Seq URL) always win. Everything else set in `.env` passes through to the container and overrides appsettings values. When running from Rider/VS (no Docker), only appsettings files apply — `.env` is not read.
-
-#### What lives where
-
-| File | Purpose | Who edits it |
-|---|---|---|
-| `.env.example` | Working dev defaults — copy to `.env` to get started | Rarely edited |
-| `.env` | Local overrides (git-ignored) — copied from `.env.example` | Everyone |
-| `appsettings.json` | Base/production defaults | Backend devs |
-| `appsettings.Development.json` | Dev defaults (generous JWT expiry, debug logging, localhost URLs) | Backend devs |
-| `docker-compose.local.yml` | Docker service wiring (host-specific values only) | Rarely edited |
-
-### Developer Workflows
-
-#### New machine setup
+Quick start:
 
 ```bash
 cp .env.example .env
 docker compose -f docker-compose.local.yml up -d
 ```
-
-That's it. `.env.example` has working defaults for everything.
-
-#### Frontend dev — tweak backend config
-
-Edit `.env` (not `.env.example`), uncomment and change what you need, restart Docker:
-
-```bash
-# Example: longer JWT tokens, relaxed rate limit
-Authentication__Jwt__ExpiresInMinutes=300
-RateLimiting__Global__PermitLimit=1000
-```
-
-```bash
-docker compose -f docker-compose.local.yml up -d
-```
-
-No backend source files need to be touched.
-
-#### Backend dev — debug in Rider/VS with frontend
-
-1. Stop the API container: `docker compose -f docker-compose.local.yml stop api`
-2. In `.env`, uncomment: `API_URL=http://host.docker.internal:5142`
-3. Restart the frontend container: `docker compose -f docker-compose.local.yml restart frontend`
-4. Launch the API from Rider with the "Development - http" profile (port 5142)
-5. Use the frontend at `localhost:{INIT_FRONTEND_PORT}` — it proxies API calls to Rider
-
-The backend loads `appsettings.Development.json` which has `localhost` connection strings for db/redis/seq (pointing at Docker-exposed ports). Breakpoints work.
-
-#### Backend dev — just run everything
-
-```bash
-docker compose -f docker-compose.local.yml up -d
-```
-
-No config changes needed. Defaults work out of the box.
-
-#### Testing on a phone or other device
-
-The app uses `Secure` + `SameSite=None` cookies, so testing over plain HTTP (e.g. `http://192.168.x.x:13000`) won't work — browsers silently discard `Secure` cookies on non-HTTPS origins. Use an HTTPS tunnel instead:
-
-1. Install [ngrok](https://ngrok.com/) (or any HTTPS tunnel — Tailscale Funnel, Cloudflare Tunnel, etc.)
-2. Start the tunnel pointing at the frontend port:
-   ```bash
-   ngrok http {INIT_FRONTEND_PORT}
-   ```
-3. Copy the HTTPS URL (e.g. `https://abc123.ngrok-free.app`) and add it to `.env`:
-   ```bash
-   ALLOWED_ORIGINS=https://abc123.ngrok-free.app
-   ```
-4. Recreate the frontend container to pick up the new env var:
-   ```bash
-   docker compose -f docker-compose.local.yml up -d frontend --force-recreate
-   ```
-5. Open the ngrok URL on your phone. Login should work end-to-end.
-
-**Why this is needed:**
-
-- The `ALLOWED_ORIGINS` env var tells the SvelteKit API proxy to accept CSRF requests from the tunnel's origin (otherwise it rejects the login POST with 403).
-- Vite's dev server is configured with `allowedHosts: true` so it accepts requests from any hostname (not just `localhost`). This is safe — only the dev server is exposed, never production.
-
-**Cleanup:** When done, remove the `ALLOWED_ORIGINS` line from `.env` and stop the tunnel.
 
 ## Deployment
 

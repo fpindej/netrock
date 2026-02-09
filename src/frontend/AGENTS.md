@@ -1,6 +1,8 @@
 # Frontend Conventions (SvelteKit / Svelte 5)
 
 > Follow the **Agent Workflow** in the root [`AGENTS.md`](../../AGENTS.md) — commit atomically, run quality checks before each commit, and write session docs when asked.
+>
+> For explanations, rationale, and design decisions, see [`docs/frontend-conventions.md`](../../docs/frontend-conventions.md) and [`docs/security.md`](../../docs/security.md).
 
 ## Tech Stack
 
@@ -154,11 +156,7 @@ If the backend doesn't provide data you need, **don't work around it**. Since we
 
 ### Architecture
 
-`createApiClient()` wraps `openapi-fetch` with automatic 401 → refresh → retry logic:
-
-1. Any request returns 401 → trigger `POST /api/auth/refresh` (once, shared across concurrent requests)
-2. If refresh succeeds → retry the original request with new cookies
-3. If refresh fails → return the 401 to the caller
+`createApiClient()` wraps `openapi-fetch` with automatic 401 → refresh → retry logic. Concurrent 401s share a single refresh promise.
 
 Two client variants:
 
@@ -203,7 +201,7 @@ const { data, response, error } = await browserClient.PATCH('/api/users/me', {
 
 ### API Proxy
 
-All `/api/*` requests are proxied to the backend via `routes/api/[...path]/+server.ts`. This catch-all route forwards cookies and headers automatically. It handles `ECONNREFUSED` by returning 503 "Backend unavailable".
+All `/api/*` requests are proxied to the backend via `routes/api/[...path]/+server.ts`. Handles `ECONNREFUSED` by returning 503.
 
 ## Error Handling
 
@@ -237,27 +235,19 @@ async function handleSubmit() {
 }
 ```
 
-`mapFieldErrors` converts ASP.NET Core's PascalCase field names to camelCase (e.g., `PhoneNumber` → `phoneNumber`). The default mapping is in `error-handling.ts`; extend it for new fields via the `customFieldMap` parameter.
+`mapFieldErrors` converts ASP.NET Core's PascalCase field names to camelCase. Extend via the `customFieldMap` parameter for new fields.
 
 ### Network Errors
 
-The API proxy handles network errors:
-
-```typescript
-if (isFetchErrorWithCode(err, 'ECONNREFUSED')) {
-	return new Response(JSON.stringify({ message: 'Backend unavailable' }), { status: 503 });
-}
-```
+The API proxy handles `ECONNREFUSED` → 503 "Backend unavailable".
 
 ## Security
 
-### Principle: Restrictive by Default
-
-Always default to the most restrictive security posture and only relax constraints when a feature explicitly requires it.
+> For security architecture, CSP rationale, and CSRF design, see [`docs/security.md`](../../docs/security.md).
 
 ### Security Response Headers
 
-The `handle` hook in `hooks.server.ts` adds security headers to all page responses. API proxy routes (`/api/*`) are skipped — those receive headers from the backend.
+The `handle` hook in `hooks.server.ts` adds security headers to page responses. API proxy routes (`/api/*`) are skipped.
 
 | Header                   | Value                                      | Purpose                                     |
 | ------------------------ | ------------------------------------------ | ------------------------------------------- |
@@ -266,11 +256,11 @@ The `handle` hook in `hooks.server.ts` adds security headers to all page respons
 | `Referrer-Policy`        | `strict-origin-when-cross-origin`          | Prevents leaking URL paths to third parties |
 | `Permissions-Policy`     | `camera=(), microphone=(), geolocation=()` | Disables unused browser APIs                |
 
-`Permissions-Policy` directives use `()` (empty allowlist) to deny access entirely. If a feature needs a browser API (e.g., webcam for avatar capture), change the specific directive to `(self)` — never remove the header or use `*`.
+`Permissions-Policy` uses `()` to deny. To enable a browser API, change the specific directive to `(self)`.
 
 ### Content Security Policy (CSP)
 
-CSP is configured via nonce mode in `svelte.config.js` using SvelteKit's built-in `kit.csp`:
+CSP is configured via nonce mode in `svelte.config.js`:
 
 ```js
 kit: {
@@ -285,18 +275,18 @@ kit: {
 }
 ```
 
-Key decisions:
+Key rules:
 
-- **`script-src`**: Nonce-based. The FOUC prevention script in `app.html` uses `%sveltekit.nonce%`.
-- **`style-src`**: Requires `'unsafe-inline'` because Svelte transitions (`fly`, `scale`) inject inline `<style>` elements at runtime. This is a documented SvelteKit limitation.
-- **`img-src`**: `'self' https: data:` allows external avatar URLs over HTTPS and Vite-inlined assets. Vite inlines files under 4KB as `data:` URIs at build time — this affects the favicon SVG and most `flag-icons` CSS sprites (country flags used in the phone input and language selector). Without `data:`, these assets are blocked by CSP.
-- **`frame-ancestors`**: `'none'` — defense-in-depth alongside `X-Frame-Options: DENY`.
+- **`script-src`**: Nonce-based. FOUC script in `app.html` uses `%sveltekit.nonce%`.
+- **`style-src`**: `'unsafe-inline'` required for Svelte transitions.
+- **`img-src`**: `data:` required for Vite-inlined assets (<4KB files).
+- **`frame-ancestors`**: `'none'` — defense-in-depth with `X-Frame-Options: DENY`.
 
-CSP is set by the SvelteKit framework (added to responses automatically). The `hooks.server.ts` does NOT set CSP — there is no conflict.
+CSP is set by SvelteKit automatically. `hooks.server.ts` does NOT set CSP.
 
 ### HSTS
 
-Strict-Transport-Security is added in `hooks.server.ts` with a **production-only guard**:
+Production-only in `hooks.server.ts`:
 
 ```typescript
 if (!dev) {
@@ -304,26 +294,19 @@ if (!dev) {
 }
 ```
 
-Never enable HSTS in development — it breaks `localhost` HTTP.
-
 ### CSRF Protection
 
-The API proxy at `routes/api/[...path]/+server.ts` validates the `Origin` header on state-changing requests (POST/PUT/PATCH/DELETE). Requests whose origin doesn't match are rejected with 403. This complements SvelteKit's built-in CSRF protection, which only covers form actions — not `+server.ts` routes.
-
-The check allows:
+The API proxy validates `Origin` on state-changing requests (POST/PUT/PATCH/DELETE). Allows:
 
 1. **Same-origin requests** — `Origin` matches `url.origin` (the SvelteKit server's own origin)
 2. **Configured origins** — `Origin` matches an entry in `ALLOWED_ORIGINS` (env var, comma-separated)
 3. **Missing `Origin` header** — safe to allow (same-origin older browsers or non-browser clients)
 
-To allow access through a reverse proxy or tunnel (ngrok, Tailscale), set the `ALLOWED_ORIGINS` environment variable:
+To allow access through a reverse proxy or tunnel, set `ALLOWED_ORIGINS`:
 
 ```bash
-# In .env
 ALLOWED_ORIGINS=https://abc123.ngrok-free.app
 ```
-
-Multiple origins are comma-separated: `ALLOWED_ORIGINS=https://a.example.com,https://b.example.com`
 
 ## Svelte 5 Patterns
 
@@ -473,7 +456,7 @@ This generates components in `$lib/components/ui/<component>/`. The configuratio
 
 ## Reactive State
 
-State files use `.svelte.ts` extension and live in `$lib/state/`:
+State files use `.svelte.ts` extension in `$lib/state/`:
 
 | File                  | Exports                                                                 |
 | --------------------- | ----------------------------------------------------------------------- |
@@ -519,13 +502,7 @@ Edit both `src/messages/en.json` and `src/messages/cs.json`:
 
 ### Paraglide Module Resolution
 
-Paraglide generates `$lib/paraglide/*` modules at build time. When running `svelte-check`, you will see ~32 errors like:
-
-```
-Cannot find module '$lib/paraglide/messages' or its corresponding type declarations
-```
-
-These are **not real errors** — the modules exist at runtime. The errors disappear after a full build (`npm run build`). Do not try to fix them.
+Paraglide generates `$lib/paraglide/*` at build time. `svelte-check` shows ~32 errors about these modules — **not real errors**. They disappear after `npm run build`.
 
 ## Styling
 
@@ -542,7 +519,7 @@ Styles are modular in `src/styles/`. The entry point is `index.css`, which impor
 | `animations.css` | Keyframes + animation classes               | Adding new animations            |
 | `utilities.css`  | Reusable effect classes                     | Glow effects, card hovers        |
 
-Tailwind CSS 4 is configured via the Vite plugin (`@tailwindcss/vite`) — there is no `tailwind.config.js` or `postcss.config.js`. The `tailwindcss-animate` plugin is loaded via `@plugin 'tailwindcss-animate'` in `index.css`.
+Tailwind CSS 4 is configured via the Vite plugin — no `tailwind.config.js` or `postcss.config.js`.
 
 Dark mode uses a class-based strategy with a custom variant:
 
@@ -587,9 +564,9 @@ Dark mode uses a class-based strategy with a custom variant:
 | `float-left` / `float-right`  | `float-start` / `float-end`      |
 | `space-x-*` (on flex/grid)    | `gap-*` (preferred on flex/grid) |
 
-**Note on `space-x-*`:** This uses `margin-left` internally (physical). On flex/grid containers, prefer `gap-*` which is direction-agnostic. Only use `space-x-*` when not in a flex/grid context.
+**Note:** `space-x-*` uses `margin-left` internally. On flex/grid containers, prefer `gap-*`.
 
-**Note on animation classes:** Classes like `slide-in-from-left`, `slide-out-to-right` from `tailwindcss-animate` are animation names, not physical properties — they are acceptable.
+**Note:** Animation classes (`slide-in-from-left`, etc.) are animation names, not physical properties — acceptable.
 
 ### Class Merging
 
@@ -606,8 +583,6 @@ Always respect `prefers-reduced-motion`:
 ```html
 <div class="motion-safe:duration-300 motion-safe:animate-in motion-safe:fade-in"></div>
 ```
-
-For custom CSS animations in `animations.css`, add a `prefers-reduced-motion: reduce` media query that disables them.
 
 ### Responsive Design
 
@@ -677,26 +652,7 @@ The app layout uses a mobile-first sidebar pattern:
 
 ## Route Structure & Data Fetching
 
-### Authentication Flow
-
-```
-Browser request
-    │
-    ▼
-hooks.server.ts          ← Security headers, locale detection
-    │
-    ▼
-+layout.server.ts (root) ← Calls getUser() → GET /api/users/me
-    │                        Returns { user, locale, apiUrl }
-    │
-    ├─► (app)/+layout.server.ts    ← user is null? → redirect 303 /login
-    │                                  user exists?  → pass through { user }
-    │
-    └─► (public)/login/+page.server.ts ← user exists? → redirect 303 /
-                                          user is null? → show login page
-```
-
-The root layout fetches the user **once** via `getUser()`. All child layouts access the user through `parent()` — they never re-fetch.
+> For the full authentication flow diagram and data fetching strategy, see [`docs/frontend-conventions.md`](../../docs/frontend-conventions.md#route-structure) and [`docs/architecture.md`](../../docs/architecture.md).
 
 ### Route Groups
 
@@ -721,21 +677,8 @@ export const load: LayoutServerLoad = async ({ parent }) => {
 
 ### Adding a New Guarded Route Group
 
-To add a route group with additional access requirements (e.g., admin-only pages):
-
-1. **Create the route group directory** with its own layout server load:
-
-   ```
-   routes/
-   ├── (app)/           # Authenticated users
-   ├── (admin)/         # Admin-only (new)
-   │   ├── +layout.server.ts
-   │   ├── +layout.svelte
-   │   └── admin-panel/
-   └── (public)/        # Unauthenticated
-   ```
-
-2. **Add a layout guard** that checks both authentication and roles:
+1. Create route group directory with `+layout.server.ts`
+2. Add a layout guard:
 
    ```typescript
    // routes/(admin)/+layout.server.ts
@@ -750,24 +693,16 @@ To add a route group with additional access requirements (e.g., admin-only pages
    };
    ```
 
-3. **Keep authorization on the backend too.** Frontend guards are UX — they prevent users from seeing pages they can't use. The backend `[Authorize(Roles = "Admin")]` is the actual security boundary. Never rely on frontend-only role checks.
+3. **Always enforce authorization on the backend too** — frontend guards are UX, not security.
 
 ### Role-Based Access
 
-**Current state:** The frontend has no role-based routing. Roles are only displayed as badges on the profile page (`AccountDetails.svelte`). The `UserResponse` from the backend includes `roles: string[]`.
-
-**Architecture:** Role-based access is enforced at two levels:
-
-| Level                       | Mechanism                                             | Purpose                                                        |
-| --------------------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
-| **Backend** (authoritative) | `[Authorize(Roles = "...")]` on controllers/endpoints | Security enforcement — rejects unauthorized API calls with 403 |
-| **Frontend** (UX)           | Layout guards + conditional rendering                 | Prevents users from seeing UI they can't use                   |
-
-The backend is always the source of truth. If a user manipulates the frontend to bypass a role check, the API call will still fail with 403.
+| Level | Mechanism | Purpose |
+|---|---|---|
+| **Backend** (authoritative) | `[Authorize(Roles = "...")]` | Security — rejects with 403 |
+| **Frontend** (UX) | Layout guards + conditional rendering | Prevents seeing unusable UI |
 
 #### Conditional Rendering by Role
-
-To show/hide UI elements based on the current user's roles:
 
 ```svelte
 <script lang="ts">
@@ -785,20 +720,9 @@ To show/hide UI elements based on the current user's roles:
 {/if}
 ```
 
-#### Future: Granular Permissions
-
-The current model is role-based (`roles: string[]`). If granular permissions are added later (e.g., `permissions: string[]` on the user response), the same patterns apply:
-
-- Backend enforces permissions via policy-based authorization
-- Frontend checks `user.permissions?.includes('orders:write')` for conditional rendering
-- Layout guards check permissions for route-level access
-- The backend remains the single source of truth
-
-Do **not** pre-build a permissions system. When the backend adds permissions to the user response, extend the frontend patterns above.
-
 ### Root Layout Data
 
-The root `+layout.server.ts` fetches the user and locale for all routes. In development, it also exposes the internal API URL for debugging (visible in the login page status indicator):
+The root `+layout.server.ts` fetches user and locale for all routes. In dev, exposes API URL for debugging:
 
 ```typescript
 export const load: LayoutServerLoad = async ({ locals, fetch, url }) => {
@@ -809,7 +733,7 @@ export const load: LayoutServerLoad = async ({ locals, fetch, url }) => {
 
 ### Universal Load Function
 
-The root `+layout.ts` (universal) sets the paraglide locale from server data so that i18n works on both server and client:
+The root `+layout.ts` sets paraglide locale from server data:
 
 ```typescript
 export const load: LayoutLoad = async ({ data }) => {
@@ -843,17 +767,15 @@ Load initial data server-side, then update client-side:
 
 ### FOUC Prevention
 
-`app.html` contains an inline `<script>` that reads the theme from `localStorage` and applies the `.dark` class before paint, preventing a flash of unstyled content. This script runs before Svelte hydration.
+`app.html` contains an inline `<script>` that applies the `.dark` class from `localStorage` before paint.
 
 ### Raw File Imports
 
-Use Vite's `?raw` suffix to import file contents as strings (used in GettingStarted for README display):
+Use Vite's `?raw` suffix to import file contents as strings:
 
 ```typescript
 import readmeContent from '../../../../README.md?raw';
 ```
-
-This is a Vite feature — the file content is bundled as a string at build time.
 
 ## TypeScript Patterns
 
@@ -923,7 +845,7 @@ npm run build    # Production build
 
 ### Known `svelte-check` Errors
 
-`svelte-check` will report ~32 errors related to `$lib/paraglide/*` module resolution. These are expected — paraglide modules are generated at build time. Only investigate errors that are NOT about paraglide imports.
+~32 errors about `$lib/paraglide/*` module resolution are expected (see [Paraglide Module Resolution](#paraglide-module-resolution)).
 
 ## Don'ts
 

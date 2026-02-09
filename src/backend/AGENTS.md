@@ -1,6 +1,8 @@
 # Backend Conventions (.NET 10 / C# 13)
 
 > Follow the **Agent Workflow** in the root [`AGENTS.md`](../../AGENTS.md) — commit atomically, run `dotnet build` before each commit, and write session docs when asked.
+>
+> For explanations, rationale, and design decisions, see [`docs/backend-conventions.md`](../../docs/backend-conventions.md), [`docs/api-contract.md`](../../docs/api-contract.md), and [`docs/security.md`](../../docs/security.md).
 
 ## Project Structure
 
@@ -126,8 +128,6 @@ Rules:
 | `List<T>` | Internal working variable only | Never as a return type on public/internal interfaces — don't expose mutability |
 | `T[]` | Performance-critical internals (`Span<T>`, interop) | Never for public API contracts — mutable and non-resizable, `IReadOnlyList<T>` is strictly better |
 
-The same "minimal scope" principle from access modifiers applies: don't return `List<T>` when the caller shouldn't add/remove items, don't return `IEnumerable<T>` when the data is already materialized.
-
 ### XML Documentation
 
 All **public and internal API surface** must have `/// <summary>` XML docs. This includes interfaces, extension method classes, middleware, shared base classes, and service implementations — not just controllers and DTOs.
@@ -141,11 +141,9 @@ All **public and internal API surface** must have `/// <summary>` XML docs. This
 | **Options classes** | Already covered in the [Options Pattern](#options-pattern) section — every class and property gets `/// <summary>` |
 | **Controllers and DTOs** | Already covered in the [OpenAPI](#openapi-specification--the-api-contract) section — `/// <summary>` on actions and every property |
 
-When adding or modifying any of these types, apply the boy-scout rule: leave the file better than you found it. If a class is missing docs, add them while you're there.
-
 ## Entity Definition
 
-All domain entities extend `BaseEntity`, which provides audit fields and soft delete:
+All domain entities extend `BaseEntity`, which provides audit fields and soft delete. The `AuditingInterceptor` automatically populates audit timestamps — never set these manually.
 
 ```csharp
 // BaseEntity provides these fields automatically:
@@ -158,8 +156,6 @@ public bool IsDeleted { get; private set; }            // Managed by SoftDelete(
 public DateTime? DeletedAt { get; private set; }       // Set by AuditingInterceptor
 public Guid? DeletedBy { get; private set; }           // Set by AuditingInterceptor
 ```
-
-The `AuditingInterceptor` **automatically** populates `CreatedAt`/`CreatedBy` on insert, `UpdatedAt`/`UpdatedBy` on update, and `DeletedAt`/`DeletedBy` on soft delete — never set these manually.
 
 ### Creating a New Entity
 
@@ -225,7 +221,7 @@ dotnet ef migrations add AddOrder \
 
 ## Result Pattern
 
-Use `Result` / `Result<T>` for all operations that can fail expectedly. Never throw exceptions for business logic failures.
+Use `Result` / `Result<T>` for expected business failures. Never throw exceptions for business logic.
 
 ```csharp
 // Success
@@ -319,7 +315,7 @@ internal class AuthenticationService(
 
 Key rules:
 - Mark implementations as `internal`
-- Use `IOptions<T>` for configuration, extract `.Value` to a readonly field
+- Use `IOptions<T>` for configuration
 - Primary constructor parameters are the injected dependencies
 
 ### 4. Register in DI (Infrastructure Layer)
@@ -449,21 +445,21 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 ```
 
 Rules:
-- Always include `/// <summary>` XML docs — these generate OpenAPI descriptions consumed by the frontend
-- Always include `[ProducesResponseType]` for all possible status codes — with `typeof(ErrorResponse)` on error codes that return a body (400, 401, etc.)
-- Always accept `CancellationToken` as the last parameter on async endpoints
-- **Never add `/// <param name="cancellationToken">`** — ASP.NET excludes `CancellationToken` from OAS parameters, but the `<param>` text leaks into `requestBody.description`. CS1573 is suppressed project-wide.
-- Only add `/// <param>` tags for parameters that should appear in the OAS (request body, route/query params)
-- **Never return anonymous objects or raw strings** from controllers — always use a defined DTO (`ErrorResponse` for errors, typed response DTOs for success). Anonymous objects produce untyped schemas in the OAS.
-- **Never use `StatusCode(int, object)`** for responses with a body — the `object` parameter loses type information and the OAS generator cannot introspect the response schema. Use typed helpers instead: `Ok(response)`, `Created(string.Empty, response)`, `BadRequest(error)`, etc.
-- **For 201 Created responses**, use `Created(string.Empty, response)` — not `CreatedAtAction` (which generates `Location` headers for MVC/Razor patterns this API doesn't use) and not `StatusCode(201, response)` (which loses type info).
-- **Never use `#pragma warning disable`** for XML doc warnings — fix the docs instead
+- Always include `/// <summary>` XML docs — these generate OpenAPI descriptions
+- Always include `[ProducesResponseType]` for all possible status codes
+- Always accept `CancellationToken` as the last parameter
+- **Never add `/// <param name="cancellationToken">`** — it leaks into `requestBody.description`
+- Only add `/// <param>` tags for parameters visible in the OAS
+- **Never return anonymous objects or raw strings** — always use defined DTOs
+- **Never use `StatusCode(int, object)`** — loses type info. Use `Ok()`, `Created(string.Empty, response)`, `BadRequest(error)`, etc.
+- **For 201 Created**, use `Created(string.Empty, response)` — not `CreatedAtAction` or `StatusCode(201, response)`
+- **Never use `#pragma warning disable`** for XML doc warnings
 - Use primary constructors for dependency injection
-- Map requests to inputs via mapper extension methods: `request.ToRegisterInput()`
+- Map requests to inputs via mapper extension methods
 
 ## Validation
 
-FluentValidation validators are **auto-discovered** from the WebApi assembly (`AddValidatorsFromAssemblyContaining<Program>()`). Co-locate validators with their request DTOs:
+FluentValidation validators are auto-discovered from the WebApi assembly. Co-locate validators with their request DTOs:
 
 ```csharp
 // WebApi/Features/Authentication/Dtos/Register/RegisterRequestValidator.cs
@@ -477,16 +473,16 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
 }
 ```
 
-Simple DTOs can also use data annotations (`[Required]`, `[MaxLength]`, `[EmailAddress]`, etc.) — both validation systems work together.
+Simple DTOs can also use data annotations — both validation systems work together.
 
 ## Error Handling
 
-Three-tier strategy:
-
-1. **Expected business failures** → Return `Result.Failure("message")` from services
-2. **Not found** → Throw `KeyNotFoundException` → `ExceptionHandlingMiddleware` returns 404
-3. **Pagination errors** → Throw `PaginationException` → middleware returns 400
-4. **Unexpected errors** → Let them propagate → middleware returns 500 with `ErrorResponse`
+| Scenario | Action |
+|---|---|
+| Expected business failure | Return `Result.Failure("message")` from service |
+| Not found | Throw `KeyNotFoundException` → middleware returns 404 |
+| Pagination error | Throw `PaginationException` → middleware returns 400 |
+| Unexpected error | Let propagate → middleware returns 500 with `ErrorResponse` |
 
 ```csharp
 // ExceptionHandlingMiddleware catches and maps exceptions:
@@ -505,17 +501,19 @@ public class ErrorResponse
 }
 ```
 
-`ErrorResponse` is the **only** error body type across the entire API — both controllers and middleware return it. The middleware serializes with explicit `JsonNamingPolicy.CamelCase` to match ASP.NET's controller serialization. Never return raw strings, anonymous objects, or other shapes for errors.
+`ErrorResponse` is the **only** error body type across the entire API. Never return raw strings, anonymous objects, or other shapes for errors.
 
 ## Security
 
+> For security architecture, cookie design, CSP rationale, and header explanations, see [`docs/security.md`](../../docs/security.md).
+
 ### Principle: Restrictive by Default
 
-Always default to the most restrictive security posture and only relax constraints when a feature explicitly requires it. This applies to headers, permissions, CORS, cookie policies, and any browser-facing configuration.
+Always default to the most restrictive security posture and only relax constraints when explicitly required.
 
 ### Security Response Headers
 
-`SecurityHeaderExtensions.UseSecurityHeaders()` adds security headers to every API response. These are browser-instructional — they tell browsers how to behave when handling responses. They have **zero impact** on non-browser clients (mobile apps, curl, etc.).
+`SecurityHeaderExtensions.UseSecurityHeaders()` adds security headers to every API response:
 
 | Header | Value | Purpose |
 |---|---|---|
@@ -524,25 +522,25 @@ Always default to the most restrictive security posture and only relax constrain
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | Prevents leaking URL paths to third-party sites |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Disables browser APIs the app doesn't use |
 
-`Permissions-Policy` uses `()` (empty allowlist) to deny access entirely. If a feature needs a browser API (e.g., webcam for avatar capture), change the value to `(self)` for that specific directive — never remove the header or use `*`.
+`Permissions-Policy` uses `()` (empty allowlist) to deny. To enable a browser API, change the specific directive to `(self)` — never remove the header or use `*`.
 
-HSTS (`Strict-Transport-Security`) is enabled via `app.UseHsts()` in non-development environments.
-
-The frontend applies the same headers to page responses via the `handle` hook in `hooks.server.ts`. API proxy routes (`/api/*`) are skipped — they receive headers from the backend directly.
+HSTS is enabled via `app.UseHsts()` in non-development environments.
 
 ## Repository Pattern & Persistence
 
+> For design rationale (why repositories return materialized objects, save boundaries, transaction strategy), see [`docs/backend-conventions.md`](../../docs/backend-conventions.md#persistence).
+
 ### DbContext Lifecycle
 
-`MyProjectDbContext` is registered as **scoped** (one per HTTP request) via `AddDbContext`. This is the correct lifetime for web APIs — each request gets a clean change tracker.
+`MyProjectDbContext` is scoped (one per HTTP request) via `AddDbContext`.
 
-- **Services** that need direct query access inject `MyProjectDbContext` via primary constructor
+- **Services** that need direct query access inject `MyProjectDbContext`
 - **Repositories** wrap `DbContext` with entity-specific query methods
-- **Never** use `IDbContextFactory` for HTTP request handling — it's for background services that need parallel/concurrent DB operations
+- **Never** use `IDbContextFactory` for HTTP request handling
 
 ### Generic Repository — `IBaseEntityRepository<T>`
 
-Provides standard CRUD with automatic soft-delete filtering:
+Standard CRUD with automatic soft-delete filtering:
 
 ```csharp
 public interface IBaseEntityRepository<TEntity> where TEntity : BaseEntity
@@ -557,13 +555,13 @@ public interface IBaseEntityRepository<TEntity> where TEntity : BaseEntity
 }
 ```
 
-All queries automatically exclude soft-deleted records via a global EF Core query filter (`HasQueryFilter(e => !e.IsDeleted)`) configured in `BaseEntityConfiguration`. Use `.IgnoreQueryFilters()` when you need to query deleted entities (e.g., `RestoreAsync`).
+All queries automatically exclude soft-deleted records via a global query filter in `BaseEntityConfiguration`. Use `.IgnoreQueryFilters()` when querying deleted entities.
 
-The open generic registration `IBaseEntityRepository<T> → BaseEntityRepository<T>` covers entities that only need standard CRUD. For entities with custom queries, create a feature-specific repository (see below).
+The open generic `IBaseEntityRepository<T> → BaseEntityRepository<T>` covers entities that only need standard CRUD. For custom queries, create a feature-specific repository.
 
 ### Custom Repositories
 
-When an entity needs queries beyond basic CRUD, create a dedicated repository:
+When an entity needs queries beyond basic CRUD:
 
 **1. Define the interface (Application layer):**
 
@@ -617,21 +615,16 @@ internal class OrderRepository(MyProjectDbContext dbContext)
 services.AddScoped<IOrderRepository, OrderRepository>();
 ```
 
-The open generic registration still serves entities without custom repositories. Feature-specific registrations take precedence when the specific interface is injected.
-
 Key rules:
-- **Return materialized objects, never `IQueryable`** — all repository methods call `ToListAsync`, `FirstOrDefaultAsync`, etc. before returning. Repositories are the query boundary; services don't compose additional LINQ on top. If a service needs a different query, add a new method to the repository.
+- **Return materialized objects, never `IQueryable`** — repositories call `ToListAsync`, `FirstOrDefaultAsync`, etc. before returning. If a service needs a different query, add a new repository method.
 - **Interface** in `Application/Features/{Feature}/Persistence/` — extends `IBaseEntityRepository<T>`
 - **Implementation** in `Infrastructure/Features/{Feature}/Persistence/` — extends `BaseEntityRepository<T>`, marked `internal`
-- **Query methods** belong on the repository, not scattered across services — the repository is the single source of truth for how an entity is queried
-- **Override `virtual` methods** from `BaseEntityRepository<T>` when you need custom behavior (e.g., eager loading with `.Include()`)
-- **Inject the specific interface** (`IOrderRepository`) in services, not the generic one — this gives access to custom methods while inheriting all base CRUD operations
+- **Override `virtual` methods** from `BaseEntityRepository<T>` for custom behavior (e.g., eager loading with `.Include()`)
+- **Inject the specific interface** (`IOrderRepository`) in services, not the generic one
 
 ### Saving Changes
 
-Repositories stage changes — they don't save them. **Services** are responsible for calling `SaveChangesAsync` on the `DbContext`. This keeps the save boundary explicit and lets a service coordinate multiple repository calls into a single atomic save.
-
-`SaveChangesAsync` wraps all pending changes in a **single implicit transaction** — if any change fails, they all roll back. For most operations, this is sufficient:
+**Services** call `SaveChangesAsync`, not repositories. `SaveChangesAsync` wraps all pending changes in a single implicit transaction:
 
 ```csharp
 await repository.AddAsync(entity, ct);
@@ -640,7 +633,7 @@ await dbContext.SaveChangesAsync(ct);
 
 ### Explicit Transactions
 
-Use explicit transactions only when you need **multiple `SaveChangesAsync` calls** to be atomic — for example, when you need an ID from the first save to use in the second:
+Use only when multiple `SaveChangesAsync` calls must be atomic:
 
 ```csharp
 await using var transaction = await dbContext.Database.BeginTransactionAsync(ct);
@@ -662,11 +655,6 @@ catch
 }
 ```
 
-When **not** to use explicit transactions:
-- Single `SaveChangesAsync` call — already atomic
-- Read-only queries — no writes to coordinate
-- Operations across different services — redesign to keep the transaction boundary within one service method
-
 | Pattern | When |
 |---|---|
 | `dbContext.SaveChangesAsync()` | Default — single batch of changes, implicitly transactional |
@@ -674,7 +662,7 @@ When **not** to use explicit transactions:
 
 ### Optimistic Concurrency
 
-Not enforced globally yet — no entities currently require it. When a use case emerges (e.g., concurrent writes to inventory, order status), discuss the strategy with the user and add concurrency tokens to that specific entity. Options include EF Core's `[ConcurrencyCheck]` attribute, `IsConcurrencyToken()` in Fluent API, or PostgreSQL's `xmin` system column. Handle `DbUpdateConcurrencyException` at the service or middleware level when introduced.
+Not enforced globally yet. When a use case emerges, discuss the strategy per-entity. Options: `[ConcurrencyCheck]`, `IsConcurrencyToken()`, or PostgreSQL's `xmin`.
 
 ## Pagination
 
@@ -687,7 +675,7 @@ The `PaginationExtensions.Paginate()` extension method applies Skip/Take with va
 
 ## Caching
 
-`ICacheService` wraps Redis with JSON serialization:
+`ICacheService` wraps Redis with JSON serialization. Use the cache-aside pattern:
 
 ```csharp
 // Cache-aside pattern
@@ -699,17 +687,17 @@ var user = await cacheService.GetOrSetAsync(
 );
 ```
 
-Cache keys are defined in `Application/Caching/Constants/CacheKeys.cs` as static methods (e.g., `CacheKeys.User(userId)` → `"user:{guid}"`).
-
-The `UserCacheInvalidationInterceptor` automatically invalidates user cache entries when `ApplicationUser` entities are modified in the DbContext — no manual invalidation needed for user data.
+Cache keys are defined in `Application/Caching/Constants/CacheKeys.cs` as static methods (e.g., `CacheKeys.User(userId)` → `"user:{guid}"`). The `UserCacheInvalidationInterceptor` automatically invalidates user cache entries on modification.
 
 ## Options Pattern
 
-Configuration classes use the **Options pattern** with Data Annotations + `IValidatableObject` for validation. All options are validated at startup via `ValidateDataAnnotations()` + `ValidateOnStart()`.
+> For rationale (why `sealed`, why `ValidateOnStart`, why `[ValidateObjectMembers]`), see [`docs/backend-conventions.md`](../../docs/backend-conventions.md#options-pattern).
+
+Configuration classes use the **Options pattern** with Data Annotations + `IValidatableObject` for validation, validated at startup via `ValidateDataAnnotations()` + `ValidateOnStart()`.
 
 ### Defining Options Classes
 
-Options classes are `public sealed class` with `const string SectionName` matching the `appsettings.json` path. **The class name must correspond to the closest related parent section** — e.g., if the section is `Authentication:Jwt`, the root class is `AuthenticationOptions` (not `JwtOptions`). Properties use `init`-only setters with sensible defaults:
+Options classes are `public sealed class` with `const string SectionName`. The class name corresponds to the closest parent `appsettings.json` section. Properties use `init`-only setters:
 
 ```csharp
 // Infrastructure/Features/Authentication/Options/AuthenticationOptions.cs
@@ -755,7 +743,7 @@ public sealed class AuthenticationOptions
 
 ### XML Documentation
 
-Every Options class and every property must have `/// <summary>` XML docs. This includes nested child classes and their properties. Follow the same style as `CachingOptions.cs`:
+Every Options class and property must have `/// <summary>` XML docs, including nested child classes:
 
 ```csharp
 /// <summary>
@@ -790,14 +778,13 @@ public sealed class AuthenticationOptions
 ```
 
 Rules:
-- **Class-level** `/// <summary>` — describe what the options configure and which `appsettings.json` section they map to (for root classes)
-- **Property-level** `/// <summary>` — start with "Gets or sets…", describe the purpose, mention defaults and constraints when relevant
+- **Class-level** `/// <summary>` — describe what the options configure and which section they map to
+- **Property-level** `/// <summary>` — start with "Gets or sets…", mention defaults and constraints
 - **Nested class** `/// <summary>` — describe what the sub-section configures
-- Use the same `Gets or sets` wording as `CachingOptions` for consistency across the codebase
 
 ### Child Options (Sub-Sections)
 
-Child options model nested `appsettings.json` sections (e.g., `Authentication:Jwt:RefreshToken`). **Always nest them as `public sealed class` inside the parent.** They have no `SectionName` — they bind automatically through the parent. They are not registered independently with `AddOptions<>`.
+Child options model nested `appsettings.json` sections. **Always nest them as `public sealed class` inside the parent.** No `SectionName`, bound automatically through the parent, not registered independently.
 
 ```csharp
 public sealed class RateLimitingOptions
@@ -827,14 +814,14 @@ Use `[UsedImplicitly]` on `init` setters of child options properties that are on
 | Mechanism | Use For |
 |---|---|
 | **Data Annotations** (`[Required]`, `[MinLength]`, `[Range]`) | Simple property-level constraints |
-| **`[ValidateObjectMembers]`** | Properties holding nested options objects with their own data annotations — ensures `ValidateDataAnnotations()` recurses into children |
+| **`[ValidateObjectMembers]`** | Properties holding nested options objects — ensures `ValidateDataAnnotations()` recurses into children. **Required on every property that holds a child options object with data annotations.** |
 | **`IValidatableObject.Validate()`** | Cross-property rules, conditional validation, business logic checks |
 
-**`[ValidateObjectMembers]`** (from `Microsoft.Extensions.Options`) tells `ValidateDataAnnotations()` to recurse into a nested object and validate its data annotations. Without it, `ValidateDataAnnotations()` only checks the root class — annotations on nested objects are silently ignored. **Every property that holds a child options object with data annotations must have `[ValidateObjectMembers]`.**
+**`[ValidateObjectMembers]`** tells `ValidateDataAnnotations()` to recurse into a nested object. Without it, annotations on nested objects are silently ignored.
 
-**Never** use `IValidateOptions<T>` — keep all validation on the options class itself via data annotations, `[ValidateObjectMembers]`, or `IValidatableObject`. This keeps validation co-located with the configuration it validates.
+**Never** use `IValidateOptions<T>` — keep all validation on the options class itself.
 
-When a parent options class composes child options that have their own `IValidatableObject.Validate()` and validation must be **conditional**, the parent must delegate validation to the children manually (because `[ValidateObjectMembers]` validates unconditionally):
+When a parent needs **conditional** child validation (because `[ValidateObjectMembers]` validates unconditionally), delegate manually:
 
 ```csharp
 // Parent delegates to children conditionally — CachingOptions pattern
@@ -849,26 +836,24 @@ public IEnumerable<ValidationResult> Validate(ValidationContext validationContex
 }
 ```
 
-For the common case where child validation is unconditional, prefer `[ValidateObjectMembers]` over manual delegation — it's simpler and less error-prone.
+For unconditional child validation, prefer `[ValidateObjectMembers]` over manual delegation.
 
 ### Registration
 
-Register options in the feature's DI extension using the standard three-call chain:
+Register in the feature's DI extension:
 
 ```csharp
 services.AddOptions<AuthenticationOptions>()
     .BindConfiguration(AuthenticationOptions.SectionName)
-    .ValidateDataAnnotations()    // Runs [Required], [MinLength], etc. AND IValidatableObject.Validate()
-    .ValidateOnStart();           // Fail fast at startup, not on first resolve
+    .ValidateDataAnnotations()    // Runs data annotations AND IValidatableObject.Validate()
+    .ValidateOnStart();           // Fail fast at startup
 ```
 
-`ValidateDataAnnotations()` invokes both data annotations **and** `IValidatableObject.Validate()` — no extra registration needed.
-
-Only **root** options classes (those with `SectionName`) are registered. Nested/composed classes bind through the parent.
+Only **root** options classes (with `SectionName`) are registered. Nested classes bind through the parent.
 
 ### Consuming Options
 
-**Runtime injection** — use `IOptions<T>` in services and extract `.Value` to a readonly field. When consuming a child options class, navigate to it from the root:
+**Runtime** — `IOptions<T>` in services, extract `.Value` to a readonly field:
 
 ```csharp
 internal class MyService(IOptions<AuthenticationOptions> authenticationOptions) : IMyService
@@ -877,22 +862,18 @@ internal class MyService(IOptions<AuthenticationOptions> authenticationOptions) 
 }
 ```
 
-**Startup configuration** — when options are needed during DI registration (before the container is built), read eagerly from `IConfiguration`:
+**Startup** — when needed during DI registration (before the container is built), read from `IConfiguration`:
 
 ```csharp
-// In a DI extension method that receives IConfiguration
 var authOptions = configuration.GetSection(AuthenticationOptions.SectionName).Get<AuthenticationOptions>()
     ?? throw new InvalidOperationException("Authentication options are not configured properly.");
-var jwtOptions = authOptions.Jwt;
 ```
 
-This is common for configuring middleware and third-party libraries (CORS policies, Redis connections, JWT bearer setup, rate limiters) that need values at registration time rather than at request time.
-
-**Never** use `IOptionsMonitor<T>` or `IOptionsSnapshot<T>` — all configuration is static and validated once at startup.
+**Never** use `IOptionsMonitor<T>` or `IOptionsSnapshot<T>` — all configuration is static.
 
 ## C# 13 Extension Member Syntax
 
-This project uses the new extension member syntax throughout. **Always** use it for new extension methods:
+**Always** use the new extension member syntax for new extension methods:
 
 ```csharp
 // ✅ Correct — C# 13 extension members
@@ -916,11 +897,13 @@ public static IQueryable<T> ConditionalWhere<T>(this IQueryable<T> query, ...) =
 
 ## Enum Handling
 
-Enums are **always strings** in the API layer — JSON responses, OpenAPI spec, and generated TypeScript types. In the **database**, enums are stored as **integers** (the EF Core default) for compact storage and index performance, with a `COMMENT ON COLUMN` documenting the valid values.
+> For rationale (why strings in API, integers in DB), see [`docs/backend-conventions.md`](../../docs/backend-conventions.md#enum-handling).
+
+Enums are **strings in the API** (JSON, OAS, TypeScript) and **integers in the database** (EF Core default).
 
 ### Declaration
 
-Define enums in the **Domain** layer alongside the entity that uses them:
+Define in the **Domain** layer:
 
 ```csharp
 // Domain/Entities/OrderStatus.cs
@@ -935,34 +918,17 @@ public enum OrderStatus
 ```
 
 Rules:
-- **Always assign explicit integer values** — never rely on implicit ordering. Inserting a member between existing ones would silently shift all subsequent values and corrupt stored data.
-- **PascalCase** member names (C# convention) — these become the string values in JSON and the OAS
-- Place in `Domain/Entities/` next to the entity, or in `Domain/Enums/` if shared across entities
-- Keep enums small and focused — if an enum grows beyond ~10 members, reconsider the modeling
+- **Always assign explicit integer values** — inserting a member between existing ones would corrupt stored data
+- **PascalCase** member names
+- Place in `Domain/Entities/` or `Domain/Enums/` if shared
 
 ### Runtime JSON Serialization
 
-`JsonStringEnumConverter` is registered globally in `Program.cs` via `AddJsonOptions`:
-
-```csharp
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
-```
-
-This ensures all API responses serialize enums as `"Shipped"` not `2`. This is non-negotiable — never remove this converter.
+`JsonStringEnumConverter` is registered globally in `Program.cs`. All API responses serialize enums as `"Shipped"` not `2`. Never remove this converter.
 
 ### OpenAPI Spec
 
-`EnumSchemaTransformer` handles enum schemas in the OAS output. It does three things:
-
-1. Sets `type: string` (not `integer`)
-2. **Lists every enum member** in the `enum` array — so consumers see all valid values
-3. **Handles nullable enums** (`MyEnum?`) by preserving the null flag → `type: [string, null]`
-
-The transformer uses `Nullable.GetUnderlyingType()` to unwrap nullable enums, so both `OrderStatus` and `OrderStatus?` properties produce correct schemas.
+`EnumSchemaTransformer` sets `type: string`, lists all members in `enum` array, and handles nullable enums (`type: [string, null]`).
 
 **OAS output for a non-nullable enum:**
 ```yaml
@@ -982,7 +948,7 @@ Status:
 
 ### Generated TypeScript Types
 
-The frontend runs `npm run api:generate` which produces TypeScript types from the OAS. With the above setup:
+With the above setup, `npm run api:generate` produces:
 
 ```typescript
 // Non-nullable enum → union of literal strings
@@ -992,22 +958,18 @@ status: "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
 status?: "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
 ```
 
-**No `unknown`, no numeric values, no type pollution.** If you see `unknown` in the generated types for an enum field, something is wrong with the transformer or annotations.
+If you see `unknown` in generated types for an enum field, the transformer or annotations are misconfigured.
 
 ### EF Core Storage
 
-Store enums as **integers** (the default) — no `HasConversion` needed. Add `.HasComment()` to document the valid values in the database schema:
+Store as **integers** (default). Add `.HasComment()` to document values:
 
 ```csharp
 builder.Property(e => e.Status)
     .HasComment("OrderStatus enum: 0=Pending, 1=Processing, 2=Shipped, 3=Delivered, 4=Cancelled");
 ```
 
-The comment format is `EnumTypeName enum: N=Member, ...` — always include the integer value so anyone querying raw data can decode a row without access to the C# source.
-
-This stores a compact `integer` column in PostgreSQL while the comment makes the column self-documenting. The comment generates `COMMENT ON COLUMN orders."Status" IS '...'` in the migration — pure metadata, zero runtime overhead.
-
-Do **not** use `HasConversion<string>()` — string storage bloats row size and indexes for no benefit when the application always works through the enum type.
+Comment format: `EnumTypeName enum: N=Member, ...`. Do **not** use `HasConversion<string>()`.
 
 ### Enum Conventions Summary
 
@@ -1022,7 +984,9 @@ Do **not** use `HasConversion<string>()` — string storage bloats row size and 
 
 ## OpenAPI Specification — The API Contract
 
-The OpenAPI spec at `/openapi/v1.json` is **the single source of truth** for the entire frontend. Every controller action, every DTO property, every status code directly generates the TypeScript types the frontend consumes via `openapi-typescript`. A sloppy spec means a sloppy frontend. Treat the OAS output as a first-class deliverable.
+> For pipeline overview, DTO design rationale, and frontend type usage, see [`docs/api-contract.md`](../../docs/api-contract.md).
+
+The OAS at `/openapi/v1.json` is the single source of truth for the frontend. Treat spec output as a first-class deliverable.
 
 ### Spec Infrastructure
 
@@ -1037,8 +1001,6 @@ The OpenAPI spec at `/openapi/v1.json` is **the single source of truth** for the
 | Scalar UI | `/scalar/v1` (dev only) | Interactive API documentation |
 
 ### Mandatory Annotations on Every Controller Action
-
-Every endpoint **must** have all of these — no exceptions:
 
 ```csharp
 /// <summary>
@@ -1067,8 +1029,6 @@ public async Task<ActionResult<UserResponse>> UpdateCurrentUser(...)
 
 ### DTO Documentation — Every Property Gets XML Docs
 
-Every property on every request/response DTO must have `/// <summary>`:
-
 ```csharp
 /// <summary>
 /// Represents a request to update the user's profile information.
@@ -1083,22 +1043,20 @@ public class UpdateUserRequest
 }
 ```
 
-These `<summary>` tags become property descriptions in the OAS schema. Without them, the frontend developer (or agent) has no idea what a field means or expects.
+These `<summary>` tags become property descriptions in the OAS schema.
 
 ### Nullability → Required/Optional in OAS
-
-DTO nullability directly controls `required` in the generated spec:
 
 ```csharp
 public string Email { get; init; } = string.Empty;  // → required in OAS, non-nullable in TypeScript
 public string? FirstName { get; init; }              // → optional in OAS, T | undefined in TypeScript
 ```
 
-Get this wrong and the frontend types are wrong. See the [Nullable Reference Types](#nullable-reference-types) section.
+See the [Nullable Reference Types](#nullable-reference-types) section.
 
 ### Validation Annotations → OAS Constraints
 
-Data annotations on DTOs flow into the spec as schema constraints:
+Data annotations on DTOs flow into the spec:
 
 ```csharp
 [MaxLength(255)]           // → maxLength: 255
@@ -1108,28 +1066,25 @@ Data annotations on DTOs flow into the spec as schema constraints:
 [Required]                 // → required (in addition to non-nullable)
 ```
 
-Use these alongside FluentValidation — data annotations feed the spec, FluentValidation handles complex rules at runtime.
+Use alongside FluentValidation — annotations feed the spec, FluentValidation handles complex rules.
 
 ### OAS Compliance Checklist
 
-Before adding or modifying any endpoint, verify:
-
-- [ ] `/// <summary>` on the controller action describing what it does
-- [ ] `/// <param>` for every **visible** parameter (request body, route, query) — **never** for `CancellationToken` (leaks into `requestBody.description`)
+- [ ] `/// <summary>` on the controller action
+- [ ] `/// <param>` for visible parameters — **never** for `CancellationToken`
 - [ ] `/// <response code="...">` for every possible status code
-- [ ] `[ProducesResponseType]` for every status code — with `typeof(T)` for response bodies, `typeof(ErrorResponse)` for error codes that return a body
+- [ ] `[ProducesResponseType]` for every status code — `typeof(T)` for response bodies, `typeof(ErrorResponse)` for error bodies
 - [ ] `ActionResult<T>` return type (not bare `ActionResult`) when returning a success body
-- [ ] Error responses always return `new ErrorResponse { Message = ... }` — never raw strings or anonymous objects
-- [ ] `/// <summary>` on every DTO class
-- [ ] `/// <summary>` on every DTO property
-- [ ] Correct nullability (`string` vs `string?`) matching the API contract
-- [ ] Data annotations (`[MaxLength]`, `[Range]`, etc.) on request DTOs for spec constraints
-- [ ] `[Description("...")]` on base-class query parameter properties (e.g. `PaginatedRequest`) — XML `<summary>` doesn't flow to inherited OAS parameters
-- [ ] `CancellationToken` as the last parameter on all async endpoints, passed through to service calls — **no** `<param>` XML doc for it
-- [ ] Route uses lowercase (`[Route("api/[controller]")]` + `LowercaseUrls = true`)
-- [ ] Enums serialize as strings with all members listed (handled by `JsonStringEnumConverter` + `EnumSchemaTransformer` — verify in Scalar)
-- [ ] No `#pragma warning disable` — CS1573 (partial param docs) is suppressed project-wide because omitting `CancellationToken` param tags is intentional
-- [ ] After any response DTO change (new DTO, renamed/added/removed properties, changed nullability), regenerate frontend types: `npm run api:generate` from `src/frontend/` with the backend running — then commit `v1.d.ts`
+- [ ] Error responses always return `new ErrorResponse { Message = ... }`
+- [ ] `/// <summary>` on every DTO class and property
+- [ ] Correct nullability (`string` vs `string?`)
+- [ ] Data annotations on request DTOs
+- [ ] `[Description("...")]` on base-class query parameter properties
+- [ ] `CancellationToken` as last parameter, passed through to services — no `<param>` XML doc
+- [ ] Route uses lowercase
+- [ ] Enums verified in Scalar (string type, all members listed)
+- [ ] No `#pragma warning disable`
+- [ ] After DTO changes: `npm run api:generate` from `src/frontend/` → commit `v1.d.ts`
 
 ## Adding a New Feature — Checklist
 
