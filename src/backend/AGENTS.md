@@ -477,6 +477,29 @@ public class ErrorResponse
 
 `ErrorResponse` is the **only** error body type across the entire API — both controllers and middleware return it. The middleware serializes with explicit `JsonNamingPolicy.CamelCase` to match ASP.NET's controller serialization. Never return raw strings, anonymous objects, or other shapes for errors.
 
+## Security
+
+### Principle: Restrictive by Default
+
+Always default to the most restrictive security posture and only relax constraints when a feature explicitly requires it. This applies to headers, permissions, CORS, cookie policies, and any browser-facing configuration.
+
+### Security Response Headers
+
+`SecurityHeaderExtensions.UseSecurityHeaders()` adds security headers to every API response. These are browser-instructional — they tell browsers how to behave when handling responses. They have **zero impact** on non-browser clients (mobile apps, curl, etc.).
+
+| Header | Value | Purpose |
+|---|---|---|
+| `X-Content-Type-Options` | `nosniff` | Prevents MIME-type sniffing (XSS via content type confusion) |
+| `X-Frame-Options` | `DENY` | Prevents embedding in iframes (clickjacking) |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Prevents leaking URL paths to third-party sites |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Disables browser APIs the app doesn't use |
+
+`Permissions-Policy` uses `()` (empty allowlist) to deny access entirely. If a feature needs a browser API (e.g., webcam for avatar capture), change the value to `(self)` for that specific directive — never remove the header or use `*`.
+
+HSTS (`Strict-Transport-Security`) is enabled via `app.UseHsts()` in non-development environments.
+
+The frontend applies the same headers to page responses via the `handle` hook in `hooks.server.ts`. API proxy routes (`/api/*`) are skipped — they receive headers from the backend directly.
+
 ## Repository & Unit of Work
 
 `IBaseEntityRepository<T>` provides standard CRUD with automatic soft-delete filtering:
