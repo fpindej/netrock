@@ -606,6 +606,7 @@ services.AddScoped<IOrderRepository, OrderRepository>();
 The open generic registration still serves entities without custom repositories. Feature-specific registrations take precedence when the specific interface is injected.
 
 Key rules:
+- **Return materialized objects, never `IQueryable`** — all repository methods call `ToListAsync`, `FirstOrDefaultAsync`, etc. before returning. Repositories are the query boundary; services don't compose additional LINQ on top. If a service needs a different query, add a new method to the repository.
 - **Interface** in `Application/Features/{Feature}/Persistence/` — extends `IBaseEntityRepository<T>`
 - **Implementation** in `Infrastructure/Features/{Feature}/Persistence/` — extends `BaseEntityRepository<T>`, marked `internal`
 - **Query methods** belong on the repository, not scattered across services — the repository is the single source of truth for how an entity is queried
