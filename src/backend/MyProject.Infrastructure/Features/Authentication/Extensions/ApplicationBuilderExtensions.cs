@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using MyProject.Application.Identity.Constants;
+using MyProject.Infrastructure.Features.Authentication.Constants;
 using MyProject.Infrastructure.Features.Authentication.Models;
 
 namespace MyProject.Infrastructure.Features.Authentication.Extensions;
@@ -33,19 +34,19 @@ public static class ApplicationBuilderExtensions
             }
         }
 
-        var testUser = await userManager.FindByNameAsync("testuser@test.com");
+        var testUser = await userManager.FindByNameAsync(SeedUsers.TestUserEmail);
         if (testUser is null)
         {
-            testUser = new ApplicationUser { UserName = "testuser@test.com", Email = "testuser@test.com", EmailConfirmed = true };
-            await userManager.CreateAsync(testUser, "TestUser123!");
+            testUser = new ApplicationUser { UserName = SeedUsers.TestUserEmail, Email = SeedUsers.TestUserEmail, EmailConfirmed = true };
+            await userManager.CreateAsync(testUser, SeedUsers.TestUserPassword);
             await userManager.AddToRoleAsync(testUser, AppRoles.User);
         }
 
-        var adminUser = await userManager.FindByNameAsync("admin@test.com");
+        var adminUser = await userManager.FindByNameAsync(SeedUsers.AdminEmail);
         if (adminUser is null)
         {
-            adminUser = new ApplicationUser { UserName = "admin@test.com", Email = "admin@test.com", EmailConfirmed = true };
-            await userManager.CreateAsync(adminUser, "AdminUser123!");
+            adminUser = new ApplicationUser { UserName = SeedUsers.AdminEmail, Email = SeedUsers.AdminEmail, EmailConfirmed = true };
+            await userManager.CreateAsync(adminUser, SeedUsers.AdminPassword);
             await userManager.AddToRoleAsync(adminUser, AppRoles.Admin);
         }
     }
