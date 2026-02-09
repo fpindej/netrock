@@ -2,10 +2,13 @@
  * API error handling utilities for ASP.NET Core backends.
  *
  * Provides type-safe parsing and mapping of validation errors
- * from ASP.NET Core's ProblemDetails format.
+ * from ASP.NET Core's ProblemDetails format, and localized error
+ * message resolution from backend error codes via paraglide-js.
  *
  * @remarks Pattern documented in src/frontend/AGENTS.md — update both when changing.
  */
+
+import * as m from '$lib/paraglide/messages';
 
 /**
  * Extended ProblemDetails with validation errors.
@@ -84,14 +87,97 @@ export function mapFieldErrors(
 }
 
 /**
- * Extracts a user-friendly error message from an API error response.
+ * Maps backend error codes (dot-separated) to paraglide message functions.
+ * When the backend returns an `errorCode` field, this map resolves it to a
+ * localized string. Unknown codes fall through to the raw message or fallback.
+ *
+ * @see ErrorCodes in MyProject.Domain for the canonical list of codes.
+ */
+const errorCodeMessages: Record<string, () => string> = {
+	// Auth — login
+	'auth.login.invalidCredentials': m.apiError_auth_login_invalidCredentials,
+	'auth.login.accountLocked': m.apiError_auth_login_accountLocked,
+	// Auth — registration
+	'auth.register.failed': m.apiError_auth_register_failed,
+	'auth.register.roleAssignFailed': m.apiError_auth_register_roleAssignFailed,
+	// Auth — tokens
+	'auth.token.missing': m.apiError_auth_token_missing,
+	'auth.token.notFound': m.apiError_auth_token_notFound,
+	'auth.token.invalidated': m.apiError_auth_token_invalidated,
+	'auth.token.reused': m.apiError_auth_token_reused,
+	'auth.token.expired': m.apiError_auth_token_expired,
+	'auth.token.userNotFound': m.apiError_auth_token_userNotFound,
+	// Auth — general
+	'auth.notAuthenticated': m.apiError_auth_notAuthenticated,
+	'auth.userNotFound': m.apiError_auth_userNotFound,
+	// Auth — password
+	'auth.password.incorrect': m.apiError_auth_password_incorrect,
+	'auth.password.changeFailed': m.apiError_auth_password_changeFailed,
+	// User — self-service
+	'user.notAuthenticated': m.apiError_user_notAuthenticated,
+	'user.notFound': m.apiError_user_notFound,
+	'user.updateFailed': m.apiError_user_updateFailed,
+	'user.delete.invalidPassword': m.apiError_user_delete_invalidPassword,
+	'user.delete.lastRole': m.apiError_user_delete_lastRole,
+	// Admin — user management
+	'admin.user.notFound': m.apiError_admin_user_notFound,
+	'admin.hierarchy.insufficient': m.apiError_admin_hierarchy_insufficient,
+	// Admin — roles
+	'admin.role.notExists': m.apiError_admin_role_notExists,
+	'admin.role.alreadyAssigned': m.apiError_admin_role_alreadyAssigned,
+	'admin.role.notAssigned': m.apiError_admin_role_notAssigned,
+	'admin.role.rankTooHigh': m.apiError_admin_role_rankTooHigh,
+	'admin.role.selfRemove': m.apiError_admin_role_selfRemove,
+	'admin.role.lastRole': m.apiError_admin_role_lastRole,
+	'admin.role.assignFailed': m.apiError_admin_role_assignFailed,
+	'admin.role.removeFailed': m.apiError_admin_role_removeFailed,
+	// Admin — lock/unlock
+	'admin.lock.selfAction': m.apiError_admin_lock_selfAction,
+	'admin.lock.failed': m.apiError_admin_lock_failed,
+	'admin.unlock.failed': m.apiError_admin_unlock_failed,
+	// Admin — delete
+	'admin.delete.selfAction': m.apiError_admin_delete_selfAction,
+	'admin.delete.lastRole': m.apiError_admin_delete_lastRole,
+	'admin.delete.failed': m.apiError_admin_delete_failed,
+	// Pagination
+	'pagination.invalidPage': m.apiError_pagination_invalidPage,
+	'pagination.invalidPageSize': m.apiError_pagination_invalidPageSize,
+	// Rate limiting
+	'rateLimit.exceeded': m.apiError_rateLimit_exceeded,
+	// Server
+	'server.internalError': m.apiError_server_internalError,
+	// Entity (generic repository errors)
+	'entity.addFailed': m.apiError_entity_addFailed,
+	'entity.notFound': m.apiError_entity_notFound,
+	'entity.notDeleted': m.apiError_entity_notDeleted
+};
+
+/**
+ * Extracts a user-friendly, localized error message from an API error response.
+ *
+ * Resolution order:
+ * 1. `errorCode` field → localized paraglide message (if code is mapped)
+ * 2. `message` field → raw backend message (ErrorResponse shape)
+ * 3. `detail` field → raw ProblemDetails detail
+ * 4. `title` field → raw ProblemDetails title
+ * 5. Fallback string
  *
  * @param error - The error object from the API response
  * @param fallback - Fallback message if no error message can be extracted
- * @returns A user-friendly error message
+ * @returns A user-friendly error message, localized when possible
  */
 export function getErrorMessage(error: unknown, fallback: string): string {
 	if (typeof error === 'object' && error !== null) {
+		// 1. Try errorCode → localized message
+		if ('errorCode' in error && typeof error.errorCode === 'string') {
+			const messageFn = errorCodeMessages[error.errorCode];
+			if (messageFn) return messageFn();
+		}
+		// 2. Try ErrorResponse shape (message field)
+		if ('message' in error && typeof error.message === 'string') {
+			return error.message;
+		}
+		// 3. Try ProblemDetails shape (detail/title)
 		if ('detail' in error && typeof error.detail === 'string') {
 			return error.detail;
 		}
