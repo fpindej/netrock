@@ -11,9 +11,12 @@
 | TypeScript (strict)     | Type safety — no `any`, define proper interfaces          |
 | Tailwind CSS 4          | Utility-first styling with CSS variable theming           |
 | shadcn-svelte (bits-ui) | Headless, accessible UI component library                 |
+| tailwind-variants       | Variant-based styling for complex components (e.g. sheet) |
 | openapi-fetch           | Type-safe API client from generated OpenAPI types         |
 | paraglide-js            | Type-safe i18n with compile-time message validation       |
 | svelte-sonner           | Toast notifications                                       |
+| @internationalized/date | Locale-aware date formatting                              |
+| flag-icons              | Country flag CSS sprites (phone input)                    |
 
 ## Project Structure
 
@@ -26,14 +29,20 @@ src/
 │   │   ├── index.ts               # Barrel export
 │   │   └── v1.d.ts                # ⚠️ GENERATED — never edit manually
 │   │
+│   ├── assets/                    # Static assets (favicon, images)
+│   │   └── favicon.svg
+│   │
 │   ├── auth/                      # Authentication helpers
 │   │   └── auth.ts                # getUser(), logout()
 │   │
 │   ├── components/
 │   │   ├── ui/                    # shadcn components (generated, customizable)
-│   │   ├── auth/                  # LoginForm, RegisterDialog
-│   │   ├── layout/                # Header, Sidebar, UserNav, ThemeToggle
-│   │   ├── profile/               # ProfileForm, AvatarDialog
+│   │   ├── auth/                  # LoginForm, LoginBackground, RegisterDialog
+│   │   ├── getting-started/       # GettingStarted, markdown renderer (removable)
+│   │   ├── layout/                # Header, Sidebar, SidebarNav, UserNav,
+│   │   │                          # ThemeToggle, LanguageSelector, ShortcutsHelp
+│   │   ├── profile/               # ProfileForm, ProfileHeader, AvatarDialog,
+│   │   │                          # AccountDetails, InfoItem
 │   │   └── common/                # StatusIndicator, WorkInProgress
 │   │
 │   ├── config/
@@ -52,17 +61,23 @@ src/
 │   │
 │   └── utils/
 │       ├── ui.ts                  # cn() for class merging
-│       └── platform.ts            # IS_MAC, IS_WINDOWS detection
+│       ├── platform.ts            # IS_MAC, IS_WINDOWS detection
+│       └── index.ts               # Barrel export (cn, WithoutChildrenOrChild)
 │
 ├── routes/
 │   ├── (app)/                     # Authenticated (redirect to /login if no user)
 │   │   ├── +layout.server.ts      # Auth guard
 │   │   ├── +layout.svelte         # App shell (sidebar + header)
-│   │   ├── profile/
-│   │   └── settings/
+│   │   ├── +page.svelte           # Dashboard / Getting Started
+│   │   ├── analytics/             # Analytics page (WIP placeholder)
+│   │   ├── profile/               # User profile page
+│   │   ├── reports/               # Reports page (WIP placeholder)
+│   │   └── settings/              # Settings page (WIP placeholder)
 │   │
 │   ├── (public)/                  # Unauthenticated
 │   │   └── login/
+│   │       ├── +page.server.ts    # Redirect to / if already logged in
+│   │       └── +page.svelte       # Login page
 │   │
 │   ├── api/                       # API proxy routes
 │   │   ├── [...path]/+server.ts   # Catch-all proxy to backend
@@ -70,13 +85,14 @@ src/
 │   │
 │   ├── +layout.svelte             # Root layout (theme init, shortcuts, toast)
 │   ├── +layout.server.ts          # Root server load (fetch user, locale)
+│   ├── +layout.ts                 # Universal load (set paraglide locale)
 │   └── +error.svelte              # Error page with status-aware icons
 │
 ├── messages/                      # i18n translation files
 │   ├── en.json
 │   └── cs.json
 │
-└── styles/                        # Global CSS
+└── styles/                        # Global CSS (modular architecture)
     ├── index.css                  # Entry point — imports all modules
     ├── themes.css                 # CSS variables (:root + .dark)
     ├── tailwind.css               # @theme inline mappings
@@ -95,7 +111,7 @@ Types are auto-generated from the backend's OpenAPI specification. **Never hand-
 npm run api:generate
 ```
 
-This fetches `/openapi/v1.json` from the running backend and generates `src/lib/api/v1.d.ts`. The backend must be running.
+This fetches `/openapi/v1.json` from the running backend and generates `src/lib/api/v1.d.ts`. The backend must be running (either in Docker or from IDE).
 
 ### Using Generated Types
 
@@ -252,6 +268,44 @@ The `handle` hook in `hooks.server.ts` adds security headers to all page respons
 
 `Permissions-Policy` directives use `()` (empty allowlist) to deny access entirely. If a feature needs a browser API (e.g., webcam for avatar capture), change the specific directive to `(self)` — never remove the header or use `*`.
 
+### Content Security Policy (CSP)
+
+CSP is configured via nonce mode in `svelte.config.js` using SvelteKit's built-in `kit.csp`:
+
+```js
+kit: {
+	csp: {
+		directives: {
+			'script-src': ['self', 'nonce'],
+			'style-src': ['self', 'unsafe-inline'],   // Required for Svelte transitions
+			'img-src': ['self', 'https:'],
+			'frame-ancestors': ['none']
+		}
+	}
+}
+```
+
+Key decisions:
+
+- **`script-src`**: Nonce-based. The FOUC prevention script in `app.html` uses `%sveltekit.nonce%`.
+- **`style-src`**: Requires `'unsafe-inline'` because Svelte transitions (`fly`, `scale`) inject inline `<style>` elements at runtime. This is a documented SvelteKit limitation.
+- **`img-src`**: `'self' https:` allows external avatar URLs over HTTPS only.
+- **`frame-ancestors`**: `'none'` — defense-in-depth alongside `X-Frame-Options: DENY`.
+
+CSP is set by the SvelteKit framework (added to responses automatically). The `hooks.server.ts` does NOT set CSP — there is no conflict.
+
+### HSTS
+
+Strict-Transport-Security is added in `hooks.server.ts` with a **production-only guard**:
+
+```typescript
+if (!dev) {
+	response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
+}
+```
+
+Never enable HSTS in development — it breaks `localhost` HTTP.
+
 ### CSRF Protection
 
 The API proxy at `routes/api/[...path]/+server.ts` validates the `Origin` header on state-changing requests (POST/PUT/PATCH/DELETE). Cross-origin requests are rejected with 403. This complements SvelteKit's built-in CSRF protection, which only covers form actions — not `+server.ts` routes.
@@ -261,6 +315,8 @@ The API proxy at `routes/api/[...path]/+server.ts` validates the `Origin` header
 **Runes only.** Never use `export let` — always `$props()`.
 
 ### Component Props
+
+Always use `interface Props` and destructure from `$props()`:
 
 ```svelte
 <script lang="ts">
@@ -273,6 +329,8 @@ The API proxy at `routes/api/[...path]/+server.ts` validates the `Origin` header
 	let { user, onSave, class: className }: Props = $props();
 </script>
 ```
+
+Never use the generic syntax `$props<{ ... }>()` — always define a separate `interface Props`.
 
 ### Reactive State
 
@@ -326,15 +384,17 @@ Components live in feature folders under `$lib/components/`:
 
 ```
 components/
-├── auth/            # LoginForm, RegisterDialog
+├── auth/            # LoginForm, LoginBackground, RegisterDialog
 │   └── index.ts     # Barrel export
-├── profile/         # ProfileForm, AvatarDialog
+├── getting-started/ # GettingStarted, markdown.ts (removable starter page)
 │   └── index.ts
-├── layout/          # Header, Sidebar, ThemeToggle
-│   └── index.ts
+├── profile/         # ProfileForm, ProfileHeader, AvatarDialog,
+│   └── index.ts     # AccountDetails, InfoItem
+├── layout/          # Header, Sidebar, SidebarNav, UserNav,
+│   └── index.ts     # ThemeToggle, LanguageSelector, ShortcutsHelp
 ├── common/          # StatusIndicator, WorkInProgress
 │   └── index.ts
-└── ui/              # shadcn (generated)
+└── ui/              # shadcn (generated, customizable)
 ```
 
 ### Barrel Exports
@@ -368,7 +428,33 @@ import { SERVER_CONFIG } from '$lib/config/server';
 npx shadcn-svelte@next add <component-name>
 ```
 
-Components are generated in `$lib/components/ui/`. Do not manually create components that shadcn already provides.
+This generates components in `$lib/components/ui/<component>/`. The configuration lives in `components.json` at the frontend root:
+
+```json
+{
+	"style": "default",
+	"tailwind": {
+		"config": "vite.config.ts",
+		"css": "src/styles/index.css",
+		"baseColor": "slate",
+		"cssVariables": true
+	},
+	"aliases": {
+		"components": "$lib/components",
+		"utils": "$lib/utils",
+		"ui": "$lib/components/ui"
+	}
+}
+```
+
+**Rules for shadcn components:**
+
+- Do not manually create components that shadcn already provides — use the CLI.
+- Generated components are **customizable** (this is a template, not a library). Modifying them is acceptable and expected.
+- When touching any shadcn component, convert physical CSS properties to logical (see Styling section).
+- When adding i18n to shadcn components (e.g., localizing "Close" sr-only text), import `$lib/paraglide/messages` and use message functions.
+- Available components: alert, avatar, badge, button, card, dialog, dropdown-menu, input, label, phone-input (custom), sheet, sonner, textarea, tooltip.
+- Browse the full catalog at [ui.shadcn.com](https://ui.shadcn.com) to find components before building custom ones.
 
 ## Reactive State
 
@@ -416,19 +502,38 @@ Edit both `src/messages/en.json` and `src/messages/cs.json`:
 { "profile_newFeature_label": "New Feature" }
 ```
 
+### Paraglide Module Resolution
+
+Paraglide generates `$lib/paraglide/*` modules at build time. When running `svelte-check`, you will see ~32 errors like:
+
+```
+Cannot find module '$lib/paraglide/messages' or its corresponding type declarations
+```
+
+These are **not real errors** — the modules exist at runtime. The errors disappear after a full build (`npm run build`). Do not try to fix them.
+
 ## Styling
 
 ### CSS Architecture
 
-Styles are modular in `src/styles/`:
+Styles are modular in `src/styles/`. The entry point is `index.css`, which imports everything in order:
 
-| File             | Purpose                              | Edit When                        |
-| ---------------- | ------------------------------------ | -------------------------------- |
-| `themes.css`     | HSL color tokens (`:root` + `.dark`) | Adding new color variables       |
-| `tailwind.css`   | `@theme inline` mappings to CSS vars | Extending Tailwind design tokens |
-| `base.css`       | `@layer base` element styles         | Global element resets            |
-| `animations.css` | Keyframes + animation classes        | Adding new animations            |
-| `utilities.css`  | Reusable effect classes              | Glow effects, card hovers        |
+| File             | Purpose                                     | Edit When                        |
+| ---------------- | ------------------------------------------- | -------------------------------- |
+| `index.css`      | Entry point, Tailwind base + plugin imports | Rarely — adding new CSS modules  |
+| `themes.css`     | HSL color tokens (`:root` + `.dark`)        | Adding new color variables       |
+| `tailwind.css`   | `@theme inline` mappings to CSS vars        | Extending Tailwind design tokens |
+| `base.css`       | `@layer base` element styles                | Global element resets            |
+| `animations.css` | Keyframes + animation classes               | Adding new animations            |
+| `utilities.css`  | Reusable effect classes                     | Glow effects, card hovers        |
+
+Tailwind CSS 4 is configured via the Vite plugin (`@tailwindcss/vite`) — there is no `tailwind.config.js` or `postcss.config.js`. The `tailwindcss-animate` plugin is loaded via `@plugin 'tailwindcss-animate'` in `index.css`.
+
+Dark mode uses a class-based strategy with a custom variant:
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
 
 ### Adding a Theme Variable
 
@@ -446,6 +551,8 @@ Styles are modular in `src/styles/`:
 
 ### Logical Properties Only (RTL Support)
 
+**All CSS must use logical properties.** Physical directional properties break RTL layouts.
+
 ```html
 <!-- ✅ Correct -->
 <div class="ms-4 me-2 ps-3 pe-1 text-start">
@@ -454,12 +561,20 @@ Styles are modular in `src/styles/`:
 </div>
 ```
 
-| Physical                   | Logical                   |
-| -------------------------- | ------------------------- |
-| `ml-*` / `mr-*`            | `ms-*` / `me-*`           |
-| `pl-*` / `pr-*`            | `ps-*` / `pe-*`           |
-| `left-*` / `right-*`       | `start-*` / `end-*`       |
-| `text-left` / `text-right` | `text-start` / `text-end` |
+| Physical                      | Logical                          |
+| ----------------------------- | -------------------------------- |
+| `ml-*` / `mr-*`               | `ms-*` / `me-*`                  |
+| `pl-*` / `pr-*`               | `ps-*` / `pe-*`                  |
+| `left-*` / `right-*`          | `start-*` / `end-*`              |
+| `text-left` / `text-right`    | `text-start` / `text-end`        |
+| `border-l` / `border-r`       | `border-s` / `border-e`          |
+| `rounded-l-*` / `rounded-r-*` | `rounded-s-*` / `rounded-e-*`    |
+| `float-left` / `float-right`  | `float-start` / `float-end`      |
+| `space-x-*` (on flex/grid)    | `gap-*` (preferred on flex/grid) |
+
+**Note on `space-x-*`:** This uses `margin-left` internally (physical). On flex/grid containers, prefer `gap-*` which is direction-agnostic. Only use `space-x-*` when not in a flex/grid context.
+
+**Note on animation classes:** Classes like `slide-in-from-left`, `slide-out-to-right` from `tailwindcss-animate` are animation names, not physical properties — they are acceptable.
 
 ### Class Merging
 
@@ -478,6 +593,72 @@ Always respect `prefers-reduced-motion`:
 ```
 
 For custom CSS animations in `animations.css`, add a `prefers-reduced-motion: reduce` media query that disables them.
+
+### Responsive Design
+
+**Mobile-first.** Start with the smallest viewport and add breakpoints for larger screens.
+
+#### Breakpoints
+
+| Prefix | Min Width | Target           |
+| ------ | --------- | ---------------- |
+| (none) | 0         | Mobile (default) |
+| `sm:`  | 640px     | Large phone      |
+| `md:`  | 768px     | Tablet           |
+| `lg:`  | 1024px    | Laptop           |
+| `xl:`  | 1280px    | Desktop          |
+| `2xl:` | 1536px    | Wide desktop     |
+
+#### Mandatory Rules
+
+1. **Always start mobile-first.** Write base styles for 320px, then add `sm:`, `md:`, `lg:` prefixes for larger screens.
+
+2. **Never use multi-column grids inside dialogs without a mobile fallback.**
+
+   ```html
+   <!-- ✅ Correct -->
+   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+   	<!-- ❌ Wrong — unusable on mobile inside a dialog -->
+   	<div class="grid grid-cols-2 gap-4"></div>
+   </div>
+   ```
+
+3. **Scale padding responsively.** Never use large flat padding values.
+
+   ```html
+   <!-- ✅ Correct -->
+   <div class="p-4 sm:p-6 lg:p-8">
+   	<!-- ❌ Wrong — 64px padding on a 320px screen -->
+   	<div class="p-16"></div>
+   </div>
+   ```
+
+4. **Minimum font size: 12px (`text-xs`).** Never use `text-[10px]` or smaller — it's unreadable on mobile and fails WCAG.
+
+5. **Touch targets: minimum 40px (h-10).** All interactive elements (buttons, links, toggles) must have at least 40px height. Prefer 44px (`h-11`) for primary actions. Inline text buttons need `min-h-10` with `inline-flex items-center`.
+
+6. **Use `h-dvh` not `h-screen`** for full-height layouts. `h-dvh` (dynamic viewport height) accounts for mobile browser chrome (address bar, bottom nav).
+
+7. **Prevent flex overflow.** Add `min-w-0` on flex children that contain text that might overflow. Add `truncate` or `overflow-hidden` when content must not wrap.
+
+8. **`overflow-hidden` on scroll containers** to prevent horizontal page scroll on mobile.
+
+9. **Use `shrink-0`** on elements that must not compress (icons, badges, buttons alongside text).
+
+#### Test Viewports
+
+When making responsive changes, mentally verify at these widths: **320px**, **375px**, **768px**, **1024px**, **1440px**.
+
+#### Existing Responsive Patterns (Reference)
+
+The app layout uses a mobile-first sidebar pattern:
+
+- `md:hidden` — mobile hamburger menu (sheet drawer)
+- `hidden md:block` — desktop sidebar
+- `h-dvh` — full dynamic viewport height
+- Feature grids: `sm:grid-cols-2 xl:grid-cols-4`
+- Dialog footers: `flex-col-reverse sm:flex-row`
+- Text sizes: `text-sm sm:text-base md:text-lg`
 
 ## Route Structure & Data Fetching
 
@@ -505,6 +686,22 @@ export const load: LayoutServerLoad = async ({ locals, fetch, url }) => {
 };
 ```
 
+### Universal Load Function
+
+The root `+layout.ts` (universal) sets the paraglide locale from server data so that i18n works on both server and client:
+
+```typescript
+export const load: LayoutLoad = async ({ data }) => {
+	const locale = data.locale;
+	if (locales.includes(locale)) {
+		setLocale(locale);
+	} else {
+		setLocale(baseLocale);
+	}
+	return data;
+};
+```
+
 ### Combining Server + Client Data
 
 Load initial data server-side, then update client-side:
@@ -523,6 +720,70 @@ Load initial data server-side, then update client-side:
 </script>
 ```
 
+### FOUC Prevention
+
+`app.html` contains an inline `<script>` that reads the theme from `localStorage` and applies the `.dark` class before paint, preventing a flash of unstyled content. This script runs before Svelte hydration.
+
+### Raw File Imports
+
+Use Vite's `?raw` suffix to import file contents as strings (used in GettingStarted for README display):
+
+```typescript
+import readmeContent from '../../../../README.md?raw';
+```
+
+This is a Vite feature — the file content is bundled as a string at build time.
+
+## TypeScript Patterns
+
+### Type Narrowing Over Assertions
+
+Prefer type narrowing over `as` casts:
+
+```typescript
+// ✅ Correct
+if ('detail' in error) {
+	// TypeScript narrows the type
+}
+
+// ❌ Avoid
+const detail = (error as ApiError).detail;
+```
+
+### localStorage Access
+
+Always wrap `localStorage` access in `try/catch` — it throws in private browsing mode and when storage quota is exceeded:
+
+```typescript
+// ✅ Correct
+try {
+	const value = localStorage.getItem('key');
+} catch {
+	// Ignore — private browsing or quota exceeded
+}
+```
+
+### Navigator API
+
+Prefer `navigator.userAgentData.platform` (modern Chromium) with `navigator.platform` fallback:
+
+```typescript
+const platform = navigator.userAgentData?.platform ?? navigator.platform;
+```
+
+### Navigation with `resolve()`
+
+Always use `resolve()` from `$app/paths` with `goto()` for base-path-aware navigation:
+
+```typescript
+import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
+
+await goto(resolve('/'));
+```
+
+Never suppress the `svelte/no-navigation-without-resolve` lint rule.
+
 ## Quality Checklist
 
 Run **all** of these before every commit:
@@ -531,20 +792,39 @@ Run **all** of these before every commit:
 npm run format   # Prettier
 npm run lint     # ESLint
 npm run check    # Svelte + TypeScript type check
-npm run build    # Production build (run occasionally, always before PR)
 ```
+
+Run occasionally (always before PR):
+
+```bash
+npm run build    # Production build
+```
+
+### Known `svelte-check` Errors
+
+`svelte-check` will report ~32 errors related to `$lib/paraglide/*` module resolution. These are expected — paraglide modules are generated at build time. Only investigate errors that are NOT about paraglide imports.
 
 ## Don'ts
 
-- ❌ `export let` — use `$props()`
-- ❌ `any` type — define proper interfaces
-- ❌ Physical CSS properties (`ml-`, `mr-`, `left-`, `right-`)
-- ❌ Import server config from barrel (`$lib/config`)
-- ❌ Leave components in `$lib/components/` root — use feature folders
-- ❌ Mix reactive state (`.svelte.ts`) with pure utils (`.ts`)
-- ❌ Hand-edit `v1.d.ts` — run `npm run api:generate`
-- ❌ Create UI components that shadcn already provides
-- ❌ Work around missing API endpoints — propose them instead
+- `export let` — use `$props()`
+- `$props<{ ... }>()` generic syntax — use `interface Props` + `$props()`
+- `any` type — define proper interfaces
+- `as` type assertions when narrowing is possible
+- Physical CSS properties (`ml-`, `mr-`, `left-`, `right-`, `border-l`, `border-r`)
+- `space-x-*` on flex/grid — use `gap-*` instead
+- `text-[10px]` or smaller — minimum `text-xs` (12px)
+- `p-16` or large flat padding — scale responsively (`p-4 sm:p-6 lg:p-8`)
+- `grid-cols-2+` inside dialogs without `grid-cols-1` mobile fallback
+- `h-screen` — use `h-dvh` for full-height layouts
+- `null!` non-null assertions
+- Import server config from barrel (`$lib/config`)
+- Leave components in `$lib/components/` root — use feature folders
+- Mix reactive state (`.svelte.ts`) with pure utils (`.ts`)
+- Hand-edit `v1.d.ts` — run `npm run api:generate`
+- Create UI components that shadcn already provides
+- Work around missing API endpoints — propose them instead
+- Suppress `svelte/no-navigation-without-resolve` — use `resolve()` with `goto()`
+- Silent failures — always handle errors explicitly
 
 ## Adding a New Feature — Checklist
 
@@ -556,5 +836,7 @@ npm run build    # Production build (run occasionally, always before PR)
 6. **Server load**: Add `+page.server.ts` for initial data
 7. **i18n**: Add keys to both `en.json` and `cs.json`
 8. **Navigation**: Update sidebar/header if adding a new page
+9. **Responsive**: Verify at 320px, 375px, 768px, 1024px
+10. **Accessibility**: Touch targets ≥40px, logical properties, `prefers-reduced-motion`
 
 Commit atomically: types+aliases → components → route+server-load → i18n keys.
