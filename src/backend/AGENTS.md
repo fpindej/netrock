@@ -19,8 +19,7 @@ src/backend/
 │   │           ├── {Operation}Input.cs
 │   │           └── {Entity}Output.cs
 │   ├── Persistence/
-│   │   ├── IBaseEntityRepository.cs
-│   │   └── IUnitOfWork.cs
+│   │   └── IBaseEntityRepository.cs
 │   ├── Caching/
 │   │   ├── ICacheService.cs
 │   │   └── Constants/CacheKeys.cs
@@ -42,7 +41,6 @@ src/backend/
 │   ├── Persistence/
 │   │   ├── MyProjectDbContext.cs
 │   │   ├── BaseEntityRepository.cs
-│   │   ├── UnitOfWork.cs
 │   │   ├── Configurations/        # Shared EF configs (BaseEntityConfiguration)
 │   │   ├── Extensions/            # Query helpers, migrations, pagination
 │   │   └── Interceptors/          # AuditingInterceptor, cache invalidation
@@ -532,19 +530,20 @@ public interface IBaseEntityRepository<TEntity> where TEntity : BaseEntity
 }
 ```
 
-All queries automatically exclude soft-deleted records via a global EF Core query filter (`HasQueryFilter(e => !e.IsDeleted)`) configured in `BaseEntityConfiguration`. Use `.IgnoreQueryFilters()` when you need to query deleted entities (e.g., `RestoreAsync`). Use `IUnitOfWork` for explicit save and transaction control:
+All queries automatically exclude soft-deleted records via a global EF Core query filter (`HasQueryFilter(e => !e.IsDeleted)`) configured in `BaseEntityConfiguration`. Use `.IgnoreQueryFilters()` when you need to query deleted entities (e.g., `RestoreAsync`). Save changes via `DbContext.SaveChangesAsync()`:
 
 ```csharp
 await repository.AddAsync(entity, ct);
-await unitOfWork.SaveChangesAsync(ct);
+await dbContext.SaveChangesAsync(ct);
 ```
 
-For transactions spanning multiple operations:
+For transactions spanning multiple operations, use `DbContext.Database` directly:
 
 ```csharp
-await unitOfWork.BeginTransactionAsync(ct);
+await using var transaction = await dbContext.Database.BeginTransactionAsync(ct);
 // ... multiple repository operations ...
-await unitOfWork.CommitTransactionAsync(ct);
+await dbContext.SaveChangesAsync(ct);
+await transaction.CommitAsync(ct);
 ```
 
 ## Pagination
