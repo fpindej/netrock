@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.HttpOverrides;
+using MyProject.Infrastructure.Features.Admin.Extensions;
 using MyProject.Infrastructure.Persistence.Extensions;
 using MyProject.Infrastructure.Caching.Extensions;
 using MyProject.Infrastructure.Cookies.Extensions;
@@ -46,6 +47,9 @@ try
 
         Log.Debug("Adding cookie services");
         builder.Services.AddCookieServices();
+
+        Log.Debug("Adding admin services");
+        builder.Services.AddAdminServices();
     }
     catch (Exception ex)
     {
