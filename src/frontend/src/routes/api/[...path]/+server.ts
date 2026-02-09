@@ -9,6 +9,36 @@ const COOKIE_AUTH_ENDPOINTS = ['auth/login', 'auth/refresh'];
 const UNSAFE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
 /**
+ * Request headers forwarded to the backend.
+ * Only headers the API needs are proxied — everything else is stripped
+ * to avoid leaking browser metadata to internal services.
+ */
+const FORWARDED_REQUEST_HEADERS = [
+	'accept',
+	'accept-language',
+	'authorization',
+	'content-type',
+	'content-length',
+	'cookie',
+	'if-match',
+	'if-none-match',
+	'if-modified-since'
+];
+
+/**
+ * Response headers stripped before sending to the browser.
+ * Prevents leaking internal infrastructure details and removes
+ * hop-by-hop headers that are meaningless across the proxy boundary.
+ */
+const STRIPPED_RESPONSE_HEADERS = [
+	'connection',
+	'keep-alive',
+	'transfer-encoding',
+	'server',
+	'x-powered-by'
+];
+
+/**
  * Validates that the request Origin header matches the app's own origin.
  * This prevents cross-site request forgery for cookie-authenticated requests
  * proxied through SvelteKit (SameSite=None cookies are sent cross-origin).
@@ -34,6 +64,31 @@ function isOriginAllowed(request: Request, url: URL): boolean {
 	return origin === url.origin;
 }
 
+/** Build a filtered copy of request headers using the allowlist. */
+function filterRequestHeaders(source: Headers): Headers {
+	const filtered = new Headers();
+	for (const name of FORWARDED_REQUEST_HEADERS) {
+		const value = source.get(name);
+		if (value) {
+			filtered.set(name, value);
+		}
+	}
+	return filtered;
+}
+
+/** Remove unwanted headers from the backend response. */
+function stripResponseHeaders(response: Response): Response {
+	const headers = new Headers(response.headers);
+	for (const name of STRIPPED_RESPONSE_HEADERS) {
+		headers.delete(name);
+	}
+	return new Response(response.body, {
+		status: response.status,
+		statusText: response.statusText,
+		headers
+	});
+}
+
 export const fallback: RequestHandler = async ({ request, params, url, fetch }) => {
 	if (!isOriginAllowed(request, url)) {
 		return new Response(JSON.stringify({ message: 'Cross-origin requests are not allowed' }), {
@@ -55,21 +110,15 @@ export const fallback: RequestHandler = async ({ request, params, url, fetch }) 
 
 	const newRequest = new Request(targetUrl, {
 		method: request.method,
-		headers: request.headers,
+		headers: filterRequestHeaders(request.headers),
 		body: request.body,
 		// @ts-expect-error - duplex is needed for streaming bodies in some node versions/fetch implementations
 		duplex: 'half'
 	});
 
-	newRequest.headers.delete('host');
-	newRequest.headers.delete('connection');
-	// Note: We are forwarding all other headers (including Cookie and Authorization)
-	// This is necessary for auth to work, but be aware of the security implications
-	// if the backend is not trusted or if this proxy is exposed to untrusted clients.
-
 	try {
 		const response = await fetch(newRequest);
-		return response;
+		return stripResponseHeaders(response);
 	} catch (err) {
 		console.error('Proxy error:', err);
 
