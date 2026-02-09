@@ -8,21 +8,20 @@ using MyProject.Infrastructure.Persistence.Interceptors;
 namespace MyProject.Infrastructure.Persistence.Extensions;
 
 /// <summary>
-/// Extension methods for registering persistence services (DbContext, repositories, unit of work).
+/// Extension methods for registering persistence services (DbContext and repositories).
 /// </summary>
 public static class ServiceCollectionExtensions
 {
     extension(IServiceCollection services)
     {
         /// <summary>
-        /// Registers the database context, unit of work, and generic repository.
+        /// Registers the database context and generic repository.
         /// </summary>
         /// <param name="configuration">The application configuration for reading connection strings.</param>
         /// <returns>The service collection for chaining.</returns>
         public IServiceCollection AddPersistence(IConfiguration configuration)
         {
             services.ConfigureDbContext(configuration);
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped(typeof(IBaseEntityRepository<>), typeof(BaseEntityRepository<>));
 
             return services;
