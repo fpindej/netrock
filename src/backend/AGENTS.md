@@ -116,6 +116,18 @@ Rules:
 - **Never use `null!`** (the null-forgiving operator) — it defeats the purpose of NRT. If you need it, the design is wrong.
 - **DTOs**: match nullability to whether the field is required in the API contract — this flows through to the OpenAPI spec and generated TypeScript types
 
+### Collection Return Types — Narrowest Type That Fits
+
+| Type | When | Why |
+|---|---|---|
+| `IReadOnlyList<T>` | Default for returning collections | Materialized, indexed, signals immutability |
+| `IReadOnlyCollection<T>` | Need count but not index access | Rare — `IReadOnlyList<T>` is almost always better |
+| `IEnumerable<T>` | Lazy/streaming evaluation is genuinely needed | Almost never in this codebase — repositories materialize everything |
+| `List<T>` | Internal working variable only | Never as a return type on public/internal interfaces — don't expose mutability |
+| `T[]` | Performance-critical internals (`Span<T>`, interop) | Never for public API contracts — mutable and non-resizable, `IReadOnlyList<T>` is strictly better |
+
+The same "minimal scope" principle from access modifiers applies: don't return `List<T>` when the caller shouldn't add/remove items, don't return `IEnumerable<T>` when the data is already materialized.
+
 ### XML Documentation
 
 All **public and internal API surface** must have `/// <summary>` XML docs. This includes interfaces, extension method classes, middleware, shared base classes, and service implementations — not just controllers and DTOs.
