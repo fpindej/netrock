@@ -299,9 +299,10 @@ Backend service
   → Controller returns ErrorResponse { errorCode: "auth.register.duplicateEmail", message: "..." }
 
 Frontend getErrorMessage()
-  → looks up "auth.register.duplicateEmail" in errorCodeMessages map
+  → resolveErrorCode() transforms "auth.register.duplicateEmail" → "apiError_auth_register_duplicateEmail"
+  → dynamically looks up m["apiError_auth_register_duplicateEmail"] on the paraglide module
   → returns paraglide localized string (EN/CS/...)
-  → falls back to raw message if code is unmapped
+  → falls back to raw message if no translation exists
 ```
 
 This keeps the backend simple (English only, no resource files, no locale negotiation) while giving every frontend full control over localization. A future mobile app would do the same — map `errorCode` to its own localized strings.
@@ -311,8 +312,7 @@ This keeps the backend simple (English only, no resource files, no locale negoti
 1. Add `const string` to `ErrorCodes.cs` in the appropriate nested class (Domain)
 2. Use it in the service's `Result.Failure()` call (Infrastructure)
 3. Add `apiError_{code_with_dots_as_underscores}` key to both `en.json` and `cs.json` (Frontend)
-4. Add entry to `errorCodeMessages` map in `error-handling.ts` (Frontend)
-5. If mapping Identity errors: add case to the appropriate `Map*IdentityError()` switch expression (Infrastructure)
+4. If mapping Identity errors: add case to the appropriate `Map*IdentityError()` switch expression (Infrastructure)
 
 ## Local Development
 

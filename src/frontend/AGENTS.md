@@ -225,32 +225,36 @@ if (!response.ok) {
 
 #### `getErrorMessage()` Resolution Order
 
-1. **`errorCode` field** → look up in `errorCodeMessages` map → localized paraglide string
+1. **`errorCode` field** → dynamic paraglide key lookup → localized string
 2. **`message` field** → raw backend English string (ErrorResponse shape)
 3. **`detail` field** → ProblemDetails detail
 4. **`title` field** → ProblemDetails title
 5. **Fallback string** → the caller-provided fallback
 
-The `errorCode` is always preferred because it produces a properly localized message. The raw `message` fallback ensures the user still sees something meaningful for unmapped codes.
+The `errorCode` is always preferred because it produces a properly localized message. The raw `message` fallback ensures the user still sees something meaningful for codes without a translation.
 
-#### `errorCodeMessages` Map
+#### Dynamic Error Code Resolution
 
-Every backend error code has a corresponding entry in the `errorCodeMessages` map in `error-handling.ts`:
+Error codes are resolved to paraglide messages automatically at runtime via `resolveErrorCode()` in `error-handling.ts`. The function transforms the dot-separated error code into a paraglide key and looks it up on the module namespace:
 
-```typescript
-const errorCodeMessages: Record<string, () => string> = {
-	[ErrorCode.Auth.LoginInvalidCredentials]: () => m.apiError_auth_login_invalidCredentials(),
-	[ErrorCode.Auth.RegisterDuplicateEmail]: () => m.apiError_auth_register_duplicateEmail()
-	// ... one entry per ErrorCodes constant
-};
+```
+"auth.login.invalidCredentials" → m["apiError_auth_login_invalidCredentials"]()
 ```
 
-When adding a new backend error code, you **must** add:
+This means **no manual mapping is needed** — adding a new error code only requires adding the `apiError_*` key to `en.json` and `cs.json`. The function handles the rest:
 
-1. A translation key in both `en.json` and `cs.json` (naming: `apiError_{code_with_dots_as_underscores}`)
-2. An entry in the `errorCodeMessages` map that calls the paraglide message function
+```typescript
+function resolveErrorCode(errorCode: string): string | undefined {
+	const key = `apiError_${errorCode.replaceAll('.', '_')}`;
+	const messageFn = (m as Record<string, unknown>)[key];
+	if (typeof messageFn === 'function') {
+		return (messageFn as () => string)();
+	}
+	return undefined;
+}
+```
 
-If either is missing, the frontend falls back to the raw English message — losing localization.
+If no translation exists for a given error code, the function returns `undefined` and `getErrorMessage()` falls back to the raw English message from the backend.
 
 ### Validation Errors (Field-Level)
 
@@ -554,7 +558,7 @@ Backend error codes have a special translation key prefix: `apiError_`. The key 
 | `admin.role.notExists`         | `apiError_admin_role_notExists`         |
 | `server.internalError`         | `apiError_server_internalError`         |
 
-These keys exist in both `en.json` and `cs.json` and are referenced from the `errorCodeMessages` map in `error-handling.ts`.
+These keys exist in both `en.json` and `cs.json` and are resolved automatically by `resolveErrorCode()` in `error-handling.ts`.
 
 ### Usage
 
@@ -1018,7 +1022,7 @@ npm run build    # Production build
 5. **Route**: Create page in `routes/(app)/{feature}/`
 6. **Server load**: Add `+page.server.ts` for initial data
 7. **i18n**: Add keys to both `en.json` and `cs.json`
-8. **Error codes**: If the backend returns new error codes, add `apiError_*` keys to both language files and entries to `errorCodeMessages` in `error-handling.ts`
+8. **Error codes**: If the backend returns new error codes, add `apiError_*` keys to both language files (resolution is automatic via `resolveErrorCode()`)
 9. **Navigation**: Update sidebar/header if adding a new page
 10. **Responsive**: Verify at 320px, 375px, 768px, 1024px
 11. **Accessibility**: Touch targets ≥40px, logical properties, `prefers-reduced-motion`
