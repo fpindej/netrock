@@ -116,6 +116,33 @@ Rules:
 - **Never use `null!`** (the null-forgiving operator) — it defeats the purpose of NRT. If you need it, the design is wrong.
 - **DTOs**: match nullability to whether the field is required in the API contract — this flows through to the OpenAPI spec and generated TypeScript types
 
+### Time Abstraction — Always Use `TimeProvider`
+
+Never use `DateTime.UtcNow`, `DateTimeOffset.UtcNow`, or `DateTime.Now` directly. Always inject `TimeProvider` and call `timeProvider.GetUtcNow()`:
+
+```csharp
+// ✅ Correct — inject TimeProvider
+internal class MyService(TimeProvider timeProvider) : IMyService
+{
+    public void DoSomething()
+    {
+        var now = timeProvider.GetUtcNow();
+    }
+}
+
+// ❌ Wrong — direct static call, untestable
+var now = DateTimeOffset.UtcNow;
+var now = DateTime.UtcNow;
+```
+
+`TimeProvider.System` is registered as a singleton in `Program.cs`:
+
+```csharp
+builder.Services.AddSingleton(TimeProvider.System);
+```
+
+This enables deterministic time in tests by substituting a `FakeTimeProvider`. In DTOs and other types that cannot take constructor dependencies, compute time-dependent values in the service layer and pass them as parameters.
+
 ### Collection Return Types — Narrowest Type That Fits
 
 | Type | When | Why |

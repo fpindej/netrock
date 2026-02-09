@@ -52,7 +52,8 @@ internal static class RateLimiterExtensions
                 if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
                 {
                     context.HttpContext.Response.Headers.RetryAfter = retryAfter.TotalSeconds.ToString(CultureInfo.InvariantCulture);
-                    context.HttpContext.Response.Headers["X-RateLimit-Reset"] = DateTimeOffset.UtcNow.Add(retryAfter).ToUnixTimeSeconds().ToString();
+                    var timeProvider = context.HttpContext.RequestServices.GetRequiredService<TimeProvider>();
+                    context.HttpContext.Response.Headers["X-RateLimit-Reset"] = timeProvider.GetUtcNow().Add(retryAfter).ToUnixTimeSeconds().ToString();
 
                     var response = new ErrorResponse
                     {

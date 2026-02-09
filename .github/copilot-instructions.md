@@ -18,6 +18,7 @@ Read these files for detailed conventions:
 - Primary constructors for DI, `internal` implementations
 - Entities extend `BaseEntity`, configurations extend `BaseEntityConfiguration<T>`
 - XML docs on controller actions — they generate the OpenAPI spec consumed by frontend
+- Use `TimeProvider` (injected) instead of `DateTime.UtcNow` / `DateTimeOffset.UtcNow` — `TimeProvider.System` is registered as singleton
 
 ### Frontend (SvelteKit / Svelte 5)
 - Svelte 5 Runes only — never `export let`

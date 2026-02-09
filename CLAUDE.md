@@ -12,6 +12,7 @@ Full-stack web application template: .NET 10 API (Clean Architecture) + SvelteKi
 
 - Never edit `src/frontend/src/lib/api/v1.d.ts` — run `npm run api:generate` instead
 - Always use `Result` / `Result<T>` for backend operations that can fail
+- Always use `TimeProvider` (injected) instead of `DateTime.UtcNow` / `DateTimeOffset.UtcNow` — `TimeProvider.System` is registered as singleton
 - Always use C# 13 extension member syntax for new extension methods
 - Always use Svelte 5 Runes (`$props`, `$state`, `$derived`, `$effect`) — never `export let`
 - Commit atomically using Conventional Commits after each logical change
