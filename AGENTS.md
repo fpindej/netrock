@@ -282,12 +282,37 @@ Unused GitHub default labels (`enhancement`, `good first issue`, `help wanted`, 
 
 | Layer | Strategy |
 |---|---|
-| **Backend services** | Return `Result` / `Result<T>` for expected failures |
-| **Backend exceptions** | `KeyNotFoundException` → 404, `PaginationException` → 400, unhandled → 500 |
-| **Backend middleware** | `ExceptionHandlingMiddleware` catches all, returns `ErrorResponse` JSON |
+| **Backend services** | Return `Result` / `Result<T>` with stable `ErrorCodes.*` constant for expected failures |
+| **Backend exceptions** | `KeyNotFoundException` → 404, `PaginationException` → 400, unhandled → 500 — all with error codes |
+| **Backend middleware** | `ExceptionHandlingMiddleware` catches all, returns `ErrorResponse` JSON with `errorCode` |
 | **Frontend API errors** | `isValidationProblemDetails()` → field-level errors with shake animation |
-| **Frontend generic errors** | `getErrorMessage()` → toast notification |
+| **Frontend generic errors** | `getErrorMessage()` resolves `errorCode` → localized paraglide message; falls back to raw `message` |
 | **Frontend network errors** | `isFetchErrorWithCode('ECONNREFUSED')` → 503 "Backend unavailable" |
+
+### Error Code → Localization Flow
+
+The backend does **not** handle translations. Instead, every failure carries a stable error code that any client can resolve to a localized string independently:
+
+```
+Backend service
+  → Result.Failure("English message", ErrorCodes.Auth.RegisterDuplicateEmail)
+  → Controller returns ErrorResponse { errorCode: "auth.register.duplicateEmail", message: "..." }
+
+Frontend getErrorMessage()
+  → looks up "auth.register.duplicateEmail" in errorCodeMessages map
+  → returns paraglide localized string (EN/CS/...)
+  → falls back to raw message if code is unmapped
+```
+
+This keeps the backend simple (English only, no resource files, no locale negotiation) while giving every frontend full control over localization. A future mobile app would do the same — map `errorCode` to its own localized strings.
+
+**Adding a new error code end-to-end:**
+
+1. Add `const string` to `ErrorCodes.cs` in the appropriate nested class (Domain)
+2. Use it in the service's `Result.Failure()` call (Infrastructure)
+3. Add `apiError_{code_with_dots_as_underscores}` key to both `en.json` and `cs.json` (Frontend)
+4. Add entry to `errorCodeMessages` map in `error-handling.ts` (Frontend)
+5. If mapping Identity errors: add case to the appropriate `Map*IdentityError()` switch expression (Infrastructure)
 
 ## Local Development
 

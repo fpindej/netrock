@@ -207,12 +207,62 @@ All `/api/*` requests are proxied to the backend via `routes/api/[...path]/+serv
 
 ## Error Handling
 
+### Error Code Resolution (Generic Errors)
+
+The backend returns a stable `errorCode` on every error response. The frontend resolves this code to a localized message using `getErrorMessage()`:
+
+```typescript
+import { getErrorMessage, browserClient } from '$lib/api';
+import { toast } from '$lib/components/ui/sonner';
+import * as m from '$lib/paraglide/messages';
+
+const { response, error: apiError } = await browserClient.POST('/api/auth/register', { body });
+
+if (!response.ok) {
+	toast.error(getErrorMessage(apiError, m.auth_register_error()));
+}
+```
+
+#### `getErrorMessage()` Resolution Order
+
+1. **`errorCode` field** → look up in `errorCodeMessages` map → localized paraglide string
+2. **`message` field** → raw backend English string (ErrorResponse shape)
+3. **`detail` field** → ProblemDetails detail
+4. **`title` field** → ProblemDetails title
+5. **Fallback string** → the caller-provided fallback
+
+The `errorCode` is always preferred because it produces a properly localized message. The raw `message` fallback ensures the user still sees something meaningful for unmapped codes.
+
+#### `errorCodeMessages` Map
+
+Every backend error code has a corresponding entry in the `errorCodeMessages` map in `error-handling.ts`:
+
+```typescript
+const errorCodeMessages: Record<string, () => string> = {
+	[ErrorCode.Auth.LoginInvalidCredentials]: () => m.apiError_auth_login_invalidCredentials(),
+	[ErrorCode.Auth.RegisterDuplicateEmail]: () => m.apiError_auth_register_duplicateEmail()
+	// ... one entry per ErrorCodes constant
+};
+```
+
+When adding a new backend error code, you **must** add:
+
+1. A translation key in both `en.json` and `cs.json` (naming: `apiError_{code_with_dots_as_underscores}`)
+2. An entry in the `errorCodeMessages` map that calls the paraglide message function
+
+If either is missing, the frontend falls back to the raw English message — losing localization.
+
 ### Validation Errors (Field-Level)
 
 ASP.NET Core returns `ValidationProblemDetails` with field-level errors. Handle them with the provided utilities:
 
 ```typescript
-import { isValidationProblemDetails, mapFieldErrors, browserClient } from '$lib/api';
+import {
+	isValidationProblemDetails,
+	mapFieldErrors,
+	getErrorMessage,
+	browserClient
+} from '$lib/api';
 import { createFieldShakes } from '$lib/state';
 import { toast } from '$lib/components/ui/sonner';
 import * as m from '$lib/paraglide/messages';
@@ -493,6 +543,18 @@ State files use `.svelte.ts` extension and live in `$lib/state/`:
 ```
 
 Examples: `auth_login_title`, `profile_personalInfo_firstName`, `nav_dashboard`, `meta_profile_title`
+
+### API Error Code Keys
+
+Backend error codes have a special translation key prefix: `apiError_`. The key is derived from the error code by replacing dots with underscores:
+
+| Backend Error Code             | Translation Key                         |
+| ------------------------------ | --------------------------------------- |
+| `auth.register.duplicateEmail` | `apiError_auth_register_duplicateEmail` |
+| `admin.role.notExists`         | `apiError_admin_role_notExists`         |
+| `server.internalError`         | `apiError_server_internalError`         |
+
+These keys exist in both `en.json` and `cs.json` and are referenced from the `errorCodeMessages` map in `error-handling.ts`.
 
 ### Usage
 
@@ -956,8 +1018,9 @@ npm run build    # Production build
 5. **Route**: Create page in `routes/(app)/{feature}/`
 6. **Server load**: Add `+page.server.ts` for initial data
 7. **i18n**: Add keys to both `en.json` and `cs.json`
-8. **Navigation**: Update sidebar/header if adding a new page
-9. **Responsive**: Verify at 320px, 375px, 768px, 1024px
-10. **Accessibility**: Touch targets ≥40px, logical properties, `prefers-reduced-motion`
+8. **Error codes**: If the backend returns new error codes, add `apiError_*` keys to both language files and entries to `errorCodeMessages` in `error-handling.ts`
+9. **Navigation**: Update sidebar/header if adding a new page
+10. **Responsive**: Verify at 320px, 375px, 768px, 1024px
+11. **Accessibility**: Touch targets ≥40px, logical properties, `prefers-reduced-motion`
 
 Commit atomically: types+aliases → components → route+server-load → i18n keys.
