@@ -28,6 +28,7 @@ public sealed class AuthenticationOptions
         /// Must be at least 32 characters for HMAC-SHA256.
         /// </summary>
         [Required]
+        [MinLength(32)]
         public string Key { get; init; } = string.Empty;
 
         /// <summary>
