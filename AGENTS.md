@@ -71,7 +71,7 @@ flowchart TD
 | Backend (.NET) | [`src/backend/AGENTS.md`](src/backend/AGENTS.md) |
 | Frontend (SvelteKit) | [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md) |
 
-Read the relevant file before working in that area. Both are self-contained with real code examples.
+Always read the relevant file before working in that area. Both are self-contained with real code examples.
 
 ---
 
@@ -79,9 +79,9 @@ Read the relevant file before working in that area. Both are self-contained with
 
 > For rationale and examples, see [`docs/backend-conventions.md` — Code Quality Principles](docs/backend-conventions.md#code-quality-principles).
 
-- **Keep structures clean** — public methods read like a table of contents; delegate details to well-named private methods.
-- **Deduplicate when identical in intent** — extract when a change to one copy would always require the same change to the others. If the "shared" code needs flags or conditionals, it's not real duplication.
-- **Design for testability** — small focused methods, constructor injection, pure logic where possible. Don't wrap framework types just to mock them.
+- **Always keep structures clean** — public methods must read like a table of contents; delegate details to well-named private methods.
+- **Always deduplicate when identical in intent** — extract when a change to one copy would always require the same change to the others. If the "shared" code needs flags or conditionals, it is not real duplication.
+- **Always design for testability** — small focused methods, constructor injection, pure logic where possible. Do not wrap framework types just to mock them.
 
 ---
 
@@ -97,7 +97,8 @@ Read the relevant file before working in that area. Both are self-contained with
 | **Defense in depth** | Validate on both frontend and backend; use headers *and* CSP |
 | **Least privilege** | Expose minimum data and permissions |
 | **Fail closed** | Reject on validation/parsing/origin failure — never fall through |
-| **Secrets never in code** | `.env` or environment variables only |
+| **Secrets never in code** | `.env` or environment variables only. If a secret is accidentally committed, rotate it immediately — removing from git history is not sufficient. |
+| **Never commit secrets** | Never commit `.env` files, connection strings with real credentials, JWT signing keys, or API keys/tokens |
 | **Audit dependencies** | Consider attack surface before adding packages |
 
 When building features:
@@ -146,7 +147,7 @@ docs: add session notes for orders feature
 test(auth): add login integration tests
 ```
 
-Format: `type(scope): lowercase imperative description` — max 72 chars, no period.
+Format: `type(scope): lowercase imperative description` — max 72 chars, no period. Always add a body to explain *why* when the reason is not obvious from the title.
 
 #### Atomic Commit Strategy
 
@@ -169,7 +170,7 @@ Never commit code that doesn't compile, has lint errors, or fails type checks.
 
 ### Documentation Maintenance
 
-When a PR changes conventions, architecture, patterns, or workflows, update the relevant `docs/` files and AGENTS.md files in the same PR.
+Always update the relevant `docs/` files and AGENTS.md files in the same PR when it changes conventions, architecture, patterns, or workflows.
 
 **Before updating any AGENTS.md or docs/ file, discuss the proposed changes with the user.** Explain what you intend to add, modify, or remove, and get confirmation before editing. Documentation defines how the project works — never update it silently.
 
@@ -184,12 +185,12 @@ When a PR changes conventions, architecture, patterns, or workflows, update the 
 | Git workflow, issues, PRs, labels | `AGENTS.md` + `docs/workflow.md` |
 
 Rules:
-- **Discuss with the user first** — propose the specific docs changes and wait for approval
-- Update docs in the **same commit** as the code change they document (or as a dedicated `docs:` commit in the same PR)
+- **Always discuss with the user first** — propose the specific docs changes and wait for approval
+- Always update docs in the **same commit** as the code change they document (or as a dedicated `docs:` commit in the same PR)
 - AGENTS.md changes = actionable rules, code templates, tables, checklists
 - docs/ changes = explanations, rationale, design decisions
-- If adding a new convention, add the rule to AGENTS.md **and** the rationale to docs/
-- If removing or changing a convention, update **both** places
+- When adding a new convention, always add the rule to AGENTS.md **and** the rationale to docs/
+- When removing or changing a convention, always update **both** places
 
 ### Session Documentation
 
@@ -203,7 +204,7 @@ Do **not** generate session docs automatically — only when explicitly requeste
 
 #### When to Use Mermaid Diagrams
 
-Include diagrams in session docs when they add clarity:
+Always include diagrams in session docs when they add clarity:
 
 | Diagram Type | Use For |
 |---|---|
@@ -213,7 +214,7 @@ Include diagrams in session docs when they add clarity:
 | `classDiagram` | Service/interface relationships |
 | `stateDiagram-v2` | State transitions (order lifecycle) |
 
-Keep diagrams focused — one concern per diagram, prefer a few clear diagrams over many trivial ones.
+Always keep diagrams focused — one concern per diagram. Never create trivial diagrams; use a few clear diagrams instead.
 
 ### Branch Hygiene
 
@@ -283,7 +284,7 @@ Do **not** create PRs automatically — only when explicitly requested.
 
 ### Labels
 
-Always label issues and PRs. Apply **all** that fit.
+Always label issues and PRs. Apply **all** that fit. If a new label would genuinely help categorize work and none of the existing ones cover it, create it with `gh label create` before applying.
 
 | Label | Color | Description | Use when |
 |---|---|---|---|

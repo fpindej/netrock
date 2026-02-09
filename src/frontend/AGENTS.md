@@ -449,10 +449,10 @@ This generates components in `$lib/components/ui/<component>/`. The configuratio
 
 - Do not manually create components that shadcn already provides — use the CLI.
 - Generated components are **customizable** (this is a template, not a library). Modifying them is acceptable and expected.
-- When touching any shadcn component, convert physical CSS properties to logical (see Styling section).
-- When adding i18n to shadcn components (e.g., localizing "Close" sr-only text), import `$lib/paraglide/messages` and use message functions.
+- When touching any shadcn component, always convert physical CSS properties to logical (see Styling section).
+- When adding i18n to shadcn components (e.g., localizing "Close" sr-only text), always import `$lib/paraglide/messages` and use message functions.
 - Available components: alert, avatar, badge, button, card, dialog, dropdown-menu, input, label, phone-input (custom), sheet, sonner, textarea, tooltip.
-- Browse the full catalog at [ui.shadcn.com](https://ui.shadcn.com) to find components before building custom ones.
+- Always browse the full catalog at [ui.shadcn.com](https://ui.shadcn.com) to find components before building custom ones.
 
 ## Reactive State
 
@@ -881,6 +881,6 @@ npm run build    # Production build
 8. **Navigation**: Update sidebar/header if adding a new page
 9. **Responsive**: Verify at 320px, 375px, 768px, 1024px
 10. **Accessibility**: Touch targets ≥40px, logical properties, `prefers-reduced-motion`
-11. **Docs**: Update `docs/` and AGENTS.md if the feature introduces new patterns or conventions (see root `AGENTS.md` — Documentation Maintenance)
+11. **Docs**: Always evaluate whether the feature introduces new patterns or conventions — if it does, update `docs/` and AGENTS.md in the same PR (see root `AGENTS.md` — Documentation Maintenance)
 
 Commit atomically: types+aliases → components → route+server-load → i18n keys.

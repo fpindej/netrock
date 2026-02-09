@@ -526,6 +526,23 @@ Always default to the most restrictive security posture and only relax constrain
 
 HSTS is enabled via `app.UseHsts()` in non-development environments.
 
+### Authentication Cookie Requirements
+
+| Attribute | Value | Purpose |
+|---|---|---|
+| `HttpOnly` | `true` | Prevents JavaScript access (XSS protection) |
+| `Secure` | `true` | Only sent over HTTPS |
+| `SameSite` | `None` | Required for cross-site cookie forwarding through the proxy |
+| `Path` | `/` (access token) or `/api/auth/refresh` (refresh token) | Limits cookie scope |
+
+Never change `HttpOnly` or `Secure` to `false`. Never widen `Path` on the refresh token cookie.
+
+### Refresh Token Security Invariants
+
+- **Always SHA-256 hash** refresh tokens before database storage — never store raw tokens
+- **Always rotate** on every refresh — invalidate the old token, issue a new one
+- **Always scope** the refresh token cookie to `/api/auth/refresh` — it must not be sent on every API call
+
 ## Repository Pattern & Persistence
 
 > For design rationale (why repositories return materialized objects, save boundaries, transaction strategy), see [`docs/backend-conventions.md`](../../docs/backend-conventions.md#persistence).
@@ -1104,6 +1121,6 @@ Use alongside FluentValidation — annotations feed the spec, FluentValidation h
 14. **WebApi**: Add validators co-located with request DTOs
 15. **WebApi**: Wire DI call in `Program.cs`
 16. **Migration**: `dotnet ef migrations add ...`
-17. **Docs**: Update `docs/` and AGENTS.md if the feature introduces new patterns or conventions (see root `AGENTS.md` — Documentation Maintenance)
+17. **Docs**: Always evaluate whether the feature introduces new patterns or conventions — if it does, update `docs/` and AGENTS.md in the same PR (see root `AGENTS.md` — Documentation Maintenance)
 
 Commit atomically: entity+config → service interface+DTOs+repository interface → service implementation+repository implementation+DI → controller+DTOs+mapper+validators → migration.
