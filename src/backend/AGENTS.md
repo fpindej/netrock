@@ -591,9 +591,7 @@ public sealed class JwtOptions : IValidatableObject
 
 ### Child Options (Sub-Sections)
 
-Child options model nested `appsettings.json` sections (e.g., `Authentication:Jwt:RefreshToken`). They are always `public sealed class` with **no `SectionName`** — they bind automatically through the parent. They are **not** registered independently with `AddOptions<>`.
-
-**Default: nest inside the parent class.** This is the standard approach — keeps parent and child together, makes the relationship explicit:
+Child options model nested `appsettings.json` sections (e.g., `Authentication:Jwt:RefreshToken`). **Always nest them as `public sealed class` inside the parent.** They have no `SectionName` — they bind automatically through the parent. They are not registered independently with `AddOptions<>`.
 
 ```csharp
 public sealed class RateLimitingOptions
@@ -613,7 +611,7 @@ public sealed class RateLimitingOptions
 }
 ```
 
-**Exception: separate file for large children** (10+ properties or substantial `IValidatableObject` logic). Example: `RedisOptions` (13 properties + 7 validation rules) lives in its own file alongside `CachingOptions`. Same directory, same namespace — just too large to nest without hurting readability.
+When referencing nested types outside the parent (e.g., in method parameters), use the fully-qualified name: `CachingOptions.RedisOptions`.
 
 Use `[UsedImplicitly]` on `init` setters of child options properties that are only set by the configuration binder (e.g., `public int ExpiresInDays { get; [UsedImplicitly] init; } = 7;`).
 

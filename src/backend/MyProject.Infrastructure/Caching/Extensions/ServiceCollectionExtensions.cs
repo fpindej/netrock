@@ -30,7 +30,7 @@ public static class ServiceCollectionExtensions
         }
         else
         {
-            var inMemoryOptions = cachingOptions?.InMemory ?? new InMemoryOptions();
+            var inMemoryOptions = cachingOptions?.InMemory ?? new CachingOptions.InMemoryOptions();
             services.AddDistributedMemoryCache(options =>
             {
                 options.SizeLimit = inMemoryOptions.SizeLimit;
@@ -43,7 +43,7 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    private static ConfigurationOptions BuildConfigurationOptions(RedisOptions redisOptions)
+    private static ConfigurationOptions BuildConfigurationOptions(CachingOptions.RedisOptions redisOptions)
     {
         // Parse the connection string using StackExchange.Redis built-in parser
         // Supports formats like: "localhost:6379" or "host1:6379,host2:6379" or full connection strings
