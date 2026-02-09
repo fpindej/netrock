@@ -307,6 +307,66 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/api/auth/change-password': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Changes the current authenticated user's password.
+		 *     Revokes all existing refresh tokens to force re-authentication on other devices.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			/** @description The change password request containing current and new passwords */
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['ChangePasswordRequest'];
+				};
+			};
+			responses: {
+				/** @description Password changed successfully */
+				204: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description If the request is invalid or the current password is incorrect */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -326,6 +386,13 @@ export interface components {
 			 *     Use this with the /api/auth/refresh endpoint when the access token expires.
 			 */
 			refreshToken?: string;
+		};
+		/** @description Represents a request to change the current user's password. */
+		ChangePasswordRequest: {
+			/** @description The user's current password for verification. */
+			currentPassword: string;
+			/** @description The new password to set for the account. */
+			newPassword: string;
 		};
 		/** @description Response DTO for error information. */
 		ErrorResponse: {

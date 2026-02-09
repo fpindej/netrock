@@ -93,6 +93,17 @@
 	"settings_description": "Správa předvoleb a konfigurace aplikace.",
 	"settings_wipDescription": "Pracujeme na komplexním nastavení, které vám umožní plně přizpůsobit aplikaci.",
 
+	"settings_changePassword_title": "Změna hesla",
+	"settings_changePassword_description": "Aktualizujte si heslo pro zabezpečení svého účtu.",
+	"settings_changePassword_currentPassword": "Aktuální heslo",
+	"settings_changePassword_newPassword": "Nové heslo",
+	"settings_changePassword_confirmPassword": "Potvrzení nového hesla",
+	"settings_changePassword_submit": "Změnit heslo",
+	"settings_changePassword_submitting": "Měním...",
+	"settings_changePassword_success": "Heslo bylo úspěšně změněno. Přihlaste se prosím znovu.",
+	"settings_changePassword_error": "Nepodařilo se změnit heslo",
+	"settings_changePassword_mismatch": "Hesla se neshodují",
+
 	"profile_title": "Profil",
 	"profile_description": "Takto vás uvidí ostatní uživatelé.",
 
