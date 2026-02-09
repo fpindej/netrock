@@ -1063,11 +1063,6 @@ export interface components {
 		};
 		/** @description Response DTO for error information. */
 		ErrorResponse: {
-			/**
-			 * @description A stable, dot-separated error code for frontend localization (e.g. "auth.login.invalidCredentials").
-			 *     Clients use this to resolve translated error messages. Null when no specific code applies.
-			 */
-			errorCode?: null | string;
 			/** @description The main error message. */
 			message?: null | string;
 			/** @description Additional error details or technical information. */
