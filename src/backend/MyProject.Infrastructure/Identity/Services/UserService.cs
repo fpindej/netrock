@@ -1,10 +1,15 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
+using MyProject.Application.Cookies;
+using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity;
+using MyProject.Application.Identity.Dtos;
 using MyProject.Domain;
 using MyProject.Infrastructure.Features.Authentication.Models;
+using MyProject.Infrastructure.Persistence;
 
 namespace MyProject.Infrastructure.Identity.Services;
 
@@ -14,7 +19,9 @@ namespace MyProject.Infrastructure.Identity.Services;
 internal class UserService(
     UserManager<ApplicationUser> userManager,
     IUserContext userContext,
-    ICacheService cacheService) : IUserService
+    ICacheService cacheService,
+    MyProjectDbContext dbContext,
+    ICookieService cookieService) : IUserService
 {
     private static readonly CacheEntryOptions UserCacheOptions =
         CacheEntryOptions.AbsoluteExpireIn(TimeSpan.FromMinutes(1));
@@ -122,5 +129,80 @@ internal class UserService(
             Roles: roles);
 
         return Result<UserOutput>.Success(output);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> DeleteAccountAsync(DeleteAccountInput input, CancellationToken cancellationToken = default)
+    {
+        var userId = userContext.UserId;
+
+        if (!userId.HasValue)
+        {
+            return Result.Failure("User is not authenticated.");
+        }
+
+        var user = await userManager.FindByIdAsync(userId.Value.ToString());
+
+        if (user is null)
+        {
+            return Result.Failure("User not found.");
+        }
+
+        var passwordValid = await userManager.CheckPasswordAsync(user, input.Password);
+
+        if (!passwordValid)
+        {
+            return Result.Failure("Invalid password.");
+        }
+
+        await RevokeUserTokens(userId.Value, cancellationToken);
+        ClearAuthCookies();
+        await InvalidateUserCache(userId.Value);
+        await DeleteUser(user);
+
+        return Result.Success();
+    }
+
+    private async Task RevokeUserTokens(Guid userId, CancellationToken cancellationToken)
+    {
+        var tokens = await dbContext.RefreshTokens
+            .Where(rt => rt.UserId == userId && !rt.Invalidated)
+            .ToListAsync(cancellationToken);
+
+        foreach (var token in tokens)
+        {
+            token.Invalidated = true;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is not null)
+        {
+            await userManager.UpdateSecurityStampAsync(user);
+        }
+    }
+
+    private void ClearAuthCookies()
+    {
+        cookieService.DeleteCookie(CookieNames.AccessToken);
+        cookieService.DeleteCookie(CookieNames.RefreshToken);
+    }
+
+    private async Task InvalidateUserCache(Guid userId)
+    {
+        var cacheKey = CacheKeys.User(userId);
+        await cacheService.RemoveAsync(cacheKey);
+    }
+
+    private async Task DeleteUser(ApplicationUser user)
+    {
+        var result = await userManager.DeleteAsync(user);
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"Failed to delete user account: {errors}");
+        }
     }
 }

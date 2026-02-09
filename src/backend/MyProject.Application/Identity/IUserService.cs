@@ -1,4 +1,5 @@
 using MyProject.Application.Features.Authentication.Dtos;
+using MyProject.Application.Identity.Dtos;
 using MyProject.Domain;
 
 namespace MyProject.Application.Identity;
@@ -22,6 +23,15 @@ public interface IUserService
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A Result containing the updated user if successful, or failure if not.</returns>
     Task<Result<UserOutput>> UpdateProfileAsync(UpdateProfileInput input, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes the current user's account after password confirmation.
+    /// Revokes all tokens, clears auth cookies, and permanently removes the user.
+    /// </summary>
+    /// <param name="input">The account deletion input containing the user's password for confirmation.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A Result indicating success or failure.</returns>
+    Task<Result> DeleteAccountAsync(DeleteAccountInput input, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the roles for a specific user.
