@@ -1,4 +1,4 @@
-﻿namespace MyProject.Domain;
+namespace MyProject.Domain;
 
 /// <summary>
 /// Represents the result of an operation, indicating success or failure, and optionally containing a value.
@@ -44,7 +44,7 @@ public class Result<T>
     /// </summary>
     /// <param name="error">The error message.</param>
     /// <returns>A failed result containing the error message.</returns>
-    public static Result<T> Failure(string? error)
+    public static Result<T> Failure(string error)
     {
         return new Result<T>(false, error, default);
     }
