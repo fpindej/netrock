@@ -677,6 +677,11 @@ catch
 | `dbContext.SaveChangesAsync()` | Default — single batch of changes, implicitly transactional |
 | `BeginTransactionAsync` / `CommitAsync` | Multiple `SaveChangesAsync` calls that must succeed or fail together |
 
+Do **not** use explicit transactions when:
+- A single `SaveChangesAsync` call covers all changes (already atomic)
+- The operation is read-only (no writes to coordinate)
+- The work spans multiple services (redesign to keep the transaction boundary within one service method)
+
 ### Optimistic Concurrency
 
 Not enforced globally yet. When a use case emerges, discuss the strategy per-entity. Options: `[ConcurrencyCheck]`, `IsConcurrencyToken()`, or PostgreSQL's `xmin`.

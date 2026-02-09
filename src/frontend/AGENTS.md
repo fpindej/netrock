@@ -201,7 +201,7 @@ const { data, response, error } = await browserClient.PATCH('/api/users/me', {
 
 ### API Proxy
 
-All `/api/*` requests are proxied to the backend via `routes/api/[...path]/+server.ts`. Handles `ECONNREFUSED` by returning 503.
+All `/api/*` requests are proxied to the backend via `routes/api/[...path]/+server.ts`. The proxy forwards cookies and headers automatically. Handles `ECONNREFUSED` by returning 503.
 
 ## Error Handling
 
@@ -256,7 +256,7 @@ The `handle` hook in `hooks.server.ts` adds security headers to page responses. 
 | `Referrer-Policy`        | `strict-origin-when-cross-origin`          | Prevents leaking URL paths to third parties |
 | `Permissions-Policy`     | `camera=(), microphone=(), geolocation=()` | Disables unused browser APIs                |
 
-`Permissions-Policy` uses `()` to deny. To enable a browser API, change the specific directive to `(self)`.
+`Permissions-Policy` uses `()` to deny. To enable a browser API, change the specific directive to `(self)` — never remove the header or use `*`.
 
 ### Content Security Policy (CSP)
 
@@ -583,6 +583,8 @@ Always respect `prefers-reduced-motion`:
 ```html
 <div class="motion-safe:duration-300 motion-safe:animate-in motion-safe:fade-in"></div>
 ```
+
+For custom CSS animations in `animations.css`, add a `@media (prefers-reduced-motion: reduce)` query that disables them.
 
 ### Responsive Design
 
