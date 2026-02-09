@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { WorkInProgress } from '$lib/components/common';
+	import { ChangePasswordForm } from '$lib/components/settings';
 	import * as m from '$lib/paraglide/messages';
 </script>
 
@@ -8,8 +8,13 @@
 	<meta name="description" content={m.meta_settings_description()} />
 </svelte:head>
 
-<WorkInProgress
-	title={m.settings_title()}
-	description={m.settings_description()}
-	wipDescription={m.settings_wipDescription()}
-/>
+<div class="space-y-6">
+	<div>
+		<h3 class="text-lg font-medium">{m.settings_title()}</h3>
+		<p class="text-sm text-muted-foreground">{m.settings_description()}</p>
+	</div>
+	<div class="h-px w-full bg-border"></div>
+	<div class="max-w-2xl">
+		<ChangePasswordForm />
+	</div>
+</div>

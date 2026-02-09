@@ -48,7 +48,9 @@ const DEFAULT_FIELD_MAP: Record<string, string> = {
 	AvatarUrl: 'avatarUrl',
 	Email: 'email',
 	Password: 'password',
-	ConfirmPassword: 'confirmPassword'
+	ConfirmPassword: 'confirmPassword',
+	CurrentPassword: 'currentPassword',
+	NewPassword: 'newPassword'
 };
 
 /**

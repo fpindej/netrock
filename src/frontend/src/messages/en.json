@@ -93,6 +93,17 @@
 	"settings_description": "Manage your application preferences and configurations.",
 	"settings_wipDescription": "We are working on a comprehensive settings panel to give you full control over your experience.",
 
+	"settings_changePassword_title": "Change Password",
+	"settings_changePassword_description": "Update your password to keep your account secure.",
+	"settings_changePassword_currentPassword": "Current Password",
+	"settings_changePassword_newPassword": "New Password",
+	"settings_changePassword_confirmPassword": "Confirm New Password",
+	"settings_changePassword_submit": "Change Password",
+	"settings_changePassword_submitting": "Changing...",
+	"settings_changePassword_success": "Password changed successfully. Please log in again.",
+	"settings_changePassword_error": "Failed to change password",
+	"settings_changePassword_mismatch": "Passwords do not match",
+
 	"profile_title": "Profile",
 	"profile_description": "This is how others will see you on the site.",
 
