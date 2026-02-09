@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using MyProject.Application.Identity.Constants;
@@ -8,19 +7,18 @@ using MyProject.Infrastructure.Features.Authentication.Models;
 namespace MyProject.Infrastructure.Features.Authentication.Extensions;
 
 /// <summary>
-/// Extension methods for seeding Identity roles and development test users at startup.
+/// Internal methods for seeding Identity roles and development test users.
+/// Called by the database initialization orchestrator, not directly from <c>Program.cs</c>.
 /// </summary>
-public static class ApplicationBuilderExtensions
+internal static class IdentitySeedExtensions
 {
     /// <summary>
     /// Seeds all roles defined in <see cref="AppRoles.All"/> if they do not already exist.
-    /// This should run in every environment to ensure the role set is consistent.
     /// </summary>
-    /// <param name="appBuilder">The application builder.</param>
-    public static async Task SeedRolesAsync(this IApplicationBuilder appBuilder)
+    /// <param name="serviceProvider">The scoped service provider.</param>
+    internal static async Task SeedRolesAsync(IServiceProvider serviceProvider)
     {
-        using var scope = appBuilder.ApplicationServices.CreateScope();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+        var roleManager = serviceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
 
         foreach (var role in AppRoles.All)
         {
@@ -32,17 +30,13 @@ public static class ApplicationBuilderExtensions
     }
 
     /// <summary>
-    /// Seeds test users for local development. Must not be called in production.
-    /// <para>
-    /// User credentials are defined in <see cref="SeedUsers"/>.
+    /// Seeds test users for local development.
     /// Roles must already exist — call <see cref="SeedRolesAsync"/> first.
-    /// </para>
     /// </summary>
-    /// <param name="appBuilder">The application builder.</param>
-    public static async Task SeedDevelopmentUsersAsync(this IApplicationBuilder appBuilder)
+    /// <param name="serviceProvider">The scoped service provider.</param>
+    internal static async Task SeedDevelopmentUsersAsync(IServiceProvider serviceProvider)
     {
-        using var scope = appBuilder.ApplicationServices.CreateScope();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
         await SeedUserAsync(userManager, SeedUsers.TestUserEmail, SeedUsers.TestUserPassword, AppRoles.User);
         await SeedUserAsync(userManager, SeedUsers.AdminEmail, SeedUsers.AdminPassword, AppRoles.Admin);
