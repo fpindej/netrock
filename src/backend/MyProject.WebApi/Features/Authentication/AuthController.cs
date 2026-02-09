@@ -117,6 +117,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
             return BadRequest(new ErrorResponse { Message = result.Error });
         }
 
-        return StatusCode(StatusCodes.Status201Created, new RegisterResponse { Id = result.Value });
+        var response = new RegisterResponse { Id = result.Value };
+        return Created(string.Empty, response);
     }
 }
