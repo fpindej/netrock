@@ -60,7 +60,6 @@ src/
 │   │   └── index.ts               # Type aliases from API schemas
 │   │
 │   └── utils/
-│       ├── i18n.ts                # resolveErrorCode() — dynamic paraglide message lookup
 │       ├── ui.ts                  # cn() for class merging
 │       ├── platform.ts            # IS_MAC, IS_WINDOWS detection
 │       └── index.ts               # Barrel export (cn, WithoutChildrenOrChild)
@@ -208,9 +207,9 @@ All `/api/*` requests are proxied to the backend via `routes/api/[...path]/+serv
 
 ## Error Handling
 
-### Error Code Resolution (Generic Errors)
+### Error Handling (Generic Errors)
 
-The backend returns a stable `errorCode` on every error response. The frontend resolves this code to a localized message using `getErrorMessage()`:
+The backend returns a descriptive `message` on every error response. The frontend uses this message directly via `getErrorMessage()`:
 
 ```typescript
 import { getErrorMessage, browserClient } from '$lib/api';
@@ -226,35 +225,12 @@ if (!response.ok) {
 
 #### `getErrorMessage()` Resolution Order
 
-1. **`errorCode` field** → dynamic paraglide key lookup → localized string
-2. **`message` field** → raw backend English string (ErrorResponse shape)
-3. **`detail` field** → ProblemDetails detail
-4. **`title` field** → ProblemDetails title
-5. **Fallback string** → the caller-provided fallback
+1. **`message` field** → backend's descriptive error message (ErrorResponse shape)
+2. **`detail` field** → ProblemDetails detail
+3. **`title` field** → ProblemDetails title
+4. **Fallback string** → the caller-provided fallback
 
-The `errorCode` is always preferred because it produces a properly localized message. The raw `message` fallback ensures the user still sees something meaningful for codes without a translation.
-
-#### Dynamic Error Code Resolution
-
-Error codes are resolved to paraglide messages automatically at runtime via `resolveErrorCode()` in `$lib/utils/i18n.ts`. The function transforms the dot-separated error code into a paraglide key and looks it up on the module namespace:
-
-```
-"auth.login.invalidCredentials" → messages["apiError_auth_login_invalidCredentials"]()
-```
-
-This means **no manual mapping is needed** — adding a new error code only requires adding the `apiError_*` key to `en.json` and `cs.json`. The function handles the rest:
-
-```typescript
-// $lib/utils/i18n.ts — the cast lives at the module boundary
-const messages = m as unknown as Record<string, (() => string) | undefined>;
-
-export function resolveErrorCode(errorCode: string): string | undefined {
-	const key = `apiError_${errorCode.replaceAll('.', '_')}`;
-	return messages[key]?.();
-}
-```
-
-`error-handling.ts` imports `resolveErrorCode` from `$lib/utils` and uses it in `getErrorMessage()`. If no translation exists for a given error code, the function returns `undefined` and `getErrorMessage()` falls back to the raw English message from the backend.
+The backend always returns specific, user-friendly English messages with every error (e.g., `"Username 'user@example.com' is already taken."`). The frontend displays these messages directly — no translation or mapping is needed.
 
 ### Validation Errors (Field-Level)
 
@@ -547,18 +523,6 @@ State files use `.svelte.ts` extension and live in `$lib/state/`:
 ```
 
 Examples: `auth_login_title`, `profile_personalInfo_firstName`, `nav_dashboard`, `meta_profile_title`
-
-### API Error Code Keys
-
-Backend error codes have a special translation key prefix: `apiError_`. The key is derived from the error code by replacing dots with underscores:
-
-| Backend Error Code             | Translation Key                         |
-| ------------------------------ | --------------------------------------- |
-| `auth.register.duplicateEmail` | `apiError_auth_register_duplicateEmail` |
-| `admin.role.notExists`         | `apiError_admin_role_notExists`         |
-| `server.internalError`         | `apiError_server_internalError`         |
-
-These keys exist in both `en.json` and `cs.json` and are resolved automatically by `resolveErrorCode()` in `$lib/utils/i18n.ts`.
 
 ### Usage
 
@@ -1022,7 +986,7 @@ npm run build    # Production build
 5. **Route**: Create page in `routes/(app)/{feature}/`
 6. **Server load**: Add `+page.server.ts` for initial data
 7. **i18n**: Add keys to both `en.json` and `cs.json`
-8. **Error codes**: If the backend returns new error codes, add `apiError_*` keys to both language files (resolution is automatic via `resolveErrorCode()`)
+8. **Error handling**: The backend returns descriptive messages with every error — no frontend translation keys needed. Use `getErrorMessage()` to display them.
 9. **Navigation**: Update sidebar/header if adding a new page
 10. **Responsive**: Verify at 320px, 375px, 768px, 1024px
 11. **Accessibility**: Touch targets ≥40px, logical properties, `prefers-reduced-motion`

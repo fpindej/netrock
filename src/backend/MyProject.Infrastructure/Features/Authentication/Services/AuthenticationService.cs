@@ -37,18 +37,18 @@ internal class AuthenticationService(
 
         if (user is null)
         {
-            return Result<AuthenticationOutput>.Failure("Invalid username or password.", ErrorCodes.Auth.LoginInvalidCredentials);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials);
         }
 
         var signInResult = await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
         if (signInResult.IsLockedOut)
         {
-            return Result<AuthenticationOutput>.Failure("Account is temporarily locked due to multiple failed login attempts. Please try again later.", ErrorCodes.Auth.LoginAccountLocked);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginAccountLocked);
         }
 
         if (!signInResult.Succeeded)
         {
-            return Result<AuthenticationOutput>.Failure("Invalid username or password.", ErrorCodes.Auth.LoginInvalidCredentials);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials);
         }
 
         var accessToken = await tokenProvider.GenerateAccessToken(user);
@@ -107,16 +107,14 @@ internal class AuthenticationService(
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            var errorCode = MapRegistrationIdentityError(result.Errors);
-            return Result<Guid>.Failure(errors, errorCode);
+            return Result<Guid>.Failure(errors);
         }
 
         var roleResult = await userManager.AddToRoleAsync(user, AppRoles.User);
 
         if (!roleResult.Succeeded)
         {
-            var errors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
-            return Result<Guid>.Failure(errors, ErrorCodes.Auth.RegisterRoleAssignFailed);
+            return Result<Guid>.Failure(ErrorMessages.Auth.RegisterRoleAssignFailed);
         }
 
         return Result<Guid>.Success(user.Id);
@@ -142,7 +140,7 @@ internal class AuthenticationService(
     {
         if (string.IsNullOrEmpty(refreshToken))
         {
-            return Result<AuthenticationOutput>.Failure("Refresh token is missing.", ErrorCodes.Auth.TokenMissing);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.TokenMissing);
         }
 
         var hashedToken = HashHelper.Sha256(refreshToken);
@@ -152,12 +150,12 @@ internal class AuthenticationService(
 
         if (storedToken is null)
         {
-            return Fail("Refresh token not found.", ErrorCodes.Auth.TokenNotFound);
+            return Fail(ErrorMessages.Auth.TokenNotFound);
         }
 
         if (storedToken.Invalidated)
         {
-            return Fail("Refresh token has been invalidated.", ErrorCodes.Auth.TokenInvalidated);
+            return Fail(ErrorMessages.Auth.TokenInvalidated);
         }
 
         if (storedToken.Used)
@@ -165,14 +163,14 @@ internal class AuthenticationService(
             // Security alert: Token reuse! Revoke all tokens for this user.
             storedToken.Invalidated = true;
             await RevokeUserTokens(storedToken.UserId, cancellationToken);
-            return Fail("Invalid refresh token.", ErrorCodes.Auth.TokenReused);
+            return Fail(ErrorMessages.Auth.TokenReused);
         }
 
         if (storedToken.ExpiredAt < timeProvider.GetUtcNow().UtcDateTime)
         {
             storedToken.Invalidated = true;
             await dbContext.SaveChangesAsync(cancellationToken);
-            return Fail("Refresh token has expired.", ErrorCodes.Auth.TokenExpired);
+            return Fail(ErrorMessages.Auth.TokenExpired);
         }
 
         // Mark current token as used
@@ -181,7 +179,7 @@ internal class AuthenticationService(
         var user = storedToken.User;
         if (user is null)
         {
-            return Result<AuthenticationOutput>.Failure("User not found.", ErrorCodes.Auth.TokenUserNotFound);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.TokenUserNotFound);
         }
 
         var newAccessToken = await tokenProvider.GenerateAccessToken(user);
@@ -222,14 +220,14 @@ internal class AuthenticationService(
 
         return Result<AuthenticationOutput>.Success(output);
 
-        Result<AuthenticationOutput> Fail(string message, string? errorCode = null)
+        Result<AuthenticationOutput> Fail(string message)
         {
             if (useCookies)
             {
                 cookieService.DeleteCookie(CookieNames.AccessToken);
                 cookieService.DeleteCookie(CookieNames.RefreshToken);
             }
-            return Result<AuthenticationOutput>.Failure(message, errorCode);
+            return Result<AuthenticationOutput>.Failure(message);
         }
     }
 
@@ -240,21 +238,21 @@ internal class AuthenticationService(
 
         if (!userId.HasValue)
         {
-            return Result.Failure("User is not authenticated.", ErrorCodes.Auth.NotAuthenticated);
+            return Result.Failure(ErrorMessages.Auth.NotAuthenticated);
         }
 
         var user = await userManager.FindByIdAsync(userId.Value.ToString());
 
         if (user is null)
         {
-            return Result.Failure("User not found.", ErrorCodes.Auth.UserNotFound);
+            return Result.Failure(ErrorMessages.Auth.UserNotFound);
         }
 
         var passwordValid = await userManager.CheckPasswordAsync(user, input.CurrentPassword);
 
         if (!passwordValid)
         {
-            return Result.Failure("Current password is incorrect.", ErrorCodes.Auth.PasswordIncorrect);
+            return Result.Failure(ErrorMessages.Auth.PasswordIncorrect);
         }
 
         var changeResult = await userManager.ChangePasswordAsync(user, input.CurrentPassword, input.NewPassword);
@@ -262,52 +260,12 @@ internal class AuthenticationService(
         if (!changeResult.Succeeded)
         {
             var errors = string.Join(", ", changeResult.Errors.Select(e => e.Description));
-            var errorCode = MapPasswordIdentityError(changeResult.Errors);
-            return Result.Failure(errors, errorCode);
+            return Result.Failure(errors);
         }
 
         await RevokeUserTokens(userId.Value, cancellationToken);
 
         return Result.Success();
-    }
-
-    /// <summary>
-    /// Maps the first ASP.NET Identity error from a registration attempt to a specific error code.
-    /// </summary>
-    private static string MapRegistrationIdentityError(IEnumerable<IdentityError> errors)
-    {
-        var code = errors.FirstOrDefault()?.Code;
-        return code switch
-        {
-            "DuplicateEmail" or "DuplicateUserName" => ErrorCodes.Auth.RegisterDuplicateEmail,
-            "InvalidEmail" => ErrorCodes.Auth.RegisterInvalidEmail,
-            "InvalidUserName" => ErrorCodes.Auth.RegisterInvalidEmail,
-            "PasswordTooShort" => ErrorCodes.Auth.RegisterPasswordTooShort,
-            "PasswordRequiresDigit" => ErrorCodes.Auth.RegisterPasswordRequiresDigit,
-            "PasswordRequiresLower" => ErrorCodes.Auth.RegisterPasswordRequiresLower,
-            "PasswordRequiresUpper" => ErrorCodes.Auth.RegisterPasswordRequiresUpper,
-            "PasswordRequiresNonAlphanumeric" => ErrorCodes.Auth.RegisterPasswordRequiresNonAlphanumeric,
-            "PasswordRequiresUniqueChars" => ErrorCodes.Auth.RegisterPasswordRequiresUniqueChars,
-            _ => ErrorCodes.Auth.RegisterFailed
-        };
-    }
-
-    /// <summary>
-    /// Maps the first ASP.NET Identity error from a password change attempt to a specific error code.
-    /// </summary>
-    private static string MapPasswordIdentityError(IEnumerable<IdentityError> errors)
-    {
-        var code = errors.FirstOrDefault()?.Code;
-        return code switch
-        {
-            "PasswordTooShort" => ErrorCodes.Auth.PasswordTooShort,
-            "PasswordRequiresDigit" => ErrorCodes.Auth.PasswordRequiresDigit,
-            "PasswordRequiresLower" => ErrorCodes.Auth.PasswordRequiresLower,
-            "PasswordRequiresUpper" => ErrorCodes.Auth.PasswordRequiresUpper,
-            "PasswordRequiresNonAlphanumeric" => ErrorCodes.Auth.PasswordRequiresNonAlphanumeric,
-            "PasswordRequiresUniqueChars" => ErrorCodes.Auth.PasswordRequiresUniqueChars,
-            _ => ErrorCodes.Auth.PasswordChangeFailed
-        };
     }
 
     private async Task RevokeUserTokens(Guid userId, CancellationToken cancellationToken = default)

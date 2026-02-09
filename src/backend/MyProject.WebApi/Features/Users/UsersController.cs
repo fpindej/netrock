@@ -56,7 +56,7 @@ public class UsersController(IUserService userService) : ControllerBase
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { ErrorCode = result.ErrorCode, Message = result.Error });
+            return BadRequest(new ErrorResponse { Message = result.Error });
         }
 
         return Ok(result.Value!.ToResponse());
@@ -82,7 +82,7 @@ public class UsersController(IUserService userService) : ControllerBase
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { ErrorCode = result.ErrorCode, Message = result.Error });
+            return BadRequest(new ErrorResponse { Message = result.Error });
         }
 
         return NoContent();

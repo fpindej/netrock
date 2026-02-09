@@ -80,7 +80,7 @@ internal class AdminService(
     {
         if (!AppRoles.All.Contains(input.Role))
         {
-            return Result.Failure($"Role '{input.Role}' does not exist.", ErrorCodes.Admin.RoleNotExists);
+            return Result.Failure($"Role '{input.Role}' does not exist.");
         }
 
         var user = await userManager.FindByIdAsync(userId.ToString());
@@ -101,12 +101,12 @@ internal class AdminService(
 
         if (AppRoles.GetRoleRank(input.Role) >= callerRank)
         {
-            return Result.Failure("Cannot assign a role at or above your own rank.", ErrorCodes.Admin.RoleRankTooHigh);
+            return Result.Failure("Cannot assign a role at or above your own rank.");
         }
 
         if (await userManager.IsInRoleAsync(user, input.Role))
         {
-            return Result.Failure($"User already has the '{input.Role}' role.", ErrorCodes.Admin.RoleAlreadyAssigned);
+            return Result.Failure($"User already has the '{input.Role}' role.");
         }
 
         var result = await userManager.AddToRoleAsync(user, input.Role);
@@ -114,7 +114,7 @@ internal class AdminService(
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors, ErrorCodes.Admin.RoleAssignFailed);
+            return Result.Failure(errors);
         }
 
         await InvalidateUserCacheAsync(userId);
@@ -130,7 +130,7 @@ internal class AdminService(
     {
         if (!AppRoles.All.Contains(role))
         {
-            return Result.Failure($"Role '{role}' does not exist.", ErrorCodes.Admin.RoleNotExists);
+            return Result.Failure($"Role '{role}' does not exist.");
         }
 
         var user = await userManager.FindByIdAsync(userId.ToString());
@@ -142,7 +142,7 @@ internal class AdminService(
 
         if (callerUserId == userId)
         {
-            return Result.Failure("Cannot remove a role from your own account.", ErrorCodes.Admin.RoleSelfRemove);
+            return Result.Failure(ErrorMessages.Admin.RoleSelfRemove);
         }
 
         var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
@@ -156,12 +156,12 @@ internal class AdminService(
 
         if (AppRoles.GetRoleRank(role) >= callerRank)
         {
-            return Result.Failure("Cannot remove a role at or above your own rank.", ErrorCodes.Admin.RoleRankTooHigh);
+            return Result.Failure("Cannot remove a role at or above your own rank.");
         }
 
         if (!await userManager.IsInRoleAsync(user, role))
         {
-            return Result.Failure($"User does not have the '{role}' role.", ErrorCodes.Admin.RoleNotAssigned);
+            return Result.Failure($"User does not have the '{role}' role.");
         }
 
         var lastAdminResult = await EnforceLastAdminProtectionAsync(userId, role, cancellationToken);
@@ -175,7 +175,7 @@ internal class AdminService(
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors, ErrorCodes.Admin.RoleRemoveFailed);
+            return Result.Failure(errors);
         }
 
         await RevokeUserSessionsAsync(user, userId, cancellationToken);
@@ -199,7 +199,7 @@ internal class AdminService(
 
         if (callerUserId == userId)
         {
-            return Result.Failure("Cannot lock your own account.", ErrorCodes.Admin.LockSelfAction);
+            return Result.Failure(ErrorMessages.Admin.LockSelfAction);
         }
 
         var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
@@ -215,7 +215,7 @@ internal class AdminService(
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors, ErrorCodes.Admin.LockFailed);
+            return Result.Failure(errors);
         }
 
         await RevokeUserSessionsAsync(user, userId, cancellationToken);
@@ -248,7 +248,7 @@ internal class AdminService(
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors, ErrorCodes.Admin.UnlockFailed);
+            return Result.Failure(errors);
         }
 
         // Reset access failed count
@@ -274,7 +274,7 @@ internal class AdminService(
 
         if (callerUserId == userId)
         {
-            return Result.Failure("Cannot delete your own account.", ErrorCodes.Admin.DeleteSelfAction);
+            return Result.Failure(ErrorMessages.Admin.DeleteSelfAction);
         }
 
         var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
@@ -298,7 +298,7 @@ internal class AdminService(
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors, ErrorCodes.Admin.DeleteFailed);
+            return Result.Failure(errors);
         }
 
         await InvalidateUserCacheAsync(userId);
@@ -343,7 +343,7 @@ internal class AdminService(
 
         if (callerRank <= targetRank)
         {
-            return Result.Failure("You do not have sufficient privileges to manage this user.", ErrorCodes.Admin.HierarchyInsufficient);
+            return Result.Failure(ErrorMessages.Admin.HierarchyInsufficient);
         }
 
         return Result.Success();
@@ -372,7 +372,7 @@ internal class AdminService(
 
         if (usersInRoleCount <= 1)
         {
-            return Result.Failure($"Cannot remove the '{role}' role — this is the last user with this role.", ErrorCodes.Admin.RoleLastRole);
+            return Result.Failure($"Cannot remove the '{role}' role — this is the last user with this role.");
         }
 
         return Result.Success();
@@ -396,7 +396,7 @@ internal class AdminService(
             if (usersInRoleCount <= 1)
             {
                 return Result.Failure(
-                    $"Cannot delete this user — they are the last user with the '{role}' role.", ErrorCodes.Admin.DeleteLastRole);
+                    $"Cannot delete this user — they are the last user with the '{role}' role.");
             }
         }
 

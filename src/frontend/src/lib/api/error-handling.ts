@@ -2,13 +2,11 @@
  * API error handling utilities for ASP.NET Core backends.
  *
  * Provides type-safe parsing and mapping of validation errors
- * from ASP.NET Core's ProblemDetails format, and localized error
- * message resolution from backend error codes via paraglide-js.
+ * from ASP.NET Core's ProblemDetails format, and user-friendly
+ * error message extraction from backend responses.
  *
  * @remarks Pattern documented in src/frontend/AGENTS.md — update both when changing.
  */
-
-import { resolveErrorCode } from '$lib/utils';
 
 /**
  * Extended ProblemDetails with validation errors.
@@ -87,31 +85,29 @@ export function mapFieldErrors(
 }
 
 /**
- * Extracts a user-friendly, localized error message from an API error response.
+ * Extracts a user-friendly error message from an API error response.
  *
  * Resolution order:
- * 1. `errorCode` field → localized paraglide message (via dynamic key lookup)
- * 2. `message` field → raw backend message (ErrorResponse shape)
- * 3. `detail` field → raw ProblemDetails detail
- * 4. `title` field → raw ProblemDetails title
- * 5. Fallback string
+ * 1. `message` field → backend message (ErrorResponse shape)
+ * 2. `detail` field → ProblemDetails detail
+ * 3. `title` field → ProblemDetails title
+ * 4. Fallback string
+ *
+ * The backend always returns specific, descriptive English messages.
+ * The `errorCode` field remains available on responses for programmatic
+ * handling (e.g., switching on specific error codes in UI logic).
  *
  * @param error - The error object from the API response
  * @param fallback - Fallback message if no error message can be extracted
- * @returns A user-friendly error message, localized when possible
+ * @returns A user-friendly error message
  */
 export function getErrorMessage(error: unknown, fallback: string): string {
 	if (typeof error === 'object' && error !== null) {
-		// 1. Try errorCode → localized message
-		if ('errorCode' in error && typeof error.errorCode === 'string') {
-			const resolved = resolveErrorCode(error.errorCode);
-			if (resolved) return resolved;
-		}
-		// 2. Try ErrorResponse shape (message field)
+		// 1. Try ErrorResponse shape (message field)
 		if ('message' in error && typeof error.message === 'string') {
 			return error.message;
 		}
-		// 3. Try ProblemDetails shape (detail/title)
+		// 2. Try ProblemDetails shape (detail/title)
 		if ('detail' in error && typeof error.detail === 'string') {
 			return error.detail;
 		}

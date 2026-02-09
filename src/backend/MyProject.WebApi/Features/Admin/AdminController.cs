@@ -91,7 +91,7 @@ public class AdminController(IAdminService adminService) : ApiController
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { ErrorCode = result.ErrorCode, Message = result.Error });
+            return BadRequest(new ErrorResponse { Message = result.Error });
         }
 
         return NoContent();
@@ -122,7 +122,7 @@ public class AdminController(IAdminService adminService) : ApiController
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { ErrorCode = result.ErrorCode, Message = result.Error });
+            return BadRequest(new ErrorResponse { Message = result.Error });
         }
 
         return NoContent();
@@ -152,7 +152,7 @@ public class AdminController(IAdminService adminService) : ApiController
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { ErrorCode = result.ErrorCode, Message = result.Error });
+            return BadRequest(new ErrorResponse { Message = result.Error });
         }
 
         return NoContent();
@@ -181,7 +181,7 @@ public class AdminController(IAdminService adminService) : ApiController
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { ErrorCode = result.ErrorCode, Message = result.Error });
+            return BadRequest(new ErrorResponse { Message = result.Error });
         }
 
         return NoContent();
@@ -211,7 +211,7 @@ public class AdminController(IAdminService adminService) : ApiController
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { ErrorCode = result.ErrorCode, Message = result.Error });
+            return BadRequest(new ErrorResponse { Message = result.Error });
         }
 
         return NoContent();

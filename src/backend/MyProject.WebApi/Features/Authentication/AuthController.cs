@@ -41,7 +41,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (!result.IsSuccess)
         {
-            return Unauthorized(new ErrorResponse { ErrorCode = result.ErrorCode, Message = result.Error });
+            return Unauthorized(new ErrorResponse { Message = result.Error });
         }
 
         return Ok(result.Value!.ToResponse());
@@ -75,14 +75,14 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (string.IsNullOrEmpty(refreshToken))
         {
-            return Unauthorized(new ErrorResponse { ErrorCode = ErrorCodes.Auth.TokenMissing, Message = "Refresh token is missing." });
+            return Unauthorized(new ErrorResponse { Message = ErrorMessages.Auth.TokenMissing });
         }
 
         var result = await authenticationService.RefreshTokenAsync(refreshToken, useCookies, cancellationToken);
 
         if (!result.IsSuccess)
         {
-            return Unauthorized(new ErrorResponse { ErrorCode = result.ErrorCode, Message = result.Error });
+            return Unauthorized(new ErrorResponse { Message = result.Error });
         }
 
         return Ok(result.Value!.ToResponse());
@@ -120,7 +120,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { ErrorCode = result.ErrorCode, Message = result.Error });
+            return BadRequest(new ErrorResponse { Message = result.Error });
         }
 
         var response = new RegisterResponse { Id = result.Value };
@@ -147,7 +147,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { ErrorCode = result.ErrorCode, Message = result.Error });
+            return BadRequest(new ErrorResponse { Message = result.Error });
         }
 
         return NoContent();

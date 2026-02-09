@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using MyProject.Domain;
+using static MyProject.Domain.ErrorMessages;
 using MyProject.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using MyProject.Application.Persistence;
@@ -58,7 +59,7 @@ internal class BaseEntityRepository<TEntity>(MyProjectDbContext dbContext)
         }
         catch (Exception ex)
         {
-            return Result<TEntity>.Failure($"Failed to add entity: {ex.Message}", ErrorCodes.Entity.AddFailed);
+            return Result<TEntity>.Failure($"Failed to add entity: {ex.Message}");
         }
     }
 
@@ -74,7 +75,7 @@ internal class BaseEntityRepository<TEntity>(MyProjectDbContext dbContext)
         var entity = await _dbSet.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
         if (entity is null)
         {
-            return Result<TEntity>.Failure($"Entity with ID {id} not found or already deleted.", ErrorCodes.Entity.NotFound);
+            return Result<TEntity>.Failure(Entity.NotFound);
         }
 
         entity.SoftDelete();
@@ -90,7 +91,7 @@ internal class BaseEntityRepository<TEntity>(MyProjectDbContext dbContext)
             .FirstOrDefaultAsync(e => e.Id == id && e.IsDeleted, cancellationToken);
         if (entity is null)
         {
-            return Result<TEntity>.Failure($"Entity with ID {id} not found or not deleted.", ErrorCodes.Entity.NotDeleted);
+            return Result<TEntity>.Failure(Entity.NotDeleted);
         }
 
         entity.Restore();

@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
-using MyProject.Domain;
 using MyProject.WebApi.Options;
 using MyProject.WebApi.Shared;
 
@@ -58,7 +57,6 @@ internal static class RateLimiterExtensions
 
                     var response = new ErrorResponse
                     {
-                        ErrorCode = ErrorCodes.RateLimit.Exceeded,
                         Message = "Rate limit exceeded",
                         Details = $"Too many requests. Please try again in {retryAfter.TotalMinutes:F1} minutes."
                     };

@@ -35,7 +35,7 @@ internal class UserService(
 
         if (!userId.HasValue)
         {
-            return Result<UserOutput>.Failure("User is not authenticated.", ErrorCodes.User.NotAuthenticated);
+            return Result<UserOutput>.Failure(ErrorMessages.User.NotAuthenticated);
         }
 
         var cacheKey = CacheKeys.User(userId.Value);
@@ -50,7 +50,7 @@ internal class UserService(
 
         if (user is null)
         {
-            return Result<UserOutput>.Failure("User not found.", ErrorCodes.User.NotFound);
+            return Result<UserOutput>.Failure(ErrorMessages.User.NotFound);
         }
 
         var roles = await userManager.GetRolesAsync(user);
@@ -90,14 +90,14 @@ internal class UserService(
 
         if (!userId.HasValue)
         {
-            return Result<UserOutput>.Failure("User is not authenticated.", ErrorCodes.User.NotAuthenticated);
+            return Result<UserOutput>.Failure(ErrorMessages.User.NotAuthenticated);
         }
 
         var user = await userManager.FindByIdAsync(userId.Value.ToString());
 
         if (user is null)
         {
-            return Result<UserOutput>.Failure("User not found.", ErrorCodes.User.NotFound);
+            return Result<UserOutput>.Failure(ErrorMessages.User.NotFound);
         }
 
         user.FirstName = input.FirstName;
@@ -111,8 +111,7 @@ internal class UserService(
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            var errorCode = MapUpdateIdentityError(result.Errors);
-            return Result<UserOutput>.Failure(errors, errorCode);
+            return Result<UserOutput>.Failure(errors);
         }
 
         // Invalidate cache after update
@@ -141,21 +140,21 @@ internal class UserService(
 
         if (!userId.HasValue)
         {
-            return Result.Failure("User is not authenticated.", ErrorCodes.User.NotAuthenticated);
+            return Result.Failure(ErrorMessages.User.NotAuthenticated);
         }
 
         var user = await userManager.FindByIdAsync(userId.Value.ToString());
 
         if (user is null)
         {
-            return Result.Failure("User not found.", ErrorCodes.User.NotFound);
+            return Result.Failure(ErrorMessages.User.NotFound);
         }
 
         var passwordValid = await userManager.CheckPasswordAsync(user, input.Password);
 
         if (!passwordValid)
         {
-            return Result.Failure("Invalid password.", ErrorCodes.User.DeleteInvalidPassword);
+            return Result.Failure(ErrorMessages.User.DeleteInvalidPassword);
         }
 
         var lastAdminResult = await EnforceLastAdminProtectionForDeletionAsync(user, cancellationToken);
@@ -170,22 +169,6 @@ internal class UserService(
         await InvalidateUserCache(userId.Value);
 
         return Result.Success();
-    }
-
-    /// <summary>
-    /// Maps the first ASP.NET Identity error from a profile update attempt to a specific error code.
-    /// </summary>
-    private static string MapUpdateIdentityError(IEnumerable<IdentityError> errors)
-    {
-        var code = errors.FirstOrDefault()?.Code;
-        return code switch
-        {
-            "DuplicateEmail" or "DuplicateUserName" => ErrorCodes.User.UpdateDuplicateEmail,
-            "InvalidEmail" => ErrorCodes.User.UpdateInvalidEmail,
-            "InvalidUserName" => ErrorCodes.User.UpdateInvalidEmail,
-            "ConcurrencyFailure" => ErrorCodes.User.UpdateConcurrencyFailure,
-            _ => ErrorCodes.User.UpdateFailed
-        };
     }
 
     /// <summary>
@@ -207,8 +190,7 @@ internal class UserService(
             if (usersInRoleCount <= 1)
             {
                 return Result.Failure(
-                    $"Cannot delete your account — you are the last user with the '{role}' role.",
-                    ErrorCodes.User.DeleteLastRole);
+                    $"Cannot delete your account — you are the last user with the '{role}' role.");
             }
         }
 

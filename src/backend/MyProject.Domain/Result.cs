@@ -18,20 +18,14 @@ public class Result<T>
     public string? Error { get; }
 
     /// <summary>
-    /// Gets the stable error code for frontend localization, if the operation failed.
-    /// </summary>
-    public string? ErrorCode { get; }
-
-    /// <summary>
     /// Gets the value returned by the operation if successful.
     /// </summary>
     public T? Value { get; }
 
-    private Result(bool isSuccess, string? error, string? errorCode, T? value)
+    private Result(bool isSuccess, string? error, T? value)
     {
         IsSuccess = isSuccess;
         Error = error;
-        ErrorCode = errorCode;
         Value = value;
     }
 
@@ -42,18 +36,17 @@ public class Result<T>
     /// <returns>A successful result containing the value.</returns>
     public static Result<T> Success(T value)
     {
-        return new Result<T>(true, null, null, value);
+        return new Result<T>(true, null, value);
     }
 
     /// <summary>
     /// Creates a failed result with the specified error message.
     /// </summary>
     /// <param name="error">The error message.</param>
-    /// <param name="errorCode">An optional stable error code for frontend localization.</param>
     /// <returns>A failed result containing the error message.</returns>
-    public static Result<T> Failure(string error, string? errorCode = null)
+    public static Result<T> Failure(string error)
     {
-        return new Result<T>(false, error, errorCode, default);
+        return new Result<T>(false, error, default);
     }
 }
 
@@ -72,16 +65,10 @@ public class Result
     /// </summary>
     public string? Error { get; }
 
-    /// <summary>
-    /// Gets the stable error code for frontend localization, if the operation failed.
-    /// </summary>
-    public string? ErrorCode { get; }
-
-    private Result(bool isSuccess, string? error = null, string? errorCode = null)
+    private Result(bool isSuccess, string? error = null)
     {
         IsSuccess = isSuccess;
         Error = error;
-        ErrorCode = errorCode;
     }
 
     /// <summary>
@@ -97,10 +84,9 @@ public class Result
     /// Creates a failed result with the specified error message.
     /// </summary>
     /// <param name="error">The error message.</param>
-    /// <param name="errorCode">An optional stable error code for frontend localization.</param>
     /// <returns>A failed result containing the error message.</returns>
-    public static Result Failure(string error, string? errorCode = null)
+    public static Result Failure(string error)
     {
-        return new Result(false, error, errorCode);
+        return new Result(false, error);
     }
 }
