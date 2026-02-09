@@ -14,7 +14,7 @@ const config = {
 				'default-src': ['self'],
 				'script-src': ['self', 'nonce'],
 				'style-src': ['self', 'unsafe-inline'],
-				'img-src': ['self', 'https:'],
+				'img-src': ['self', 'https:', 'data:'],
 				'font-src': ['self'],
 				'connect-src': ['self'],
 				'frame-ancestors': ['none'],

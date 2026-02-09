@@ -278,7 +278,7 @@ kit: {
 		directives: {
 			'script-src': ['self', 'nonce'],
 			'style-src': ['self', 'unsafe-inline'],   // Required for Svelte transitions
-			'img-src': ['self', 'https:'],
+			'img-src': ['self', 'https:', 'data:'],    // data: required for Vite-inlined assets
 			'frame-ancestors': ['none']
 		}
 	}
@@ -289,7 +289,7 @@ Key decisions:
 
 - **`script-src`**: Nonce-based. The FOUC prevention script in `app.html` uses `%sveltekit.nonce%`.
 - **`style-src`**: Requires `'unsafe-inline'` because Svelte transitions (`fly`, `scale`) inject inline `<style>` elements at runtime. This is a documented SvelteKit limitation.
-- **`img-src`**: `'self' https:` allows external avatar URLs over HTTPS only.
+- **`img-src`**: `'self' https: data:` allows external avatar URLs over HTTPS and Vite-inlined assets. Vite inlines files under 4KB as `data:` URIs at build time — this affects the favicon SVG and most `flag-icons` CSS sprites (country flags used in the phone input and language selector). Without `data:`, these assets are blocked by CSP.
 - **`frame-ancestors`**: `'none'` — defense-in-depth alongside `X-Frame-Options: DENY`.
 
 CSP is set by the SvelteKit framework (added to responses automatically). The `hooks.server.ts` does NOT set CSP — there is no conflict.
