@@ -106,9 +106,9 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     /// <response code="201">User successfully created</response>
     /// <response code="400">If the registration data is invalid</response>
     [HttpPost("register")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
         var result = await authenticationService.Register(request.ToRegisterInput(), cancellationToken);
 
@@ -117,6 +117,6 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
             return BadRequest(new ErrorResponse { Message = result.Error });
         }
 
-        return Created($"/api/users/{result.Value}", new { id = result.Value });
+        return StatusCode(StatusCodes.Status201Created, new RegisterResponse { Id = result.Value });
     }
 }
