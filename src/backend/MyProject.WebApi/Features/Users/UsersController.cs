@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyProject.Application.Identity;
 using MyProject.WebApi.Features.Users.Dtos;
@@ -9,10 +8,7 @@ namespace MyProject.WebApi.Features.Users;
 /// <summary>
 /// Controller for managing user profiles and information.
 /// </summary>
-[ApiController]
-[Route("api/[controller]")]
-[Authorize]
-public class UsersController(IUserService userService) : ControllerBase
+public class UsersController(IUserService userService) : ApiController
 {
     /// <summary>
     /// Gets the current authenticated user's information

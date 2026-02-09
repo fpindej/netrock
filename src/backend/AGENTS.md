@@ -402,9 +402,9 @@ public class UserResponse
 ### Authorized Endpoints — Extend `ApiController`
 
 ```csharp
-// Shared/ApiController.cs — base for all authorized, versioned controllers
+// Shared/ApiController.cs — base for all authorized controllers
 [ApiController]
-[Route("api/v1/[controller]")]
+[Route("api/[controller]")]
 [Authorize]
 public abstract class ApiController : ControllerBase;
 ```
