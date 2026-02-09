@@ -455,6 +455,8 @@ Rules:
 - **Never add `/// <param name="cancellationToken">`** — ASP.NET excludes `CancellationToken` from OAS parameters, but the `<param>` text leaks into `requestBody.description`. CS1573 is suppressed project-wide.
 - Only add `/// <param>` tags for parameters that should appear in the OAS (request body, route/query params)
 - **Never return anonymous objects or raw strings** from controllers — always use a defined DTO (`ErrorResponse` for errors, typed response DTOs for success). Anonymous objects produce untyped schemas in the OAS.
+- **Never use `StatusCode(int, object)`** for responses with a body — the `object` parameter loses type information and the OAS generator cannot introspect the response schema. Use typed helpers instead: `Ok(response)`, `Created(string.Empty, response)`, `BadRequest(error)`, etc.
+- **For 201 Created responses**, use `Created(string.Empty, response)` — not `CreatedAtAction` (which generates `Location` headers for MVC/Razor patterns this API doesn't use) and not `StatusCode(201, response)` (which loses type info).
 - **Never use `#pragma warning disable`** for XML doc warnings — fix the docs instead
 - Use primary constructors for dependency injection
 - Map requests to inputs via mapper extension methods: `request.ToRegisterInput()`
@@ -1127,6 +1129,7 @@ Before adding or modifying any endpoint, verify:
 - [ ] Route uses lowercase (`[Route("api/[controller]")]` + `LowercaseUrls = true`)
 - [ ] Enums serialize as strings with all members listed (handled by `JsonStringEnumConverter` + `EnumSchemaTransformer` — verify in Scalar)
 - [ ] No `#pragma warning disable` — CS1573 (partial param docs) is suppressed project-wide because omitting `CancellationToken` param tags is intentional
+- [ ] After any response DTO change (new DTO, renamed/added/removed properties, changed nullability), regenerate frontend types: `npm run api:generate` from `src/frontend/` with the backend running — then commit `v1.d.ts`
 
 ## Adding a New Feature — Checklist
 

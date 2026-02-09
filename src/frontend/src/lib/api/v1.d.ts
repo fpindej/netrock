@@ -277,7 +277,9 @@ export interface paths {
 					headers: {
 						[name: string]: unknown;
 					};
-					content?: never;
+					content: {
+						'application/json': components['schemas']['RegisterResponse'];
+					};
 				};
 				/** @description If the registration data is invalid */
 				400: {
@@ -362,6 +364,14 @@ export interface components {
 			firstName?: null | string;
 			/** @description The last name of the user. */
 			lastName?: null | string;
+		};
+		/** @description Represents the response returned after successful user registration. */
+		RegisterResponse: {
+			/**
+			 * Format: uuid
+			 * @description The unique identifier of the newly created user.
+			 */
+			id?: string;
 		};
 		/** @description Represents a request to update the user's profile information. */
 		UpdateUserRequest: {
