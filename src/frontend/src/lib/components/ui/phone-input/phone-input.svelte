@@ -99,7 +99,7 @@
 			{#snippet child({ props })}
 				<Button
 					variant="outline"
-					class="flex w-[100px] shrink-0 items-center justify-between gap-1 px-2"
+					class="flex w-20 shrink-0 items-center justify-between gap-1 px-2 sm:w-[100px]"
 					{...props}
 				>
 					<span class={`fi fi-${selectedCountry.code} h-3 w-4 shrink-0 rounded-sm`}></span>
