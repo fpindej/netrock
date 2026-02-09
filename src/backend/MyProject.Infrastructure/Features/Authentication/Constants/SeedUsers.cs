@@ -2,7 +2,7 @@ namespace MyProject.Infrastructure.Features.Authentication.Constants;
 
 /// <summary>
 /// Default user credentials for development seeding.
-/// These are only used by <see cref="Extensions.ApplicationBuilderExtensions.SeedIdentityUsersAsync"/>
+/// These are only used by <see cref="Persistence.Extensions.ApplicationBuilderExtensions.InitializeDatabaseAsync"/>
 /// and should never appear in production.
 /// </summary>
 internal static class SeedUsers

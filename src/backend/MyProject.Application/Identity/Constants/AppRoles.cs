@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace MyProject.Application.Identity.Constants;
 
 /// <summary>
@@ -21,7 +23,12 @@ public static class AppRoles
     public const string Admin = "Admin";
 
     /// <summary>
-    /// All defined roles. Used by the identity seeding logic to ensure all roles exist.
+    /// All defined roles, discovered automatically from <c>public const string</c> fields.
+    /// Adding a new role constant is sufficient — no manual registration required.
     /// </summary>
-    public static readonly IReadOnlyList<string> All = [User, Admin];
+    public static readonly IReadOnlyList<string> All = typeof(AppRoles)
+        .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+        .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string))
+        .Select(f => (string)f.GetRawConstantValue()!)
+        .ToList();
 }

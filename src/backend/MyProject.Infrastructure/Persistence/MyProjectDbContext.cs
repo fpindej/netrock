@@ -21,8 +21,9 @@ internal class MyProjectDbContext(DbContextOptions<MyProjectDbContext> options)
     /// Configures the model by applying all <see cref="IEntityTypeConfiguration{TEntity}"/> from this assembly,
     /// the auth schema, and fuzzy search extensions.
     /// <para>
-    /// Role seed data is handled at runtime by <c>SeedIdentityUsersAsync</c> via <c>RoleManager</c>,
-    /// which correctly handles normalization. See <see cref="MyProject.Application.Identity.Constants.AppRoles"/>.
+    /// Role seed data is handled at runtime by <see cref="Extensions.ApplicationBuilderExtensions.InitializeDatabaseAsync"/>
+    /// via <c>RoleManager</c>, which correctly handles normalization.
+    /// See <see cref="MyProject.Application.Identity.Constants.AppRoles"/>.
     /// </para>
     /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
