@@ -104,9 +104,6 @@ try
 
     if (app.Environment.IsDevelopment())
     {
-        Log.Debug("Setting UseDeveloperExceptionPage");
-        app.UseDeveloperExceptionPage();
-
         Log.Debug("Apply migrations to local database");
         app.ApplyMigrations();
 
