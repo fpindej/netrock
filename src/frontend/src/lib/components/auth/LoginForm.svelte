@@ -146,7 +146,7 @@
 						<span class="text-muted-foreground">{m.auth_login_noAccount()}</span>
 						<button
 							type="button"
-							class="ms-1 font-medium text-primary hover:underline"
+							class="ms-1 inline-flex min-h-10 items-center font-medium text-primary hover:underline"
 							onclick={() => (isRegisterOpen = true)}
 						>
 							{m.auth_login_signUp()}
