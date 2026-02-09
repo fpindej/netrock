@@ -9,6 +9,7 @@ Read these files for detailed conventions:
 - `AGENTS.md` — Project overview, architecture, agent workflow, git discipline
 - `src/backend/AGENTS.md` — .NET patterns: entities, EF Core, Result pattern, services, controllers
 - `src/frontend/AGENTS.md` — SvelteKit patterns: API client, type generation, components, state
+- `docs/` — Explanations, rationale, and design decisions (see `docs/README.md` for index)
 
 ## Key Rules
 

@@ -7,6 +7,7 @@ Full-stack web application template: .NET 10 API (Clean Architecture) + SvelteKi
 - `AGENTS.md` — Project overview, architecture, agent workflow, git discipline
 - `src/backend/AGENTS.md` — .NET conventions, entities, Result pattern, EF Core, services, controllers
 - `src/frontend/AGENTS.md` — SvelteKit conventions, API client, type generation, components, state
+- `docs/` — Explanations, rationale, and design decisions (see [`docs/README.md`](docs/README.md) for index)
 
 ## Hard Rules
 
