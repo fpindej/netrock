@@ -155,15 +155,15 @@ internal class UserService(
             return Result.Failure("Invalid password.");
         }
 
-        await RevokeUserTokens(userId.Value, cancellationToken);
+        await RevokeUserTokens(user, userId.Value, cancellationToken);
+        await DeleteUser(user);
         ClearAuthCookies();
         await InvalidateUserCache(userId.Value);
-        await DeleteUser(user);
 
         return Result.Success();
     }
 
-    private async Task RevokeUserTokens(Guid userId, CancellationToken cancellationToken)
+    private async Task RevokeUserTokens(ApplicationUser user, Guid userId, CancellationToken cancellationToken)
     {
         var tokens = await dbContext.RefreshTokens
             .Where(rt => rt.UserId == userId && !rt.Invalidated)
@@ -175,12 +175,7 @@ internal class UserService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
-
-        var user = await userManager.FindByIdAsync(userId.ToString());
-        if (user is not null)
-        {
-            await userManager.UpdateSecurityStampAsync(user);
-        }
+        await userManager.UpdateSecurityStampAsync(user);
     }
 
     private void ClearAuthCookies()
