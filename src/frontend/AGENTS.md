@@ -60,6 +60,7 @@ src/
 │   │   └── index.ts               # Type aliases from API schemas
 │   │
 │   └── utils/
+│       ├── i18n.ts                # resolveErrorCode() — dynamic paraglide message lookup
 │       ├── ui.ts                  # cn() for class merging
 │       ├── platform.ts            # IS_MAC, IS_WINDOWS detection
 │       └── index.ts               # Barrel export (cn, WithoutChildrenOrChild)
@@ -235,26 +236,25 @@ The `errorCode` is always preferred because it produces a properly localized mes
 
 #### Dynamic Error Code Resolution
 
-Error codes are resolved to paraglide messages automatically at runtime via `resolveErrorCode()` in `error-handling.ts`. The function transforms the dot-separated error code into a paraglide key and looks it up on the module namespace:
+Error codes are resolved to paraglide messages automatically at runtime via `resolveErrorCode()` in `$lib/utils/i18n.ts`. The function transforms the dot-separated error code into a paraglide key and looks it up on the module namespace:
 
 ```
-"auth.login.invalidCredentials" → m["apiError_auth_login_invalidCredentials"]()
+"auth.login.invalidCredentials" → messages["apiError_auth_login_invalidCredentials"]()
 ```
 
 This means **no manual mapping is needed** — adding a new error code only requires adding the `apiError_*` key to `en.json` and `cs.json`. The function handles the rest:
 
 ```typescript
-function resolveErrorCode(errorCode: string): string | undefined {
+// $lib/utils/i18n.ts — the cast lives at the module boundary
+const messages = m as unknown as Record<string, (() => string) | undefined>;
+
+export function resolveErrorCode(errorCode: string): string | undefined {
 	const key = `apiError_${errorCode.replaceAll('.', '_')}`;
-	const messageFn = (m as Record<string, unknown>)[key];
-	if (typeof messageFn === 'function') {
-		return (messageFn as () => string)();
-	}
-	return undefined;
+	return messages[key]?.();
 }
 ```
 
-If no translation exists for a given error code, the function returns `undefined` and `getErrorMessage()` falls back to the raw English message from the backend.
+`error-handling.ts` imports `resolveErrorCode` from `$lib/utils` and uses it in `getErrorMessage()`. If no translation exists for a given error code, the function returns `undefined` and `getErrorMessage()` falls back to the raw English message from the backend.
 
 ### Validation Errors (Field-Level)
 
@@ -558,7 +558,7 @@ Backend error codes have a special translation key prefix: `apiError_`. The key 
 | `admin.role.notExists`         | `apiError_admin_role_notExists`         |
 | `server.internalError`         | `apiError_server_internalError`         |
 
-These keys exist in both `en.json` and `cs.json` and are resolved automatically by `resolveErrorCode()` in `error-handling.ts`.
+These keys exist in both `en.json` and `cs.json` and are resolved automatically by `resolveErrorCode()` in `$lib/utils/i18n.ts`.
 
 ### Usage
 
