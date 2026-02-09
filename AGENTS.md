@@ -381,6 +381,32 @@ docker compose -f docker-compose.local.yml up -d
 
 No config changes needed. Defaults work out of the box.
 
+#### Testing on a phone or other device
+
+The app uses `Secure` + `SameSite=None` cookies, so testing over plain HTTP (e.g. `http://192.168.x.x:13000`) won't work — browsers silently discard `Secure` cookies on non-HTTPS origins. Use an HTTPS tunnel instead:
+
+1. Install [ngrok](https://ngrok.com/) (or any HTTPS tunnel — Tailscale Funnel, Cloudflare Tunnel, etc.)
+2. Start the tunnel pointing at the frontend port:
+   ```bash
+   ngrok http {INIT_FRONTEND_PORT}
+   ```
+3. Copy the HTTPS URL (e.g. `https://abc123.ngrok-free.app`) and add it to `.env`:
+   ```bash
+   ALLOWED_ORIGINS=https://abc123.ngrok-free.app
+   ```
+4. Recreate the frontend container to pick up the new env var:
+   ```bash
+   docker compose -f docker-compose.local.yml up -d frontend --force-recreate
+   ```
+5. Open the ngrok URL on your phone. Login should work end-to-end.
+
+**Why this is needed:**
+
+- The `ALLOWED_ORIGINS` env var tells the SvelteKit API proxy to accept CSRF requests from the tunnel's origin (otherwise it rejects the login POST with 403).
+- Vite's dev server is configured with `allowedHosts: true` so it accepts requests from any hostname (not just `localhost`). This is safe — only the dev server is exposed, never production.
+
+**Cleanup:** When done, remove the `ALLOWED_ORIGINS` line from `.env` and stop the tunnel.
+
 ## Deployment
 
 Build and push images via `./deploy.sh` (or `deploy.ps1`), configured by `deploy.config.json`.

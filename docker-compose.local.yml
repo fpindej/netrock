@@ -16,6 +16,7 @@ x-db-environment: &db-environment
 
 x-frontend-environment: &frontend-environment
   API_URL: ${API_URL:-http://api:8080}
+  ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
 
 x-common-settings: &common-settings
   restart: unless-stopped

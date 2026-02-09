@@ -308,7 +308,22 @@ Never enable HSTS in development — it breaks `localhost` HTTP.
 
 ### CSRF Protection
 
-The API proxy at `routes/api/[...path]/+server.ts` validates the `Origin` header on state-changing requests (POST/PUT/PATCH/DELETE). Cross-origin requests are rejected with 403. This complements SvelteKit's built-in CSRF protection, which only covers form actions — not `+server.ts` routes.
+The API proxy at `routes/api/[...path]/+server.ts` validates the `Origin` header on state-changing requests (POST/PUT/PATCH/DELETE). Requests whose origin doesn't match are rejected with 403. This complements SvelteKit's built-in CSRF protection, which only covers form actions — not `+server.ts` routes.
+
+The check allows:
+
+1. **Same-origin requests** — `Origin` matches `url.origin` (the SvelteKit server's own origin)
+2. **Configured origins** — `Origin` matches an entry in `ALLOWED_ORIGINS` (env var, comma-separated)
+3. **Missing `Origin` header** — safe to allow (same-origin older browsers or non-browser clients)
+
+To allow access through a reverse proxy or tunnel (ngrok, Tailscale), set the `ALLOWED_ORIGINS` environment variable:
+
+```bash
+# In .env
+ALLOWED_ORIGINS=https://abc123.ngrok-free.app
+```
+
+Multiple origins are comma-separated: `ALLOWED_ORIGINS=https://a.example.com,https://b.example.com`
 
 ## Svelte 5 Patterns
 

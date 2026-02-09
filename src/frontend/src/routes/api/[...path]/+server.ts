@@ -39,7 +39,8 @@ const STRIPPED_RESPONSE_HEADERS = [
 ];
 
 /**
- * Validates that the request Origin header matches the app's own origin.
+ * Validates that the request Origin header matches the app's own origin
+ * or an explicitly configured allowed origin (ALLOWED_ORIGINS env var).
  * This prevents cross-site request forgery for cookie-authenticated requests
  * proxied through SvelteKit (SameSite=None cookies are sent cross-origin).
  *
@@ -61,7 +62,11 @@ function isOriginAllowed(request: Request, url: URL): boolean {
 		return true;
 	}
 
-	return origin === url.origin;
+	if (origin === url.origin) {
+		return true;
+	}
+
+	return SERVER_CONFIG.ALLOWED_ORIGINS.includes(origin);
 }
 
 /** Build a filtered copy of request headers using the allowlist. */
