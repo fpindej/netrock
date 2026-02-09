@@ -87,15 +87,24 @@
 					<Input
 						id="deleteAccountPassword"
 						type="password"
+						autocomplete="current-password"
 						bind:value={password}
 						placeholder={m.settings_deleteAccount_passwordPlaceholder()}
+						aria-invalid={!!fieldErrors.password || !!generalError}
+						aria-describedby={fieldErrors.password || generalError
+							? 'deleteAccountPasswordError'
+							: undefined}
 						class={fieldShakes.class('password')}
 						disabled={isLoading}
 					/>
 					{#if fieldErrors.password}
-						<p class="text-xs text-destructive">{fieldErrors.password}</p>
+						<p id="deleteAccountPasswordError" class="text-xs text-destructive">
+							{fieldErrors.password}
+						</p>
 					{:else if generalError}
-						<p class="text-xs text-destructive">{generalError}</p>
+						<p id="deleteAccountPasswordError" class="text-xs text-destructive">
+							{generalError}
+						</p>
 					{/if}
 				</div>
 			</div>
