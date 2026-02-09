@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication;
-using MyProject.Infrastructure.Features.Authentication.Constants;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
 using MyProject.WebApi.Shared;
