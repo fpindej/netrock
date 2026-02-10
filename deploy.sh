@@ -15,6 +15,7 @@
 #    --no-bump       Don't increment version (rebuild same tag)
 #    --no-push       Build only, don't push to registry
 #    --no-latest     Don't update :latest tag
+#    --no-commit     Don't commit version bump to git
 #    --yes, -y       Skip confirmation prompts
 #    --help, -h      Show this help
 #
@@ -71,19 +72,19 @@ print_info() {
 prompt_yn() {
     local question=$1
     local default=$2
-    
+
     if [[ "$YES_TO_ALL" == "true" ]]; then
         [[ "$default" == "y" ]] && echo "y" || echo "n"
         return
     fi
-    
+
     local prompt_hint
     if [[ "$default" == "y" ]]; then
         prompt_hint="[Y/n]"
     else
         prompt_hint="[y/N]"
     fi
-    
+
     read -p "$(echo -e "${BOLD}$question${NC} $prompt_hint: ")" answer
     answer=${answer:-$default}
     echo "$answer" | tr '[:upper:]' '[:lower:]'
@@ -92,12 +93,12 @@ prompt_yn() {
 prompt_value() {
     local question=$1
     local default=$2
-    
+
     local prompt_text="$question"
     if [[ -n "$default" ]]; then
         prompt_text="$question [${default}]"
     fi
-    
+
     read -p "$(echo -e "${BOLD}$prompt_text${NC}: ")" answer
     echo "${answer:-$default}"
 }
@@ -121,6 +122,7 @@ show_help() {
     echo "  --no-bump                     Keep current version (rebuild)"
     echo "  --no-push                     Build only, don't push to registry"
     echo "  --no-latest                   Don't update :latest tag"
+    echo "  --no-commit                   Don't commit version bump to git"
     echo "  -y, --yes                     Skip confirmation prompts"
     echo "  -h, --help                    Show this help message"
     echo ""
@@ -136,10 +138,10 @@ show_help() {
 bump_version() {
     local version=$1
     local bump_type=$2
-    
+
     local major minor patch
     IFS='.' read -r major minor patch <<< "$version"
-    
+
     case $bump_type in
         major)
             major=$((major + 1))
@@ -154,7 +156,7 @@ bump_version() {
             patch=$((patch + 1))
             ;;
     esac
-    
+
     echo "$major.$minor.$patch"
 }
 
@@ -172,7 +174,7 @@ create_default_config() {
     detected_name=${detected_name:-"MyProject"}
     # Convert PascalCase to kebab-case
     local detected_slug=$(echo "$detected_name" | sed 's/\([a-z]\)\([A-Z]\)/\1-\2/g' | tr '[:upper:]' '[:lower:]')
-    
+
     cat > "$CONFIG_FILE" << EOF
 {
   "registry": "myusername",
@@ -190,7 +192,7 @@ read_config() {
         print_warning "Config file not found. Creating default..."
         create_default_config
     fi
-    
+
     # Parse JSON (portable way without jq dependency)
     REGISTRY=$(grep -o '"registry"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*: *"\([^"]*\)"/\1/')
     BACKEND_IMAGE=$(grep -o '"backendImage"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*: *"\([^"]*\)"/\1/')
@@ -213,9 +215,60 @@ save_config() {
 EOF
 }
 
+prompt_registry() {
+    echo "" >&2
+    echo -e "${BOLD}Container registry:${NC}" >&2
+    echo "" >&2
+    echo "  [1] Docker Hub         - hub.docker.com (username/image)" >&2
+    echo "  [2] GitHub (GHCR)      - ghcr.io/owner/image" >&2
+    echo "  [3] Azure (ACR)        - myregistry.azurecr.io" >&2
+    echo "  [4] DigitalOcean       - registry.digitalocean.com/namespace" >&2
+    echo "  [5] AWS ECR            - 123456789.dkr.ecr.region.amazonaws.com" >&2
+    echo "  [6] Custom             - Enter full registry prefix" >&2
+    echo "" >&2
+
+    read -p "$(echo -e "${BOLD}Choose [1-6]${NC}: ")" choice
+
+    case ${choice} in
+        1)
+            local username
+            read -p "$(echo -e "${BOLD}Docker Hub username${NC}: ")" username
+            echo "$username"
+            ;;
+        2)
+            local owner
+            read -p "$(echo -e "${BOLD}GitHub owner (user or org)${NC}: ")" owner
+            echo "ghcr.io/$owner"
+            ;;
+        3)
+            local acr_name
+            read -p "$(echo -e "${BOLD}ACR registry name${NC} (e.g. myregistry): ")" acr_name
+            echo "${acr_name}.azurecr.io"
+            ;;
+        4)
+            local do_namespace
+            read -p "$(echo -e "${BOLD}DigitalOcean namespace${NC}: ")" do_namespace
+            echo "registry.digitalocean.com/$do_namespace"
+            ;;
+        5)
+            local ecr_url
+            read -p "$(echo -e "${BOLD}ECR URL${NC} (e.g. 123456789.dkr.ecr.us-east-1.amazonaws.com): ")" ecr_url
+            echo "$ecr_url"
+            ;;
+        6)
+            local custom
+            read -p "$(echo -e "${BOLD}Registry prefix${NC}: ")" custom
+            echo "$custom"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
 configure_registry() {
     print_header "Deploy Configuration"
-    
+
     echo ""
     print_info "Current configuration:"
     echo -e "  Registry:         ${CYAN}$REGISTRY${NC}"
@@ -225,12 +278,16 @@ configure_registry() {
     echo -e "  Frontend Version: ${CYAN}$FRONTEND_VERSION${NC}"
     echo -e "  Platform:         ${CYAN}$PLATFORM${NC}"
     echo ""
-    
+
     local reconfigure=$(prompt_yn "Reconfigure settings?" "n")
-    
+
     if [[ "$reconfigure" == "y" ]]; then
         echo ""
-        REGISTRY=$(prompt_value "Docker registry (e.g., myusername, ghcr.io/myuser)" "$REGISTRY")
+        local new_registry
+        new_registry=$(prompt_registry)
+        if [[ -n "$new_registry" ]]; then
+            REGISTRY="$new_registry"
+        fi
         BACKEND_IMAGE=$(prompt_value "Backend image name" "$BACKEND_IMAGE")
         FRONTEND_IMAGE=$(prompt_value "Frontend image name" "$FRONTEND_IMAGE")
         PLATFORM=$(prompt_platform "$PLATFORM")
@@ -253,13 +310,13 @@ prompt_platform() {
     echo -e "  ${DIM}Current: $current${NC}" >&2
     echo "" >&2
     read -p "$(echo -e "${BOLD}Choose [1-5]${NC} (default: keep current): ")" choice
-    
+
     case ${choice} in
         1) echo "linux/amd64" ;;
         2) echo "linux/arm64" ;;
         3) echo "linux/arm64/v8" ;;
         4) echo "linux/arm/v7" ;;
-        5) 
+        5)
             read -p "$(echo -e "${BOLD}Enter platform${NC}: ")" custom_platform
             echo "${custom_platform:-$current}"
             ;;
@@ -277,7 +334,7 @@ prompt_bump_type() {
     echo "  [4] None   (rebuild current version)" >&2
     echo "" >&2
     read -p "$(echo -e "${BOLD}Choose [1-4]${NC} (default: 1): ")" choice
-    
+
     case ${choice:-1} in
         1) echo "patch" ;;
         2) echo "minor" ;;
@@ -295,7 +352,7 @@ check_docker() {
         print_error "Docker is not running"
         exit 1
     fi
-    
+
     # Setup buildx if needed
     if ! docker buildx inspect default > /dev/null 2>&1; then
         docker buildx create --use > /dev/null 2>&1
@@ -304,14 +361,14 @@ check_docker() {
 
 check_docker_login() {
     local registry=$1
-    
+
     # Docker config file location
     local config_path="$HOME/.docker/config.json"
-    
+
     if [ ! -f "$config_path" ]; then
         return 1
     fi
-    
+
     # Check for Docker Hub auth (simple username = Docker Hub)
     if [[ "$registry" != *"/"* ]]; then
         # Docker Hub stores auth as "https://index.docker.io/v1/"
@@ -325,17 +382,17 @@ check_docker_login() {
             return 0
         fi
     fi
-    
+
     return 1
 }
 
 request_docker_login() {
     local registry=$1
-    
+
     echo ""
     print_warning "Not logged in to Docker registry"
     echo ""
-    
+
     # Determine which registry to login to
     if [[ "$registry" != *"/"* ]]; then
         # Simple username = Docker Hub
@@ -353,6 +410,25 @@ request_docker_login() {
         echo ""
         echo -e "  ${DIM}2. Run this command:${NC}"
         echo -e "     ${CYAN}docker login ghcr.io -u YOUR_GITHUB_USERNAME${NC}"
+    elif [[ "$registry" == *.azurecr.io ]]; then
+        # Azure Container Registry
+        echo -e "  You need to login to Azure Container Registry."
+        echo ""
+        echo -e "  ${DIM}Run this command:${NC}"
+        echo -e "    ${CYAN}az acr login --name ${registry%.azurecr.io}${NC}"
+    elif [[ "$registry" == registry.digitalocean.com/* ]]; then
+        # DigitalOcean Container Registry
+        echo -e "  You need to login to DigitalOcean Container Registry."
+        echo ""
+        echo -e "  ${DIM}Run this command:${NC}"
+        echo -e "    ${CYAN}doctl registry login${NC}"
+    elif [[ "$registry" == *.dkr.ecr.*.amazonaws.com ]]; then
+        # AWS ECR
+        local region=$(echo "$registry" | sed 's/.*\.dkr\.ecr\.\(.*\)\.amazonaws\.com/\1/')
+        echo -e "  You need to login to AWS ECR."
+        echo ""
+        echo -e "  ${DIM}Run this command:${NC}"
+        echo -e "    ${CYAN}aws ecr get-login-password --region $region | docker login --username AWS --password-stdin $registry${NC}"
     else
         # Other registry
         local registry_host="${registry%%/*}"
@@ -361,14 +437,14 @@ request_docker_login() {
         echo -e "  ${DIM}Run this command:${NC}"
         echo -e "    ${CYAN}docker login $registry_host${NC}"
     fi
-    
+
     echo ""
     read -p "Press Enter after logging in to continue (or 'q' to quit): " retry
-    
+
     if [[ "$retry" == "q" ]]; then
         return 1
     fi
-    
+
     check_docker_login "$registry"
 }
 
@@ -376,48 +452,48 @@ build_backend() {
     local version=$1
     local push=$2
     local tag_latest=$3
-    
+
     print_step "Building Backend API..."
-    
+
     local full_image="$REGISTRY/$BACKEND_IMAGE"
-    
+
     # Find the WebApi directory
     local webapi_dir=$(find src/backend -maxdepth 1 -type d -name "*.WebApi" 2>/dev/null | head -1)
     if [ -z "$webapi_dir" ]; then
         print_error "WebApi directory not found in src/backend"
         return 1
     fi
-    
+
     local dockerfile="$webapi_dir/Dockerfile"
     if [ ! -f "$dockerfile" ]; then
         print_error "Dockerfile not found: $dockerfile"
         return 1
     fi
-    
+
     print_substep "Image: $full_image:$version"
-    
+
     local build_args="--platform $PLATFORM -t $full_image:$version"
-    
+
     if [[ "$tag_latest" == "true" ]]; then
         build_args="$build_args -t $full_image:latest"
     fi
-    
+
     if [[ "$push" == "true" ]]; then
         build_args="$build_args --push"
     else
         build_args="$build_args --load"
     fi
-    
+
     pushd src/backend > /dev/null
     local build_result=0
     docker buildx build $build_args -f "$(basename "$webapi_dir")/Dockerfile" . 2>&1 || build_result=$?
     popd > /dev/null
-    
+
     if [ $build_result -ne 0 ]; then
         print_error "Backend build failed"
         return 1
     fi
-    
+
     if [[ "$push" == "true" ]]; then
         print_success "Backend pushed: $full_image:$version"
     else
@@ -429,40 +505,40 @@ build_frontend() {
     local version=$1
     local push=$2
     local tag_latest=$3
-    
+
     print_step "Building Frontend..."
-    
+
     local full_image="$REGISTRY/$FRONTEND_IMAGE"
-    
+
     if [ ! -f "src/frontend/Dockerfile" ]; then
         print_error "Dockerfile not found: src/frontend/Dockerfile"
         return 1
     fi
-    
+
     print_substep "Image: $full_image:$version"
-    
+
     local build_args="--platform $PLATFORM -t $full_image:$version"
-    
+
     if [[ "$tag_latest" == "true" ]]; then
         build_args="$build_args -t $full_image:latest"
     fi
-    
+
     if [[ "$push" == "true" ]]; then
         build_args="$build_args --push"
     else
         build_args="$build_args --load"
     fi
-    
+
     pushd src/frontend > /dev/null
     local build_result=0
     docker buildx build $build_args . 2>&1 || build_result=$?
     popd > /dev/null
-    
+
     if [ $build_result -ne 0 ]; then
         print_error "Frontend build failed"
         return 1
     fi
-    
+
     if [[ "$push" == "true" ]]; then
         print_success "Frontend pushed: $full_image:$version"
     else
@@ -477,6 +553,7 @@ TARGET=""
 BUMP_TYPE=""
 DO_PUSH="true"
 TAG_LATEST="true"
+DO_COMMIT="true"
 YES_TO_ALL="false"
 INTERACTIVE_MODE="false"
 
@@ -508,6 +585,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-latest)
             TAG_LATEST="false"
+            shift
+            ;;
+        --no-commit)
+            DO_COMMIT="false"
             shift
             ;;
         -y|--yes)
@@ -545,7 +626,19 @@ read_config
 # Check if registry is default
 if [ "$REGISTRY" = "myusername" ]; then
     print_warning "Registry is set to default 'myusername'"
-    configure_registry
+    echo ""
+    print_info "Let's configure your container registry first."
+
+    REGISTRY=$(prompt_registry)
+    if [[ -z "$REGISTRY" ]]; then
+        print_error "Registry is required"
+        exit 1
+    fi
+    BACKEND_IMAGE=$(prompt_value "Backend image name" "$BACKEND_IMAGE")
+    FRONTEND_IMAGE=$(prompt_value "Frontend image name" "$FRONTEND_IMAGE")
+    PLATFORM=$(prompt_platform "$PLATFORM")
+    save_config
+    print_success "Configuration saved"
     read_config
 fi
 
@@ -564,7 +657,7 @@ fi
 if [ -z "$TARGET" ]; then
     INTERACTIVE_MODE="true"
     configure_registry
-    
+
     echo ""
     echo -e "${BOLD}What would you like to deploy?${NC}"
     echo ""
@@ -573,7 +666,7 @@ if [ -z "$TARGET" ]; then
     echo "  [3] Both"
     echo ""
     read -p "$(echo -e "${BOLD}Choose [1-3]${NC}: ")" choice
-    
+
     case $choice in
         1) TARGET="backend" ;;
         2) TARGET="frontend" ;;
@@ -632,6 +725,7 @@ echo -e "  ${BOLD}Options${NC}"
 echo -e "  ─────────────────────────────────────"
 echo -e "  Push to registry: $([ "$DO_PUSH" == "true" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${YELLOW}No (build only)${NC}")"
 echo -e "  Update :latest:   $([ "$TAG_LATEST" == "true" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${DIM}No${NC}")"
+echo -e "  Commit version:   $([ "$DO_COMMIT" == "true" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${DIM}No${NC}")"
 echo ""
 
 # Confirmation
@@ -664,10 +758,10 @@ if [[ "$FAILED" == "true" ]]; then
     exit 1
 fi
 
-# Update versions in config and commit
-if [[ "$BUMP_TYPE" != "none" && "$DO_PUSH" == "true" ]]; then
+# Update versions in config
+if [[ "$BUMP_TYPE" != "none" ]]; then
     print_step "Updating version..."
-    
+
     # Update only the versions that were deployed
     if [[ "$TARGET" == "backend" || "$TARGET" == "all" ]]; then
         BACKEND_VERSION=$NEW_BACKEND_VERSION
@@ -676,29 +770,34 @@ if [[ "$BUMP_TYPE" != "none" && "$DO_PUSH" == "true" ]]; then
         FRONTEND_VERSION=$NEW_FRONTEND_VERSION
     fi
     save_config
-    
-    # Build commit message
-    local commit_msg="chore: bump"
-    if [[ "$TARGET" == "backend" ]]; then
-        commit_msg="$commit_msg backend to $NEW_BACKEND_VERSION"
-    elif [[ "$TARGET" == "frontend" ]]; then
-        commit_msg="$commit_msg frontend to $NEW_FRONTEND_VERSION"
-    else
-        commit_msg="$commit_msg backend to $NEW_BACKEND_VERSION, frontend to $NEW_FRONTEND_VERSION"
-    fi
-    
+    print_success "Version updated in $CONFIG_FILE"
+
     # Commit the version bump
-    if git rev-parse --git-dir > /dev/null 2>&1; then
-        git add "$CONFIG_FILE" > /dev/null 2>&1
-        git commit -m "$commit_msg" > /dev/null 2>&1 || true
-        print_success "Version updated (committed)"
-    else
-        print_success "Version updated"
+    if [[ "$DO_COMMIT" == "true" ]]; then
+        if git rev-parse --git-dir > /dev/null 2>&1; then
+            # Build commit message
+            commit_msg="chore(deploy): bump"
+            if [[ "$TARGET" == "backend" ]]; then
+                commit_msg="$commit_msg backend to $NEW_BACKEND_VERSION"
+            elif [[ "$TARGET" == "frontend" ]]; then
+                commit_msg="$commit_msg frontend to $NEW_FRONTEND_VERSION"
+            else
+                commit_msg="$commit_msg backend to $NEW_BACKEND_VERSION, frontend to $NEW_FRONTEND_VERSION"
+            fi
+
+            if git add "$CONFIG_FILE" && git commit -m "$commit_msg"; then
+                print_success "Version bump committed"
+            else
+                print_warning "Failed to commit version bump (you may need to commit manually)"
+            fi
+        else
+            print_info "Not a git repository — skipping commit"
+        fi
     fi
 fi
 
 # Complete
-print_header "Deploy Complete! 🚀"
+print_header "Deploy Complete!"
 
 echo ""
 echo -e "  ${BOLD}Deployed Images${NC}"

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Web API Template - Unified Deploy Script
 
@@ -27,6 +27,9 @@
 .PARAMETER NoLatest
     Don't update :latest tag
 
+.PARAMETER NoCommit
+    Don't commit version bump to git
+
 .PARAMETER Yes
     Skip confirmation prompts
 
@@ -47,14 +50,15 @@ param (
     [Parameter(Position = 0)]
     [ValidateSet("backend", "frontend", "all", "")]
     [string]$Target = "",
-    
+
     [switch]$Patch,
     [switch]$Minor,
     [switch]$Major,
     [switch]$NoBump,
     [switch]$NoPush,
     [switch]$NoLatest,
-    
+    [switch]$NoCommit,
+
     [Alias("y")]
     [switch]$Yes
 )
@@ -155,12 +159,12 @@ function Get-BumpedVersion {
         [string]$Version,
         [string]$BumpType
     )
-    
+
     $parts = $Version.Split('.')
     $major = [int]$parts[0]
     $minor = [int]$parts[1]
     $patch = [int]$parts[2]
-    
+
     switch ($BumpType) {
         "major" {
             $major++
@@ -175,7 +179,7 @@ function Get-BumpedVersion {
             $patch++
         }
     }
-    
+
     return "$major.$minor.$patch"
 }
 
@@ -187,7 +191,7 @@ $ConfigFile = Join-Path $ScriptDir "deploy.config.json"
 function Get-Config {
     if (-not (Test-Path $ConfigFile)) {
         Write-Warning "Config file not found. Creating default..."
-        
+
         # Try to detect project name
         $detectedName = "MyProject"
         $webApiDir = Get-ChildItem -Path "src\backend" -Directory -Filter "*.WebApi" -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -196,7 +200,7 @@ function Get-Config {
         }
         # Convert PascalCase to kebab-case
         $detectedSlug = ($detectedName -creplace '([a-z])([A-Z])', '$1-$2').ToLower()
-        
+
         $defaultConfig = @{
             registry = "myusername"
             backendImage = "$detectedSlug-api"
@@ -205,10 +209,10 @@ function Get-Config {
             frontendVersion = "0.1.0"
             platform = "linux/amd64"
         }
-        
+
         $defaultConfig | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
     }
-    
+
     return Get-Content $ConfigFile -Raw | ConvertFrom-Json
 }
 
@@ -217,11 +221,54 @@ function Save-Config {
     $Config | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
 }
 
+function Read-Registry {
+    Write-Host ""
+    Write-Host "Container registry:" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  [1] Docker Hub         - hub.docker.com (username/image)"
+    Write-Host "  [2] GitHub (GHCR)      - ghcr.io/owner/image"
+    Write-Host "  [3] Azure (ACR)        - myregistry.azurecr.io"
+    Write-Host "  [4] DigitalOcean       - registry.digitalocean.com/namespace"
+    Write-Host "  [5] AWS ECR            - 123456789.dkr.ecr.region.amazonaws.com"
+    Write-Host "  [6] Custom             - Enter full registry prefix"
+    Write-Host ""
+
+    $choice = Read-Host "Choose [1-6]"
+
+    switch ($choice) {
+        "1" {
+            $username = Read-Host "Docker Hub username"
+            return $username
+        }
+        "2" {
+            $owner = Read-Host "GitHub owner (user or org)"
+            return "ghcr.io/$owner"
+        }
+        "3" {
+            $acrName = Read-Host "ACR registry name (e.g. myregistry)"
+            return "$acrName.azurecr.io"
+        }
+        "4" {
+            $doNamespace = Read-Host "DigitalOcean namespace"
+            return "registry.digitalocean.com/$doNamespace"
+        }
+        "5" {
+            $ecrUrl = Read-Host "ECR URL (e.g. 123456789.dkr.ecr.us-east-1.amazonaws.com)"
+            return $ecrUrl
+        }
+        "6" {
+            $custom = Read-Host "Registry prefix"
+            return $custom
+        }
+        default { return "" }
+    }
+}
+
 function Show-ConfigureRegistry {
     param($Config)
-    
+
     Write-Header "Deploy Configuration"
-    
+
     Write-Host ""
     Write-Info "Current configuration:"
     Write-Host "  Registry:         " -NoNewline; Write-Host $Config.registry -ForegroundColor Cyan
@@ -231,25 +278,28 @@ function Show-ConfigureRegistry {
     Write-Host "  Frontend Version: " -NoNewline; Write-Host $Config.frontendVersion -ForegroundColor Cyan
     Write-Host "  Platform:         " -NoNewline; Write-Host $Config.platform -ForegroundColor Cyan
     Write-Host ""
-    
+
     $reconfigure = Read-YesNo "Reconfigure settings?" $false
-    
+
     if ($reconfigure) {
         Write-Host ""
-        $Config.registry = Read-Value "Docker registry (e.g., myusername, ghcr.io/myuser)" $Config.registry
+        $newRegistry = Read-Registry
+        if (-not [string]::IsNullOrWhiteSpace($newRegistry)) {
+            $Config.registry = $newRegistry
+        }
         $Config.backendImage = Read-Value "Backend image name" $Config.backendImage
         $Config.frontendImage = Read-Value "Frontend image name" $Config.frontendImage
         $Config.platform = Read-Platform $Config.platform
         Save-Config $Config
         Write-Success "Configuration saved"
     }
-    
+
     return $Config
 }
 
 function Read-Platform {
     param([string]$Current)
-    
+
     Write-Host ""
     Write-Host "Target platform:" -ForegroundColor White
     Write-Host ""
@@ -262,13 +312,13 @@ function Read-Platform {
     Write-Host "  Current: $Current" -ForegroundColor DarkGray
     Write-Host ""
     $choice = Read-Host "Choose [1-5] (default: keep current)"
-    
+
     switch ($choice) {
         "1" { return "linux/amd64" }
         "2" { return "linux/arm64" }
         "3" { return "linux/arm64/v8" }
         "4" { return "linux/arm/v7" }
-        "5" { 
+        "5" {
             $custom = Read-Host "Enter platform"
             if ([string]::IsNullOrWhiteSpace($custom)) { return $Current }
             return $custom
@@ -287,7 +337,7 @@ function Read-BumpType {
     Write-Host "  [4] None   (rebuild current version)"
     Write-Host ""
     $choice = Read-Host "Choose [1-4] (default: 1)"
-    
+
     switch ($choice) {
         "2" { return "minor" }
         "3" { return "major" }
@@ -309,15 +359,13 @@ function Test-Docker {
 
 function Test-DockerLogin {
     param([string]$Registry)
-    
-    # For Docker Hub (no hostname or docker.io), check if logged in
+
     $ErrorActionPreference = "Continue"
-    
-    # Try to get auth status - docker config contains auth info
+
     $configPath = Join-Path $env:USERPROFILE ".docker\config.json"
     if (Test-Path $configPath) {
         $dockerConfig = Get-Content $configPath -Raw | ConvertFrom-Json
-        
+
         # Check for Docker Hub auth (stored as "https://index.docker.io/v1/")
         if ($Registry -notmatch "/") {
             # Simple username = Docker Hub
@@ -337,18 +385,18 @@ function Test-DockerLogin {
             }
         }
     }
-    
+
     $ErrorActionPreference = "Stop"
     return $false
 }
 
 function Request-DockerLogin {
     param([string]$Registry)
-    
+
     Write-Host ""
     Write-Warning "Not logged in to Docker registry"
     Write-Host ""
-    
+
     # Determine which registry to login to
     if ($Registry -notmatch "/") {
         # Simple username = Docker Hub
@@ -368,6 +416,29 @@ function Request-DockerLogin {
         Write-Host "  2. Run this command:" -ForegroundColor DarkGray
         Write-Host "     docker login ghcr.io -u YOUR_GITHUB_USERNAME" -ForegroundColor Cyan
     }
+    elseif ($Registry -match "\.azurecr\.io$") {
+        # Azure Container Registry
+        $acrName = $Registry -replace '\.azurecr\.io$', ''
+        Write-Host "  You need to login to Azure Container Registry." -ForegroundColor White
+        Write-Host ""
+        Write-Host "  Run this command:" -ForegroundColor DarkGray
+        Write-Host "    az acr login --name $acrName" -ForegroundColor Cyan
+    }
+    elseif ($Registry -match "^registry\.digitalocean\.com/") {
+        # DigitalOcean Container Registry
+        Write-Host "  You need to login to DigitalOcean Container Registry." -ForegroundColor White
+        Write-Host ""
+        Write-Host "  Run this command:" -ForegroundColor DarkGray
+        Write-Host "    doctl registry login" -ForegroundColor Cyan
+    }
+    elseif ($Registry -match "\.dkr\.ecr\..*\.amazonaws\.com$") {
+        # AWS ECR
+        $region = $Registry -replace '.*\.dkr\.ecr\.(.*?)\.amazonaws\.com$', '$1'
+        Write-Host "  You need to login to AWS ECR." -ForegroundColor White
+        Write-Host ""
+        Write-Host "  Run this command:" -ForegroundColor DarkGray
+        Write-Host "    aws ecr get-login-password --region $region | docker login --username AWS --password-stdin $Registry" -ForegroundColor Cyan
+    }
     else {
         # Other registry
         $registryHost = ($Registry -split "/")[0]
@@ -376,14 +447,14 @@ function Request-DockerLogin {
         Write-Host "  Run this command:" -ForegroundColor DarkGray
         Write-Host "    docker login $registryHost" -ForegroundColor Cyan
     }
-    
+
     Write-Host ""
-    
+
     $retry = Read-Host "Press Enter after logging in to continue (or 'q' to quit)"
     if ($retry -eq 'q') {
         return $false
     }
-    
+
     return Test-DockerLogin $Registry
 }
 
@@ -394,55 +465,55 @@ function Build-Backend {
         [bool]$TagLatest,
         $Config
     )
-    
+
     Write-Step "Building Backend API..."
-    
+
     $fullImage = "$($Config.registry)/$($Config.backendImage)"
-    
+
     # Find WebApi directory
     $webApiDir = Get-ChildItem -Path "src\backend" -Directory -Filter "*.WebApi" -ErrorAction SilentlyContinue | Select-Object -First 1
     if (-not $webApiDir) {
         Write-ErrorMessage "WebApi directory not found in src\backend"
         return $false
     }
-    
+
     $dockerfile = Join-Path $webApiDir.FullName "Dockerfile"
     if (-not (Test-Path $dockerfile)) {
         Write-ErrorMessage "Dockerfile not found: $dockerfile"
         return $false
     }
-    
+
     Write-SubStep "Image: ${fullImage}:$Version"
-    
+
     $buildArgs = @(
         "buildx", "build",
         "--platform", $Config.platform,
         "-t", "${fullImage}:$Version"
     )
-    
+
     if ($TagLatest) {
         $buildArgs += "-t"
         $buildArgs += "${fullImage}:latest"
     }
-    
+
     if ($Push) {
         $buildArgs += "--push"
     }
     else {
         $buildArgs += "--load"
     }
-    
+
     $buildArgs += "-f"
     $buildArgs += "$($webApiDir.Name)/Dockerfile"
     $buildArgs += "."
-    
+
     Push-Location "src\backend"
     try {
         $ErrorActionPreference = "Continue"
         & docker @buildArgs
         $buildExitCode = $LASTEXITCODE
         $ErrorActionPreference = "Stop"
-        
+
         if ($buildExitCode -ne 0) {
             Write-ErrorMessage "Backend build failed"
             return $false
@@ -451,14 +522,14 @@ function Build-Backend {
     finally {
         Pop-Location
     }
-    
+
     if ($Push) {
         Write-Success "Backend pushed: ${fullImage}:$Version"
     }
     else {
         Write-Success "Backend built: ${fullImage}:$Version"
     }
-    
+
     return $true
 }
 
@@ -469,46 +540,46 @@ function Build-Frontend {
         [bool]$TagLatest,
         $Config
     )
-    
+
     Write-Step "Building Frontend..."
-    
+
     $fullImage = "$($Config.registry)/$($Config.frontendImage)"
-    
+
     $dockerfile = Join-Path $ScriptDir "src\frontend\Dockerfile"
     if (-not (Test-Path $dockerfile)) {
         Write-ErrorMessage "Dockerfile not found: $dockerfile"
         return $false
     }
-    
+
     Write-SubStep "Image: ${fullImage}:$Version"
-    
+
     $buildArgs = @(
         "buildx", "build",
         "--platform", $Config.platform,
         "-t", "${fullImage}:$Version"
     )
-    
+
     if ($TagLatest) {
         $buildArgs += "-t"
         $buildArgs += "${fullImage}:latest"
     }
-    
+
     if ($Push) {
         $buildArgs += "--push"
     }
     else {
         $buildArgs += "--load"
     }
-    
+
     $buildArgs += "."
-    
+
     Push-Location "src\frontend"
     try {
         $ErrorActionPreference = "Continue"
         & docker @buildArgs
         $buildExitCode = $LASTEXITCODE
         $ErrorActionPreference = "Stop"
-        
+
         if ($buildExitCode -ne 0) {
             Write-ErrorMessage "Frontend build failed"
             return $false
@@ -517,14 +588,14 @@ function Build-Frontend {
     finally {
         Pop-Location
     }
-    
+
     if ($Push) {
         Write-Success "Frontend pushed: ${fullImage}:$Version"
     }
     else {
         Write-Success "Frontend built: ${fullImage}:$Version"
     }
-    
+
     return $true
 }
 
@@ -547,12 +618,27 @@ $Config = Get-Config
 # Check if registry is default
 if ($Config.registry -eq "myusername") {
     Write-Warning "Registry is set to default 'myusername'"
-    $Config = Show-ConfigureRegistry $Config
+    Write-Host ""
+    Write-Info "Let's configure your container registry first."
+
+    $newRegistry = Read-Registry
+    if ([string]::IsNullOrWhiteSpace($newRegistry)) {
+        Write-ErrorMessage "Registry is required"
+        exit 1
+    }
+    $Config.registry = $newRegistry
+    $Config.backendImage = Read-Value "Backend image name" $Config.backendImage
+    $Config.frontendImage = Read-Value "Frontend image name" $Config.frontendImage
+    $Config.platform = Read-Platform $Config.platform
+    Save-Config $Config
+    Write-Success "Configuration saved"
+    $Config = Get-Config
 }
 
 # Determine push and latest flags
 $DoPush = -not $NoPush
 $TagLatest = -not $NoLatest
+$DoCommit = -not $NoCommit
 
 # Track if we're in interactive mode
 $InteractiveMode = $false
@@ -561,7 +647,7 @@ $InteractiveMode = $false
 if ([string]::IsNullOrWhiteSpace($Target)) {
     $InteractiveMode = $true
     $Config = Show-ConfigureRegistry $Config
-    
+
     Write-Host ""
     Write-Host "What would you like to deploy?" -ForegroundColor White
     Write-Host ""
@@ -570,7 +656,7 @@ if ([string]::IsNullOrWhiteSpace($Target)) {
     Write-Host "  [3] Both"
     Write-Host ""
     $choice = Read-Host "Choose [1-3]"
-    
+
     switch ($choice) {
         "1" { $Target = "backend" }
         "2" { $Target = "frontend" }
@@ -644,6 +730,8 @@ Write-Host "  Push to registry: " -NoNewline
 if ($DoPush) { Write-Host "Yes" -ForegroundColor Green } else { Write-Host "No (build only)" -ForegroundColor Yellow }
 Write-Host "  Update :latest:   " -NoNewline
 if ($TagLatest) { Write-Host "Yes" -ForegroundColor Green } else { Write-Host "No" -ForegroundColor DarkGray }
+Write-Host "  Commit version:   " -NoNewline
+if ($DoCommit) { Write-Host "Yes" -ForegroundColor Green } else { Write-Host "No" -ForegroundColor DarkGray }
 Write-Host ""
 
 # Confirmation
@@ -688,10 +776,10 @@ if ($Failed) {
     exit 1
 }
 
-# Update versions in config and commit
-if ($BumpType -ne "none" -and $DoPush) {
+# Update versions in config
+if ($BumpType -ne "none") {
     Write-Step "Updating version..."
-    
+
     # Update only the versions that were deployed
     if ($Target -eq "backend" -or $Target -eq "all") {
         $Config.backendVersion = $NewBackendVersion
@@ -700,31 +788,43 @@ if ($BumpType -ne "none" -and $DoPush) {
         $Config.frontendVersion = $NewFrontendVersion
     }
     Save-Config $Config
-    
-    # Build commit message
-    $commitMsg = "chore: bump"
-    if ($Target -eq "backend") {
-        $commitMsg = "$commitMsg backend to $NewBackendVersion"
-    }
-    elseif ($Target -eq "frontend") {
-        $commitMsg = "$commitMsg frontend to $NewFrontendVersion"
-    }
-    else {
-        $commitMsg = "$commitMsg backend to $NewBackendVersion, frontend to $NewFrontendVersion"
-    }
-    
+    Write-Success "Version updated in deploy.config.json"
+
     # Commit the version bump
-    $ErrorActionPreference = "Continue"
-    git rev-parse --git-dir 2>&1 | Out-Null
-    if ($LASTEXITCODE -eq 0) {
-        git add $ConfigFile 2>&1 | Out-Null
-        git commit -m $commitMsg 2>&1 | Out-Null
-        $ErrorActionPreference = "Stop"
-        Write-Success "Version updated (committed)"
-    }
-    else {
-        $ErrorActionPreference = "Stop"
-        Write-Success "Version updated"
+    if ($DoCommit) {
+        $ErrorActionPreference = "Continue"
+        $gitCheck = git rev-parse --git-dir 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            # Build commit message
+            $commitMsg = "chore(deploy): bump"
+            if ($Target -eq "backend") {
+                $commitMsg = "$commitMsg backend to $NewBackendVersion"
+            }
+            elseif ($Target -eq "frontend") {
+                $commitMsg = "$commitMsg frontend to $NewFrontendVersion"
+            }
+            else {
+                $commitMsg = "$commitMsg backend to $NewBackendVersion, frontend to $NewFrontendVersion"
+            }
+
+            $null = git add $ConfigFile 2>&1
+            $addExitCode = $LASTEXITCODE
+            $null = git commit -m $commitMsg 2>&1
+            $commitExitCode = $LASTEXITCODE
+
+            $ErrorActionPreference = "Stop"
+
+            if ($addExitCode -eq 0 -and $commitExitCode -eq 0) {
+                Write-Success "Version bump committed"
+            }
+            else {
+                Write-Warning "Failed to commit version bump (you may need to commit manually)"
+            }
+        }
+        else {
+            $ErrorActionPreference = "Stop"
+            Write-Info "Not a git repository - skipping commit"
+        }
     }
 }
 
