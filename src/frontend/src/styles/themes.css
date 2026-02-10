@@ -1,100 +1,103 @@
 /* =============================================================================
    THEME VARIABLES
    Color tokens and design system variables for light and dark themes.
-   These can be overridden at runtime for user preferences.
+
+   Palette: Warm stone-neutral base with slate-blue accents.
+   Light mode uses an off-white paper tone; dark mode uses warm charcoal.
+   Both avoid harsh extremes for comfortable extended use.
    ============================================================================= */
 
 :root {
-	/* Core colors */
-	--background: 0 0% 100%;
-	--foreground: 222.2 84% 4.9%;
-	--card: 0 0% 100%;
-	--card-foreground: 222.2 84% 4.9%;
-	--popover: 0 0% 100%;
-	--popover-foreground: 222.2 84% 4.9%;
+	/* Core colors — warm off-white, not pure white */
+	--background: 40 20% 97%;
+	--foreground: 20 15% 15%;
+	--card: 40 15% 98.5%;
+	--card-foreground: 20 15% 15%;
+	--popover: 40 20% 99%;
+	--popover-foreground: 20 15% 15%;
 
-	/* Brand colors */
-	--primary: 222.2 47.4% 11.2%;
-	--primary-foreground: 210 40% 98%;
-	--secondary: 210 40% 96.1%;
-	--secondary-foreground: 222.2 47.4% 11.2%;
+	/* Brand colors — refined slate-blue */
+	--primary: 220 25% 20%;
+	--primary-foreground: 40 20% 97%;
+	--secondary: 35 15% 93%;
+	--secondary-foreground: 220 25% 20%;
 
 	/* Neutral colors */
-	--muted: 210 40% 96.1%;
-	--muted-foreground: 215.4 16.3% 46.9%;
-	--accent: 210 40% 96.1%;
-	--accent-foreground: 222.2 47.4% 11.2%;
+	--muted: 35 12% 93%;
+	--muted-foreground: 20 8% 46%;
+	--accent: 35 12% 91%;
+	--accent-foreground: 220 25% 20%;
 
-	/* Semantic colors */
-	--destructive: 0 84.2% 60.2%;
-	--destructive-foreground: 210 40% 98%;
-	--success: 142 76% 36%;
-	--success-foreground: 355.7 100% 97.3%;
-	--warning: 48 96% 53%;
-	--warning-foreground: 222.2 47.4% 11.2%;
+	/* Semantic colors — toned down, still clearly distinct */
+	--destructive: 0 55% 55%;
+	--destructive-foreground: 40 20% 97%;
+	--success: 150 40% 38%;
+	--success-foreground: 40 20% 97%;
+	--warning: 42 75% 50%;
+	--warning-foreground: 20 15% 15%;
 
 	/* UI colors */
-	--border: 214.3 31.8% 91.4%;
-	--input: 214.3 31.8% 91.4%;
-	--ring: 222.2 84% 4.9%;
+	--border: 30 12% 88%;
+	--input: 30 12% 88%;
+	--ring: 220 25% 20%;
 
 	/* Layout */
 	--radius: 0.5rem;
 
-	/* Sidebar */
-	--sidebar-background: 0 0% 98%;
-	--sidebar-foreground: 240 5.3% 26.1%;
-	--sidebar-primary: 240 5.9% 10%;
-	--sidebar-primary-foreground: 0 0% 98%;
-	--sidebar-accent: 240 4.8% 95.9%;
-	--sidebar-accent-foreground: 240 5.9% 10%;
-	--sidebar-border: 220 13% 91%;
-	--sidebar-ring: 217.2 91.2% 59.8%;
+	/* Sidebar — slightly cooler than content for visual separation */
+	--sidebar-background: 30 10% 95.5%;
+	--sidebar-foreground: 20 10% 28%;
+	--sidebar-primary: 220 25% 20%;
+	--sidebar-primary-foreground: 40 20% 97%;
+	--sidebar-accent: 35 10% 91%;
+	--sidebar-accent-foreground: 20 10% 18%;
+	--sidebar-border: 30 10% 89%;
+	--sidebar-ring: 220 45% 50%;
 	--sidebar-width-md: 220px;
 	--sidebar-width-collapsed: 68px;
 }
 
 .dark {
-	/* Core colors */
-	--background: 240 10% 3.9%;
-	--foreground: 240 5% 90%;
-	--card: 240 10% 5%;
-	--card-foreground: 240 5% 90%;
-	--popover: 240 10% 3.9%;
-	--popover-foreground: 240 5% 90%;
+	/* Core colors — warm charcoal, not blue-black */
+	--background: 24 8% 10%;
+	--foreground: 30 6% 82%;
+	--card: 24 7% 12.5%;
+	--card-foreground: 30 6% 82%;
+	--popover: 24 7% 11%;
+	--popover-foreground: 30 6% 82%;
 
-	/* Brand colors */
-	--primary: 240 5% 90%;
-	--primary-foreground: 240 5.9% 10%;
-	--secondary: 240 3.7% 15.9%;
-	--secondary-foreground: 240 5% 90%;
+	/* Brand colors — soft light for primary, reversed contrast */
+	--primary: 30 6% 82%;
+	--primary-foreground: 24 8% 12%;
+	--secondary: 24 5% 17%;
+	--secondary-foreground: 30 6% 82%;
 
 	/* Neutral colors */
-	--muted: 240 3.7% 15.9%;
-	--muted-foreground: 240 5% 64.9%;
-	--accent: 240 3.7% 15.9%;
-	--accent-foreground: 240 5% 90%;
+	--muted: 24 5% 17%;
+	--muted-foreground: 25 5% 55%;
+	--accent: 24 5% 19%;
+	--accent-foreground: 30 6% 82%;
 
-	/* Semantic colors */
-	--destructive: 0 50% 30%;
-	--destructive-foreground: 240 5% 90%;
-	--success: 142 50% 25%;
-	--success-foreground: 142 70% 95%;
-	--warning: 48 70% 25%;
-	--warning-foreground: 48 100% 90%;
+	/* Semantic colors — muted but readable on dark backgrounds */
+	--destructive: 0 40% 35%;
+	--destructive-foreground: 30 6% 82%;
+	--success: 150 35% 28%;
+	--success-foreground: 150 40% 90%;
+	--warning: 42 55% 30%;
+	--warning-foreground: 42 70% 88%;
 
 	/* UI colors */
-	--border: 240 3.7% 15.9%;
-	--input: 240 3.7% 15.9%;
-	--ring: 240 4.9% 83.9%;
+	--border: 24 5% 18%;
+	--input: 24 5% 18%;
+	--ring: 30 5% 70%;
 
-	/* Sidebar */
-	--sidebar-background: 240 5.9% 10%;
-	--sidebar-foreground: 240 4.8% 95.9%;
-	--sidebar-primary: 224.3 76.3% 48%;
+	/* Sidebar — slightly darker than content for depth */
+	--sidebar-background: 24 8% 9%;
+	--sidebar-foreground: 30 5% 85%;
+	--sidebar-primary: 220 50% 55%;
 	--sidebar-primary-foreground: 0 0% 100%;
-	--sidebar-accent: 240 3.7% 15.9%;
-	--sidebar-accent-foreground: 240 4.8% 95.9%;
-	--sidebar-border: 240 3.7% 15.9%;
-	--sidebar-ring: 217.2 91.2% 59.8%;
+	--sidebar-accent: 24 5% 15%;
+	--sidebar-accent-foreground: 30 5% 85%;
+	--sidebar-border: 24 5% 16%;
+	--sidebar-ring: 220 50% 55%;
 }

@@ -82,7 +82,8 @@
 								size: 'icon'
 							}),
 							'h-9 w-9',
-							active && 'dark:bg-muted dark:text-white dark:hover:bg-muted dark:hover:text-white'
+							active &&
+								'dark:bg-muted dark:text-foreground dark:hover:bg-muted dark:hover:text-foreground'
 						)}
 						aria-current={active ? 'page' : undefined}
 						aria-label={item.title()}
@@ -105,7 +106,8 @@
 					variant: active ? 'default' : 'ghost',
 					size: 'sm'
 				}),
-				active && 'dark:bg-muted dark:text-white dark:hover:bg-muted dark:hover:text-white',
+				active &&
+					'dark:bg-muted dark:text-foreground dark:hover:bg-muted dark:hover:text-foreground',
 				'justify-start'
 			)}
 			aria-current={active ? 'page' : undefined}

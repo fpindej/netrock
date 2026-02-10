@@ -27,7 +27,7 @@
 		<div class="relative mb-6">
 			<div class="glow-warning"></div>
 			<div
-				class="relative flex h-20 w-20 items-center justify-center rounded-full border border-warning/30 bg-gradient-to-br from-warning/10 to-amber-500/10"
+				class="relative flex h-20 w-20 items-center justify-center rounded-full border border-warning/30 bg-gradient-to-br from-warning/10 to-warning/5"
 			>
 				<Construction class="h-10 w-10 text-warning" />
 			</div>

@@ -15,7 +15,7 @@
 	width: 20rem;
 	height: 20rem;
 	border-radius: 9999px;
-	background: linear-gradient(to bottom left, hsl(var(--primary) / 0.2), hsl(280 70% 50% / 0.2));
+	background: linear-gradient(to bottom left, hsl(var(--primary) / 0.15), hsl(var(--accent) / 0.1));
 	filter: blur(48px);
 	pointer-events: none;
 	-webkit-transform: translateZ(0); /* Safari compositing fix */
@@ -28,7 +28,7 @@
 	width: 20rem;
 	height: 20rem;
 	border-radius: 9999px;
-	background: linear-gradient(to top right, hsl(200 70% 50% / 0.2), hsl(180 70% 50% / 0.2));
+	background: linear-gradient(to top right, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1));
 	filter: blur(48px);
 	pointer-events: none;
 	-webkit-transform: translateZ(0); /* Safari compositing fix */
@@ -157,7 +157,7 @@
 		135deg,
 		hsl(var(--primary) / 0.15),
 		transparent 50%,
-		hsl(280 70% 50% / 0.1)
+		hsl(var(--accent) / 0.08)
 	);
 	mask:
 		linear-gradient(#fff 0 0) content-box,

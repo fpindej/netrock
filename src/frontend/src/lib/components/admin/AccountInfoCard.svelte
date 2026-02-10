@@ -59,7 +59,7 @@
 			{#if user.emailConfirmed}
 				<Badge
 					variant="outline"
-					class="border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400"
+					class="border-success/30 bg-success/10 text-success dark:border-success/30 dark:bg-success/10 dark:text-success-foreground"
 				>
 					{m.admin_userDetail_yes()}
 				</Badge>
