@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AccountInfoCard, RoleManagementCard, AccountActionsCard } from '$lib/components/admin';
+	import { AccountInfoCard, UserManagementCard } from '$lib/components/admin';
 	import type { AdminUser, AdminRole, User } from '$lib/types';
 
 	interface Props {
@@ -11,8 +11,7 @@
 	let { user, roles, currentUser }: Props = $props();
 </script>
 
-<div class="grid gap-6">
+<div class="grid gap-6 lg:grid-cols-2">
 	<AccountInfoCard {user} />
-	<RoleManagementCard {user} {roles} {currentUser} />
-	<AccountActionsCard {user} {currentUser} />
+	<UserManagementCard {user} {roles} {currentUser} />
 </div>
