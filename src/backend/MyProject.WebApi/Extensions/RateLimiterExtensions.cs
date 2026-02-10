@@ -12,7 +12,7 @@ namespace MyProject.WebApi.Extensions;
 internal static class RateLimiterExtensions
 {
     /// <summary>
-    /// Registers rate limiting services with a global fixed-window limiter partitioned by user or IP.
+    /// Registers rate limiting services with a global fixed-window limiter and per-endpoint policies.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configuration">The application configuration for reading rate limiting options.</param>
@@ -29,47 +29,55 @@ internal static class RateLimiterExtensions
             var rateLimitOptions = configuration.GetSection(RateLimitingOptions.SectionName).Get<RateLimitingOptions>()
                                       ?? throw new InvalidOperationException("Rate limiting options are not configured properly.");
 
-            opt.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-            {
-                var userIdentifier = context.User.Identity?.Name ??
-                                     context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
-
-                return RateLimitPartition.GetFixedWindowLimiter(userIdentifier, _ =>
-                    new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = rateLimitOptions.Global.PermitLimit,
-                        Window = rateLimitOptions.Global.Window,
-                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 0 // No queuing - immediate rejection with 429
-                    });
-            });
-
-            opt.OnRejected = async (context, token) =>
-            {
-                context.HttpContext.Response.StatusCode = 429;
-                context.HttpContext.Response.ContentType = "application/json";
-
-                // Add standard rate limiting headers
-                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
-                {
-                    context.HttpContext.Response.Headers.RetryAfter = retryAfter.TotalSeconds.ToString(CultureInfo.InvariantCulture);
-                    var timeProvider = context.HttpContext.RequestServices.GetRequiredService<TimeProvider>();
-                    context.HttpContext.Response.Headers["X-RateLimit-Reset"] = timeProvider.GetUtcNow().Add(retryAfter).ToUnixTimeSeconds().ToString();
-
-                    var response = new ErrorResponse
-                    {
-                        Message = "Rate limit exceeded",
-                        Details = $"Too many requests. Please try again in {retryAfter.TotalMinutes:F1} minutes."
-                    };
-
-                    await context.HttpContext.Response.WriteAsJsonAsync(response, token);
-                }
-            };
-
+            ConfigureGlobalLimiter(opt, rateLimitOptions.Global);
+            ConfigureOnRejected(opt);
             AddRegistrationPolicy(opt, rateLimitOptions.Registration);
         });
 
         return services;
+    }
+
+    /// <summary>
+    /// Configures the global fixed-window rate limiter partitioned by authenticated user or IP address.
+    /// </summary>
+    private static void ConfigureGlobalLimiter(RateLimiterOptions options,
+        RateLimitingOptions.GlobalLimitOptions globalOptions)
+    {
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        {
+            var userIdentifier = context.User.Identity?.Name ??
+                                 context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+
+            return RateLimitPartition.GetFixedWindowLimiter(userIdentifier,
+                _ => CreateFixedWindowOptions(globalOptions));
+        });
+    }
+
+    /// <summary>
+    /// Configures the rejection handler that returns a JSON <see cref="ErrorResponse"/> with retry-after headers.
+    /// </summary>
+    private static void ConfigureOnRejected(RateLimiterOptions options)
+    {
+        options.OnRejected = async (context, token) =>
+        {
+            context.HttpContext.Response.StatusCode = 429;
+            context.HttpContext.Response.ContentType = "application/json";
+
+            if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            {
+                context.HttpContext.Response.Headers.RetryAfter = retryAfter.TotalSeconds.ToString(CultureInfo.InvariantCulture);
+                var timeProvider = context.HttpContext.RequestServices.GetRequiredService<TimeProvider>();
+                context.HttpContext.Response.Headers["X-RateLimit-Reset"] = timeProvider.GetUtcNow().Add(retryAfter).ToUnixTimeSeconds().ToString();
+
+                var response = new ErrorResponse
+                {
+                    Message = "Rate limit exceeded",
+                    Details = $"Too many requests. Please try again in {retryAfter.TotalSeconds:F0} seconds."
+                };
+
+                await context.HttpContext.Response.WriteAsJsonAsync(response, token);
+            }
+        };
     }
 
     /// <summary>
@@ -83,14 +91,23 @@ internal static class RateLimiterExtensions
             {
                 var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
 
-                return RateLimitPartition.GetFixedWindowLimiter(ipAddress, _ =>
-                    new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = registrationOptions.PermitLimit,
-                        Window = registrationOptions.Window,
-                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 0
-                    });
+                return RateLimitPartition.GetFixedWindowLimiter(ipAddress,
+                    _ => CreateFixedWindowOptions(registrationOptions));
             });
+    }
+
+    /// <summary>
+    /// Creates <see cref="FixedWindowRateLimiterOptions"/> from a <see cref="RateLimitingOptions.FixedWindowPolicyOptions"/> configuration.
+    /// </summary>
+    private static FixedWindowRateLimiterOptions CreateFixedWindowOptions(
+        RateLimitingOptions.FixedWindowPolicyOptions policyOptions)
+    {
+        return new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = policyOptions.PermitLimit,
+            Window = policyOptions.Window,
+            QueueProcessingOrder = policyOptions.QueueProcessingOrder,
+            QueueLimit = policyOptions.QueueLimit
+        };
     }
 }
