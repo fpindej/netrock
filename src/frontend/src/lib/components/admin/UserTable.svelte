@@ -1,11 +1,10 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Badge } from '$lib/components/ui/badge';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import { Eye, Users, ChevronRight } from '@lucide/svelte';
+	import { Users, ChevronRight } from '@lucide/svelte';
 	import type { AdminUser } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
-	import { cn } from '$lib/utils';
 
 	interface Props {
 		users: AdminUser[];
@@ -18,6 +17,11 @@
 			return [user.firstName, user.lastName].filter(Boolean).join(' ');
 		}
 		return user.username ?? '';
+	}
+
+	function navigateToUser(userId: string | undefined): void {
+		if (!userId) return;
+		goto(resolve(`/admin/users/${userId}`));
 	}
 </script>
 
@@ -79,14 +83,26 @@
 					>
 						{m.admin_users_status()}
 					</th>
-					<th class="px-4 py-3 text-end text-xs font-medium tracking-wide text-muted-foreground">
-						{m.admin_users_actions()}
+					<th class="w-10 px-4 py-3">
+						<span class="sr-only">{m.admin_users_viewDetails()}</span>
 					</th>
 				</tr>
 			</thead>
 			<tbody>
 				{#each users as user (user.id)}
-					<tr class="border-b transition-colors hover:bg-muted/50">
+					<tr
+						class="cursor-pointer border-b transition-colors hover:bg-muted/50"
+						onclick={() => navigateToUser(user.id)}
+						role="link"
+						aria-label={m.admin_users_viewDetails()}
+						tabindex="0"
+						onkeydown={(e: KeyboardEvent) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault();
+								navigateToUser(user.id);
+							}
+						}}
+					>
 						<td class="px-4 py-3 font-medium">
 							<span class="truncate">{displayName(user)}</span>
 						</td>
@@ -110,13 +126,7 @@
 							{/if}
 						</td>
 						<td class="px-4 py-3 text-end">
-							<a
-								href={resolve(`/admin/users/${user.id}`)}
-								class={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'h-10 w-10')}
-								aria-label={m.admin_users_viewDetails()}
-							>
-								<Eye class="h-4 w-4" />
-							</a>
+							<ChevronRight class="h-4 w-4 text-muted-foreground" />
 						</td>
 					</tr>
 				{/each}
