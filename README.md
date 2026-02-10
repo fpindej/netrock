@@ -1,162 +1,261 @@
-# Web APP Template
+<div align="center">
 
-This repository serves as a robust starting point for building modern full-stack applications with .NET and SvelteKit. It comes pre-configured with essential components to jumpstart your development, following Clean Architecture principles.
+# NETrock
 
-## Features
+**The production-grade SaaS foundation you'd eventually build yourself — so you don't have to.**
 
-### Backend (.NET 10)
-*   **Clean Architecture:** Organized into Domain, Application, Infrastructure, and WebApi layers.
-*   **Database:** Pre-configured PostgreSQL connection with Entity Framework Core.
-*   **Identity:** Built-in authentication system (JWT/Cookie-based) with HttpOnly cookies.
-*   **Validation:** FluentValidation integration.
-*   **Logging:** Serilog configuration.
-*   **Documentation:** Scalar (OpenAPI) integration.
+.NET 10 + SvelteKit + PostgreSQL + Redis. Clean Architecture. Fully dockerized.
+One script. Zero boilerplate debt.
 
-### Frontend (SvelteKit)
-*   **Modern Stack:** Svelte 5 (Runes), Tailwind CSS v4, and Vite.
-*   **UI Components:** Shadcn-svelte (using bits-ui@next) for accessible, customizable components.
-*   **BFF Pattern:** Backend-for-Frontend architecture using SvelteKit's server-side hooks and proxy routes to handle authentication securely.
-*   **Type Safety:** End-to-end type safety with `openapi-fetch` generated from the backend OpenAPI spec.
-*   **Localization:** Production-ready i18n system with type-safe keys, server-side detection, and cookie persistence.
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![SvelteKit](https://img.shields.io/badge/SvelteKit-Svelte_5-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)](https://redis.io/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-### DevOps
-*   **Containerization:** Ready-to-use `Dockerfile` and `docker-compose` setup for the entire stack.
-*   **Tooling:** Includes initialization scripts to rename the project and set up ports automatically.
+</div>
 
-## Prerequisites
+---
 
-Before you begin, ensure you have the following installed:
+## Why NETrock?
 
-*   [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-*   [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-*   [Node.js 22+](https://nodejs.org/) (for local frontend development)
-*   [Git](https://git-scm.com/)
+Every SaaS starts the same way: authentication, role management, rate limiting, validation, API docs, type-safe clients, i18n, Docker setup... You spend weeks on infrastructure before writing a single line of business logic.
 
-## Getting Started
+**NETrock is the foundation that skips all of that.** Not a toy starter kit — a production-hardened architecture with real security, real patterns, and real conventions that scale.
 
-Follow these simple steps to set up your new project:
+Run the init script, pick a name, and start building your product. Everything else is already done.
 
-### 1. Clone the Repository
+---
 
-Fork this repository or clone it directly to your local machine:
+## What You Get
 
-```bash
-git clone <your-repo-url>
-cd web-api-template
+### Backend — .NET 10 / C# 13
+
+| Feature | Implementation |
+|---|---|
+| **Clean Architecture** | Domain → Application → Infrastructure → WebApi, with enforced dependency rules |
+| **Authentication** | JWT in HttpOnly cookies with refresh token rotation and security stamp validation |
+| **Authorization** | Role-based with hierarchical role system (SuperAdmin > Admin > User) |
+| **Rate Limiting** | Global + per-endpoint policies, configurable fixed-window with IP partitioning |
+| **Validation** | FluentValidation + Data Annotations, flowing constraints into OpenAPI spec |
+| **Caching** | Redis (distributed) + in-memory fallback, cache-aside pattern with auto-invalidation |
+| **Database** | PostgreSQL + EF Core with soft delete, audit fields, and global query filters |
+| **API Documentation** | OpenAPI spec + Scalar UI, with enum handling and schema transformers |
+| **Error Handling** | Result pattern for business logic, middleware for exceptions, structured `ErrorResponse` everywhere |
+| **Logging** | Serilog → Seq with structured request logging |
+| **Account Management** | Registration, login, logout, password change, profile updates, account deletion |
+| **Admin Panel** | User management, role assignment/removal, admin-only endpoints |
+
+### Frontend — SvelteKit / Svelte 5
+
+| Feature | Implementation |
+|---|---|
+| **Svelte 5 Runes** | Modern reactivity with `$state`, `$derived`, `$effect` — no legacy stores |
+| **Type-Safe API Client** | Generated from OpenAPI spec via `openapi-typescript` — backend changes break the build, not the user |
+| **Tailwind CSS 4** | Utility-first styling with shadcn-svelte (bits-ui) components |
+| **BFF Architecture** | Server-side API proxy handles cookies, CSRF, and auth transparently |
+| **i18n** | Paraglide JS — type-safe keys, compile-time optimization, SSR-compatible |
+| **Security Headers** | CSP-ready, X-Frame-Options, Referrer-Policy, Permissions-Policy on every response |
+| **Responsive Layout** | Sidebar navigation with mobile drawer, breakpoint-aware page layouts |
+
+### Infrastructure
+
+| Feature | Implementation |
+|---|---|
+| **Fully Dockerized** | One `docker compose up` for the entire stack — API, frontend, DB, Redis, Seq |
+| **Init Script** | Renames the entire solution, sets ports, generates secrets, restores tools |
+| **Environment Config** | `.env` overrides for everything — JWT expiry, rate limits, CORS, Redis, logging |
+| **Deploy Script** | Build and push images with a single command |
+| **Structured Logging** | Seq dashboard for searching, filtering, and correlating requests |
+
+---
+
+## Architecture
+
+```
+Frontend (SvelteKit :5173)
+    │
+    │  /api/* proxy (catch-all server route)
+    │  Forwards cookies + headers, validates CSRF
+    ▼
+Backend API (.NET :8080)
+    │
+    │  Clean Architecture
+    │  WebApi → Application ← Infrastructure → Domain
+    │
+    ├── PostgreSQL (:5432)  — EF Core, soft delete, audit trails
+    ├── Redis (:6379)       — Distributed cache, security stamp lookup
+    └── Seq (:80)           — Structured log aggregation
 ```
 
-### 2. Run the Initialization Script
+---
 
-This template includes scripts to rename the project (from "MyProject" to your desired name) and configure ports. It will also restore local .NET tools (like `dotnet-ef`).
+## Security — Not an Afterthought
 
-**For macOS / Linux:**
+NETrock is built **security-first**. Every decision defaults to the most restrictive option, then selectively opens what's needed.
 
+- **JWT in HttpOnly cookies** — tokens never touch JavaScript, immune to XSS theft
+- **Refresh token rotation** — single-use tokens with automatic family revocation
+- **Security stamp validation** — role changes propagate to active sessions via SHA-256 hashed stamps in JWT claims, cached in Redis
+- **Rate limiting** — global + per-endpoint (registration has its own stricter policy), configurable per environment
+- **CSRF protection** — Origin header validation in the SvelteKit API proxy
+- **Input validation everywhere** — FluentValidation on the backend, even if the frontend already validates
+- **Security headers on every response** — both API and frontend set `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`
+- **Soft delete** — nothing is ever truly gone, audit trail on every mutation
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [Node.js 22+](https://nodejs.org/)
+- [Git](https://git-scm.com/)
+
+### 1. Clone & Initialize
+
+```bash
+git clone https://github.com/fpindej/web-app-template.git my-saas
+cd my-saas
+```
+
+**macOS / Linux:**
 ```bash
 chmod +x init.sh
 ./init.sh
 ```
 
-**For Windows (PowerShell):**
-
+**Windows (PowerShell):**
 ```powershell
 .\init.ps1
 ```
 
-**What the script does:**
-1.  Asks for your **Project Name** (e.g., `MyAwesomeApi`).
-2.  Asks for a **Base Port** (default `13000`).
-    *   **Frontend:** `Base Port` (e.g., `13000`).
-    *   **API:** `Base Port + 2` (e.g., `13002`).
-    *   **Database:** `Base Port + 4` (e.g., `13004`).
-3.  Renames all files, directories, and namespaces in the solution.
-4.  Updates `docker-compose.local.yml` and configuration files with the new ports.
-5.  Restores local .NET tools (ensures `dotnet-ef` is available).
+The init script will:
+1. Ask for your **project name** (e.g., `Acme`)
+2. Ask for a **base port** (default `13000`)
+3. Rename all files, directories, namespaces, and configs
+4. Generate a random JWT secret
+5. Restore .NET tools (`dotnet-ef`)
 
-### 3. Run the Application
-
-Once initialized, you can start the entire infrastructure (Frontend + API + Database) using Docker Compose:
+### 2. Launch Everything
 
 ```bash
 docker compose -f docker-compose.local.yml up -d --build
 ```
 
-*   **Frontend:** `http://localhost:<BASE_PORT>` (e.g., `http://localhost:13000`)
-*   **API:** `http://localhost:<API_PORT>` (e.g., `http://localhost:13002`)
-*   **Swagger UI:** `http://localhost:<API_PORT>/scalar/v1`
+That's it. Your entire stack is running:
+
+| Service | URL |
+|---|---|
+| **Frontend** | `http://localhost:<BASE_PORT>` |
+| **API** | `http://localhost:<BASE_PORT + 2>` |
+| **API Docs (Scalar)** | `http://localhost:<BASE_PORT + 2>/scalar/v1` |
+| **Seq (Logs)** | `http://localhost:<BASE_PORT + 8>` |
+
+### 3. Start Building
+
+The foundation is in place. Add your domain entities, services, and pages — the architecture guides you:
+
+```
+# Add a backend feature
+src/backend/YourProject.Domain/Entities/         → Entity
+src/backend/YourProject.Application/Features/    → Interface + DTOs
+src/backend/YourProject.Infrastructure/Features/ → Implementation
+src/backend/YourProject.WebApi/Features/         → Controller + Validation
+
+# Add a frontend page
+src/frontend/src/routes/(app)/your-feature/      → Page + components
+src/frontend/src/lib/api/                        → Auto-generated types
+```
+
+---
 
 ## Project Structure
 
 ```
 src/
-├── backend/                # .NET Web API solution
-│   ├── MyProject.Domain/   # Core domain entities, value objects
-│   ├── MyProject.Application/ # Application contracts, features
-│   ├── MyProject.Infrastructure/ # Implementation (EF Core, etc.)
-│   └── MyProject.WebApi/   # API entry point
+├── backend/                          # .NET 10 API (Clean Architecture)
+│   ├── YourProject.Domain/           # Entities, value objects, Result pattern
+│   ├── YourProject.Application/      # Interfaces, DTOs, service contracts
+│   ├── YourProject.Infrastructure/   # EF Core, Identity, Redis, implementations
+│   └── YourProject.WebApi/           # Controllers, middleware, validation
 │
-└── frontend/               # SvelteKit application
-    ├── src/
-    │   ├── lib/
-    │   │   ├── api/        # Generated API client
-    │   │   ├── components/ # UI components (Shadcn)
-    │   │   └── server/     # Server-side config
-    │   └── routes/         # File-based routing
-    └── static/
+└── frontend/                         # SvelteKit application
+    └── src/
+        ├── lib/
+        │   ├── api/                  # Generated OpenAPI types + client
+        │   ├── components/           # shadcn-svelte + feature components
+        │   ├── state/                # Reactive state (.svelte.ts)
+        │   └── config/              # App configuration
+        └── routes/
+            ├── (app)/                # Authenticated pages
+            ├── (public)/             # Public pages (login)
+            └── api/                  # API proxy to backend
 ```
 
-## Database Migrations
+---
 
-> **Note:** When running the API in the `Development` configuration, the application automatically applies any pending migrations on startup.
+## Developer Workflows
 
-If you need to add new migrations:
+### Frontend dev — tweak backend config without touching code
 
-1.  Ensure the database container is running.
-2.  Run the following command from the root directory:
+Edit `.env`, restart Docker:
 
 ```bash
-dotnet ef migrations add <MigrationName> --project src/backend/<YourProjectName>.Infrastructure --startup-project src/backend/<YourProjectName>.WebApi --output-dir Features/Postgres/Migrations
-dotnet ef database update --project src/backend/<YourProjectName>.Infrastructure --startup-project src/backend/<YourProjectName>.WebApi
+# Longer JWT tokens, relaxed rate limit
+Authentication__Jwt__ExpiresInMinutes=300
+RateLimiting__Global__PermitLimit=1000
 ```
 
-## Frontend Development
+```bash
+docker compose -f docker-compose.local.yml up -d
+```
 
-For a better developer experience (HMR, faster builds), you can run the frontend locally while keeping the backend in Docker:
+### Backend dev — debug with breakpoints in Rider/VS
 
-1.  Start the backend and database:
-    ```bash
-    docker compose -f docker-compose.local.yml up -d api db
-    ```
-2.  Navigate to the frontend directory:
-    ```bash
-    cd src/frontend
-    ```
-3.  Install dependencies:
-    ```bash
-    npm install
-    ```
-4.  Start the dev server:
-    ```bash
-    npm run dev
-    ```
+1. Stop the API container: `docker compose -f docker-compose.local.yml stop api`
+2. Set `API_URL=http://host.docker.internal:5142` in `.env`
+3. Restart frontend: `docker compose -f docker-compose.local.yml restart frontend`
+4. Launch API from your IDE — breakpoints work, frontend proxies to it
+
+### Database migrations
+
+```bash
+dotnet ef migrations add <Name> \
+  --project src/backend/<YourProject>.Infrastructure \
+  --startup-project src/backend/<YourProject>.WebApi \
+  --output-dir Features/Postgres/Migrations
+```
+
+Migrations auto-apply on startup in Development.
+
+---
 
 ## Localization
 
-The frontend includes a robust localization system built on `Paraglide JS`, designed for high-traffic and scalable SPAs.
+Production-ready i18n with [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs):
 
-### Key Features
-*   **Type-Safe Keys:** TypeScript types are generated from the default locale (`en.json`), preventing missing key errors.
-*   **Auto-Detection:** Detects language from the browser (client-side) or `Accept-Language` header/cookies (server-side).
-*   **Persistence:** User preference is saved in a cookie (`locale`) for consistent experience across sessions.
-*   **SSR Support:** Injects the correct `lang` attribute into the HTML tag during server-side rendering to prevent hydration mismatches.
+- **Type-safe keys** — generated from `en.json`, compile-time errors on missing keys
+- **SSR-compatible** — correct `lang` attribute on first render, no hydration mismatch
+- **Auto-detection** — browser language → `Accept-Language` header → cookie fallback
+- **Adding a language** — create `es.json`, register in `i18n.ts`, done
 
-### Adding a New Language
-1.  Create a new translation file in `src/frontend/src/lib/locales/` (e.g., `es.json`).
-2.  Register the new locale in `src/frontend/src/lib/i18n.ts`:
-    ```typescript
-    register('es', () => import('./locales/es.json'));
-    ```
-3.  Add the language code to the `supportedLocales` array in `src/frontend/src/lib/i18n.ts`.
+---
+
+## What This Is NOT
+
+NETrock is opinionated by design. It's not:
+
+- **A generic starter** — it makes real choices (PostgreSQL, not "any database"; JWT cookies, not "pluggable auth")
+- **A microservices framework** — it's a monolith, because that's what 95% of SaaS products should start as
+- **A UI kit** — it uses shadcn-svelte components, but your product's design is your own
+- **Magic** — you still need to understand .NET, SvelteKit, and SQL. NETrock gives you the architecture, not the knowledge
+
+---
 
 ## License
 
-This project is licensed under the [GNU Affero General Public License v3.0 (AGPLv3)](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
