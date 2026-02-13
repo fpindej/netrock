@@ -391,6 +391,43 @@ docker compose -f docker-compose.local.yml up -d
 
 No config changes needed. Defaults work out of the box.
 
+## Infrastructure & Tooling
+
+### SDK & Runtime
+
+| Tool | Version | Configured in |
+|---|---|---|
+| .NET SDK | `10.0.100` (`rollForward: latestMajor`) | `global.json` |
+| Node.js | Engine-strict enforced | `src/frontend/package.json` + `.npmrc` |
+| dotnet-ef | `10.0.0` | `.config/dotnet-tools.json` |
+
+### Build Configuration
+
+| File | Purpose |
+|---|---|
+| `Directory.Build.props` | Shared project properties: `net10.0`, `Nullable=enable`, `ImplicitUsings=enable` |
+| `Directory.Packages.props` | Centralized NuGet version management — all package versions defined here, not in `.csproj` files |
+| `nuget.config` | Locked to NuGet.org only (no custom feeds) |
+| `global.json` | Pins .NET SDK version |
+| `src/frontend/.npmrc` | `engine-strict=true` — npm refuses to install if Node version doesn't match |
+
+### CI/CD & Hooks
+
+No GitHub Actions workflows or pre-commit hooks are configured. Pre-commit checks (build, format, lint, type check) are manual steps documented in `CLAUDE.md`. There is no automated enforcement — developers and agents are responsible for running checks before every commit.
+
+A `.github/copilot-instructions.md` exists with condensed rules for GitHub Copilot. Keep it in sync with `CLAUDE.md` when hard rules change.
+
+### Docker
+
+| File | Purpose |
+|---|---|
+| `src/backend/MyProject.WebApi/Dockerfile` | Multi-stage production build (restore → build → publish → runtime) |
+| `src/frontend/Dockerfile` | Production build (build → runtime with Node adapter) |
+| `src/frontend/Dockerfile.local` | Development — mounts source, runs `npm run dev` for hot-reload |
+| `docker-compose.local.yml` | 5-service local stack (api, frontend, db, redis, seq) |
+
+The backend Dockerfile uses layer caching: `.csproj` files are restored first (cached), then source is copied and built. This avoids re-downloading NuGet packages on every source change.
+
 ## Deployment
 
 Build and push images via `./deploy.sh` (or `deploy.ps1`), configured by `deploy.config.json`.
