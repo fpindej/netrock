@@ -180,6 +180,19 @@ export const load: PageServerLoad = async ({ fetch, url }) => {
 };
 ```
 
+When a page needs multiple independent API calls, use `Promise.all` for parallel fetching:
+
+```typescript
+export const load: PageServerLoad = async ({ fetch, url, params }) => {
+	const client = createApiClient(fetch, url.origin);
+	const [userResult, rolesResult] = await Promise.all([
+		client.GET('/api/v1/admin/users/{id}', { params: { path: { id: params.id } } }),
+		client.GET('/api/v1/admin/roles')
+	]);
+	return { user: userResult.data, roles: rolesResult.data };
+};
+```
+
 ### Client-Side (For User Interactions)
 
 Use `browserClient` for form submissions and user-triggered actions:
@@ -389,6 +402,20 @@ Never use the generic syntax `$props<{ ... }>()` — always define a separate `i
 </script>
 ```
 
+### Reactive Collections
+
+Svelte 5 provides reactive collection classes in `svelte/reactivity`. Use these instead of plain `Set`/`Map`/`URLSearchParams` when reactivity is needed:
+
+```typescript
+import { SvelteSet } from 'svelte/reactivity';
+import { SvelteURLSearchParams } from 'svelte/reactivity';
+
+const activeFields = new SvelteSet<string>();   // Reactive Set — auto-tracks adds/deletes
+const params = new SvelteURLSearchParams(url.searchParams); // Reactive query string manipulation
+```
+
+These are used in the codebase for shake state management (`SvelteSet`) and admin pagination/search (`SvelteURLSearchParams`).
+
 ### Bindable Props
 
 ```svelte
@@ -427,14 +454,18 @@ Components live in feature folders under `$lib/components/`:
 
 ```
 components/
+├── admin/           # UserTable, Pagination, RoleTable, UserDetailCards,
+│   └── index.ts     # UserManagementCard, AccountInfoCard
 ├── auth/            # LoginForm, LoginBackground, RegisterDialog
 │   └── index.ts     # Barrel export
 ├── getting-started/ # GettingStarted, markdown.ts (removable starter page)
 │   └── index.ts
-├── profile/         # ProfileForm, ProfileHeader, AvatarDialog,
-│   └── index.ts     # AccountDetails, InfoItem
 ├── layout/          # Header, Sidebar, SidebarNav, UserNav,
 │   └── index.ts     # ThemeToggle, LanguageSelector, ShortcutsHelp
+├── profile/         # ProfileForm, ProfileHeader, AvatarDialog,
+│   └── index.ts     # AccountDetails, InfoItem
+├── settings/        # ChangePasswordForm, DeleteAccountDialog
+│   └── index.ts
 ├── common/          # StatusIndicator, WorkInProgress
 │   └── index.ts
 └── ui/              # shadcn (generated, customizable)
@@ -1003,6 +1034,10 @@ npm run build    # Production build
 - Work around missing API endpoints — propose them instead
 - Suppress `svelte/no-navigation-without-resolve` — use `resolve()` with `goto()`
 - Silent failures — always handle errors explicitly
+
+## Testing
+
+No test infrastructure is currently set up — no vitest, playwright, or other test frameworks are configured. When tests are added, this section will document the testing frameworks, patterns, and conventions.
 
 ## Adding a New Feature — Checklist
 
