@@ -19,6 +19,7 @@ internal class PermissionPolicyProvider(IOptions<AuthorizationOptions> options) 
         {
             var permission = policyName[Prefix.Length..];
             var policy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
                 .AddRequirements(new PermissionRequirement(permission))
                 .Build();
 

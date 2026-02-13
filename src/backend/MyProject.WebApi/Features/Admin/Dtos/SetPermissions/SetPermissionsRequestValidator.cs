@@ -13,10 +13,14 @@ public class SetPermissionsRequestValidator : AbstractValidator<SetPermissionsRe
     public SetPermissionsRequestValidator()
     {
         RuleFor(x => x.Permissions)
-            .NotNull();
+            .NotNull()
+            .Must(p => p.Count <= 50)
+            .WithMessage("Cannot set more than 50 permissions at once.");
 
         RuleForEach(x => x.Permissions)
             .NotEmpty()
-            .MaximumLength(100);
+            .MaximumLength(100)
+            .Matches(@"^[a-z][a-z0-9_.]*$")
+            .WithMessage("Permission values must be lowercase alphanumeric with dots or underscores.");
     }
 }

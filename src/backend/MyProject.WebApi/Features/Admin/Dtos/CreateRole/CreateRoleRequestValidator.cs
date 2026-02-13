@@ -14,7 +14,9 @@ public class CreateRoleRequestValidator : AbstractValidator<CreateRoleRequest>
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(50);
+            .MaximumLength(50)
+            .Matches(@"^[A-Za-z][A-Za-z0-9 _-]*$")
+            .WithMessage("Role name must start with a letter and contain only letters, numbers, spaces, hyphens, or underscores.");
 
         RuleFor(x => x.Description)
             .MaximumLength(200);
