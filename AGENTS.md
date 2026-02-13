@@ -415,8 +415,6 @@ No config changes needed. Defaults work out of the box.
 
 No GitHub Actions workflows or pre-commit hooks are configured. Pre-commit checks (build, format, lint, type check) are manual steps documented in `CLAUDE.md`. There is no automated enforcement — developers and agents are responsible for running checks before every commit.
 
-A `.github/copilot-instructions.md` exists with condensed rules for GitHub Copilot. Keep it in sync with `CLAUDE.md` when hard rules change.
-
 ### Docker
 
 | File | Purpose |
