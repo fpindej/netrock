@@ -3,12 +3,14 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MyProject.Application.Identity.Constants;
 using MyProject.Infrastructure.Cryptography;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Features.Authentication.Options;
+using MyProject.Infrastructure.Persistence;
 
 namespace MyProject.Infrastructure.Features.Authentication.Services;
 
@@ -17,7 +19,7 @@ namespace MyProject.Infrastructure.Features.Authentication.Services;
 /// </summary>
 internal class JwtTokenProvider(
     UserManager<ApplicationUser> userManager,
-    RoleManager<ApplicationRole> roleManager,
+    MyProjectDbContext dbContext,
     IOptions<AuthenticationOptions> authenticationOptions,
     TimeProvider timeProvider) : ITokenProvider
 {
@@ -76,24 +78,25 @@ internal class JwtTokenProvider(
     }
 
     /// <summary>
-    /// Collects deduplicated permission claim values from all of the user's roles.
+    /// Collects deduplicated permission claim values from all of the user's roles in a single query.
     /// </summary>
     private async Task<HashSet<string>> GetPermissionsForRolesAsync(IList<string> roleNames)
     {
-        var permissions = new HashSet<string>(StringComparer.Ordinal);
+        var normalizedNames = roleNames
+            .Select(r => r.ToUpperInvariant())
+            .ToList();
 
-        foreach (var roleName in roleNames)
-        {
-            var role = await roleManager.FindByNameAsync(roleName);
-            if (role is null) continue;
+        var permissions = await dbContext.RoleClaims
+            .Join(dbContext.Roles,
+                rc => rc.RoleId,
+                r => r.Id,
+                (rc, r) => new { r.NormalizedName, rc.ClaimType, rc.ClaimValue })
+            .Where(x => normalizedNames.Contains(x.NormalizedName!)
+                        && x.ClaimType == AppPermissions.ClaimType)
+            .Select(x => x.ClaimValue!)
+            .Distinct()
+            .ToListAsync();
 
-            var roleClaims = await roleManager.GetClaimsAsync(role);
-            foreach (var claim in roleClaims.Where(c => c.Type == AppPermissions.ClaimType))
-            {
-                permissions.Add(claim.Value);
-            }
-        }
-
-        return permissions;
+        return permissions.ToHashSet(StringComparer.Ordinal);
     }
 }

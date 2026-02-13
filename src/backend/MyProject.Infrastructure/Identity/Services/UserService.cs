@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MyProject.Application.Caching;
@@ -249,7 +248,7 @@ internal class UserService(
     }
 
     /// <summary>
-    /// Collects deduplicated permission values for the given roles.
+    /// Collects deduplicated permission values for the given roles in a single query.
     /// SuperAdmin receives all permissions implicitly.
     /// </summary>
     private async Task<IReadOnlyList<string>> GetPermissionsForRolesAsync(IList<string> roleNames)
@@ -259,21 +258,20 @@ internal class UserService(
             return AppPermissions.All;
         }
 
-        var permissions = new HashSet<string>(StringComparer.Ordinal);
+        var normalizedNames = roleNames
+            .Select(r => r.ToUpperInvariant())
+            .ToList();
 
-        foreach (var roleName in roleNames)
-        {
-            var role = await roleManager.FindByNameAsync(roleName);
-            if (role is null) continue;
-
-            var roleClaims = await roleManager.GetClaimsAsync(role);
-            foreach (var claim in roleClaims.Where(c => c.Type == AppPermissions.ClaimType))
-            {
-                permissions.Add(claim.Value);
-            }
-        }
-
-        return permissions.ToList();
+        return await dbContext.RoleClaims
+            .Join(dbContext.Roles,
+                rc => rc.RoleId,
+                r => r.Id,
+                (rc, r) => new { r.NormalizedName, rc.ClaimType, rc.ClaimValue })
+            .Where(x => normalizedNames.Contains(x.NormalizedName!)
+                        && x.ClaimType == AppPermissions.ClaimType)
+            .Select(x => x.ClaimValue!)
+            .Distinct()
+            .ToListAsync();
     }
 
     /// <summary>

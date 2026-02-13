@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -185,21 +184,28 @@ internal class RoleManagementService(
             return Result.Failure(ErrorMessages.Roles.InvalidPermission);
         }
 
-        // Clear existing permission claims
-        var existingClaims = await roleManager.GetClaimsAsync(role);
-        foreach (var claim in existingClaims.Where(c => c.Type == AppPermissions.ClaimType))
-        {
-            await roleManager.RemoveClaimAsync(role, claim);
-        }
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        // Add new permission claims
-        foreach (var permission in input.Permissions.Distinct(StringComparer.Ordinal))
-        {
-            await roleManager.AddClaimAsync(role, new Claim(AppPermissions.ClaimType, permission));
-        }
+        // Bulk-remove existing permission claims
+        await dbContext.RoleClaims
+            .Where(rc => rc.RoleId == roleId && rc.ClaimType == AppPermissions.ClaimType)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        // Bulk-add new permission claims
+        var distinctPermissions = input.Permissions.Distinct(StringComparer.Ordinal).ToList();
+        dbContext.RoleClaims.AddRange(distinctPermissions.Select(permission =>
+            new IdentityRoleClaim<Guid>
+            {
+                RoleId = roleId,
+                ClaimType = AppPermissions.ClaimType,
+                ClaimValue = permission
+            }));
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         // Rotate security stamps for all users in this role to force re-auth
         await RotateSecurityStampsForRoleAsync(roleId, cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
 
         logger.LogInformation("Permissions updated for role '{RoleName}' (ID '{RoleId}'): [{Permissions}]",
             role.Name, roleId, string.Join(", ", input.Permissions));
@@ -229,29 +235,25 @@ internal class RoleManagementService(
             .Select(ur => ur.UserId)
             .ToListAsync(cancellationToken);
 
-        foreach (var userId in userIds)
+        if (userIds.Count == 0) return;
+
+        // Bulk-invalidate all active refresh tokens for affected users
+        await dbContext.RefreshTokens
+            .Where(rt => userIds.Contains(rt.UserId) && !rt.Invalidated)
+            .ExecuteUpdateAsync(
+                s => s.SetProperty(rt => rt.Invalidated, true),
+                cancellationToken);
+
+        // Load all affected users in a single query
+        var users = await dbContext.Users
+            .Where(u => userIds.Contains(u.Id))
+            .ToListAsync(cancellationToken);
+
+        foreach (var user in users)
         {
-            var user = await userManager.FindByIdAsync(userId.ToString());
-            if (user is null) continue;
-
-            // Invalidate refresh tokens
-            var tokens = await dbContext.RefreshTokens
-                .Where(rt => rt.UserId == userId && !rt.Invalidated)
-                .ToListAsync(cancellationToken);
-
-            foreach (var token in tokens)
-            {
-                token.Invalidated = true;
-            }
-
             await userManager.UpdateSecurityStampAsync(user);
-            await cacheService.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
-            await cacheService.RemoveAsync(CacheKeys.User(userId), cancellationToken);
-        }
-
-        if (userIds.Count > 0)
-        {
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await cacheService.RemoveAsync(CacheKeys.SecurityStamp(user.Id), cancellationToken);
+            await cacheService.RemoveAsync(CacheKeys.User(user.Id), cancellationToken);
         }
     }
 }
