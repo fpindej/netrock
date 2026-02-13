@@ -1,7 +1,5 @@
 # Backend Conventions (.NET 10 / C# 13)
 
-> Follow the **Agent Workflow** in the root [`AGENTS.md`](../../AGENTS.md) — commit atomically, run `dotnet build` before each commit, and write session docs when asked.
-
 ## Project Structure
 
 ```
@@ -68,6 +66,25 @@ src/backend/
     ├── Extensions/                # CORS, rate limiting
     └── Options/                   # CorsOptions, RateLimitingOptions
 ```
+
+## Dependency Management
+
+### Centralized Package Versioning
+
+NuGet package versions are managed centrally in `Directory.Packages.props`. **Never add version attributes to individual `.csproj` files.**
+
+To add a new dependency:
+
+1. Add the version to `Directory.Packages.props`:
+   ```xml
+   <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+   ```
+2. Reference it in the appropriate `.csproj` **without** a version:
+   ```xml
+   <PackageReference Include="Newtonsoft.Json" />
+   ```
+
+`Directory.Build.props` sets shared properties across all projects: `net10.0`, `Nullable=enable`, `ImplicitUsings=enable`.
 
 ## C# Conventions
 
@@ -219,6 +236,17 @@ Key rules:
 - **Public constructor** for domain creation with required parameters
 - **Generate `Id`** in the constructor
 
+### Soft-Delete & Restore
+
+`BaseEntity` provides `SoftDelete()` and `Restore()` instance methods. **Always call these methods** — never set `IsDeleted` directly:
+
+```csharp
+entity.SoftDelete();  // Sets IsDeleted = true (idempotent — no-ops if already deleted)
+entity.Restore();     // Sets IsDeleted = false, clears DeletedAt/DeletedBy (idempotent)
+```
+
+The `AuditingInterceptor` detects these state changes and automatically populates `DeletedAt`/`DeletedBy` on soft-delete and clears them on restore.
+
 ## EF Core Configuration
 
 Configurations inherit from `BaseEntityConfiguration<T>`, which handles all `BaseEntity` fields (primary key, audit columns, soft delete index, and a global query filter that excludes soft-deleted entities). Override `ConfigureEntity` to add entity-specific mapping:
@@ -239,6 +267,22 @@ internal class OrderConfiguration : BaseEntityConfiguration<Order>
 ```
 
 Configurations are auto-discovered via `modelBuilder.ApplyConfigurationsFromAssembly()` in `MyProjectDbContext`.
+
+### Database Schema Strategy
+
+Most entities use the default `public` schema. Feature-specific tables may use named schemas for logical grouping (e.g., `builder.ToTable("RefreshTokens", "auth")`). When adding a new entity, use the default schema unless the entity belongs to an existing named schema.
+
+### Database Seeding
+
+On startup, `InitializeDatabaseAsync` runs a three-part initialization:
+
+1. **Migrations** (Development only) — auto-applies pending EF Core migrations
+2. **Role seeding** (always) — ensures all roles from `AppRoles.All` exist via `RoleManager`
+3. **Test user seeding** (Development only) — creates test users from `SeedUsers` constants
+
+Roles are defined as `public const string` fields in `Application/Identity/Constants/AppRoles.cs`. Adding a new field is sufficient — `AppRoles.All` discovers roles automatically via reflection.
+
+Test user credentials are in `Infrastructure/Features/Authentication/Constants/SeedUsers.cs`. These are development-only — never used in production.
 
 After creating entity + configuration:
 1. Add `DbSet<Order>` to `MyProjectDbContext`
@@ -645,6 +689,27 @@ Always default to the most restrictive security posture and only relax constrain
 HSTS (`Strict-Transport-Security`) is enabled via `app.UseHsts()` in non-development environments.
 
 The frontend applies the same headers to page responses via the `handle` hook in `hooks.server.ts`. API proxy routes (`/api/*`) are skipped — they receive headers from the backend directly.
+
+### ForwardedHeaders
+
+The middleware pipeline configures `X-Forwarded-For` and `X-Forwarded-Proto` header processing for reverse proxy scenarios (Docker, nginx, load balancers). In production, `Request.Scheme` is manually overridden to `https`. Without this, rate limiting, logging, and CORS checks use the proxy's IP/scheme instead of the client's.
+
+## Role Hierarchy & Authorization
+
+Roles follow a strict hierarchy: `SuperAdmin` (rank 3) > `Admin` (rank 2) > `User` (rank 1).
+
+`AppRoles.GetRoleRank()` and `AppRoles.GetHighestRank()` resolve numeric ranks for comparison. Authorization rules enforced by the Admin service:
+
+| Rule | What it prevents |
+|---|---|
+| Hierarchy check | Cannot manage users whose highest role rank ≥ your own |
+| Role assignment | Cannot assign roles at or above your own rank |
+| Role removal | Cannot remove roles at or above your own rank |
+| Self-protection | Cannot remove a role from yourself |
+| Self-lock | Cannot lock your own account |
+| Self-delete | Cannot delete your own account |
+
+These rules prevent privilege escalation. The frontend mirrors this logic in `$lib/utils/roles.ts`.
 
 ## Repository Pattern & Persistence
 
@@ -1247,24 +1312,10 @@ Before adding or modifying any endpoint, verify:
 - [ ] No `#pragma warning disable` — CS1573 (partial param docs) is suppressed project-wide because omitting `CancellationToken` param tags is intentional
 - [ ] After any response DTO change (new DTO, renamed/added/removed properties, changed nullability), regenerate frontend types: `npm run api:generate` from `src/frontend/` with the backend running — then commit `v1.d.ts`
 
-## Adding a New Feature — Checklist
+## Testing
 
-1. **Domain**: Create entity in `Domain/Entities/` extending `BaseEntity`
-2. **Domain**: If the entity has enum properties, define them with explicit integer values in `Domain/Entities/` (or `Domain/Enums/` if shared)
-3. **Domain**: Add error messages to `ErrorMessages.cs` in a new or existing nested class — values are user-facing English strings
-4. **Application**: Define `I{Feature}Service` in `Application/Features/{Feature}/`
-5. **Application**: Create Input/Output record DTOs in `Application/Features/{Feature}/Dtos/`
-6. **Application**: If the entity needs custom queries, define `I{Feature}Repository` in `Application/Features/{Feature}/Persistence/` extending `IBaseEntityRepository<T>`
-7. **Infrastructure**: Implement service in `Infrastructure/Features/{Feature}/Services/` (mark `internal`) — use `Result.Failure(ErrorMessages.X.Y)` for static failures, inline interpolation for dynamic messages
-8. **Infrastructure**: If custom repository was defined, implement in `Infrastructure/Features/{Feature}/Persistence/` extending `BaseEntityRepository<T>` (mark `internal`)
-9. **Infrastructure**: Add EF configuration in `Infrastructure/Features/{Feature}/Configurations/` (extend `BaseEntityConfiguration<T>`) — add `.HasComment()` on enum columns
-10. **Infrastructure**: Create DI extension in `Infrastructure/Features/{Feature}/Extensions/ServiceCollectionExtensions.cs`
-11. **Infrastructure**: Add `DbSet<Entity>` to `MyProjectDbContext`
-12. **WebApi**: Create controller in `WebApi/Features/{Feature}/` (extend `ApiController` or `ControllerBase`) — pass `Message` from Result to ErrorResponse
-13. **WebApi**: Create Request/Response DTOs in `WebApi/Features/{Feature}/Dtos/{Operation}/`
-14. **WebApi**: Create Mapper in `WebApi/Features/{Feature}/{Feature}Mapper.cs`
-15. **WebApi**: Add validators co-located with request DTOs
-16. **WebApi**: Wire DI call in `Program.cs`
-17. **Migration**: `dotnet ef migrations add ...`
+No test infrastructure is currently set up — no unit test or integration test projects exist in the solution. When tests are added, this section will document the testing frameworks, patterns, and conventions.
 
-Commit atomically: entity+config+error messages → service interface+DTOs+repository interface → service implementation+repository implementation+DI → controller+DTOs+mapper+validators → migration.
+## Adding a New Feature
+
+For step-by-step procedures (add entity, add endpoint, add feature), see [`SKILLS.md`](../../SKILLS.md). This file documents **conventions and patterns** — SKILLS.md documents **workflows and checklists**.

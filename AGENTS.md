@@ -2,6 +2,8 @@
 
 Full-stack web application template: **.NET 10 API** (Clean Architecture) + **SvelteKit frontend** (Svelte 5), fully dockerized.
 
+> Hard rules and pre-commit checks are in [`CLAUDE.md`](CLAUDE.md) — always loaded into context.
+
 ## Tech Stack
 
 | | Backend | Frontend |
@@ -57,17 +59,6 @@ WebApi → Application ← Infrastructure
 | `src/lib/state/` | Reactive state (`.svelte.ts` files) |
 | `src/lib/config/` | App configuration (client-safe vs server-only split) |
 
-## Detailed Conventions
-
-| Area | Reference |
-|---|---|
-| Backend (.NET) | [`src/backend/AGENTS.md`](src/backend/AGENTS.md) |
-| Frontend (SvelteKit) | [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md) |
-
-Read the relevant file before working in that area. Both are self-contained with real code examples.
-
----
-
 ## Code Quality Principles
 
 These apply across the entire codebase — backend and frontend alike.
@@ -119,13 +110,6 @@ Write code that is naturally testable through good structure, not by over-abstra
 3. **Sanitize all output.** Prevent XSS by escaping user-generated content. Never render raw HTML from user input. Validate URLs to block `javascript:` schemes.
 4. **Protect state-changing operations.** All mutations (POST/PUT/DELETE) must verify authentication, authorization, and CSRF protection. The SvelteKit API proxy validates Origin headers; the backend validates JWT tokens.
 5. **Log security events.** Failed login attempts, token refresh failures, authorization denials — these should be logged at Warning/Error level for monitoring.
-
-### Layer-Specific Security
-
-Detailed security conventions (headers, CSRF, Permissions-Policy, HSTS) are documented in each layer's AGENTS.md:
-
-- **Backend**: [`src/backend/AGENTS.md` — Security section](src/backend/AGENTS.md)
-- **Frontend**: [`src/frontend/AGENTS.md` — Security section](src/frontend/AGENTS.md)
 
 ---
 
@@ -399,16 +383,6 @@ docker compose -f docker-compose.local.yml up -d
 
 No backend source files need to be touched.
 
-#### Backend dev — debug in Rider/VS with frontend
-
-1. Stop the API container: `docker compose -f docker-compose.local.yml stop api`
-2. In `.env`, uncomment: `API_URL=http://host.docker.internal:5142`
-3. Restart the frontend container: `docker compose -f docker-compose.local.yml restart frontend`
-4. Launch the API from Rider with the "Development - http" profile (port 5142)
-5. Use the frontend at `localhost:{INIT_FRONTEND_PORT}` — it proxies API calls to Rider
-
-The backend loads `appsettings.Development.json` which has `localhost` connection strings for db/redis/seq (pointing at Docker-exposed ports). Breakpoints work.
-
 #### Backend dev — just run everything
 
 ```bash
@@ -417,31 +391,40 @@ docker compose -f docker-compose.local.yml up -d
 
 No config changes needed. Defaults work out of the box.
 
-#### Testing on a phone or other device
+## Infrastructure & Tooling
 
-The app uses `Secure` + `SameSite=None` cookies, so testing over plain HTTP (e.g. `http://192.168.x.x:13000`) won't work — browsers silently discard `Secure` cookies on non-HTTPS origins. Use an HTTPS tunnel instead:
+### SDK & Runtime
 
-1. Install [ngrok](https://ngrok.com/) (or any HTTPS tunnel — Tailscale Funnel, Cloudflare Tunnel, etc.)
-2. Start the tunnel pointing at the frontend port:
-   ```bash
-   ngrok http {INIT_FRONTEND_PORT}
-   ```
-3. Copy the HTTPS URL (e.g. `https://abc123.ngrok-free.app`) and add it to `.env`:
-   ```bash
-   ALLOWED_ORIGINS=https://abc123.ngrok-free.app
-   ```
-4. Recreate the frontend container to pick up the new env var:
-   ```bash
-   docker compose -f docker-compose.local.yml up -d frontend --force-recreate
-   ```
-5. Open the ngrok URL on your phone. Login should work end-to-end.
+| Tool | Version | Configured in |
+|---|---|---|
+| .NET SDK | `10.0.100` (`rollForward: latestMajor`) | `global.json` |
+| Node.js | Engine-strict enforced | `src/frontend/package.json` + `.npmrc` |
+| dotnet-ef | `10.0.0` | `.config/dotnet-tools.json` |
 
-**Why this is needed:**
+### Build Configuration
 
-- The `ALLOWED_ORIGINS` env var tells the SvelteKit API proxy to accept CSRF requests from the tunnel's origin (otherwise it rejects the login POST with 403).
-- Vite's dev server is configured with `allowedHosts: true` so it accepts requests from any hostname (not just `localhost`). This is safe — only the dev server is exposed, never production.
+| File | Purpose |
+|---|---|
+| `Directory.Build.props` | Shared project properties: `net10.0`, `Nullable=enable`, `ImplicitUsings=enable` |
+| `Directory.Packages.props` | Centralized NuGet version management — all package versions defined here, not in `.csproj` files |
+| `nuget.config` | Locked to NuGet.org only (no custom feeds) |
+| `global.json` | Pins .NET SDK version |
+| `src/frontend/.npmrc` | `engine-strict=true` — npm refuses to install if Node version doesn't match |
 
-**Cleanup:** When done, remove the `ALLOWED_ORIGINS` line from `.env` and stop the tunnel.
+### CI/CD & Hooks
+
+No GitHub Actions workflows or pre-commit hooks are configured. Pre-commit checks (build, format, lint, type check) are manual steps documented in `CLAUDE.md`. There is no automated enforcement — developers and agents are responsible for running checks before every commit.
+
+### Docker
+
+| File | Purpose |
+|---|---|
+| `src/backend/MyProject.WebApi/Dockerfile` | Multi-stage production build (restore → build → publish → runtime) |
+| `src/frontend/Dockerfile` | Production build (build → runtime with Node adapter) |
+| `src/frontend/Dockerfile.local` | Development — mounts source, runs `npm run dev` for hot-reload |
+| `docker-compose.local.yml` | 5-service local stack (api, frontend, db, redis, seq) |
+
+The backend Dockerfile uses layer caching: `.csproj` files are restored first (cached), then source is copied and built. This avoids re-downloading NuGet packages on every source change.
 
 ## Deployment
 

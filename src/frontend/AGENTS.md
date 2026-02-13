@@ -1,7 +1,5 @@
 # Frontend Conventions (SvelteKit / Svelte 5)
 
-> Follow the **Agent Workflow** in the root [`AGENTS.md`](../../AGENTS.md) — commit atomically, run quality checks before each commit, and write session docs when asked.
-
 ## Tech Stack
 
 | Technology              | Purpose                                                   |
@@ -179,6 +177,19 @@ export const load: PageServerLoad = async ({ fetch, url }) => {
 	const client = createApiClient(fetch, url.origin);
 	const { data } = await client.GET('/api/users/me');
 	return { user: data };
+};
+```
+
+When a page needs multiple independent API calls, use `Promise.all` for parallel fetching:
+
+```typescript
+export const load: PageServerLoad = async ({ fetch, url, params }) => {
+	const client = createApiClient(fetch, url.origin);
+	const [userResult, rolesResult] = await Promise.all([
+		client.GET('/api/v1/admin/users/{id}', { params: { path: { id: params.id } } }),
+		client.GET('/api/v1/admin/roles')
+	]);
+	return { user: userResult.data, roles: rolesResult.data };
 };
 ```
 
@@ -391,6 +402,20 @@ Never use the generic syntax `$props<{ ... }>()` — always define a separate `i
 </script>
 ```
 
+### Reactive Collections
+
+Svelte 5 provides reactive collection classes in `svelte/reactivity`. Use these instead of plain `Set`/`Map`/`URLSearchParams` when reactivity is needed:
+
+```typescript
+import { SvelteSet } from 'svelte/reactivity';
+import { SvelteURLSearchParams } from 'svelte/reactivity';
+
+const activeFields = new SvelteSet<string>();   // Reactive Set — auto-tracks adds/deletes
+const params = new SvelteURLSearchParams(url.searchParams); // Reactive query string manipulation
+```
+
+These are used in the codebase for shake state management (`SvelteSet`) and admin pagination/search (`SvelteURLSearchParams`).
+
 ### Bindable Props
 
 ```svelte
@@ -429,14 +454,18 @@ Components live in feature folders under `$lib/components/`:
 
 ```
 components/
+├── admin/           # UserTable, Pagination, RoleTable, UserDetailCards,
+│   └── index.ts     # UserManagementCard, AccountInfoCard
 ├── auth/            # LoginForm, LoginBackground, RegisterDialog
 │   └── index.ts     # Barrel export
 ├── getting-started/ # GettingStarted, markdown.ts (removable starter page)
 │   └── index.ts
-├── profile/         # ProfileForm, ProfileHeader, AvatarDialog,
-│   └── index.ts     # AccountDetails, InfoItem
 ├── layout/          # Header, Sidebar, SidebarNav, UserNav,
 │   └── index.ts     # ThemeToggle, LanguageSelector, ShortcutsHelp
+├── profile/         # ProfileForm, ProfileHeader, AvatarDialog,
+│   └── index.ts     # AccountDetails, InfoItem
+├── settings/        # ChangePasswordForm, DeleteAccountDialog
+│   └── index.ts
 ├── common/          # StatusIndicator, WorkInProgress
 │   └── index.ts
 └── ui/              # shadcn (generated, customizable)
@@ -1006,18 +1035,10 @@ npm run build    # Production build
 - Suppress `svelte/no-navigation-without-resolve` — use `resolve()` with `goto()`
 - Silent failures — always handle errors explicitly
 
-## Adding a New Feature — Checklist
+## Testing
 
-1. **Types**: Run `npm run api:generate` if backend has new endpoints
-2. **Type alias**: Add to `$lib/types/index.ts` if the schema is commonly used
-3. **Components**: Create in `$lib/components/{feature}/` with barrel `index.ts`
-4. **State**: If needed, create `$lib/state/{feature}.svelte.ts`
-5. **Route**: Create page in `routes/(app)/{feature}/`
-6. **Server load**: Add `+page.server.ts` for initial data
-7. **i18n**: Add keys to both `en.json` and `cs.json`
-8. **Error handling**: The backend returns descriptive messages with every error — no frontend translation keys needed. Use `getErrorMessage()` to display them.
-9. **Navigation**: Update sidebar/header if adding a new page
-10. **Responsive**: Verify at 320px, 375px, 768px, 1024px
-11. **Accessibility**: Touch targets ≥40px, logical properties, `prefers-reduced-motion`
+No test infrastructure is currently set up — no vitest, playwright, or other test frameworks are configured. When tests are added, this section will document the testing frameworks, patterns, and conventions.
 
-Commit atomically: types+aliases → components → route+server-load → i18n keys.
+## Adding a New Feature
+
+For step-by-step procedures (add page, add component, add feature), see [`SKILLS.md`](../../SKILLS.md). This file documents **conventions and patterns** — SKILLS.md documents **workflows and checklists**.
