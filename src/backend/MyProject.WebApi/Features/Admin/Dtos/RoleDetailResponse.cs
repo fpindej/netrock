@@ -3,9 +3,9 @@ using JetBrains.Annotations;
 namespace MyProject.WebApi.Features.Admin.Dtos;
 
 /// <summary>
-/// Represents a role with its associated user count.
+/// Detailed role response including permissions and user count.
 /// </summary>
-public class AdminRoleResponse
+public class RoleDetailResponse
 {
     /// <summary>
     /// The unique identifier of the role.
@@ -26,6 +26,11 @@ public class AdminRoleResponse
     /// Whether this is a system-defined role that cannot be deleted or renamed.
     /// </summary>
     public bool IsSystem { [UsedImplicitly] get; [UsedImplicitly] init; }
+
+    /// <summary>
+    /// The permission claim values assigned to this role.
+    /// </summary>
+    public IReadOnlyList<string> Permissions { [UsedImplicitly] get; [UsedImplicitly] init; } = [];
 
     /// <summary>
     /// The number of users assigned to this role.

@@ -12,12 +12,13 @@ public static class ServiceCollectionExtensions
     extension(IServiceCollection services)
     {
         /// <summary>
-        /// Registers the admin service for user and role management.
+        /// Registers the admin services for user and role management.
         /// </summary>
         /// <returns>The service collection for chaining.</returns>
         public IServiceCollection AddAdminServices()
         {
             services.AddScoped<IAdminService, AdminService>();
+            services.AddScoped<IRoleManagementService, RoleManagementService>();
             return services;
         }
     }

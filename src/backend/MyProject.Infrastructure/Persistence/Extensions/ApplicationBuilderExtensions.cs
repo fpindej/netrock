@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,7 @@ public static class ApplicationBuilderExtensions
         }
 
         await SeedRolesAsync(services);
+        await SeedRolePermissionsAsync(services);
 
         if (isDevelopment)
         {
@@ -53,6 +55,41 @@ public static class ApplicationBuilderExtensions
             if (!await roleManager.RoleExistsAsync(role))
             {
                 await roleManager.CreateAsync(new ApplicationRole { Name = role });
+            }
+        }
+    }
+
+    /// <summary>
+    /// Seeds the default permission claims for the Admin role.
+    /// Idempotent — skips permissions that already exist as role claims.
+    /// SuperAdmin is not seeded because it has implicit all permissions.
+    /// </summary>
+    private static async Task SeedRolePermissionsAsync(IServiceProvider serviceProvider)
+    {
+        var roleManager = serviceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+
+        var adminPermissions = new[]
+        {
+            AppPermissions.Users.View,
+            AppPermissions.Users.Manage,
+            AppPermissions.Users.AssignRoles,
+            AppPermissions.Roles.View
+        };
+
+        var adminRole = await roleManager.FindByNameAsync(AppRoles.Admin);
+        if (adminRole is null) return;
+
+        var existingClaims = await roleManager.GetClaimsAsync(adminRole);
+        var existingPermissions = existingClaims
+            .Where(c => c.Type == AppPermissions.ClaimType)
+            .Select(c => c.Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var permission in adminPermissions)
+        {
+            if (!existingPermissions.Contains(permission))
+            {
+                await roleManager.AddClaimAsync(adminRole, new Claim(AppPermissions.ClaimType, permission));
             }
         }
     }

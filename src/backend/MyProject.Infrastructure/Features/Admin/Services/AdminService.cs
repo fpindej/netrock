@@ -78,7 +78,8 @@ internal class AdminService(
     public async Task<Result> AssignRoleAsync(Guid callerUserId, Guid userId, AssignRoleInput input,
         CancellationToken cancellationToken = default)
     {
-        if (!AppRoles.All.Contains(input.Role))
+        var roleExists = await roleManager.FindByNameAsync(input.Role) is not null;
+        if (!roleExists)
         {
             return Result.Failure($"Role '{input.Role}' does not exist.");
         }
@@ -130,7 +131,8 @@ internal class AdminService(
     public async Task<Result> RemoveRoleAsync(Guid callerUserId, Guid userId, string role,
         CancellationToken cancellationToken = default)
     {
-        if (!AppRoles.All.Contains(role))
+        var roleExists = await roleManager.FindByNameAsync(role) is not null;
+        if (!roleExists)
         {
             return Result.Failure($"Role '{role}' does not exist.");
         }
@@ -327,6 +329,8 @@ internal class AdminService(
             .Select(role => new AdminRoleOutput(
                 role.Id,
                 role.Name ?? string.Empty,
+                role.Description,
+                AppRoles.All.Contains(role.Name ?? string.Empty),
                 roleCounts.GetValueOrDefault(role.Id)))
             .ToList();
     }
