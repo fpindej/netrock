@@ -45,10 +45,14 @@ public static class AppRoles
 
     /// <summary>
     /// Returns the hierarchy rank of a single role. Higher rank means more authority.
-    /// Unknown roles return 0.
+    /// <para>
+    /// Custom roles intentionally receive rank 0, making them assignable by any admin (rank 2+).
+    /// Custom roles act as permission bundles with no hierarchy authority — they cannot be used
+    /// to manage other users' roles.
+    /// </para>
     /// </summary>
     /// <param name="role">The role name.</param>
-    /// <returns>The numeric rank: SuperAdmin=3, Admin=2, User=1, unknown=0.</returns>
+    /// <returns>The numeric rank: SuperAdmin=3, Admin=2, User=1, custom/unknown=0.</returns>
     public static int GetRoleRank(string role) => role switch
     {
         SuperAdmin => 3,

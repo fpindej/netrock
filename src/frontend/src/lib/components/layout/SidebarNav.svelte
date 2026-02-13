@@ -24,7 +24,8 @@
 
 	let { collapsed = false, onNavigate, user }: Props = $props();
 
-	type NavItem = { title: () => string; href: string; icon: Component<IconProps>; permission?: string };
+	type NavItem = { title: () => string; href: string; icon: Component<IconProps> };
+	type AdminNavItem = NavItem & { permission: string };
 
 	let items: NavItem[] = [
 		{
@@ -44,7 +45,7 @@
 		}
 	];
 
-	let adminItems: NavItem[] = [
+	let adminItems: AdminNavItem[] = [
 		{
 			title: m.nav_adminUsers,
 			href: resolve('/admin/users'),
@@ -60,7 +61,7 @@
 	];
 
 	let visibleAdminItems = $derived(
-		adminItems.filter((item) => hasPermission(user, item.permission!))
+		adminItems.filter((item) => hasPermission(user, item.permission))
 	);
 
 	function isActive(href: string, pathname: string) {

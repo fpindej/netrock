@@ -12,6 +12,10 @@ public class UpdateRoleRequestValidator : AbstractValidator<UpdateRoleRequest>
     /// </summary>
     public UpdateRoleRequestValidator()
     {
+        RuleFor(x => x)
+            .Must(x => x.Name is not null || x.Description is not null)
+            .WithMessage("At least one field must be provided.");
+
         RuleFor(x => x.Name)
             .MaximumLength(50)
             .Matches(@"^[A-Za-z][A-Za-z0-9 _-]*$")

@@ -68,6 +68,8 @@ public static class ApplicationBuilderExtensions
     {
         var roleManager = serviceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
 
+        // Admin gets user management + role viewing by default.
+        // Roles.Manage is deliberately excluded — only SuperAdmin can create/edit/delete roles.
         var adminPermissions = new[]
         {
             AppPermissions.Users.View,
