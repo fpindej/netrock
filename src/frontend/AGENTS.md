@@ -1,7 +1,5 @@
 # Frontend Conventions (SvelteKit / Svelte 5)
 
-> Follow the **Agent Workflow** in the root [`AGENTS.md`](../../AGENTS.md) — commit atomically, run quality checks before each commit, and write session docs when asked.
-
 ## Tech Stack
 
 | Technology              | Purpose                                                   |

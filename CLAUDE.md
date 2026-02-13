@@ -1,20 +1,56 @@
 # CLAUDE.md
 
-Full-stack web application template: .NET 10 API (Clean Architecture) + SvelteKit frontend (Svelte 5), fully dockerized.
+NETrock — full-stack web app template: .NET 10 API (Clean Architecture) + SvelteKit frontend (Svelte 5), fully dockerized.
 
-## Read These for Full Context
+## Architecture
 
-- `AGENTS.md` — Project overview, architecture, agent workflow, git discipline
-- `src/backend/AGENTS.md` — .NET conventions, entities, Result pattern, EF Core, services, controllers
-- `src/frontend/AGENTS.md` — SvelteKit conventions, API client, type generation, components, state
+```
+Frontend (SvelteKit :5173) → /api/* proxy → Backend API (.NET :8080) → PostgreSQL / Redis / Seq
+```
+
+Backend: `WebApi → Application ← Infrastructure → Domain` (Clean Architecture)
 
 ## Hard Rules
 
-- Never edit `src/frontend/src/lib/api/v1.d.ts` — run `npm run api:generate` instead
-- Always use `Result` / `Result<T>` for backend operations that can fail
-- Always use `TimeProvider` (injected) instead of `DateTime.UtcNow` / `DateTimeOffset.UtcNow` — `TimeProvider.System` is registered as singleton
-- Always use C# 13 extension member syntax for new extension methods
-- Always use Svelte 5 Runes (`$props`, `$state`, `$derived`, `$effect`) — never `export let`
-- Commit atomically using Conventional Commits after each logical change
-- Run `dotnet build src/backend/MyProject.slnx` and `cd src/frontend && npm run format && npm run lint && npm run check` before every commit
-- At session end, create `docs/sessions/{date}-{topic}.md` with summary, decisions, and Mermaid diagrams
+### Backend
+
+- `Result`/`Result<T>` for all fallible operations — never throw for business logic
+- `TimeProvider` (injected) — never `DateTime.UtcNow` or `DateTimeOffset.UtcNow`
+- C# 13 `extension(T)` syntax for new extension methods
+- Never `null!` — fix the design instead
+- Typed DTOs only — `ErrorResponse` for errors, never anonymous objects or raw strings
+- `internal` on all Infrastructure service implementations
+- `/// <summary>` XML docs on all public and internal API surface
+
+### Frontend
+
+- Never hand-edit `src/frontend/src/lib/api/v1.d.ts` — run `npm run api:generate`
+- Svelte 5 Runes only: `$props`, `$state`, `$derived`, `$effect` — never `export let`
+- `interface Props` + `$props()` — never `$props<{...}>()`
+- Logical CSS only: `ms-*`/`me-*`/`ps-*`/`pe-*` — never `ml-*`/`mr-*`/`pl-*`/`pr-*`
+- No `any` type — define proper interfaces
+- Feature folders in `$lib/components/{feature}/` with barrel `index.ts`
+
+### Cross-Cutting
+
+- Security restrictive by default — deny first, open selectively
+- Atomic commits using Conventional Commits: `type(scope): imperative description`
+
+## Pre-Commit Checks
+
+```bash
+dotnet build src/backend/MyProject.slnx
+cd src/frontend && npm run format && npm run lint && npm run check
+```
+
+## Conventions Reference
+
+| File | When to read |
+|---|---|
+| `AGENTS.md` | Architecture, workflow, git discipline, security, error handling, local dev |
+| `src/backend/AGENTS.md` | Entities, Result pattern, EF Core, services, controllers, validation, OpenAPI |
+| `src/frontend/AGENTS.md` | Routing, API client, type generation, components, state, i18n, styling |
+
+## Session Documentation
+
+When explicitly asked: create `docs/sessions/{YYYY-MM-DD}-{topic-slug}.md` per `docs/sessions/README.md`. Commit: `docs: add session notes for {topic}`.
