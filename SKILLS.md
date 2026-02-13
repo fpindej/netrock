@@ -190,7 +190,12 @@ dotnet ef database update \
    },
    ```
 6. Use in components: `hasPermission(user, Permissions.Orders.View)`
-7. Verify: `cd src/frontend && npm run format && npm run lint && npm run check`
+7. If adding a new admin page: add a per-page guard in `+page.server.ts`:
+   ```typescript
+   if (!hasPermission(user, Permissions.Orders.View)) throw redirect(303, '/');
+   ```
+8. If adding a sidebar nav item: add `permission: Permissions.Orders.View` to the nav item in `SidebarNav.svelte` — items are filtered per-permission, not as a group
+9. Verify: `cd src/frontend && npm run format && npm run lint && npm run check`
 
 ---
 

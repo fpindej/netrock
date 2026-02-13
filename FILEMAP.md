@@ -56,7 +56,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **i18n keys** (rename/remove in `en.json`) | Same key in `cs.json`, all `m.{key}()` usages |
 | **i18n keys** (add) | Add to both `en.json` and `cs.json` |
 | **Layout components** (Sidebar, Header) | All pages that use the app shell |
-| **`SidebarNav.svelte`** | Navigation links for all pages |
+| **`SidebarNav.svelte`** | Navigation links for all pages; admin items are per-permission gated |
+| **Admin `+page.server.ts`** (add permission guard) | Must check specific permission and redirect if missing |
 | **Route `+layout.server.ts`** | All child routes that depend on parent data |
 | **Route `+page.server.ts`** | The corresponding `+page.svelte` |
 | **Styles (`themes.css`)** | `tailwind.css` mappings, components using the variables |

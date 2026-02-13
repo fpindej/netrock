@@ -829,22 +829,25 @@ To add a route group with additional access requirements (e.g., admin-only pages
    └── (public)/        # Unauthenticated
    ```
 
-2. **Add a layout guard** that checks both authentication and roles:
+2. **Add a layout guard** that checks both authentication and permissions:
 
    ```typescript
    // routes/(admin)/+layout.server.ts
    import { redirect } from '@sveltejs/kit';
+   import { hasAnyPermission, Permissions } from '$lib/utils';
    import type { LayoutServerLoad } from './$types';
 
    export const load: LayoutServerLoad = async ({ parent }) => {
    	const { user } = await parent();
    	if (!user) throw redirect(303, '/login');
-   	if (!user.roles?.includes('Admin')) throw redirect(303, '/');
+   	if (!hasAnyPermission(user, [Permissions.Users.View])) throw redirect(303, '/');
    	return { user };
    };
    ```
 
-3. **Keep authorization on the backend too.** Frontend guards are UX — they prevent users from seeing pages they can't use. The backend `[Authorize(Roles = "Admin")]` is the actual security boundary. Never rely on frontend-only role checks.
+3. **Add per-page guards** for each page that checks its specific permission (see "Layout and Page Guards with Permissions" below).
+
+4. **Keep authorization on the backend too.** Frontend guards are UX — they prevent users from seeing pages they can't use. The backend `[RequirePermission]` is the actual security boundary. Never rely on frontend-only permission checks.
 
 ### Role & Permission-Based Access
 
@@ -903,17 +906,37 @@ The `Permissions` object mirrors the backend `AppPermissions` constants:
 {/if}
 ```
 
-#### Layout Guards with Permissions
+#### Layout and Page Guards with Permissions
 
-The admin layout guard checks for admin-related permissions:
+Authorization guards are layered:
 
-```typescript
-// routes/(app)/admin/+layout.server.ts
-const hasAdminAccess = hasAnyPermission(user, [Permissions.Users.View, Permissions.Roles.View]);
-if (!hasAdminAccess) throw redirect(303, '/');
-```
+1. **Admin layout** — broad gate: allows access if user has *any* admin permission:
 
-The sidebar navigation uses the same check to show/hide the admin section.
+   ```typescript
+   // routes/(app)/admin/+layout.server.ts
+   const hasAdminAccess = hasAnyPermission(user, [Permissions.Users.View, Permissions.Roles.View]);
+   if (!hasAdminAccess) throw redirect(303, '/');
+   ```
+
+2. **Individual pages** — specific gate: each page checks its own required permission:
+
+   ```typescript
+   // routes/(app)/admin/users/+page.server.ts
+   if (!hasPermission(user, Permissions.Users.View)) throw redirect(303, '/');
+   ```
+
+   This prevents users with only `roles.view` from hitting a 403 error on the users page — they get a clean redirect instead.
+
+3. **Sidebar navigation** — filters admin items per-permission (not a blanket show/hide):
+
+   ```typescript
+   // SidebarNav.svelte
+   let visibleAdminItems = $derived(
+       adminItems.filter((item) => hasPermission(user, item.permission!))
+   );
+   ```
+
+   A user with only `roles.view` sees only the Roles link, not Users. The admin section separator only appears if at least one admin item is visible.
 
 #### Role Hierarchy (Still Active)
 
