@@ -68,7 +68,7 @@ HTTP Request
 
 ### Permission Data Flow
 
-1. **Login**: `JwtTokenProvider` fetches all roles for the user, then fetches claims for each role via `RoleManager.GetClaimsAsync()`. Permission claims (type `"permission"`) are deduplicated and embedded in the JWT.
+1. **Login**: `JwtTokenProvider` fetches all roles for the user, then collects permission claims via a single join query on `RoleClaims` + `Roles`. Permission claims (type `"permission"`) are deduplicated and embedded in the JWT.
 2. **API Calls**: `PermissionAuthorizationHandler` reads claims from the JWT — no database query per request.
 3. **Frontend**: `/api/users/me` returns the user's permissions array. `hasPermission()` and `hasAnyPermission()` helpers gate UI elements.
 4. **Permission Changes**: When a SuperAdmin modifies a role's permissions, `RoleManagementService` rotates security stamps for all users in that role, invalidates their refresh tokens, and clears their cache entries. This forces re-authentication on next request, at which point new permission claims are embedded.

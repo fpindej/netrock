@@ -783,7 +783,7 @@ PermissionAuthorizationHandler
 
 #### JWT Permission Claims
 
-`JwtTokenProvider` collects permission claims from all user roles via `RoleManager.GetClaimsAsync()`, deduplicates them, and adds `new Claim("permission", value)` to the JWT. `UserService` returns `AppPermissions.All` values for SuperAdmin users in the `/api/users/me` response.
+`JwtTokenProvider` collects permission claims from all user roles via a single join query on `RoleClaims` + `Roles`, deduplicates them, and adds `new Claim("permission", value)` to the JWT. `UserService` returns `AppPermissions.All` values for SuperAdmin users in the `/api/users/me` response.
 
 #### System Role Protection
 

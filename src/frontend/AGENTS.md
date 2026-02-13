@@ -932,7 +932,7 @@ Authorization guards are layered:
    ```typescript
    // SidebarNav.svelte
    let visibleAdminItems = $derived(
-       adminItems.filter((item) => hasPermission(user, item.permission!))
+       adminItems.filter((item) => hasPermission(user, item.permission))
    );
    ```
 
