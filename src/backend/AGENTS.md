@@ -61,6 +61,11 @@ src/backend/
     │           └── {Operation}/
     │               ├── {Operation}Request.cs
     │               └── {Operation}RequestValidator.cs
+    ├── Authorization/             # Permission-based authorization
+    │   ├── RequirePermissionAttribute.cs
+    │   ├── PermissionPolicyProvider.cs
+    │   ├── PermissionAuthorizationHandler.cs
+    │   └── PermissionRequirement.cs
     ├── Shared/                    # ApiController, ErrorResponse, PaginatedRequest/Response, ValidationConstants
     ├── Middlewares/                # ExceptionHandlingMiddleware
     ├── Extensions/                # CORS, rate limiting
@@ -274,13 +279,16 @@ Most entities use the default `public` schema. Feature-specific tables may use n
 
 ### Database Seeding
 
-On startup, `InitializeDatabaseAsync` runs a three-part initialization:
+On startup, `InitializeDatabaseAsync` runs a four-part initialization:
 
 1. **Migrations** (Development only) — auto-applies pending EF Core migrations
 2. **Role seeding** (always) — ensures all roles from `AppRoles.All` exist via `RoleManager`
-3. **Test user seeding** (Development only) — creates test users from `SeedUsers` constants
+3. **Permission seeding** (always) — ensures default permissions are assigned to roles via `SeedRolePermissionsAsync()` (idempotent — checks existing claims before adding)
+4. **Test user seeding** (Development only) — creates test users from `SeedUsers` constants
 
 Roles are defined as `public const string` fields in `Application/Identity/Constants/AppRoles.cs`. Adding a new field is sufficient — `AppRoles.All` discovers roles automatically via reflection.
+
+Permissions are seeded via `SeedRolePermissionsAsync()` in `ApplicationBuilderExtensions.cs`. It adds permission claims (claim type `"permission"`) to roles via `RoleManager.AddClaimAsync()`. Currently seeds `users.view`, `users.manage`, `users.assign_roles`, and `roles.view` for the Admin role.
 
 Test user credentials are in `Infrastructure/Features/Authentication/Constants/SeedUsers.cs`. These are development-only — never used in production.
 
@@ -694,9 +702,11 @@ The frontend applies the same headers to page responses via the `handle` hook in
 
 The middleware pipeline configures `X-Forwarded-For` and `X-Forwarded-Proto` header processing for reverse proxy scenarios (Docker, nginx, load balancers). In production, `Request.Scheme` is manually overridden to `https`. Without this, rate limiting, logging, and CORS checks use the proxy's IP/scheme instead of the client's.
 
-## Role Hierarchy & Authorization
+## Authorization — Roles & Permissions
 
-Roles follow a strict hierarchy: `SuperAdmin` (rank 3) > `Admin` (rank 2) > `User` (rank 1).
+### Role Hierarchy
+
+Roles follow a strict hierarchy: `SuperAdmin` (rank 3) > `Admin` (rank 2) > `User` (rank 1). Custom roles have rank 0 (no hierarchy authority — they are permission bundles only).
 
 `AppRoles.GetRoleRank()` and `AppRoles.GetHighestRank()` resolve numeric ranks for comparison. Authorization rules enforced by the Admin service:
 
@@ -710,6 +720,106 @@ Roles follow a strict hierarchy: `SuperAdmin` (rank 3) > `Admin` (rank 2) > `Use
 | Self-delete | Cannot delete your own account |
 
 These rules prevent privilege escalation. The frontend mirrors this logic in `$lib/utils/roles.ts`.
+
+### Permission System
+
+Authorization uses atomic permissions checked via `[RequirePermission("permission.name")]` on controller actions. Permissions are stored as ASP.NET Identity role claims in the `AspNetRoleClaims` table and embedded in JWT tokens as `"permission"` claims.
+
+#### Key Files
+
+| File | Purpose |
+|---|---|
+| `Application/Identity/Constants/AppPermissions.cs` | Permission constants, `All` collection (reflection-discovered), `ByCategory` grouped dictionary |
+| `Application/Identity/Constants/PermissionDefinition.cs` | Record: `(string Value, string Category)` |
+| `WebApi/Authorization/RequirePermissionAttribute.cs` | `[RequirePermission("users.view")]` — sets policy to `Permission:users.view` |
+| `WebApi/Authorization/PermissionPolicyProvider.cs` | Dynamic `IAuthorizationPolicyProvider` for `Permission:*` policies |
+| `WebApi/Authorization/PermissionAuthorizationHandler.cs` | Checks SuperAdmin bypass → permission claim match → deny |
+| `WebApi/Authorization/PermissionRequirement.cs` | `IAuthorizationRequirement` holding permission string |
+| `Infrastructure/Features/Admin/Services/RoleManagementService.cs` | Role CRUD, permission assignment, security stamp rotation |
+
+#### Permission Constants
+
+Defined in `AppPermissions.cs` using nested static classes (mirrors `AppRoles` pattern):
+
+| Permission | Description |
+|---|---|
+| `users.view` | View user list/details in admin panel |
+| `users.manage` | Lock/unlock/delete users |
+| `users.assign_roles` | Assign/remove roles to/from users |
+| `roles.view` | View role list/details |
+| `roles.manage` | Create/edit/delete custom roles and assign permissions |
+
+`AppPermissions.All` discovers permissions via reflection (scans nested types for `const string` fields). `AppPermissions.ByCategory` groups them by category (class name).
+
+#### Default Seeded Permissions
+
+| Permission | SuperAdmin | Admin | User |
+|---|---|---|---|
+| `users.view` | implicit | seeded | — |
+| `users.manage` | implicit | seeded | — |
+| `users.assign_roles` | implicit | seeded | — |
+| `roles.view` | implicit | seeded | — |
+| `roles.manage` | implicit | — | — |
+
+SuperAdmin has all permissions implicitly (code check in `PermissionAuthorizationHandler`, never stored in DB). Seeding is handled by `SeedRolePermissionsAsync()` in `ApplicationBuilderExtensions.cs` (idempotent — checks existing claims before adding).
+
+#### Authorization Flow
+
+```
+Request with JWT
+    │
+    ▼
+[RequirePermission("users.view")]
+    │
+    ▼
+PermissionPolicyProvider           ← Resolves "Permission:users.view" policy dynamically
+    │
+    ▼
+PermissionAuthorizationHandler
+    ├── User is SuperAdmin? → Allow (implicit all)
+    ├── User has "permission" claim matching? → Allow
+    └── Otherwise → 403 Forbidden
+```
+
+#### JWT Permission Claims
+
+`JwtTokenProvider` collects permission claims from all user roles via `RoleManager.GetClaimsAsync()`, deduplicates them, and adds `new Claim("permission", value)` to the JWT. `UserService` returns `AppPermissions.All` values for SuperAdmin users in the `/api/users/me` response.
+
+#### System Role Protection
+
+| Role | Delete | Rename | Edit Permissions |
+|---|---|---|---|
+| SuperAdmin | no | no | no (implicit all) |
+| Admin | no | no | yes |
+| User | no | no | yes |
+| Custom roles | yes (if 0 users) | yes | yes |
+
+System role detection uses `AppRoles.All.Contains(name)` — no DB flag needed.
+
+#### Permission Change Propagation
+
+When permissions are changed on a role via `SetRolePermissionsAsync`, all users in that role have their:
+1. Refresh tokens invalidated (deleted from DB)
+2. Security stamps rotated (`UserManager.UpdateSecurityStampAsync`)
+3. User cache entries cleared
+
+This forces re-authentication, ensuring updated permissions take effect on next login.
+
+#### Using `[RequirePermission]` on Endpoints
+
+```csharp
+// Single permission required
+[HttpGet]
+[RequirePermission(AppPermissions.Users.View)]
+public async Task<ActionResult<IEnumerable<AdminUserResponse>>> ListUsers(...)
+
+// Different permissions on different actions in the same controller
+[HttpDelete("{id}")]
+[RequirePermission(AppPermissions.Users.Manage)]
+public async Task<ActionResult> DeleteUser(Guid id, ...)
+```
+
+Never use class-level `[Authorize(Roles = "...")]` on controllers that use permissions — apply `[RequirePermission]` per-action instead.
 
 ## Repository Pattern & Persistence
 

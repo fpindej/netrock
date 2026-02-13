@@ -11,7 +11,8 @@ Full-stack web application template: **.NET 10 API** (Clean Architecture) + **Sv
 | **Framework** | .NET 10 / C# 13 | SvelteKit / Svelte 5 (Runes) |
 | **Database** | PostgreSQL + EF Core | — |
 | **Caching** | Redis (IDistributedCache) | — |
-| **Auth** | JWT in HttpOnly cookies | Cookie-based (automatic via API proxy) |
+| **Auth** | JWT in HttpOnly cookies + permission claims | Cookie-based (automatic via API proxy) |
+| **Authorization** | `[RequirePermission]` + role hierarchy | `hasPermission()` + `hasAnyPermission()` utilities |
 | **Validation** | FluentValidation + Data Annotations | TypeScript strict mode |
 | **API Docs** | Scalar (OpenAPI at `/openapi/v1.json`) | openapi-typescript (generated types) |
 | **Styling** | — | Tailwind CSS 4 + shadcn-svelte (bits-ui) |

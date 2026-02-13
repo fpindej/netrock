@@ -161,6 +161,36 @@ dotnet ef database update \
 
 1. Add `public const string` field to `src/backend/MyProject.Application/Identity/Constants/AppRoles.cs`
 2. That's it — `AppRoles.All` discovers roles via reflection, seeding picks them up automatically
+3. *(Optional)* To seed default permissions for the new role, add entries to `SeedRolePermissionsAsync()` in `src/backend/MyProject.Infrastructure/Persistence/Extensions/ApplicationBuilderExtensions.cs`
+
+### Add a Permission
+
+**Backend:**
+
+1. Add `public const string` field to the appropriate nested class in `src/backend/MyProject.Application/Identity/Constants/AppPermissions.cs`:
+   ```csharp
+   public static class Orders
+   {
+       public const string View = "orders.view";
+       public const string Manage = "orders.manage";
+   }
+   ```
+   `AppPermissions.All` discovers permissions via reflection — no manual registration needed.
+2. Add `[RequirePermission(AppPermissions.Orders.View)]` to the relevant controller actions
+3. *(Optional)* Seed the permission for existing roles in `SeedRolePermissionsAsync()` in `src/backend/MyProject.Infrastructure/Persistence/Extensions/ApplicationBuilderExtensions.cs`
+4. Verify: `dotnet build src/backend/MyProject.slnx`
+
+**Frontend:**
+
+5. Add matching constants to `src/frontend/src/lib/utils/permissions.ts`:
+   ```typescript
+   Orders: {
+       View: 'orders.view',
+       Manage: 'orders.manage',
+   },
+   ```
+6. Use in components: `hasPermission(user, Permissions.Orders.View)`
+7. Verify: `cd src/frontend && npm run format && npm run lint && npm run check`
 
 ---
 
