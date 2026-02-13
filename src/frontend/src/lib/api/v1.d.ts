@@ -343,6 +343,15 @@ export interface paths {
 						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
+				/** @description If too many registration requests have been made */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
 			};
 		};
 		delete?: never;
@@ -462,7 +471,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
-				/** @description If the user does not have the Admin or SuperAdmin role */
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -519,7 +528,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
-				/** @description If the user does not have the Admin or SuperAdmin role */
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -582,7 +591,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
-				/** @description If the user does not have the Admin or SuperAdmin role */
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -662,7 +671,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
-				/** @description If the user does not have the Admin or SuperAdmin role */
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -741,7 +750,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
-				/** @description If the user does not have the Admin or SuperAdmin role */
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -816,7 +825,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
-				/** @description If the user does not have the Admin or SuperAdmin role */
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -889,7 +898,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
-				/** @description If the user does not have the Admin or SuperAdmin role */
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -970,6 +979,7 @@ export interface paths {
 				path?: never;
 				cookie?: never;
 			};
+			/** @description The role name and optional description */
 			requestBody: {
 				content: {
 					'application/json': components['schemas']['CreateRoleRequest'];
@@ -992,6 +1002,7 @@ export interface paths {
 						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
+				/** @description If the user is not authenticated */
 				401: {
 					headers: {
 						[name: string]: unknown;
@@ -1000,6 +1011,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -1029,12 +1041,14 @@ export interface paths {
 				query?: never;
 				header?: never;
 				path: {
+					/** @description The role ID */
 					id: string;
 				};
 				cookie?: never;
 			};
 			requestBody?: never;
 			responses: {
+				/** @description Returns the role details */
 				200: {
 					headers: {
 						[name: string]: unknown;
@@ -1043,6 +1057,7 @@ export interface paths {
 						'application/json': components['schemas']['RoleDetailResponse'];
 					};
 				};
+				/** @description If the role was not found */
 				400: {
 					headers: {
 						[name: string]: unknown;
@@ -1051,6 +1066,7 @@ export interface paths {
 						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
+				/** @description If the user is not authenticated */
 				401: {
 					headers: {
 						[name: string]: unknown;
@@ -1059,6 +1075,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -1069,28 +1086,32 @@ export interface paths {
 				};
 			};
 		};
-		/** Updates an existing role's name and/or description. */
+		/** Updates an existing role's name and/or description. System roles cannot be renamed. */
 		put: {
 			parameters: {
 				query?: never;
 				header?: never;
 				path: {
+					/** @description The role ID */
 					id: string;
 				};
 				cookie?: never;
 			};
+			/** @description The fields to update */
 			requestBody: {
 				content: {
 					'application/json': components['schemas']['UpdateRoleRequest'];
 				};
 			};
 			responses: {
+				/** @description Role updated successfully */
 				204: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content?: never;
 				};
+				/** @description If the update is invalid (system role rename, name taken, etc.) */
 				400: {
 					headers: {
 						[name: string]: unknown;
@@ -1099,6 +1120,7 @@ export interface paths {
 						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
+				/** @description If the user is not authenticated */
 				401: {
 					headers: {
 						[name: string]: unknown;
@@ -1107,6 +1129,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -1118,24 +1141,27 @@ export interface paths {
 			};
 		};
 		post?: never;
-		/** Deletes a custom role. */
+		/** Deletes a custom role. System roles and roles with assigned users cannot be deleted. */
 		delete: {
 			parameters: {
 				query?: never;
 				header?: never;
 				path: {
+					/** @description The role ID */
 					id: string;
 				};
 				cookie?: never;
 			};
 			requestBody?: never;
 			responses: {
+				/** @description Role deleted successfully */
 				204: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content?: never;
 				};
+				/** @description If the role is a system role or has users assigned */
 				400: {
 					headers: {
 						[name: string]: unknown;
@@ -1144,6 +1170,7 @@ export interface paths {
 						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
+				/** @description If the user is not authenticated */
 				401: {
 					headers: {
 						[name: string]: unknown;
@@ -1152,6 +1179,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -1175,28 +1203,35 @@ export interface paths {
 			cookie?: never;
 		};
 		get?: never;
-		/** Replaces all permissions on a role. */
+		/**
+		 * Replaces all permissions on a role. Rotates security stamps for affected users.
+		 *     SuperAdmin permissions cannot be modified.
+		 */
 		put: {
 			parameters: {
 				query?: never;
 				header?: never;
 				path: {
+					/** @description The role ID */
 					id: string;
 				};
 				cookie?: never;
 			};
+			/** @description The new set of permissions */
 			requestBody: {
 				content: {
 					'application/json': components['schemas']['SetPermissionsRequest'];
 				};
 			};
 			responses: {
+				/** @description Permissions updated successfully */
 				204: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content?: never;
 				};
+				/** @description If the permissions are invalid or SuperAdmin is targeted */
 				400: {
 					headers: {
 						[name: string]: unknown;
@@ -1205,6 +1240,7 @@ export interface paths {
 						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
+				/** @description If the user is not authenticated */
 				401: {
 					headers: {
 						[name: string]: unknown;
@@ -1213,6 +1249,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -1247,6 +1284,7 @@ export interface paths {
 			};
 			requestBody?: never;
 			responses: {
+				/** @description Returns the permission groups */
 				200: {
 					headers: {
 						[name: string]: unknown;
@@ -1255,6 +1293,7 @@ export interface paths {
 						'application/json': components['schemas']['PermissionGroupResponse'][];
 					};
 				};
+				/** @description If the user is not authenticated */
 				401: {
 					headers: {
 						[name: string]: unknown;
@@ -1263,6 +1302,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description If the user does not have the required permission */
 				403: {
 					headers: {
 						[name: string]: unknown;
@@ -1372,6 +1412,13 @@ export interface components {
 			/** @description The new password to set for the account. */
 			newPassword: string;
 		};
+		/** @description Request to create a new custom role. */
+		CreateRoleRequest: {
+			/** @description The name of the new role. */
+			name: string;
+			/** @description An optional description of the role's purpose. */
+			description?: null | string;
+		};
 		/** @description Represents a request to permanently delete the current user's account. */
 		DeleteAccountRequest: {
 			/** @description The user's current password for confirmation. */
@@ -1420,6 +1467,13 @@ export interface components {
 			/** @description The password for authentication. */
 			password: string;
 		};
+		/** @description A group of permissions belonging to the same category. */
+		PermissionGroupResponse: {
+			/** @description The category name (e.g. "Users", "Roles"). */
+			category?: string;
+			/** @description The permission values in this category. */
+			permissions?: string[];
+		};
 		ProblemDetails: {
 			type?: null | string;
 			title?: null | string;
@@ -1460,6 +1514,39 @@ export interface components {
 			 * @description The unique identifier of the newly created user.
 			 */
 			id?: string;
+		};
+		/** @description Detailed role response including permissions and user count. */
+		RoleDetailResponse: {
+			/**
+			 * Format: uuid
+			 * @description The unique identifier of the role.
+			 */
+			id?: string;
+			/** @description The name of the role. */
+			name?: string;
+			/** @description An optional description of the role's purpose. */
+			description?: null | string;
+			/** @description Whether this is a system-defined role that cannot be deleted or renamed. */
+			isSystem?: boolean;
+			/** @description The permission claim values assigned to this role. */
+			permissions?: string[];
+			/**
+			 * Format: int32
+			 * @description The number of users assigned to this role.
+			 */
+			userCount?: number;
+		};
+		/** @description Request to replace all permissions on a role. */
+		SetPermissionsRequest: {
+			/** @description The full set of permission values to assign to the role. */
+			permissions: string[];
+		};
+		/** @description Request to update an existing role's name and/or description. */
+		UpdateRoleRequest: {
+			/** @description The new role name, or `null` to keep the current name. */
+			name?: null | string;
+			/** @description The new description, or `null` to keep the current description. */
+			description?: null | string;
 		};
 		/** @description Represents a request to update the user's profile information. */
 		UpdateUserRequest: {
@@ -1502,53 +1589,6 @@ export interface components {
 			roles?: string[];
 			/** @description The atomic permissions granted to the user through their roles. */
 			permissions?: string[];
-		};
-		/** @description Detailed role response including permissions and user count. */
-		RoleDetailResponse: {
-			/**
-			 * Format: uuid
-			 * @description The unique identifier of the role.
-			 */
-			id?: string;
-			/** @description The name of the role. */
-			name?: string;
-			/** @description An optional description of the role's purpose. */
-			description?: null | string;
-			/** @description Whether this is a system-defined role that cannot be deleted or renamed. */
-			isSystem?: boolean;
-			/** @description The permission claim values assigned to this role. */
-			permissions?: string[];
-			/**
-			 * Format: int32
-			 * @description The number of users assigned to this role.
-			 */
-			userCount?: number;
-		};
-		/** @description A group of permissions belonging to the same category. */
-		PermissionGroupResponse: {
-			/** @description The category name (e.g. "Users", "Roles"). */
-			category?: string;
-			/** @description The permission values in this category. */
-			permissions?: string[];
-		};
-		/** @description Request to create a new custom role. */
-		CreateRoleRequest: {
-			/** @description The name of the new role. */
-			name: string;
-			/** @description An optional description of the role's purpose. */
-			description?: null | string;
-		};
-		/** @description Request to update an existing role's name and/or description. */
-		UpdateRoleRequest: {
-			/** @description The new role name, or null to keep the current name. */
-			name?: null | string;
-			/** @description The new description, or null to keep the current description. */
-			description?: null | string;
-		};
-		/** @description Request to replace all permissions on a role. */
-		SetPermissionsRequest: {
-			/** @description The full set of permission values to assign to the role. */
-			permissions: string[];
 		};
 	};
 	responses: never;
