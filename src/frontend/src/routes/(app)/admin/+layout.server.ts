@@ -1,4 +1,5 @@
 import { redirect } from '@sveltejs/kit';
+import { hasAnyPermission, Permissions } from '$lib/utils';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ parent }) => {
@@ -8,8 +9,8 @@ export const load: LayoutServerLoad = async ({ parent }) => {
 		throw redirect(303, '/login');
 	}
 
-	const isAdmin = user.roles?.some((r) => r === 'Admin' || r === 'SuperAdmin') ?? false;
-	if (!isAdmin) {
+	const hasAdminAccess = hasAnyPermission(user, [Permissions.Users.View, Permissions.Roles.View]);
+	if (!hasAdminAccess) {
 		throw redirect(303, '/');
 	}
 

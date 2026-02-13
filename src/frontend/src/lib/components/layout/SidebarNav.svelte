@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { cn } from '$lib/utils';
+	import { cn, hasAnyPermission, Permissions } from '$lib/utils';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import {
 		LayoutDashboard,
@@ -57,7 +57,7 @@
 		}
 	];
 
-	let isAdmin = $derived(user?.roles?.some((r) => r === 'Admin' || r === 'SuperAdmin') ?? false);
+	let isAdmin = $derived(hasAnyPermission(user, [Permissions.Users.View, Permissions.Roles.View]));
 
 	function isActive(href: string, pathname: string) {
 		if (href === resolve('/')) {

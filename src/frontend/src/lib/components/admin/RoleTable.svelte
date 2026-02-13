@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Badge } from '$lib/components/ui/badge';
 	import { Shield } from '@lucide/svelte';
+	import { resolve } from '$app/paths';
 	import type { AdminRole } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
 
@@ -22,13 +23,22 @@
 	<!-- Mobile: card list -->
 	<div class="divide-y md:hidden">
 		{#each roles as role (role.id)}
-			<div class="flex items-center justify-between p-4">
-				<Badge variant="secondary" class="text-sm">{role.name}</Badge>
+			<!-- eslint-disable svelte/no-navigation-without-resolve -- href is pre-resolved -->
+			<a
+				href={resolve(`/admin/roles/${role.id}`)}
+				class="flex items-center justify-between p-4 transition-colors hover:bg-muted/50"
+			>
+				<div class="flex items-center gap-2">
+					<Badge variant="secondary" class="text-sm">{role.name}</Badge>
+					{#if role.isSystem}
+						<Badge variant="outline" class="text-xs">{m.admin_roles_system()}</Badge>
+					{/if}
+				</div>
 				<span class="text-sm text-muted-foreground tabular-nums">
 					{role.userCount ?? 0}
 					{m.admin_roles_userCount().toLowerCase()}
 				</span>
-			</div>
+			</a>
 		{/each}
 	</div>
 
@@ -40,6 +50,9 @@
 					<th class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground">
 						{m.admin_roles_name()}
 					</th>
+					<th class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground">
+						{m.admin_roles_description()}
+					</th>
 					<th class="px-4 py-3 text-end text-xs font-medium tracking-wide text-muted-foreground">
 						{m.admin_roles_userCount()}
 					</th>
@@ -47,9 +60,18 @@
 			</thead>
 			<tbody>
 				{#each roles as role (role.id)}
+					<!-- eslint-disable svelte/no-navigation-without-resolve -- href is pre-resolved -->
 					<tr class="border-b transition-colors hover:bg-muted/50">
 						<td class="px-4 py-3">
-							<Badge variant="secondary">{role.name}</Badge>
+							<a href={resolve(`/admin/roles/${role.id}`)} class="flex items-center gap-2">
+								<Badge variant="secondary">{role.name}</Badge>
+								{#if role.isSystem}
+									<Badge variant="outline" class="text-xs">{m.admin_roles_system()}</Badge>
+								{/if}
+							</a>
+						</td>
+						<td class="px-4 py-3 text-muted-foreground">
+							{role.description ?? ''}
 						</td>
 						<td class="px-4 py-3 text-end tabular-nums">{role.userCount ?? 0}</td>
 					</tr>

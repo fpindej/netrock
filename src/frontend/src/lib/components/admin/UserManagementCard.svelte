@@ -11,7 +11,14 @@
 	import { resolve } from '$app/paths';
 	import { Plus, X, Loader2, Lock, Unlock, Trash2 } from '@lucide/svelte';
 	import type { AdminUser, AdminRole, User } from '$lib/types';
-	import { canManageUser, getAssignableRoles, getRoleRank, getHighestRank } from '$lib/utils';
+	import {
+		canManageUser,
+		getAssignableRoles,
+		getRoleRank,
+		getHighestRank,
+		hasPermission,
+		Permissions
+	} from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
@@ -36,7 +43,13 @@
 	// --- Derived permissions ---
 	let callerRoles = $derived(currentUser.roles ?? []);
 	let targetRoles = $derived(user.roles ?? []);
-	let canManage = $derived(canManageUser(callerRoles, targetRoles));
+	let canManageByHierarchy = $derived(canManageUser(callerRoles, targetRoles));
+	let canManage = $derived(
+		canManageByHierarchy && hasPermission(currentUser, Permissions.Users.Manage)
+	);
+	let canAssignRoles = $derived(
+		canManageByHierarchy && hasPermission(currentUser, Permissions.Users.AssignRoles)
+	);
 	let callerRank = $derived(getHighestRank(callerRoles));
 
 	let availableRoles = $derived(
@@ -47,7 +60,7 @@
 	);
 
 	function canRemoveRole(role: string): boolean {
-		return canManage && getRoleRank(role) < callerRank;
+		return canAssignRoles && getRoleRank(role) < callerRank;
 	}
 
 	// --- Role actions ---
@@ -170,7 +183,7 @@
 		</div>
 
 		<!-- Assign role -->
-		{#if canManage && availableRoles.length > 0}
+		{#if canAssignRoles && availableRoles.length > 0}
 			<div class="flex flex-col gap-2 sm:flex-row sm:items-end">
 				<div class="flex-1">
 					<label for="role-select" class="mb-1 block text-sm font-medium">
