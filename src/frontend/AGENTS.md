@@ -507,7 +507,7 @@ import { SERVER_CONFIG } from '$lib/config/server';
 ### Adding shadcn Components
 
 ```bash
-npx shadcn-svelte@next add <component-name>
+npx shadcn-svelte@latest add <component-name>
 ```
 
 This generates components in `$lib/components/ui/<component>/`. The configuration lives in `components.json` at the frontend root:
@@ -535,7 +535,7 @@ This generates components in `$lib/components/ui/<component>/`. The configuratio
 - Generated components are **customizable** (this is a template, not a library). Modifying them is acceptable and expected.
 - When touching any shadcn component, convert physical CSS properties to logical (see Styling section).
 - When adding i18n to shadcn components (e.g., localizing "Close" sr-only text), import `$lib/paraglide/messages` and use message functions.
-- Available components: alert, avatar, badge, button, card, dialog, dropdown-menu, input, label, phone-input (custom), sheet, sonner, textarea, tooltip.
+- Available components: alert, avatar, badge, button, card, checkbox, dialog, dropdown-menu, input, label, phone-input (custom), select, separator, sheet, sonner, textarea, tooltip.
 - Browse the full catalog at [ui.shadcn.com](https://ui.shadcn.com) to find components before building custom ones.
 
 ## Reactive State

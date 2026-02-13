@@ -264,13 +264,13 @@ This updates `src/frontend/src/lib/api/v1.d.ts`. After regenerating:
 ### Add a shadcn Component
 
 ```bash
-cd src/frontend && npx shadcn-svelte@next add {component-name}
+cd src/frontend && npx shadcn-svelte@latest add {component-name}
 ```
 
 Generates in `src/frontend/src/lib/components/ui/{component}/`. After adding:
 
 1. Convert any physical CSS to logical (`ml-*` → `ms-*`, etc.)
-2. Available: alert, avatar, badge, button, card, dialog, dropdown-menu, input, label, phone-input, select, separator, sheet, sonner, textarea, tooltip
+2. Available: alert, avatar, badge, button, card, checkbox, dialog, dropdown-menu, input, label, phone-input, select, separator, sheet, sonner, textarea, tooltip
 3. Browse full catalog: [ui.shadcn.com](https://ui.shadcn.com)
 
 ### Add an npm Package

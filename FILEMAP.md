@@ -61,7 +61,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Route `+page.server.ts`** | The corresponding `+page.svelte` |
 | **Styles (`themes.css`)** | `tailwind.css` mappings, components using the variables |
 | **Styles (`tailwind.css`)** | Components using custom Tailwind tokens |
-| **`components.json`** (shadcn config) | Future `npx shadcn-svelte@next add` commands |
+| **`components.json`** (shadcn config) | Future `npx shadcn-svelte@latest add` commands |
 | **`package.json`** (scripts) | CI/CD references, CLAUDE.md pre-commit checks |
 
 ### Cross-Stack Changes
