@@ -160,8 +160,9 @@ That's it. Your entire stack is running:
 | Service | URL |
 |---|---|
 | **Frontend** | `http://localhost:<BASE_PORT>` |
-| **API** | `http://localhost:<BASE_PORT + 2>` |
 | **API Docs (Scalar)** | `http://localhost:<BASE_PORT + 2>/scalar/v1` |
+| **Health UI** | `http://localhost:<BASE_PORT + 2>/health-ui` |
+| **Hangfire** | `http://localhost:<BASE_PORT + 2>/hangfire` |
 | **Seq (Logs)** | `http://localhost:<BASE_PORT + 8>` |
 
 ### 3. Start Building

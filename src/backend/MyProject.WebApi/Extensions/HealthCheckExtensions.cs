@@ -53,7 +53,10 @@ internal static class HealthCheckExtensions
                 {
                     setup.SetEvaluationTimeInSeconds(30);
                     setup.MaximumHistoryEntriesPerEndpoint(50);
-                    setup.AddHealthCheckEndpoint("API", "/health");
+                    // Absolute URI required — relative URIs resolve via ServerAddressesService
+                    // which returns the bind address (0.0.0.0), not a routable target.
+                    // Port 8080 matches the Dockerfile EXPOSE directive.
+                    setup.AddHealthCheckEndpoint("API", "http://localhost:8080/health");
                 })
                 .AddInMemoryStorage();
         }

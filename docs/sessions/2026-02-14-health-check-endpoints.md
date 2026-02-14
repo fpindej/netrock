@@ -69,6 +69,18 @@ flowchart TD
     end
 ```
 
+## HealthChecks UI (Stacked PR)
+
+Added `AspNetCore.HealthChecks.UI` dashboard at `/health-ui` (non-production only), using in-memory storage with an EF Core 10 workaround (`Microsoft.EntityFrameworkCore.InMemory` at `$(FrameworkVersion)` to override the transitive 8.x dependency).
+
+### Key decisions
+
+- **In-memory storage over PostgreSQL**: Avoids extra tables, schema coupling, and the same EF Core 10 transitive dependency issue. Health check history is ephemeral dev data — no need to persist it.
+- **Absolute endpoint URL (`http://localhost:8080/health`)**: Relative URIs resolve via `ServerAddressesService` which returns the bind address (`0.0.0.0`) — not a routable target. Port 8080 matches the Dockerfile `EXPOSE` directive.
+- **`--context` in init scripts**: `AddInMemoryStorage()` registers a second EF Core `DbContext` (`HealthChecksDb`), causing `dotnet ef` to fail without an explicit `--context` parameter.
+- **Init script URL output**: Added Health UI, Hangfire, and Seq URLs; removed redundant API base URL.
+
 ## Follow-Up Items
 
 - [ ] Consider adding health check endpoint to OpenAPI spec if public documentation is desired
+- [ ] Monitor `AspNetCore.HealthChecks.UI` for native EF Core 10 support (remove `Microsoft.EntityFrameworkCore.InMemory` workaround when fixed)
