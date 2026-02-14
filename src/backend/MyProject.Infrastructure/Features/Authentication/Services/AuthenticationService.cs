@@ -34,7 +34,7 @@ internal class AuthenticationService(
     private readonly AuthenticationOptions.JwtOptions _jwtOptions = authenticationOptions.Value.Jwt;
 
     /// <inheritdoc />
-    public async Task<Result<AuthenticationOutput>> Login(string username, string password, bool useCookies = false, CancellationToken cancellationToken = default)
+    public async Task<Result<AuthenticationOutput>> Login(string username, string password, bool useCookies = false, bool rememberMe = false, CancellationToken cancellationToken = default)
     {
         var user = await userManager.FindByNameAsync(username);
 
@@ -66,7 +66,8 @@ internal class AuthenticationService(
             CreatedAt = utcNow.UtcDateTime,
             ExpiredAt = utcNow.UtcDateTime.AddDays(_jwtOptions.RefreshToken.ExpiresInDays),
             Used = false,
-            Invalidated = false
+            Invalidated = false,
+            Persistent = rememberMe
         };
 
         dbContext.RefreshTokens.Add(refreshTokenEntity);
@@ -74,15 +75,18 @@ internal class AuthenticationService(
 
         if (useCookies)
         {
+            var accessTokenExpires = rememberMe ? utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes) : (DateTimeOffset?)null;
+            var refreshTokenExpires = rememberMe ? utcNow.AddDays(_jwtOptions.RefreshToken.ExpiresInDays) : (DateTimeOffset?)null;
+
             cookieService.SetSecureCookie(
                 key: CookieNames.AccessToken,
                 value: accessToken,
-                expires: utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes));
+                expires: accessTokenExpires);
 
             cookieService.SetSecureCookie(
                 key: CookieNames.RefreshToken,
                 value: refreshTokenString,
-                expires: utcNow.AddDays(_jwtOptions.RefreshToken.ExpiresInDays));
+                expires: refreshTokenExpires);
         }
 
         var output = new AuthenticationOutput(
@@ -204,7 +208,8 @@ internal class AuthenticationService(
             CreatedAt = utcNow.UtcDateTime,
             ExpiredAt = storedToken.ExpiredAt,
             Used = false,
-            Invalidated = false
+            Invalidated = false,
+            Persistent = storedToken.Persistent
         };
 
         dbContext.RefreshTokens.Add(newRefreshTokenEntity);
@@ -212,15 +217,18 @@ internal class AuthenticationService(
 
         if (useCookies)
         {
+            var accessTokenExpires = storedToken.Persistent ? utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes) : (DateTimeOffset?)null;
+            var refreshTokenExpires = storedToken.Persistent ? new DateTimeOffset(storedToken.ExpiredAt, TimeSpan.Zero) : (DateTimeOffset?)null;
+
             cookieService.SetSecureCookie(
                 key: CookieNames.AccessToken,
                 value: newAccessToken,
-                expires: utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes));
+                expires: accessTokenExpires);
 
             cookieService.SetSecureCookie(
                 key: CookieNames.RefreshToken,
                 value: newRefreshTokenString,
-                expires: new DateTimeOffset(storedToken.ExpiredAt, TimeSpan.Zero));
+                expires: refreshTokenExpires);
         }
 
         var output = new AuthenticationOutput(
