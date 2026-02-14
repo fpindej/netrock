@@ -60,10 +60,12 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     /// <param name="useCookies">When true, sets tokens in HttpOnly cookies for web clients. Defaults to false (stateless).</param>
     /// <returns>Authentication response containing new access and refresh tokens</returns>
     /// <response code="200">Returns new authentication tokens (optionally also set in HttpOnly cookies)</response>
+    /// <response code="400">If the request body is malformed</response>
     /// <response code="401">If the refresh token is invalid, expired, or missing</response>
     [HttpPost("refresh")]
     [EnableRateLimiting(RateLimitPolicies.Auth)]
     [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<AuthenticationResponse>> Refresh(

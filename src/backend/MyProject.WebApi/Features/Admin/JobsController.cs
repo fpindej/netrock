@@ -132,11 +132,11 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
     /// <response code="401">If the user is not authenticated</response>
     /// <response code="403">If the user does not have the required permission</response>
     /// <response code="404">If the job was not found</response>
+    /// <response code="429">If too many requests have been made</response>
     [HttpDelete("jobs/{jobId:jobId}")]
     [RequirePermission(AppPermissions.Jobs.Manage)]
     [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -162,11 +162,11 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
     /// <response code="401">If the user is not authenticated</response>
     /// <response code="403">If the user does not have the required permission</response>
     /// <response code="404">If the job was not found</response>
+    /// <response code="429">If too many requests have been made</response>
     [HttpPost("jobs/{jobId:jobId}/pause")]
     [RequirePermission(AppPermissions.Jobs.Manage)]
     [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -192,11 +192,11 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
     /// <response code="401">If the user is not authenticated</response>
     /// <response code="403">If the user does not have the required permission</response>
     /// <response code="404">If the job was not found</response>
+    /// <response code="429">If too many requests have been made</response>
     [HttpPost("jobs/{jobId:jobId}/resume")]
     [RequirePermission(AppPermissions.Jobs.Manage)]
     [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

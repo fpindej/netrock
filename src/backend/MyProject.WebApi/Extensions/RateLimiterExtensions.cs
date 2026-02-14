@@ -77,9 +77,6 @@ internal static class RateLimiterExtensions
     {
         options.OnRejected = async (context, token) =>
         {
-            context.HttpContext.Response.StatusCode = 429;
-            context.HttpContext.Response.ContentType = "application/problem+json";
-
             var retryAfterSeconds = 60;
 
             if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
@@ -92,15 +89,17 @@ internal static class RateLimiterExtensions
 
             context.HttpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
 
-            var problemDetails = new ProblemDetails
+            var problemDetailsService = context.HttpContext.RequestServices.GetRequiredService<IProblemDetailsService>();
+            await problemDetailsService.WriteAsync(new ProblemDetailsContext
             {
-                Status = 429,
-                Title = "Too Many Requests",
-                Detail = $"Too many requests. Please try again in {retryAfterSeconds} seconds.",
-                Instance = context.HttpContext.Request.Path
-            };
-
-            await context.HttpContext.Response.WriteAsJsonAsync(problemDetails, token);
+                HttpContext = context.HttpContext,
+                ProblemDetails = new ProblemDetails
+                {
+                    Status = StatusCodes.Status429TooManyRequests,
+                    Title = "Too Many Requests",
+                    Detail = $"Too many requests. Please try again in {retryAfterSeconds} seconds."
+                }
+            });
         };
     }
 

@@ -150,6 +150,17 @@ export const fallback: RequestHandler = async ({ request, params, url, fetch }) 
 			);
 		}
 
-		return new Response('Bad Gateway', { status: 502 });
+		return new Response(
+			JSON.stringify({
+				type: 'https://tools.ietf.org/html/rfc9110#section-15.6.3',
+				title: 'Bad Gateway',
+				status: 502,
+				detail: 'An unexpected error occurred while proxying the request'
+			}),
+			{
+				status: 502,
+				headers: { 'Content-Type': 'application/problem+json' }
+			}
+		);
 	}
 };

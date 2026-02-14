@@ -1,6 +1,5 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using MyProject.Domain;
 using MyProject.Infrastructure.Persistence.Exceptions;
 
@@ -13,7 +12,8 @@ namespace MyProject.WebApi.Middlewares;
 public class ExceptionHandlingMiddleware(
     RequestDelegate next,
     ILogger<ExceptionHandlingMiddleware> logger,
-    IHostEnvironment env)
+    IHostEnvironment env,
+    IProblemDetailsService problemDetailsService)
 {
     /// <summary>
     /// Invokes the next middleware and catches exceptions, mapping them to HTTP status codes:
@@ -56,9 +56,7 @@ public class ExceptionHandlingMiddleware(
         var problemDetails = new ProblemDetails
         {
             Status = status,
-            Title = ReasonPhrases.GetReasonPhrase(status),
-            Detail = customMessage ?? exception.Message,
-            Instance = context.Request.Path
+            Detail = customMessage ?? exception.Message
         };
 
         if (env.IsDevelopment() && exception.StackTrace is not null)
@@ -66,9 +64,10 @@ public class ExceptionHandlingMiddleware(
             problemDetails.Extensions["stackTrace"] = exception.StackTrace;
         }
 
-        context.Response.ContentType = "application/problem+json";
-        context.Response.StatusCode = status;
-
-        await context.Response.WriteAsJsonAsync(problemDetails);
+        await problemDetailsService.WriteAsync(new ProblemDetailsContext
+        {
+            HttpContext = context,
+            ProblemDetails = problemDetails
+        });
     }
 }
