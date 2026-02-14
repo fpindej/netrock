@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Hangfire;
 using Hangfire.Storage;
+using Microsoft.Extensions.Logging;
 using MyProject.Application.Features.Jobs;
 using MyProject.Application.Features.Jobs.Dtos;
 using MyProject.Domain;
@@ -12,7 +13,8 @@ namespace MyProject.Infrastructure.Features.Jobs.Services;
 /// Uses the Hangfire monitoring API and <see cref="RecurringJob"/> static API
 /// to query, trigger, pause, and remove recurring jobs.
 /// </summary>
-internal sealed class JobManagementService : IJobManagementService
+internal sealed class JobManagementService(
+    ILogger<JobManagementService> logger) : IJobManagementService
 {
     /// <summary>
     /// Stores the original cron expression for paused jobs so they can be resumed.
@@ -93,16 +95,19 @@ internal sealed class JobManagementService : IJobManagementService
     {
         if (!JobExists(jobId))
         {
+            logger.LogWarning("Attempted to trigger non-existent job '{JobId}'", jobId);
             return Task.FromResult(Result.Failure(ErrorMessages.Jobs.NotFound));
         }
 
         try
         {
             RecurringJob.TriggerJob(jobId);
+            logger.LogInformation("Manually triggered job '{JobId}'", jobId);
             return Task.FromResult(Result.Success());
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to trigger job '{JobId}'", jobId);
             return Task.FromResult(Result.Failure(ErrorMessages.Jobs.TriggerFailed));
         }
     }
@@ -112,11 +117,13 @@ internal sealed class JobManagementService : IJobManagementService
     {
         if (!JobExists(jobId))
         {
+            logger.LogWarning("Attempted to remove non-existent job '{JobId}'", jobId);
             return Task.FromResult(Result.Failure(ErrorMessages.Jobs.NotFound));
         }
 
         RecurringJob.RemoveIfExists(jobId);
         PausedJobCrons.TryRemove(jobId, out _);
+        logger.LogWarning("Removed recurring job '{JobId}'", jobId);
         return Task.FromResult(Result.Success());
     }
 
@@ -129,16 +136,19 @@ internal sealed class JobManagementService : IJobManagementService
 
         if (job is null)
         {
+            logger.LogWarning("Attempted to pause non-existent job '{JobId}'", jobId);
             return Task.FromResult(Result.Failure(ErrorMessages.Jobs.NotFound));
         }
 
         if (PausedJobCrons.ContainsKey(jobId))
         {
+            logger.LogDebug("Job '{JobId}' is already paused", jobId);
             return Task.FromResult(Result.Success());
         }
 
         PausedJobCrons[jobId] = job.Cron;
         RecurringJob.AddOrUpdate(jobId, () => NoOp(), NeverCron);
+        logger.LogInformation("Paused job '{JobId}' (original cron: '{OriginalCron}')", jobId, job.Cron);
         return Task.FromResult(Result.Success());
     }
 
@@ -147,15 +157,18 @@ internal sealed class JobManagementService : IJobManagementService
     {
         if (!JobExists(jobId))
         {
+            logger.LogWarning("Attempted to resume non-existent job '{JobId}'", jobId);
             return Task.FromResult(Result.Failure(ErrorMessages.Jobs.NotFound));
         }
 
         if (!PausedJobCrons.TryRemove(jobId, out var originalCron))
         {
+            logger.LogDebug("Job '{JobId}' is not paused — nothing to resume", jobId);
             return Task.FromResult(Result.Success());
         }
 
         RecurringJob.AddOrUpdate(jobId, () => NoOp(), originalCron);
+        logger.LogInformation("Resumed job '{JobId}' (restored cron: '{RestoredCron}')", jobId, originalCron);
         return Task.FromResult(Result.Success());
     }
 
