@@ -162,7 +162,7 @@ export function getFetchErrorCode(error: unknown): string | undefined {
 }
 
 /**
- * Type guard: returns true when the response is a 429 Too Many Requests.
+ * Returns true when the response is a 429 Too Many Requests.
  */
 export function isRateLimited(response: Response): boolean {
 	return response.status === 429;

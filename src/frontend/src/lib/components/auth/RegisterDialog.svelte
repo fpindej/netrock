@@ -4,16 +4,16 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { PhoneInput } from '$lib/components/ui/phone-input';
-	import { browserClient } from '$lib/api';
-	import * as m from '$lib/paraglide/messages';
-	import { toast } from '$lib/components/ui/sonner';
-	import { Loader2 } from '@lucide/svelte';
 	import {
+		browserClient,
 		isValidationProblemDetails,
 		mapFieldErrors,
 		getErrorMessage,
 		isRateLimited
 	} from '$lib/api';
+	import * as m from '$lib/paraglide/messages';
+	import { toast } from '$lib/components/ui/sonner';
+	import { Loader2 } from '@lucide/svelte';
 	import { createFieldShakes } from '$lib/state';
 
 	interface Props {
