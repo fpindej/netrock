@@ -150,3 +150,4 @@ flowchart TD
 - [ ] Assign `jobs.view` and `jobs.manage` permissions to Admin role via the permissions UI
 - [ ] Consider adding more recurring jobs as the application grows (e.g., email queue processing, cache warming, audit log archival)
 - [ ] If scaling to multiple servers, replace the in-memory `PausedJobCrons` dictionary with a persistent store (database or Hangfire job parameters)
+- [ ] Add a "restore jobs" admin endpoint (`POST /api/v1/admin/jobs/restore`) that re-registers all `IRecurringJobDefinition` implementations without requiring an app restart — needed when a job is deleted via the dashboard and needs to be re-introduced
