@@ -36,7 +36,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -74,7 +74,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -83,7 +83,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -92,7 +92,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -129,7 +129,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -138,7 +138,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -190,7 +190,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the credentials are invalid */
@@ -199,7 +199,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -208,7 +208,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -265,7 +265,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -274,7 +274,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -317,7 +317,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -367,7 +367,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If too many registration requests have been made */
@@ -376,7 +376,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -427,7 +427,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -436,7 +436,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -445,7 +445,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -495,7 +495,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -504,7 +504,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -513,7 +513,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -561,7 +561,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -570,7 +570,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user was not found */
@@ -579,7 +579,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -615,7 +615,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -624,7 +624,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -633,7 +633,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user was not found */
@@ -642,7 +642,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -651,7 +651,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -704,7 +704,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -713,7 +713,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -722,7 +722,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user was not found */
@@ -731,7 +731,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -740,7 +740,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -792,7 +792,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -801,7 +801,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -810,7 +810,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user was not found */
@@ -819,7 +819,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -828,7 +828,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -876,7 +876,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -885,7 +885,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -894,7 +894,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user was not found */
@@ -903,7 +903,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -912,7 +912,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -958,7 +958,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -967,7 +967,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -976,7 +976,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user was not found */
@@ -985,7 +985,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -994,7 +994,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1037,7 +1037,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1046,7 +1046,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1080,7 +1080,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -1089,7 +1089,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1098,7 +1098,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -1107,7 +1107,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1153,7 +1153,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1162,7 +1162,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the role was not found */
@@ -1171,7 +1171,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1207,7 +1207,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -1216,7 +1216,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1225,7 +1225,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the role was not found */
@@ -1234,7 +1234,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -1243,7 +1243,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1275,7 +1275,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -1284,7 +1284,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1293,7 +1293,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the role was not found */
@@ -1302,7 +1302,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -1311,7 +1311,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1363,7 +1363,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -1372,7 +1372,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1381,7 +1381,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the role was not found */
@@ -1390,7 +1390,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -1399,7 +1399,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1443,7 +1443,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1452,7 +1452,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1497,7 +1497,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1506,7 +1506,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1554,7 +1554,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1563,7 +1563,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the job was not found */
@@ -1572,7 +1572,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1605,7 +1605,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -1614,7 +1614,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1623,7 +1623,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the job was not found */
@@ -1632,7 +1632,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -1641,7 +1641,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1686,7 +1686,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -1695,7 +1695,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1704,7 +1704,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -1713,7 +1713,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1759,7 +1759,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -1768,7 +1768,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1777,7 +1777,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the job was not found */
@@ -1786,7 +1786,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -1795,7 +1795,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1841,7 +1841,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -1850,7 +1850,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1859,7 +1859,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the job was not found */
@@ -1868,7 +1868,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -1877,7 +1877,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -1923,7 +1923,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -1932,7 +1932,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the user does not have the required permission */
@@ -1941,7 +1941,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description If the job was not found */
@@ -1950,7 +1950,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 				/** @description Too Many Requests */
@@ -1959,7 +1959,7 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ErrorResponse'];
+						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
 			};
@@ -2073,13 +2073,6 @@ export interface components {
 			/** @description The user's current password for confirmation. */
 			password: string;
 		};
-		/** @description Response DTO for error information. */
-		ErrorResponse: {
-			/** @description The main error message. */
-			message?: null | string;
-			/** @description Additional error details or technical information. */
-			details?: null | string;
-		};
 		/** @description Represents a single job execution history entry. */
 		JobExecutionResponse: {
 			/** @description The background job identifier for this execution. */
@@ -2143,6 +2136,14 @@ export interface components {
 			category?: string;
 			/** @description The permission values in this category. */
 			permissions?: string[];
+		};
+		ProblemDetails: {
+			type?: null | string;
+			title?: null | string;
+			/** Format: int32 */
+			status?: null | number;
+			detail?: null | string;
+			instance?: null | string;
 		};
 		/** @description Detailed recurring job response including execution history. */
 		RecurringJobDetailResponse: {

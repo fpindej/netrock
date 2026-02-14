@@ -96,10 +96,18 @@ function stripResponseHeaders(response: Response): Response {
 
 export const fallback: RequestHandler = async ({ request, params, url, fetch }) => {
 	if (!isOriginAllowed(request, url)) {
-		return new Response(JSON.stringify({ message: 'Cross-origin requests are not allowed' }), {
-			status: 403,
-			headers: { 'Content-Type': 'application/json' }
-		});
+		return new Response(
+			JSON.stringify({
+				type: 'https://tools.ietf.org/html/rfc9110#section-15.5.4',
+				title: 'Forbidden',
+				status: 403,
+				detail: 'Cross-origin requests are not allowed'
+			}),
+			{
+				status: 403,
+				headers: { 'Content-Type': 'application/problem+json' }
+			}
+		);
 	}
 
 	// Build target URL with query string
@@ -128,10 +136,18 @@ export const fallback: RequestHandler = async ({ request, params, url, fetch }) 
 		console.error('Proxy error:', err);
 
 		if (isFetchErrorWithCode(err, 'ECONNREFUSED')) {
-			return new Response(JSON.stringify({ message: 'Backend unavailable' }), {
-				status: 503,
-				headers: { 'Content-Type': 'application/json' }
-			});
+			return new Response(
+				JSON.stringify({
+					type: 'https://tools.ietf.org/html/rfc9110#section-15.6.4',
+					title: 'Service Unavailable',
+					status: 503,
+					detail: 'Backend unavailable'
+				}),
+				{
+					status: 503,
+					headers: { 'Content-Type': 'application/problem+json' }
+				}
+			);
 		}
 
 		return new Response('Bad Gateway', { status: 502 });

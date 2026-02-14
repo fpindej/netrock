@@ -18,7 +18,6 @@ namespace MyProject.WebApi.Features.Authentication;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Auth")]
-[ProducesErrorResponseType(typeof(ErrorResponse))]
 public class AuthController(IAuthenticationService authenticationService) : ControllerBase
 {
     /// <summary>
@@ -46,7 +45,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (!result.IsSuccess)
         {
-            return Unauthorized(new ErrorResponse { Message = result.Error });
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status401Unauthorized);
         }
 
         return Ok(result.Value!.ToResponse());
@@ -82,14 +81,14 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (string.IsNullOrEmpty(refreshToken))
         {
-            return Unauthorized(new ErrorResponse { Message = ErrorMessages.Auth.TokenMissing });
+            return Problem(detail: ErrorMessages.Auth.TokenMissing, statusCode: StatusCodes.Status401Unauthorized);
         }
 
         var result = await authenticationService.RefreshTokenAsync(refreshToken, useCookies, cancellationToken);
 
         if (!result.IsSuccess)
         {
-            return Unauthorized(new ErrorResponse { Message = result.Error });
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status401Unauthorized);
         }
 
         return Ok(result.Value!.ToResponse());
@@ -130,7 +129,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { Message = result.Error });
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
         }
 
         var response = new RegisterResponse { Id = result.Value };
@@ -159,7 +158,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { Message = result.Error });
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
         }
 
         return NoContent();

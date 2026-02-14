@@ -1,13 +1,13 @@
 using System.Net;
-using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using MyProject.Domain;
 using MyProject.Infrastructure.Persistence.Exceptions;
-using MyProject.WebApi.Shared;
 
 namespace MyProject.WebApi.Middlewares;
 
 /// <summary>
-/// Catches unhandled exceptions and maps them to standardized <see cref="ErrorResponse"/> JSON responses.
+/// Catches unhandled exceptions and maps them to standardized <see cref="ProblemDetails"/> JSON responses.
 /// </summary>
 /// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
 public class ExceptionHandlingMiddleware(
@@ -15,11 +15,6 @@ public class ExceptionHandlingMiddleware(
     ILogger<ExceptionHandlingMiddleware> logger,
     IHostEnvironment env)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     /// <summary>
     /// Invokes the next middleware and catches exceptions, mapping them to HTTP status codes:
     /// <see cref="KeyNotFoundException"/> to 404,
@@ -56,17 +51,24 @@ public class ExceptionHandlingMiddleware(
         HttpStatusCode statusCode,
         string? customMessage = null)
     {
-        var errorResponse = new ErrorResponse
+        var status = (int)statusCode;
+
+        var problemDetails = new ProblemDetails
         {
-            Message = customMessage ?? exception.Message,
-            Details = env.IsDevelopment() ? exception.StackTrace : null
+            Status = status,
+            Title = ReasonPhrases.GetReasonPhrase(status),
+            Detail = customMessage ?? exception.Message,
+            Instance = context.Request.Path
         };
 
-        var payload = JsonSerializer.Serialize(errorResponse, JsonOptions);
+        if (env.IsDevelopment() && exception.StackTrace is not null)
+        {
+            problemDetails.Extensions["stackTrace"] = exception.StackTrace;
+        }
 
-        context.Response.ContentType = "application/json";
-        context.Response.StatusCode = (int)statusCode;
+        context.Response.ContentType = "application/problem+json";
+        context.Response.StatusCode = status;
 
-        await context.Response.WriteAsync(payload);
+        await context.Response.WriteAsJsonAsync(problemDetails);
     }
 }

@@ -43,7 +43,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`RateLimiterExtensions.cs`** (add policy) | Requires matching constant in `RateLimitPolicies.cs` and config in `RateLimitingOptions.cs` |
 | **Route constraint** (add/modify in `Routing/`) | `Program.cs` constraint registration, route templates using that constraint |
 | **`HealthCheckExtensions.cs`** (change endpoints/checks) | `docker-compose.local.yml` healthcheck URLs, frontend health proxy `+server.ts` |
-| **`ErrorResponseAuthorizationMiddlewareResultHandler`** | `ErrorResponse` shape, `ErrorMessages.Auth` constants, `Program.cs` registration |
+| **`ProblemDetailsAuthorizationHandler`** | `ProblemDetails` shape, `ErrorMessages.Auth` constants, `Program.cs` registration |
 | **OpenAPI transformers** | Regenerate frontend types to verify; check Scalar UI |
 
 ### Frontend Changes
@@ -113,7 +113,7 @@ src/backend/MyProject.{Layer}/
                    Features/{Feature}/Dtos/{Operation}/{Operation}Request.cs
                    Features/{Feature}/Dtos/{Operation}/{Operation}RequestValidator.cs
                    Authorization/RequirePermissionAttribute.cs (+ handler, provider, requirement)
-                   Authorization/ErrorResponseAuthorizationMiddlewareResultHandler.cs
+                   Authorization/ProblemDetailsAuthorizationHandler.cs
                    Routing/{Name}RouteConstraint.cs
                    Shared/RateLimitPolicies.cs
                    Program.cs

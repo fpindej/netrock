@@ -62,7 +62,7 @@ try
         Log.Debug("Adding permission-based authorization");
         builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
-        builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ErrorResponseAuthorizationMiddlewareResultHandler>();
+        builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ProblemDetailsAuthorizationHandler>();
     }
     catch (Exception ex)
     {
@@ -81,15 +81,20 @@ try
         options.ConstraintMap.Add("jobId", typeof(JobIdRouteConstraint));
     });
 
+    Log.Debug("Adding ProblemDetails");
+    builder.Services.AddProblemDetails(options =>
+    {
+        options.CustomizeProblemDetails = context =>
+        {
+            context.ProblemDetails.Instance = context.HttpContext.Request.Path;
+        };
+    });
+
     Log.Debug("Adding Controllers");
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        })
-        .ConfigureApiBehaviorOptions(options =>
-        {
-            options.SuppressMapClientErrors = true;
         });
 
     Log.Debug("Adding FluentValidation");

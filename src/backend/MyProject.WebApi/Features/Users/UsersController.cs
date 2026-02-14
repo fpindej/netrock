@@ -15,7 +15,6 @@ namespace MyProject.WebApi.Features.Users;
 [Route("api/[controller]")]
 [Authorize]
 [Tags("Users")]
-[ProducesErrorResponseType(typeof(ErrorResponse))]
 public class UsersController(IUserService userService) : ControllerBase
 {
     /// <summary>
@@ -33,7 +32,7 @@ public class UsersController(IUserService userService) : ControllerBase
 
         if (!userResult.IsSuccess)
         {
-            return Unauthorized();
+            return Problem(detail: userResult.Error, statusCode: StatusCodes.Status401Unauthorized);
         }
 
         return Ok(userResult.Value!.ToResponse());
@@ -59,7 +58,7 @@ public class UsersController(IUserService userService) : ControllerBase
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { Message = result.Error });
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
         }
 
         return Ok(result.Value!.ToResponse());
@@ -87,7 +86,7 @@ public class UsersController(IUserService userService) : ControllerBase
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { Message = result.Error });
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
         }
 
         return NoContent();

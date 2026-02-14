@@ -1,9 +1,9 @@
 /**
  * API error handling utilities for ASP.NET Core backends.
  *
- * Provides type-safe parsing and mapping of validation errors
- * from ASP.NET Core's ProblemDetails format, and user-friendly
- * error message extraction from backend responses.
+ * All error responses use ProblemDetails (RFC 9457). Provides type-safe
+ * parsing and mapping of validation errors, and user-friendly error
+ * message extraction from ProblemDetails responses.
  *
  * @remarks Pattern documented in src/frontend/AGENTS.md — update both when changing.
  */
@@ -12,7 +12,7 @@
  * Extended ProblemDetails with validation errors.
  * ASP.NET Core returns field-level errors in an `errors` object.
  *
- * @see https://tools.ietf.org/html/rfc7807
+ * @see https://tools.ietf.org/html/rfc9457
  */
 export interface ValidationProblemDetails {
 	type?: string | null;
@@ -85,15 +85,14 @@ export function mapFieldErrors(
 }
 
 /**
- * Extracts a user-friendly error message from an API error response.
+ * Extracts a user-friendly error message from a ProblemDetails API error response.
  *
  * Resolution order:
- * 1. `message` field → backend message (ErrorResponse shape)
- * 2. `detail` field → ProblemDetails detail
- * 3. `title` field → ProblemDetails title
- * 4. Fallback string
+ * 1. `detail` field → ProblemDetails detail (the specific error message)
+ * 2. `title` field → ProblemDetails title (generic status description)
+ * 3. Fallback string
  *
- * The backend always returns specific, descriptive English messages.
+ * The backend always returns specific, descriptive English messages in `detail`.
  *
  * @param error - The error object from the API response
  * @param fallback - Fallback message if no error message can be extracted
@@ -101,11 +100,6 @@ export function mapFieldErrors(
  */
 export function getErrorMessage(error: unknown, fallback: string): string {
 	if (typeof error === 'object' && error !== null) {
-		// 1. Try ErrorResponse shape (message field)
-		if ('message' in error && typeof error.message === 'string') {
-			return error.message;
-		}
-		// 2. Try ProblemDetails shape (detail/title)
 		if ('detail' in error && typeof error.detail === 'string') {
 			return error.detail;
 		}

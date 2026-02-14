@@ -226,7 +226,7 @@ dotnet ef database update \
    - `AddUserPolicy(...)` for authenticated endpoints (partitions by user identity)
 5. Add config section to both `appsettings.json` and `appsettings.Development.json`
 6. Apply to endpoints: `[EnableRateLimiting(RateLimitPolicies.MyPolicy)]`
-7. Add `[ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]` to the endpoint
+7. Add `[ProducesResponseType(StatusCodes.Status429TooManyRequests)]` to the endpoint
 8. Verify: `dotnet build src/backend/MyProject.slnx`
 
 ### Add a Route Constraint

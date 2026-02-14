@@ -18,7 +18,7 @@ Backend: `WebApi → Application ← Infrastructure → Domain` (Clean Architect
 - `TimeProvider` (injected) — never `DateTime.UtcNow` or `DateTimeOffset.UtcNow`
 - C# 13 `extension(T)` syntax for new extension methods
 - Never `null!` — fix the design instead
-- Typed DTOs only — `ErrorResponse` for errors, never anonymous objects or raw strings
+- Typed DTOs only — `ProblemDetails` (RFC 9457) for all error responses, never anonymous objects or raw strings
 - `internal` on all Infrastructure service implementations
 - `/// <summary>` XML docs on all public and internal API surface
 - `System.Text.Json` only — never `Newtonsoft.Json` (present solely as a Hangfire transitive dependency)

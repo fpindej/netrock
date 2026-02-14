@@ -228,7 +228,7 @@ All `/api/*` requests are proxied to the backend via `routes/api/[...path]/+serv
 
 ### Error Handling (Generic Errors)
 
-The backend returns a descriptive `message` on every error response. The frontend uses this message directly via `getErrorMessage()`:
+The backend returns ProblemDetails (RFC 9457) on every error response. The `detail` field contains the descriptive error message. The frontend extracts it via `getErrorMessage()`:
 
 ```typescript
 import { getErrorMessage, browserClient } from '$lib/api';
@@ -244,12 +244,11 @@ if (!response.ok) {
 
 #### `getErrorMessage()` Resolution Order
 
-1. **`message` field** → backend's descriptive error message (ErrorResponse shape)
-2. **`detail` field** → ProblemDetails detail
-3. **`title` field** → ProblemDetails title
-4. **Fallback string** → the caller-provided fallback
+1. **`detail` field** → ProblemDetails detail (the specific error message)
+2. **`title` field** → ProblemDetails title (generic status description)
+3. **Fallback string** → the caller-provided fallback
 
-The backend always returns specific, user-friendly English messages with every error (e.g., `"Username 'user@example.com' is already taken."`). The frontend displays these messages directly — no translation or mapping is needed.
+The backend always returns specific, user-friendly English messages in `detail` with every error (e.g., `"Username 'user@example.com' is already taken."`). The frontend displays these messages directly — no translation or mapping is needed.
 
 ### Validation Errors (Field-Level)
 
@@ -326,11 +325,14 @@ Components with multiple action handlers (e.g., `UserManagementCard`, `JobAction
 
 ### Network Errors
 
-The API proxy handles network errors:
+The API proxy handles network errors, returning ProblemDetails:
 
 ```typescript
 if (isFetchErrorWithCode(err, 'ECONNREFUSED')) {
-	return new Response(JSON.stringify({ message: 'Backend unavailable' }), { status: 503 });
+	return new Response(
+		JSON.stringify({ title: 'Service Unavailable', status: 503, detail: 'Backend unavailable' }),
+		{ status: 503, headers: { 'Content-Type': 'application/problem+json' } }
+	);
 }
 ```
 

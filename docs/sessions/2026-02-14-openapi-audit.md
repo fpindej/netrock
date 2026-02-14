@@ -102,7 +102,33 @@ flowchart TD
 | `WebApi/Features/OpenApi/Transformers/BearerSecurityOperationTransformer.cs` | Use `ControllerActionDescriptor` reflection with `inherit: true` | `EndpointMetadata` doesn't include inherited `[Authorize]` from base classes |
 | `AGENTS.md` | Updated ProducesResponseType guidance, OAS checklist | Document new `ProducesErrorResponseType` pattern |
 
-## Follow-Up Items
+## Follow-Up: ProblemDetails Migration (RFC 9457)
 
-- [ ] Regenerate frontend API types (`npm run api:generate`) after merging to pick up the new `ErrorResponse` schemas on 401/403/404 responses and `bearerAuth` security requirements
+Replaced `ErrorResponse { Message, Details }` with standard `ProblemDetails` across the entire API. This removed the need for `SuppressMapClientErrors`, `[ProducesErrorResponseType]`, custom JSON serialization options, and aligned with what ASP.NET Core natively does.
+
+### Changes
+
+| Area | Change |
+|------|--------|
+| `Program.cs` | Added `AddProblemDetails()` with `CustomizeProblemDetails`; removed `SuppressMapClientErrors`; handler → `ProblemDetailsAuthorizationHandler` |
+| `ExceptionHandlingMiddleware` | Returns `ProblemDetails` with `application/problem+json`; stack trace in `extensions.stackTrace` (dev only) |
+| Auth handler | Deleted `ErrorResponseAuthorizationMiddlewareResultHandler`, created `ProblemDetailsAuthorizationHandler` |
+| `RateLimiterExtensions` | 429 returns `ProblemDetails` |
+| `ApiController` | Removed `[ProducesErrorResponseType(typeof(ErrorResponse))]` |
+| All 4 controllers | `new ErrorResponse { Message = ... }` → `Problem(detail: ..., statusCode: ...)` |
+| `ErrorResponse.cs` | Deleted |
+| Frontend `error-handling.ts` | Removed `message` field check; resolution: `detail` → `title` → fallback |
+| Frontend proxy | CSRF/503 responses return ProblemDetails shape |
+| Docs | Updated CLAUDE.md, AGENTS.md (x2), FILEMAP.md, SKILLS.md |
+
+### Reasoning
+
+- `ErrorResponse` fought the framework — ASP.NET Core wants to return `ProblemDetails` for all client errors
+- FluentValidation already returned `ValidationProblemDetails`, creating two different error shapes
+- `ProblemDetails` is an RFC standard (9457), has `[JsonPropertyName]` attributes, and removes the need for custom JSON options
+- Nobody is using this template yet — cleanest time to switch
+
+## Remaining Items
+
+- [ ] Regenerate frontend API types (`npm run api:generate`) after merging — `ProblemDetails` replaces `ErrorResponse` in the OAS
 - [ ] Update 4 XML doc comments in `JobsController` that are missing `/// <response code="400">` entries (low priority — attributes are correct, only comments are incomplete)

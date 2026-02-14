@@ -57,7 +57,7 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
 
         if (!result.IsSuccess)
         {
-            return NotFound(new ErrorResponse { Message = result.Error });
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status404NotFound);
         }
 
         return Ok(result.Value!.ToResponse());
@@ -86,7 +86,7 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new ErrorResponse { Message = result.Error });
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
         }
 
         return NoContent();
@@ -147,7 +147,7 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
 
         if (!result.IsSuccess)
         {
-            return NotFound(new ErrorResponse { Message = result.Error });
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status404NotFound);
         }
 
         return NoContent();
@@ -177,7 +177,7 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
 
         if (!result.IsSuccess)
         {
-            return NotFound(new ErrorResponse { Message = result.Error });
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status404NotFound);
         }
 
         return NoContent();
@@ -207,22 +207,22 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
 
         if (!result.IsSuccess)
         {
-            return NotFound(new ErrorResponse { Message = result.Error });
+            return Problem(detail: result.Error, statusCode: StatusCodes.Status404NotFound);
         }
 
         return NoContent();
     }
 
     /// <summary>
-    /// Returns <see cref="NotFoundObjectResult"/> for not-found errors, <see cref="BadRequestObjectResult"/> otherwise.
+    /// Returns a 404 <see cref="ProblemDetails"/> for not-found errors, 400 otherwise.
     /// </summary>
     private ActionResult ToErrorResult(string? error)
     {
         if (error is ErrorMessages.Jobs.NotFound)
         {
-            return NotFound(new ErrorResponse { Message = error });
+            return Problem(detail: error, statusCode: StatusCodes.Status404NotFound);
         }
 
-        return BadRequest(new ErrorResponse { Message = error });
+        return Problem(detail: error, statusCode: StatusCodes.Status400BadRequest);
     }
 }

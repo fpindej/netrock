@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MyProject.WebApi.Options;
 using MyProject.WebApi.Shared;
@@ -70,14 +71,14 @@ internal static class RateLimiterExtensions
     }
 
     /// <summary>
-    /// Configures the rejection handler that returns a JSON <see cref="ErrorResponse"/> with retry-after headers.
+    /// Configures the rejection handler that returns a JSON <see cref="ProblemDetails"/> with retry-after headers.
     /// </summary>
     private static void ConfigureOnRejected(RateLimiterOptions options)
     {
         options.OnRejected = async (context, token) =>
         {
             context.HttpContext.Response.StatusCode = 429;
-            context.HttpContext.Response.ContentType = "application/json";
+            context.HttpContext.Response.ContentType = "application/problem+json";
 
             var retryAfterSeconds = 60;
 
@@ -91,13 +92,15 @@ internal static class RateLimiterExtensions
 
             context.HttpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
 
-            var response = new ErrorResponse
+            var problemDetails = new ProblemDetails
             {
-                Message = "Rate limit exceeded",
-                Details = $"Too many requests. Please try again in {retryAfterSeconds} seconds."
+                Status = 429,
+                Title = "Too Many Requests",
+                Detail = $"Too many requests. Please try again in {retryAfterSeconds} seconds.",
+                Instance = context.HttpContext.Request.Path
             };
 
-            await context.HttpContext.Response.WriteAsJsonAsync(response, token);
+            await context.HttpContext.Response.WriteAsJsonAsync(problemDetails, token);
         };
     }
 
