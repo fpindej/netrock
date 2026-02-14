@@ -5,7 +5,7 @@
 
 ## Summary
 
-Audited the full OpenAPI specification setup — document transformers, operation transformers, schema transformers, controller annotations, and Scalar UI configuration. Identified 6 issues, fixed the 3 that meaningfully impact spec consumers, and evaluated the remaining 3 as not worth fixing.
+Audited the full OpenAPI specification setup — document transformers, operation transformers, schema transformers, controller annotations, and Scalar UI configuration. Identified 6 issues, fixed 5 (the 3 original plus 2 discovered during review), and evaluated the remaining 3 as not worth fixing. Also made the runtime match the spec by ensuring all 401/403 responses return `ErrorResponse` JSON bodies.
 
 ## Changes Made
 
@@ -13,8 +13,8 @@ Audited the full OpenAPI specification setup — document transformers, operatio
 |------|--------|--------|
 | `WebApi/Features/OpenApi/Transformers/BearerSecurityOperationTransformer.cs` | New operation transformer that applies `bearerAuth` security requirement to `[Authorize]` endpoints | Security scheme was defined in the spec but never applied to operations — clients couldn't see which endpoints require auth |
 | `WebApi/Features/OpenApi/Extensions/WebApplicationBuilderExtensions.cs` | Registered `BearerSecurityOperationTransformer` | Wire up the new transformer |
-| `WebApi/Features/Admin/AdminController.cs` | Added `typeof(ErrorResponse)` to all 28 untyped 401/403 `ProducesResponseType` attributes; added `[Tags("Admin")]` | Spec consumers see the error response schema; endpoints grouped under "Admin" tag |
-| `WebApi/Features/Admin/JobsController.cs` | Added `typeof(ErrorResponse)` to all 14 untyped 401/403 `ProducesResponseType` attributes; added `[Tags("Jobs")]` | Same as above; grouped under "Jobs" tag |
+| `WebApi/Features/Admin/AdminController.cs` | Added `typeof(ErrorResponse)` to all 28 untyped 401/403 and 10 untyped 404 `ProducesResponseType` attributes; added `[Tags("Admin")]` | Spec consumers see the error response schema; endpoints grouped under "Admin" tag |
+| `WebApi/Features/Admin/JobsController.cs` | Added `typeof(ErrorResponse)` to all 14 untyped 401/403 and 5 untyped 404 `ProducesResponseType` attributes; added `[Tags("Jobs")]` | Same as above; grouped under "Jobs" tag |
 | `WebApi/Features/Users/UsersController.cs` | Added `typeof(ErrorResponse)` to 3 untyped 401 `ProducesResponseType` attributes; added `[Tags("Users")]` | Same as above; grouped under "Users" tag |
 | `WebApi/Features/Authentication/AuthController.cs` | Added `typeof(ErrorResponse)` to 2 untyped 401 `ProducesResponseType` attributes (logout, change-password); added `[Tags("Auth")]` | Same as above; grouped under "Auth" tag |
 
@@ -57,6 +57,32 @@ Audited the full OpenAPI specification setup — document transformers, operatio
 | `WebApi/Authorization/ErrorResponseAuthorizationMiddlewareResultHandler.cs` | New `IAuthorizationMiddlewareResultHandler` implementation | Returns `ErrorResponse` JSON for both 401 and 403 |
 | `WebApi/Program.cs` | Registered handler in DI | Wire up the new handler |
 
+### Fix 5: Typed 404 responses and WWW-Authenticate header
+
+- **Problem**: All 15 `[ProducesResponseType(StatusCodes.Status404NotFound)]` attributes in `AdminController` (10) and `JobsController` (5) were untyped, but controllers return `NotFound(new ErrorResponse{...})` at runtime. Also, the new auth handler was missing the `WWW-Authenticate: Bearer` header on 401 per RFC 6750.
+- **Choice**: Added `typeof(ErrorResponse)` to all 404 attributes; added `WWW-Authenticate: Bearer` header to the challenge path.
+- **Reasoning**: Completes the "every error returns `ErrorResponse`" guarantee. The `WWW-Authenticate` header is required by RFC 6750 §3 for Bearer-authenticated APIs.
+
+### Housekeeping: Untrack inlang-managed files
+
+Inlang v2.5+ auto-generates `.gitignore`, `.meta.json`, `README.md`, and `project_id` inside `project.inlang/`. These were showing up as dirty/untracked. Untracked `.gitignore` and `project_id` from git and replaced the gitignore with `*` / `!settings.json` so only the settings file is version-controlled.
+
+## Diagrams
+
+```mermaid
+flowchart TD
+    REQ[Incoming Request] --> AUTH_MW[Authentication Middleware]
+    AUTH_MW --> AUTHZ_MW[Authorization Middleware]
+    AUTHZ_MW -->|Challenged - no valid JWT| HANDLER_401["ErrorResponseAuthorizationMiddlewareResultHandler\n→ 401 + WWW-Authenticate: Bearer\n+ ErrorResponse body"]
+    AUTHZ_MW -->|Forbidden - missing permission| HANDLER_403["ErrorResponseAuthorizationMiddlewareResultHandler\n→ 403 + ErrorResponse body"]
+    AUTHZ_MW -->|Authorized| CONTROLLER[Controller Action]
+    CONTROLLER -->|Business error| RESULT["Result.Failure → ErrorResponse (400)"]
+    CONTROLLER -->|Not found| NOTFOUND["NotFound(ErrorResponse) (404)"]
+    CONTROLLER -->|Success| SUCCESS["200/201/204"]
+    CONTROLLER -->|Unhandled exception| EX_MW["ExceptionHandlingMiddleware\n→ 500 + ErrorResponse"]
+```
+
 ## Follow-Up Items
 
-- [ ] Regenerate frontend API types (`npm run api:generate`) after merging to pick up the new `ErrorResponse` schemas on 401/403 responses
+- [ ] Regenerate frontend API types (`npm run api:generate`) after merging to pick up the new `ErrorResponse` schemas on 401/403/404 responses
+- [ ] Update 4 XML doc comments in `JobsController` that are missing `/// <response code="400">` entries (low priority — attributes are correct, only comments are incomplete)
