@@ -160,3 +160,10 @@ export function getFetchErrorCode(error: unknown): string | undefined {
 	const cause = (error as { cause?: FetchErrorCause }).cause;
 	return cause?.code;
 }
+
+/**
+ * Returns true when the response is a 429 Too Many Requests.
+ */
+export function isRateLimited(response: Response): boolean {
+	return response.status === 429;
+}

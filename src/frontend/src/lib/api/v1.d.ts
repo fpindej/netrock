@@ -645,6 +645,15 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
 			};
 		};
 		options?: never;
@@ -723,6 +732,15 @@ export interface paths {
 					};
 					content: {
 						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
 			};
@@ -804,6 +822,15 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
 			};
 		};
 		options?: never;
@@ -879,6 +906,15 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
 			};
 		};
 		delete?: never;
@@ -950,6 +986,15 @@ export interface paths {
 					};
 					content: {
 						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
 			};
@@ -1054,6 +1099,15 @@ export interface paths {
 					};
 					content: {
 						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
 			};
@@ -1183,6 +1237,15 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
 			};
 		};
 		post?: never;
@@ -1240,6 +1303,15 @@ export interface paths {
 					};
 					content: {
 						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
 			};
@@ -1319,6 +1391,15 @@ export interface paths {
 					};
 					content: {
 						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
 			};
@@ -1554,6 +1635,15 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
 			};
 		};
 		options?: never;
@@ -1615,6 +1705,15 @@ export interface paths {
 					};
 					content: {
 						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
 			};
@@ -1690,6 +1789,15 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
 			};
 		};
 		delete?: never;
@@ -1763,6 +1871,15 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
 			};
 		};
 		delete?: never;
@@ -1834,6 +1951,15 @@ export interface paths {
 					};
 					content: {
 						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
 					};
 				};
 			};
