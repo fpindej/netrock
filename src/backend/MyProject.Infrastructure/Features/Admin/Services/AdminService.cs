@@ -119,8 +119,7 @@ internal class AdminService(
             return Result.Failure(errors);
         }
 
-        await userManager.UpdateSecurityStampAsync(user);
-        await cacheService.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
+        await RotateSecurityStampAsync(user, userId, cancellationToken);
         await InvalidateUserCacheAsync(userId);
         logger.LogInformation("Role '{Role}' assigned to user '{UserId}' by admin '{CallerUserId}'",
             input.Role, userId, callerUserId);
