@@ -264,8 +264,6 @@
 	"admin_userDetail_unlockError": "Nepodařilo se odemknout uživatelský účet",
 	"admin_userDetail_deleteConfirmTitle": "Smazat uživatelský účet",
 	"admin_userDetail_deleteConfirmDescription": "Opravdu chcete trvale smazat tento uživatelský účet? Tuto akci nelze vrátit zpět.",
-	"admin_userDetail_deleteConfirm": "Smazat",
-	"admin_userDetail_deleteCancel": "Zrušit",
 	"admin_userDetail_deleteSuccess": "Uživatelský účet byl smazán",
 	"admin_userDetail_deleteError": "Nepodařilo se smazat uživatelský účet",
 	"admin_userDetail_selectRole": "Vyberte roli...",

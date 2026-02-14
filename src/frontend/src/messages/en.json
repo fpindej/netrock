@@ -264,8 +264,6 @@
 	"admin_userDetail_unlockError": "Failed to unlock user account",
 	"admin_userDetail_deleteConfirmTitle": "Delete User Account",
 	"admin_userDetail_deleteConfirmDescription": "Are you sure you want to permanently delete this user account? This action cannot be undone.",
-	"admin_userDetail_deleteConfirm": "Delete",
-	"admin_userDetail_deleteCancel": "Cancel",
 	"admin_userDetail_deleteSuccess": "User account deleted",
 	"admin_userDetail_deleteError": "Failed to delete user account",
 	"admin_userDetail_selectRole": "Select a role...",
