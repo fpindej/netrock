@@ -429,12 +429,12 @@ internal class AdminService(
         CancellationToken cancellationToken)
     {
         var tokens = await dbContext.RefreshTokens
-            .Where(rt => rt.UserId == userId && !rt.Invalidated)
+            .Where(rt => rt.UserId == userId && !rt.IsInvalidated)
             .ToListAsync(cancellationToken);
 
         foreach (var token in tokens)
         {
-            token.Invalidated = true;
+            token.IsInvalidated = true;
         }
 
         if (tokens.Count > 0)

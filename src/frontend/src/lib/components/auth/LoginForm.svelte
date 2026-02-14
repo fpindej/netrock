@@ -6,6 +6,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
+	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
@@ -21,6 +22,7 @@
 
 	let email = $state('');
 	let password = $state('');
+	let rememberMe = $state(false);
 	let isApiOnline = $state(false);
 	let isSuccess = $state(false);
 	let isRedirecting = $state(false);
@@ -48,7 +50,7 @@
 
 		try {
 			const { response, error: apiError } = await browserClient.POST('/api/auth/login', {
-				body: { username: email, password }
+				body: { username: email, password, rememberMe }
 			});
 
 			if (response.ok) {
@@ -136,6 +138,13 @@
 								class="bg-background/50"
 								aria-invalid={shake.active}
 							/>
+
+							<div class="flex items-center gap-2">
+								<Checkbox id="rememberMe" bind:checked={rememberMe} />
+								<Label for="rememberMe" class="text-sm font-normal">
+									{m.auth_login_rememberMe()}
+								</Label>
+							</div>
 						</div>
 
 						<Button type="submit" class="w-full" disabled={!isApiOnline}>

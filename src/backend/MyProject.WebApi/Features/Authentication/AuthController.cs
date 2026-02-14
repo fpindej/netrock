@@ -39,7 +39,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
         [FromQuery] bool useCookies = false,
         CancellationToken cancellationToken = default)
     {
-        var result = await authenticationService.Login(request.Username, request.Password, useCookies, cancellationToken);
+        var result = await authenticationService.Login(request.Username, request.Password, useCookies, request.RememberMe, cancellationToken);
 
         if (!result.IsSuccess)
         {

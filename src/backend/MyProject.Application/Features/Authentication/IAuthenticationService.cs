@@ -14,9 +14,10 @@ public interface IAuthenticationService
     /// <param name="username">The username.</param>
     /// <param name="password">The password.</param>
     /// <param name="useCookies">Whether to set authentication cookies. Defaults to false (stateless). Set to true for web clients.</param>
+    /// <param name="rememberMe">When true and cookies are enabled, sets persistent cookies that survive browser restarts. Defaults to false (session cookies).</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A result containing authentication tokens on success.</returns>
-    Task<Result<AuthenticationOutput>> Login(string username, string password, bool useCookies = false, CancellationToken cancellationToken = default);
+    Task<Result<AuthenticationOutput>> Login(string username, string password, bool useCookies = false, bool rememberMe = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Registers a new user.

@@ -240,6 +240,7 @@ Key rules:
 - **Protected parameterless constructor** for EF Core materialization
 - **Public constructor** for domain creation with required parameters
 - **Generate `Id`** in the constructor
+- **Boolean naming**: Use `Is*`/`Has*` prefix in C# per .NET convention (e.g. `IsUsed`, `IsActive`, `HasExpired`), but map to prefix-free DB column names via `HasColumnName` (e.g. `Used`, `Active`, `Expired`) to keep the schema clean
 
 ### Soft-Delete & Restore
 

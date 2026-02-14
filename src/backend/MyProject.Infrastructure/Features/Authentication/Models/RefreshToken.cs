@@ -29,12 +29,18 @@ public class RefreshToken
     /// <summary>
     /// Gets or sets whether the token has been consumed in a refresh operation.
     /// </summary>
-    public bool Used { get; set; }
+    public bool IsUsed { get; set; }
 
     /// <summary>
     /// Gets or sets whether the token has been revoked (e.g., on logout or reuse detection).
     /// </summary>
-    public bool Invalidated { get; set; }
+    public bool IsInvalidated { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the session should persist across browser restarts.
+    /// When true, cookies are set with an explicit expiry; when false, session cookies are used.
+    /// </summary>
+    public bool IsPersistent { get; set; }
 
     /// <summary>
     /// Gets or sets the ID of the user who owns this token.

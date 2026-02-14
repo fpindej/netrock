@@ -72,6 +72,7 @@
 	"auth_login_invalidCredentials": "Invalid email or password",
 	"auth_login_apiOffline": "API is offline",
 	"auth_login_success": "Login successful!",
+	"auth_login_rememberMe": "Remember me",
 	"auth_login_noAccount": "Don't have an account?",
 	"auth_login_signUp": "Sign up",
 

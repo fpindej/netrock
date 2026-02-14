@@ -22,4 +22,10 @@ public class LoginRequest
     [Required]
     [MaxLength(255)]
     public string Password { get; [UsedImplicitly] init; } = string.Empty;
+
+    /// <summary>
+    /// When true, authentication cookies persist across browser restarts.
+    /// When false (default), session cookies are used and expire when the browser closes.
+    /// </summary>
+    public bool RememberMe { get; [UsedImplicitly] init; }
 }
