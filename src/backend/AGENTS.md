@@ -605,12 +605,13 @@ Simple DTOs can also use data annotations (`[Required]`, `[MaxLength]`, `[EmailA
 
 ## Error Handling
 
-Three-tier strategy:
+Multi-tier strategy:
 
 1. **Expected business failures** → Return `Result.Failure(ErrorMessages.X.Y)` from services
 2. **Not found** → Throw `KeyNotFoundException` → `ExceptionHandlingMiddleware` returns 404
 3. **Pagination errors** → Throw `PaginationException` → middleware returns 400
 4. **Unexpected errors** → Let them propagate → middleware returns 500 with `ErrorResponse`
+5. **Authentication/authorization failures** → `ErrorResponseAuthorizationMiddlewareResultHandler` returns 401/403 with `ErrorResponse`
 
 ```csharp
 // ExceptionHandlingMiddleware catches and maps exceptions:
@@ -815,7 +816,7 @@ PermissionPolicyProvider           ← Resolves "Permission:users.view" policy d
 PermissionAuthorizationHandler
     ├── User is SuperAdmin? → Allow (implicit all)
     ├── User has "permission" claim matching? → Allow
-    └── Otherwise → 403 Forbidden
+    └── Otherwise → 403 Forbidden with ErrorResponse body
 ```
 
 #### JWT Permission Claims
@@ -1389,8 +1390,8 @@ public async Task<ActionResult<UserResponse>> UpdateCurrentUser(...)
 | `/// <summary>` | Becomes the operation description in the spec |
 | `/// <param>` | Documents request body and route/query parameters — **do not** include `CancellationToken` (its text leaks into `requestBody.description`) |
 | `/// <response code="...">` | Documents what each status code means |
-| `[ProducesResponseType(typeof(T), StatusCode)]` | Generates the response schema — use `typeof(UserResponse)` for success, `typeof(ErrorResponse)` for errors that return a body |
-| `[ProducesResponseType(StatusCode)]` | For status codes with **no body** (204, or 401 when the controller returns bare `Unauthorized()`) |
+| `[ProducesResponseType(typeof(T), StatusCode)]` | Generates the response schema — use `typeof(UserResponse)` for success, `typeof(ErrorResponse)` for all error codes (400, 401, 403, 404, 429) |
+| `[ProducesResponseType(StatusCode)]` | For status codes with **no body** (204 No Content) |
 | `ActionResult<T>` return type | Reinforces the 200-response schema |
 
 ### DTO Documentation — Every Property Gets XML Docs
@@ -1445,7 +1446,7 @@ Before adding or modifying any endpoint, verify:
 - [ ] `/// <summary>` on the controller action describing what it does
 - [ ] `/// <param>` for every **visible** parameter (request body, route, query) — **never** for `CancellationToken` (leaks into `requestBody.description`)
 - [ ] `/// <response code="...">` for every possible status code
-- [ ] `[ProducesResponseType]` for every status code — with `typeof(T)` for response bodies, `typeof(ErrorResponse)` for error codes that return a body
+- [ ] `[ProducesResponseType]` for every status code — with `typeof(T)` for response bodies, `typeof(ErrorResponse)` for all error codes (400, 401, 403, 404, 429)
 - [ ] `ActionResult<T>` return type (not bare `ActionResult`) when returning a success body
 - [ ] Error responses always return `new ErrorResponse { Message = ... }` — never raw strings or anonymous objects
 - [ ] `/// <summary>` on every DTO class

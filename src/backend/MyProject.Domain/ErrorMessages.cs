@@ -26,6 +26,7 @@ public static class ErrorMessages
         public const string TokenExpired = "Refresh token has expired.";
         public const string TokenUserNotFound = "User not found.";
         public const string NotAuthenticated = "User is not authenticated.";
+        public const string InsufficientPermissions = "You do not have the required permissions for this action.";
         public const string UserNotFound = "User not found.";
         public const string PasswordIncorrect = "Current password is incorrect.";
     }

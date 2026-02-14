@@ -44,6 +44,19 @@ Audited the full OpenAPI specification setup — document transformers, operatio
 - **`useCookies` query parameter description (item 5)**: Already handled by `CamelCaseQueryParameterTransformer` which propagates schema descriptions to parameters. Low priority.
 - **`Set-Cookie` response headers (item 6)**: Documenting `Set-Cookie` headers in OpenAPI requires complex header schema definitions for marginal value — web clients handle cookies automatically and don't need to parse them from the spec. Not worth the complexity.
 
+### Fix 4: ErrorResponse body on middleware-level 401/403
+
+- **Problem**: The OpenAPI spec (after Fix 2) claims all 401/403 responses return `ErrorResponse`, but middleware-level auth failures (missing/expired JWT, insufficient permissions) returned empty bodies. Only controller-level returns (login, refresh) included the body.
+- **Choice**: Created `ErrorResponseAuthorizationMiddlewareResultHandler` implementing `IAuthorizationMiddlewareResultHandler`
+- **Alternatives considered**: (a) JWT `OnChallenge`/`OnForbidden` event handlers, (b) Custom middleware before `UseAuthorization()`
+- **Reasoning**: `IAuthorizationMiddlewareResultHandler` is ASP.NET Core's dedicated extension point for customizing authorization results. It handles both 401 (challenged) and 403 (forbidden) in a single class, lives cleanly in the WebApi layer alongside `ErrorResponse`, and doesn't require fragile `PostConfigure<JwtBearerOptions>` wiring. Added `ErrorMessages.Auth.InsufficientPermissions` constant for the 403 message; reused existing `ErrorMessages.Auth.NotAuthenticated` for 401.
+
+| File | Change | Reason |
+|------|--------|--------|
+| `Domain/ErrorMessages.cs` | Added `Auth.InsufficientPermissions` constant | Consistent error message for 403 responses |
+| `WebApi/Authorization/ErrorResponseAuthorizationMiddlewareResultHandler.cs` | New `IAuthorizationMiddlewareResultHandler` implementation | Returns `ErrorResponse` JSON for both 401 and 403 |
+| `WebApi/Program.cs` | Registered handler in DI | Wire up the new handler |
+
 ## Follow-Up Items
 
 - [ ] Regenerate frontend API types (`npm run api:generate`) after merging to pick up the new `ErrorResponse` schemas on 401/403 responses

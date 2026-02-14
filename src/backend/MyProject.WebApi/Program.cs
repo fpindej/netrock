@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.HttpOverrides;
 using MyProject.Infrastructure.Features.Admin.Extensions;
 using MyProject.Infrastructure.Features.Jobs.Extensions;
@@ -61,6 +62,7 @@ try
         Log.Debug("Adding permission-based authorization");
         builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ErrorResponseAuthorizationMiddlewareResultHandler>();
     }
     catch (Exception ex)
     {
