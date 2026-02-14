@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 using MyProject.Infrastructure.Caching.Options;
 
 namespace MyProject.WebApi.Extensions;
@@ -11,13 +11,15 @@ internal static class HealthCheckExtensions
     private const string ReadyTag = "ready";
 
     /// <summary>
-    /// Registers health checks for application dependencies (PostgreSQL and optionally Redis).
+    /// Registers health checks for application dependencies (PostgreSQL and optionally Redis),
+    /// and the HealthChecks UI dashboard with in-memory storage in non-production environments.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configuration">The application configuration for reading connection strings and caching options.</param>
+    /// <param name="environment">The hosting environment, used to conditionally register the HealthChecks UI.</param>
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddApplicationHealthChecks(this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration, IWebHostEnvironment environment)
     {
         var healthChecks = services.AddHealthChecks();
 
@@ -44,16 +46,29 @@ internal static class HealthCheckExtensions
                 tags: [ReadyTag]);
         }
 
+        if (!environment.IsProduction())
+        {
+            services
+                .AddHealthChecksUI(setup =>
+                {
+                    setup.SetEvaluationTimeInSeconds(30);
+                    setup.MaximumHistoryEntriesPerEndpoint(50);
+                    setup.AddHealthCheckEndpoint("API", "/health");
+                })
+                .AddInMemoryStorage();
+        }
+
         return services;
     }
 
     /// <summary>
     /// Maps health check endpoints with rate limiting disabled:
     /// <list type="bullet">
-    ///   <item><c>/health</c> — all checks, JSON response</item>
+    ///   <item><c>/health</c> — all checks, JSON response (HealthChecks UI format)</item>
     ///   <item><c>/health/ready</c> — readiness checks only (DB + Redis), JSON response</item>
     ///   <item><c>/health/live</c> — no checks, always 200 Healthy, plain text</item>
     /// </list>
+    /// In non-production environments, also maps the HealthChecks UI dashboard at <c>/health-ui</c>.
     /// </summary>
     /// <param name="app">The web application.</param>
     /// <returns>The web application for chaining.</returns>
@@ -61,14 +76,14 @@ internal static class HealthCheckExtensions
     {
         app.MapHealthChecks("/health", new()
             {
-                ResponseWriter = WriteJsonResponse
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             })
             .DisableRateLimiting();
 
         app.MapHealthChecks("/health/ready", new()
             {
                 Predicate = check => check.Tags.Contains(ReadyTag),
-                ResponseWriter = WriteJsonResponse
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             })
             .DisableRateLimiting();
 
@@ -77,6 +92,16 @@ internal static class HealthCheckExtensions
                 Predicate = _ => false
             })
             .DisableRateLimiting();
+
+        if (!app.Environment.IsProduction())
+        {
+            app.MapHealthChecksUI(options =>
+                {
+                    options.UIPath = "/health-ui";
+                    options.ApiPath = "/health-ui/api";
+                })
+                .DisableRateLimiting();
+        }
 
         return app;
     }
@@ -99,28 +124,5 @@ internal static class HealthCheckExtensions
         }
 
         return string.Join(",", parts);
-    }
-
-    /// <summary>
-    /// Writes a JSON health check response with per-check details.
-    /// </summary>
-    private static async Task WriteJsonResponse(HttpContext context, HealthReport report)
-    {
-        context.Response.ContentType = "application/json";
-
-        var response = new
-        {
-            status = report.Status.ToString(),
-            checks = report.Entries.Select(entry => new
-            {
-                name = entry.Key,
-                status = entry.Value.Status.ToString(),
-                description = entry.Value.Description,
-                duration = entry.Value.Duration.ToString()
-            }),
-            totalDuration = report.TotalDuration.ToString()
-        };
-
-        await context.Response.WriteAsJsonAsync(response);
     }
 }

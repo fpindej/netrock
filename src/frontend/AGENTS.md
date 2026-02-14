@@ -579,13 +579,13 @@ This generates components in `$lib/components/ui/<component>/`. The configuratio
 
 State files use `.svelte.ts` extension and live in `$lib/state/`:
 
-| File                  | Exports                                                                 |
-| --------------------- | ----------------------------------------------------------------------- |
+| File                  | Exports                                                                    |
+| --------------------- | -------------------------------------------------------------------------- |
 | `cooldown.svelte.ts`  | `createCooldown()` — rate-limit countdown timer (active, remaining, start) |
-| `shake.svelte.ts`     | `createShake()`, `createFieldShakes()` — field-level animation triggers |
-| `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()` — light/dark/system         |
-| `sidebar.svelte.ts`   | `sidebarState`, `toggleSidebar()`, `setSidebarCollapsed()`              |
-| `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()` — keyboard shortcuts         |
+| `shake.svelte.ts`     | `createShake()`, `createFieldShakes()` — field-level animation triggers    |
+| `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()` — light/dark/system            |
+| `sidebar.svelte.ts`   | `sidebarState`, `toggleSidebar()`, `setSidebarCollapsed()`                 |
+| `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()` — keyboard shortcuts            |
 
 **Never** mix reactive state (`.svelte.ts`) with pure utilities (`.ts`).
 

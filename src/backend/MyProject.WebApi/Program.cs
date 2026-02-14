@@ -94,7 +94,7 @@ try
     builder.Services.AddRateLimiting(builder.Configuration);
 
     Log.Debug("ConfigureServices => Setting AddHealthChecks");
-    builder.Services.AddApplicationHealthChecks(builder.Configuration);
+    builder.Services.AddApplicationHealthChecks(builder.Configuration, builder.Environment);
 
     Log.Debug("ConfigureServices => Setting AddApiDefinition");
     builder.AddOpenApiSpecification();
