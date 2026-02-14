@@ -286,22 +286,23 @@ Unused GitHub default labels (`enhancement`, `good first issue`, `help wanted`, 
 |---|---|
 | **Backend services** | Return `Result` / `Result<T>` with descriptive `ErrorMessages.*` constant for expected failures |
 | **Backend exceptions** | `KeyNotFoundException` → 404, `PaginationException` → 400, unhandled → 500 |
-| **Backend middleware** | `ExceptionHandlingMiddleware` catches all, returns `ErrorResponse` JSON with `message` |
+| **Backend middleware** | `ExceptionHandlingMiddleware` catches all, returns `ProblemDetails` (RFC 9457) JSON |
 | **Frontend API errors** | `isValidationProblemDetails()` → field-level errors with shake animation |
-| **Frontend generic errors** | `getErrorMessage()` uses backend's `message` field directly |
+| **Frontend generic errors** | `getErrorMessage()` resolves `detail` → `title` → fallback from `ProblemDetails` |
 | **Frontend network errors** | `isFetchErrorWithCode('ECONNREFUSED')` → 503 "Backend unavailable" |
 
 ### Error Message Flow
 
-The backend returns descriptive English messages directly. No error codes, no frontend translation of error codes — the message is the user-facing string:
+The backend returns descriptive English messages in `ProblemDetails.detail` (RFC 9457). No error codes, no frontend translation of error codes — the message is the user-facing string:
 
 ```
 Backend service
   → Result.Failure(ErrorMessages.Auth.LoginInvalidCredentials)
-  → Controller returns ErrorResponse { message: "Invalid username or password." }
+  → Controller returns Problem(detail: "Invalid username or password.", statusCode: 401)
+  → ProblemDetails { type, title: "Unauthorized", status: 401, detail: "Invalid username or password.", instance }
 
 Frontend getErrorMessage()
-  → uses the `message` field directly (backend messages are specific and user-friendly)
+  → resolves detail → title → fallback (ProblemDetails fields)
 ```
 
 For dynamic messages (containing runtime values like usernames or role names), services use inline string interpolation instead of constants.

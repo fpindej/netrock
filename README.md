@@ -42,7 +42,7 @@ Run the init script, pick a name, and start building your product. Everything el
 | **Caching** | Redis (distributed) + in-memory fallback, cache-aside pattern with auto-invalidation |
 | **Database** | PostgreSQL + EF Core with soft delete, audit fields, and global query filters |
 | **API Documentation** | OpenAPI spec + Scalar UI, with enum handling and schema transformers |
-| **Error Handling** | Result pattern for business logic, middleware for exceptions, structured `ErrorResponse` everywhere |
+| **Error Handling** | Result pattern for business logic, middleware for exceptions, `ProblemDetails` ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)) everywhere |
 | **Logging** | Serilog → Seq with structured request logging |
 | **Account Management** | Registration, login/logout, remember me, password change, profile updates, account deletion |
 | **Admin Panel** | User management, custom role CRUD with permission editor, role assignment, hierarchy enforcement |
