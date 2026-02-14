@@ -87,6 +87,15 @@ public static class ErrorMessages
     }
 
     /// <summary>
+    /// Job scheduling error messages.
+    /// </summary>
+    public static class Jobs
+    {
+        public const string NotFound = "Job not found.";
+        public const string TriggerFailed = "Failed to trigger job.";
+    }
+
+    /// <summary>
     /// Generic entity operation error messages (repository layer).
     /// </summary>
     public static class Entity

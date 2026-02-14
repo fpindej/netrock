@@ -48,6 +48,18 @@ public static class AppPermissions
     }
 
     /// <summary>
+    /// Job scheduling permissions.
+    /// </summary>
+    public static class Jobs
+    {
+        /// <summary>View scheduled jobs, execution history, and status.</summary>
+        public const string View = "jobs.view";
+
+        /// <summary>Trigger, pause, resume, and delete jobs.</summary>
+        public const string Manage = "jobs.manage";
+    }
+
+    /// <summary>
     /// All defined permission values, discovered automatically from nested static class constants.
     /// Adding a new permission constant is sufficient — no manual registration required.
     /// </summary>
