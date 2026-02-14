@@ -6,3 +6,7 @@ export { default as AccountInfoCard } from './AccountInfoCard.svelte';
 export { default as UserManagementCard } from './UserManagementCard.svelte';
 export { default as CreateRoleDialog } from './CreateRoleDialog.svelte';
 export { default as RolePermissionEditor } from './RolePermissionEditor.svelte';
+export { default as JobTable } from './JobTable.svelte';
+export { default as JobInfoCard } from './JobInfoCard.svelte';
+export { default as JobActionsCard } from './JobActionsCard.svelte';
+export { default as JobExecutionHistory } from './JobExecutionHistory.svelte';

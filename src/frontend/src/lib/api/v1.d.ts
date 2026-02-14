@@ -1348,6 +1348,402 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/api/v1/admin/jobs': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Gets all registered recurring jobs. */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Returns the list of recurring jobs */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['RecurringJobResponse'][];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user does not have the required permission */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/admin/jobs/{jobId}': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Gets detailed information about a recurring job, including recent execution history. */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					/** @description The recurring job identifier */
+					jobId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Returns the job details */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['RecurringJobDetailResponse'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user does not have the required permission */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the job was not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		/** Removes a recurring job from the scheduler. */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					/** @description The recurring job identifier */
+					jobId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Job removed successfully */
+				204: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user does not have the required permission */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the job was not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/admin/jobs/{jobId}/trigger': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Manually triggers an immediate execution of a recurring job. */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					/** @description The recurring job identifier */
+					jobId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Job triggered successfully */
+				204: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description If the trigger operation failed */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user does not have the required permission */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the job was not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/admin/jobs/{jobId}/pause': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Pauses a recurring job by disabling its schedule. */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					/** @description The recurring job identifier */
+					jobId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Job paused successfully */
+				204: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user does not have the required permission */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the job was not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/admin/jobs/{jobId}/resume': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Resumes a previously paused recurring job. */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					/** @description The recurring job identifier */
+					jobId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Job resumed successfully */
+				204: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ErrorResponse'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user does not have the required permission */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the job was not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1458,6 +1854,22 @@ export interface components {
 			/** @description Additional error details or technical information. */
 			details?: null | string;
 		};
+		/** @description Represents a single job execution history entry. */
+		JobExecutionResponse: {
+			/** @description The background job identifier for this execution. */
+			jobId?: string;
+			/** @description The execution status (e.g. "Succeeded", "Failed", "Processing"). */
+			status?: string;
+			/**
+			 * Format: date-time
+			 * @description When the execution started.
+			 */
+			startedAt?: null | string;
+			/** @description How long the execution took, or null if still running. */
+			duration?: null | string;
+			/** @description The error message if the execution failed, or null on success. */
+			error?: null | string;
+		};
 		/** @description Paginated response containing a list of admin user records. */
 		ListUsersResponse: {
 			/** @description The users for the current page. */
@@ -1513,6 +1925,60 @@ export interface components {
 			status?: null | number;
 			detail?: null | string;
 			instance?: null | string;
+		};
+		/** @description Detailed recurring job response including execution history. */
+		RecurringJobDetailResponse: {
+			/** @description The unique job identifier. */
+			id?: string;
+			/** @description The cron expression for the job schedule. */
+			cron?: string;
+			/**
+			 * Format: date-time
+			 * @description The next scheduled execution time, or null if paused.
+			 */
+			nextExecution?: null | string;
+			/**
+			 * Format: date-time
+			 * @description The last execution time, or null if never executed.
+			 */
+			lastExecution?: null | string;
+			/** @description The status of the most recent execution. */
+			lastStatus?: null | string;
+			/** @description Whether the job is currently paused. */
+			isPaused?: boolean;
+			/**
+			 * Format: date-time
+			 * @description When the job was registered.
+			 */
+			createdAt?: null | string;
+			/** @description Recent execution history entries. */
+			executionHistory?: components['schemas']['JobExecutionResponse'][];
+		};
+		/** @description Represents a recurring job summary for list views. */
+		RecurringJobResponse: {
+			/** @description The unique job identifier. */
+			id?: string;
+			/** @description The cron expression for the job schedule. */
+			cron?: string;
+			/**
+			 * Format: date-time
+			 * @description The next scheduled execution time, or null if paused.
+			 */
+			nextExecution?: null | string;
+			/**
+			 * Format: date-time
+			 * @description The last execution time, or null if never executed.
+			 */
+			lastExecution?: null | string;
+			/** @description The status of the most recent execution. */
+			lastStatus?: null | string;
+			/** @description Whether the job is currently paused. */
+			isPaused?: boolean;
+			/**
+			 * Format: date-time
+			 * @description When the job was registered.
+			 */
+			createdAt?: null | string;
 		};
 		/**
 		 * @description Request to refresh authentication tokens using a refresh token.

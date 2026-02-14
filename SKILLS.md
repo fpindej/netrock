@@ -197,6 +197,123 @@ dotnet ef database update \
 8. If adding a sidebar nav item: add `permission: Permissions.Orders.View` to the nav item in `SidebarNav.svelte` — items are filtered per-permission, not as a group
 9. Verify: `cd src/frontend && npm run format && npm run lint && npm run check`
 
+### Add a Background Job
+
+The template uses [Hangfire](https://www.hangfire.io/) for recurring background jobs with PostgreSQL persistence. Jobs implement the `IRecurringJobDefinition` interface and are auto-discovered at startup.
+
+**1. Create the job class** in `src/backend/MyProject.Infrastructure/Features/Jobs/RecurringJobs/{JobName}Job.cs`:
+
+```csharp
+using Hangfire;
+using Microsoft.Extensions.Logging;
+
+namespace MyProject.Infrastructure.Features.Jobs.RecurringJobs;
+
+/// <summary>
+/// Brief description of what this job does and why.
+/// </summary>
+internal sealed class MyCleanupJob(
+    MyProjectDbContext dbContext,
+    TimeProvider timeProvider,
+    ILogger<MyCleanupJob> logger) : IRecurringJobDefinition
+{
+    /// <inheritdoc />
+    public string JobId => "my-cleanup";
+
+    /// <inheritdoc />
+    public string CronExpression => Cron.Daily();
+
+    /// <inheritdoc />
+    public async Task ExecuteAsync()
+    {
+        // Job logic here — each execution gets its own DI scope
+        logger.LogInformation("Job completed");
+    }
+}
+```
+
+Key conventions:
+- Mark `internal sealed`
+- Use primary constructor for DI (scoped services work — each execution gets its own scope)
+- Use `TimeProvider` (never `DateTime.UtcNow`)
+- Use descriptive `JobId` (kebab-case, e.g. `"expired-token-cleanup"`)
+- Use `Hangfire.Cron` helpers: `Cron.Hourly()`, `Cron.Daily()`, `Cron.Weekly()`, etc.
+
+**2. Register in DI** — add two lines to `src/backend/MyProject.Infrastructure/Features/Jobs/Extensions/ServiceCollectionExtensions.cs`:
+
+```csharp
+services.AddScoped<MyCleanupJob>();
+services.AddScoped<IRecurringJobDefinition>(sp => sp.GetRequiredService<MyCleanupJob>());
+```
+
+**3. Verify:** `dotnet build src/backend/MyProject.slnx`
+
+That's it — `UseJobScheduling()` discovers all `IRecurringJobDefinition` implementations and registers them with Hangfire automatically.
+
+**Admin UI:** The job will appear in the admin panel at `/admin/jobs` (requires `jobs.view` permission). Users with `jobs.manage` can trigger, pause, resume, and delete jobs.
+
+**Configuration:** Job scheduling can be toggled via `appsettings.json`:
+```json
+"JobScheduling": {
+  "Enabled": true,
+  "WorkerCount": 4
+}
+```
+Set `Enabled` to `false` to disable Hangfire entirely (e.g. read-only replicas, specific deployment nodes).
+
+**Dev dashboard:** In development, the built-in Hangfire dashboard is available at `http://localhost:8080/hangfire`.
+
+### Fire a One-Time Background Job
+
+For ad-hoc work that should run once in the background (send email, call external API, process file), use Hangfire's `IBackgroundJobClient` directly. No custom interface needed — any DI-registered service with a public method works.
+
+**1. Create the job class** (or use any existing service) in `src/backend/MyProject.Infrastructure/Features/Jobs/`:
+
+```csharp
+using Microsoft.Extensions.Logging;
+
+namespace MyProject.Infrastructure.Features.Jobs;
+
+internal sealed class WelcomeEmailJob(
+    IEmailService emailService,
+    ILogger<WelcomeEmailJob> logger)
+{
+    public async Task ExecuteAsync(string userId, string email)
+    {
+        await emailService.SendWelcomeAsync(email);
+        logger.LogInformation("Sent welcome email to user '{UserId}'", userId);
+    }
+}
+```
+
+Key conventions:
+- All parameters must be **JSON-serializable** (strings, numbers, DTOs) — Hangfire persists them to the database
+- Never pass `IServiceProvider`, `HttpContext`, `DbContext`, or other non-serializable objects as arguments
+- Hangfire creates a fresh DI scope per execution, so scoped services (like `DbContext`) are safe to inject via constructor
+
+**2. Register in DI** — add to `ServiceCollectionExtensions.cs`:
+
+```csharp
+services.AddScoped<WelcomeEmailJob>();
+```
+
+**3. Enqueue from any service or controller** — inject `IBackgroundJobClient`:
+
+```csharp
+// Fire-and-forget (runs immediately in background)
+backgroundJobClient.Enqueue<WelcomeEmailJob>(
+    job => job.ExecuteAsync(user.Id, user.Email));
+
+// Delayed (runs after a time span)
+backgroundJobClient.Schedule<WelcomeEmailJob>(
+    job => job.ExecuteAsync(user.Id, user.Email),
+    TimeSpan.FromMinutes(30));
+```
+
+**4. Verify:** `dotnet build src/backend/MyProject.slnx`
+
+See `ExampleFireAndForgetJob.cs` in the codebase for a working reference. The Hangfire dashboard and admin UI at `/admin/jobs` show one-time job executions alongside recurring jobs.
+
 ---
 
 ## Frontend Skills

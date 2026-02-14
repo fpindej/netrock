@@ -36,6 +36,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`AppPermissions.cs`** (add permission) | Seed in `ApplicationBuilderExtensions.SeedRolePermissionsAsync()`, add `[RequirePermission]` to endpoints, update frontend `$lib/utils/permissions.ts` |
 | **`RequirePermission` attribute** (add to endpoint) | Remove any class-level `[Authorize(Roles)]`; ensure permission is defined in `AppPermissions.cs` |
 | **`RoleManagementService`** (change role behavior) | Verify system role protection rules, check security stamp rotation, verify frontend role detail page |
+| **`IRecurringJobDefinition`** (add new job) | Register in `ServiceCollectionExtensions.AddJobScheduling()`, job auto-discovered at startup |
+| **Job scheduling config** (`ServiceCollectionExtensions.AddJobScheduling`) | `Program.cs` must call `AddJobScheduling()` and `UseJobScheduling()` |
 | **OpenAPI transformers** | Regenerate frontend types to verify; check Scalar UI |
 
 ### Frontend Changes
@@ -120,6 +122,26 @@ src/frontend/src/
   routes/(app)/     {feature}/+page.svelte, +page.server.ts
   routes/(public)/  login/+page.svelte
   styles/           themes.css, tailwind.css, animations.css
+```
+
+### Job Scheduling Patterns
+
+```
+src/backend/MyProject.Infrastructure/Features/Jobs/
+  IRecurringJobDefinition.cs                          Interface for recurring jobs
+  RecurringJobs/{JobName}Job.cs                       Recurring job implementations
+  Examples/ExampleFireAndForgetJob.cs                 Example one-time job (removable)
+  Services/JobManagementService.cs                    Admin API service
+  Options/JobSchedulingOptions.cs                     Configuration (Enabled, WorkerCount)
+  Extensions/ServiceCollectionExtensions.cs           DI registration
+  Extensions/ApplicationBuilderExtensions.cs          Middleware + job registration
+src/backend/MyProject.Application/Features/Jobs/
+  IJobManagementService.cs                            Admin API interface
+  Dtos/RecurringJobOutput.cs, ...                     Job DTOs
+src/backend/MyProject.WebApi/Features/Admin/
+  JobsController.cs                                   Admin job endpoints
+  JobsMapper.cs                                       DTO mapping
+  Dtos/Jobs/                                          Response DTOs
 ```
 
 ### Singleton Files (no pattern — memorize these)
