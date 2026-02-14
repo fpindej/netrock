@@ -46,6 +46,7 @@ Run the init script, pick a name, and start building your product. Everything el
 | **Logging** | Serilog → Seq with structured request logging |
 | **Account Management** | Registration, login/logout, remember me, password change, profile updates, account deletion |
 | **Admin Panel** | User management, custom role CRUD with permission editor, role assignment, hierarchy enforcement |
+| **Background Jobs** | Hangfire with PostgreSQL persistence — recurring jobs via `IRecurringJobDefinition`, fire-and-forget via `IBackgroundJobClient`, admin UI with trigger/pause/resume/delete |
 | **Soft Refresh** | Role/permission changes rotate security stamps but preserve refresh tokens — users silently re-authenticate without logout |
 
 ### Frontend — SvelteKit / Svelte 5
@@ -60,7 +61,7 @@ Run the init script, pick a name, and start building your product. Everything el
 | **Security Headers** | CSP-ready, X-Frame-Options, Referrer-Policy, Permissions-Policy on every response |
 | **Permission Guards** | Frontend route and component guards driven by JWT permission claims — pages, nav items, and actions gated per permission |
 | **Responsive Layout** | Sidebar navigation with mobile drawer, breakpoint-aware page layouts |
-| **Admin UI** | User list with search, role list with create/edit/delete, permission checkbox editor grouped by category |
+| **Admin UI** | User list with search, role list with create/edit/delete, permission checkbox editor grouped by category, job dashboard with trigger/pause/resume |
 
 ### Infrastructure
 
@@ -87,8 +88,9 @@ Backend API (.NET :8080)
     │  Clean Architecture
     │  WebApi → Application ← Infrastructure → Domain
     │
-    ├── PostgreSQL (:5432)  — EF Core, soft delete, audit trails
+    ├── PostgreSQL (:5432)  — EF Core, soft delete, audit trails, Hangfire storage
     ├── Redis (:6379)       — Distributed cache, security stamp lookup
+    ├── Hangfire            — Recurring + fire-and-forget background jobs
     └── Seq (:80)           — Structured log aggregation
 ```
 
@@ -199,7 +201,7 @@ src/
         │   └── config/              # App configuration
         └── routes/
             ├── (app)/                # Authenticated pages
-            │   └── admin/            # Admin panel (users, roles, permissions)
+            │   └── admin/            # Admin panel (users, roles, permissions, jobs)
             ├── (public)/             # Public pages (login)
             └── api/                  # API proxy to backend
 ```

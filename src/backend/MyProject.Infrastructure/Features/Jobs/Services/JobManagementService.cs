@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using MyProject.Application.Features.Jobs;
 using MyProject.Application.Features.Jobs.Dtos;
 using MyProject.Domain;
+using MyProject.Infrastructure.Features.Jobs.Extensions;
 
 namespace MyProject.Infrastructure.Features.Jobs.Services;
 
@@ -167,7 +168,7 @@ internal sealed class JobManagementService(
             return Task.FromResult(Result.Success());
         }
 
-        RecurringJob.AddOrUpdate(jobId, () => NoOp(), originalCron);
+        RecurringJob.AddOrUpdate(jobId, () => ApplicationBuilderExtensions.ExecuteJobAsync(jobId), originalCron);
         logger.LogInformation("Resumed job '{JobId}' (restored cron: '{RestoredCron}')", jobId, originalCron);
         return Task.FromResult(Result.Success());
     }
