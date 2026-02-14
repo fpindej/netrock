@@ -26,13 +26,16 @@ internal class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken
         builder.Property(x => x.ExpiredAt)
             .IsRequired();
 
-        builder.Property(x => x.Used)
+        builder.Property(x => x.IsUsed)
+            .HasColumnName("Used")
             .IsRequired();
 
-        builder.Property(x => x.Invalidated)
+        builder.Property(x => x.IsInvalidated)
+            .HasColumnName("Invalidated")
             .IsRequired();
 
         builder.Property(x => x.IsPersistent)
+            .HasColumnName("Persistent")
             .IsRequired()
             .HasDefaultValue(false);
 

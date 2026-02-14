@@ -65,8 +65,8 @@ internal class AuthenticationService(
             UserId = user.Id,
             CreatedAt = utcNow.UtcDateTime,
             ExpiredAt = utcNow.UtcDateTime.AddDays(_jwtOptions.RefreshToken.ExpiresInDays),
-            Used = false,
-            Invalidated = false,
+            IsUsed = false,
+            IsInvalidated = false,
             IsPersistent = rememberMe
         };
 
@@ -157,28 +157,28 @@ internal class AuthenticationService(
             return Fail(ErrorMessages.Auth.TokenNotFound);
         }
 
-        if (storedToken.Invalidated)
+        if (storedToken.IsInvalidated)
         {
             return Fail(ErrorMessages.Auth.TokenInvalidated);
         }
 
-        if (storedToken.Used)
+        if (storedToken.IsUsed)
         {
             // Security alert: Token reuse! Revoke all tokens for this user.
-            storedToken.Invalidated = true;
+            storedToken.IsInvalidated = true;
             await RevokeUserTokens(storedToken.UserId, cancellationToken);
             return Fail(ErrorMessages.Auth.TokenReused);
         }
 
         if (storedToken.ExpiredAt < timeProvider.GetUtcNow().UtcDateTime)
         {
-            storedToken.Invalidated = true;
+            storedToken.IsInvalidated = true;
             await dbContext.SaveChangesAsync(cancellationToken);
             return Fail(ErrorMessages.Auth.TokenExpired);
         }
 
         // Mark current token as used
-        storedToken.Used = true;
+        storedToken.IsUsed = true;
 
         var user = storedToken.User;
         if (user is null)
@@ -197,8 +197,8 @@ internal class AuthenticationService(
             UserId = user.Id,
             CreatedAt = utcNow.UtcDateTime,
             ExpiredAt = storedToken.ExpiredAt,
-            Used = false,
-            Invalidated = false,
+            IsUsed = false,
+            IsInvalidated = false,
             IsPersistent = storedToken.IsPersistent
         };
 
@@ -288,12 +288,12 @@ internal class AuthenticationService(
     private async Task RevokeUserTokens(Guid userId, CancellationToken cancellationToken = default)
     {
         var tokens = await dbContext.RefreshTokens
-            .Where(rt => rt.UserId == userId && !rt.Invalidated)
+            .Where(rt => rt.UserId == userId && !rt.IsInvalidated)
             .ToListAsync(cancellationToken);
 
         foreach (var token in tokens)
         {
-            token.Invalidated = true;
+            token.IsInvalidated = true;
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
