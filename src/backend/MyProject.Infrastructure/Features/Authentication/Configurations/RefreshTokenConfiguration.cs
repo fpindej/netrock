@@ -32,7 +32,7 @@ internal class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken
         builder.Property(x => x.Invalidated)
             .IsRequired();
 
-        builder.Property(x => x.Persistent)
+        builder.Property(x => x.IsPersistent)
             .IsRequired()
             .HasDefaultValue(false);
 

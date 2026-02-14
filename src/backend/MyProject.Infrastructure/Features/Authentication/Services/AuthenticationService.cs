@@ -67,7 +67,7 @@ internal class AuthenticationService(
             ExpiredAt = utcNow.UtcDateTime.AddDays(_jwtOptions.RefreshToken.ExpiresInDays),
             Used = false,
             Invalidated = false,
-            Persistent = rememberMe
+            IsPersistent = rememberMe
         };
 
         dbContext.RefreshTokens.Add(refreshTokenEntity);
@@ -199,7 +199,7 @@ internal class AuthenticationService(
             ExpiredAt = storedToken.ExpiredAt,
             Used = false,
             Invalidated = false,
-            Persistent = storedToken.Persistent
+            IsPersistent = storedToken.IsPersistent
         };
 
         dbContext.RefreshTokens.Add(newRefreshTokenEntity);
@@ -207,7 +207,7 @@ internal class AuthenticationService(
 
         if (useCookies)
         {
-            SetAuthCookies(newAccessToken, newRefreshTokenString, storedToken.Persistent, utcNow,
+            SetAuthCookies(newAccessToken, newRefreshTokenString, storedToken.IsPersistent, utcNow,
                 new DateTimeOffset(storedToken.ExpiredAt, TimeSpan.Zero));
         }
 
