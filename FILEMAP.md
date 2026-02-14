@@ -42,6 +42,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`RateLimitingOptions.cs`** (add/rename option class) | `RateLimiterExtensions.cs`, `appsettings.json`, `appsettings.Development.json` |
 | **`RateLimiterExtensions.cs`** (add policy) | Requires matching constant in `RateLimitPolicies.cs` and config in `RateLimitingOptions.cs` |
 | **Route constraint** (add/modify in `Routing/`) | `Program.cs` constraint registration, route templates using that constraint |
+| **`HealthCheckExtensions.cs`** (change endpoints/checks) | `docker-compose.local.yml` healthcheck URLs, frontend health proxy `+server.ts` |
 | **OpenAPI transformers** | Regenerate frontend types to verify; check Scalar UI |
 
 ### Frontend Changes

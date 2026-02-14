@@ -94,7 +94,7 @@ try
     builder.Services.AddRateLimiting(builder.Configuration);
 
     Log.Debug("ConfigureServices => Setting AddHealthChecks");
-    builder.Services.AddHealthChecks();
+    builder.Services.AddApplicationHealthChecks(builder.Configuration);
 
     Log.Debug("ConfigureServices => Setting AddApiDefinition");
     builder.AddOpenApiSpecification();
@@ -179,7 +179,7 @@ try
     app.MapControllers();
 
     Log.Debug("Setting endpoints => MapHealthChecks");
-    app.MapHealthChecks("/health");
+    app.MapHealthCheckEndpoints();
 
     await app.RunAsync();
 }

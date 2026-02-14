@@ -34,10 +34,19 @@ services:
     <<: *common-settings
     ports:
       - "${API_PORT:-{INIT_API_PORT}}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     depends_on:
-      - db
-      - redis
-      - seq
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      seq:
+        condition: service_started
 
   seq:
     image: datalust/seq:latest
@@ -60,6 +69,12 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   db:
     image: postgres:15-alpine
@@ -70,6 +85,12 @@ services:
       - db_data:/var/lib/postgresql/data
     ports:
       - "${DB_PORT:-{INIT_DB_PORT}}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
   frontend:
     build:
@@ -83,7 +104,8 @@ services:
     ports:
       - "${FRONTEND_PORT:-{INIT_FRONTEND_PORT}}:5173"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     <<: *common-settings
 
 volumes:
