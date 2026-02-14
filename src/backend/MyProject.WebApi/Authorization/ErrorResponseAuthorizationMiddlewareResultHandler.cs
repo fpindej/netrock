@@ -28,6 +28,7 @@ internal sealed class ErrorResponseAuthorizationMiddlewareResultHandler : IAutho
         if (authorizeResult.Challenged)
         {
             httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            httpContext.Response.Headers.WWWAuthenticate = "Bearer";
             httpContext.Response.ContentType = "application/json";
             await httpContext.Response.WriteAsync(
                 JsonSerializer.Serialize(
