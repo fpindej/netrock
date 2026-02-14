@@ -15,6 +15,7 @@ namespace MyProject.WebApi.Features.Users;
 [Route("api/[controller]")]
 [Authorize]
 [Tags("Users")]
+[ProducesErrorResponseType(typeof(ErrorResponse))]
 public class UsersController(IUserService userService) : ControllerBase
 {
     /// <summary>
@@ -25,7 +26,7 @@ public class UsersController(IUserService userService) : ControllerBase
     /// <response code="401">If the user is not authenticated</response>
     [HttpGet("me")]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<UserResponse>> GetCurrentUser(CancellationToken cancellationToken)
     {
         var userResult = await userService.GetCurrentUserAsync(cancellationToken);
@@ -48,8 +49,8 @@ public class UsersController(IUserService userService) : ControllerBase
     /// <response code="401">If the user is not authenticated</response>
     [HttpPatch("me")]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<UserResponse>> UpdateCurrentUser(
         [FromBody] UpdateUserRequest request,
         CancellationToken cancellationToken)
@@ -75,9 +76,9 @@ public class UsersController(IUserService userService) : ControllerBase
     [HttpDelete("me")]
     [EnableRateLimiting(RateLimitPolicies.Sensitive)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult> DeleteAccount(
         [FromBody] DeleteAccountRequest request,
         CancellationToken cancellationToken)

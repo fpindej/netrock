@@ -86,6 +86,10 @@ try
         .AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        })
+        .ConfigureApiBehaviorOptions(options =>
+        {
+            options.SuppressMapClientErrors = true;
         });
 
     Log.Debug("Adding FluentValidation");

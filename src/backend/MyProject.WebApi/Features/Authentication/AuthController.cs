@@ -18,6 +18,7 @@ namespace MyProject.WebApi.Features.Authentication;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Auth")]
+[ProducesErrorResponseType(typeof(ErrorResponse))]
 public class AuthController(IAuthenticationService authenticationService) : ControllerBase
 {
     /// <summary>
@@ -33,9 +34,9 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     [HttpPost("login")]
     [EnableRateLimiting(RateLimitPolicies.Auth)]
     [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<AuthenticationResponse>> Login(
         [FromBody] LoginRequest request,
         [FromQuery] bool useCookies = false,
@@ -64,8 +65,8 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     [HttpPost("refresh")]
     [EnableRateLimiting(RateLimitPolicies.Auth)]
     [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<AuthenticationResponse>> Refresh(
         [FromBody] RefreshRequest? request,
         [FromQuery] bool useCookies = false,
@@ -103,7 +104,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     [Authorize]
     [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult> Logout(CancellationToken cancellationToken)
     {
         await authenticationService.Logout(cancellationToken);
@@ -121,8 +122,8 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     [HttpPost("register")]
     [EnableRateLimiting(RateLimitPolicies.Registration)]
     [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
         var result = await authenticationService.Register(request.ToRegisterInput(), cancellationToken);
@@ -149,9 +150,9 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     [HttpPost("change-password")]
     [EnableRateLimiting(RateLimitPolicies.Sensitive)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
     {
         var result = await authenticationService.ChangePasswordAsync(request.ToChangePasswordInput(), cancellationToken);

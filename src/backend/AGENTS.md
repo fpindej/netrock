@@ -526,7 +526,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     /// <response code="401">If the credentials are invalid</response>
     [HttpPost("login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         var result = await authenticationService.Login(request.Username, request.Password, cancellationToken);
@@ -539,8 +539,9 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
 Rules:
 - Always include `/// <summary>` XML docs — these generate OpenAPI descriptions consumed by the frontend
-- Always include `[ProducesResponseType]` for all possible status codes — with `typeof(ErrorResponse)` on error codes that return a body (400, 401, etc.)
-- **`[ProducesResponseType]` goes on the action, never on the controller or base class.** Each action explicitly declares its complete response contract so the OAS entry is self-contained and precise. Even when multiple actions share a status code (e.g., 401 on all authorized endpoints, 429 on all rate-limited endpoints), repeat the attribute per-action — class-level placement silently applies to actions that don't need it, creating noise in the spec and misleading generated types. Example: only add 429 to endpoints with `[EnableRateLimiting]`, not to the base class just because the global limiter exists.
+- Always include `[ProducesResponseType]` for all possible status codes — **without** `typeof(...)` on error codes (400, 401, 403, 404, 429). The error response type is set globally via `[ProducesErrorResponseType(typeof(ErrorResponse))]` on base controllers (see below). Only specify `typeof(T)` on success codes (200, 201).
+- **Error response type convention**: `[ProducesErrorResponseType(typeof(ErrorResponse))]` is declared on `ApiController` (base class) and on standalone controllers (`AuthController`, `UsersController`). Combined with `SuppressMapClientErrors = true` in `Program.cs`, this ensures all error status codes use `ErrorResponse` instead of ASP.NET's default `ProblemDetails`. Never add `typeof(ErrorResponse)` to individual `[ProducesResponseType]` attributes.
+- **`[ProducesResponseType]` for status codes goes on the action.** Each action explicitly declares which status codes it can produce. Only add 429 to endpoints with `[EnableRateLimiting]`, 404 only on lookup endpoints, etc.
 - Always accept `CancellationToken` as the last parameter on async endpoints
 - **Never add `/// <param name="cancellationToken">`** — ASP.NET excludes `CancellationToken` from OAS parameters, but the `<param>` text leaks into `requestBody.description`. CS1573 is suppressed project-wide.
 - Only add `/// <param>` tags for parameters that should appear in the OAS (request body, route/query params)
@@ -1446,7 +1447,7 @@ Before adding or modifying any endpoint, verify:
 - [ ] `/// <summary>` on the controller action describing what it does
 - [ ] `/// <param>` for every **visible** parameter (request body, route, query) — **never** for `CancellationToken` (leaks into `requestBody.description`)
 - [ ] `/// <response code="...">` for every possible status code
-- [ ] `[ProducesResponseType]` for every status code — with `typeof(T)` for response bodies, `typeof(ErrorResponse)` for all error codes (400, 401, 403, 404, 429)
+- [ ] `[ProducesResponseType]` for every status code — with `typeof(T)` for success bodies (200, 201), **no type** on error codes (the controller's `[ProducesErrorResponseType(typeof(ErrorResponse))]` handles it)
 - [ ] `ActionResult<T>` return type (not bare `ActionResult`) when returning a success body
 - [ ] Error responses always return `new ErrorResponse { Message = ... }` — never raw strings or anonymous objects
 - [ ] `/// <summary>` on every DTO class
@@ -1455,7 +1456,7 @@ Before adding or modifying any endpoint, verify:
 - [ ] Data annotations (`[MaxLength]`, `[Range]`, etc.) on request DTOs for spec constraints
 - [ ] `[Description("...")]` on base-class query parameter properties (e.g. `PaginatedRequest`) — XML `<summary>` doesn't flow to inherited OAS parameters
 - [ ] `CancellationToken` as the last parameter on all async endpoints, passed through to service calls — **no** `<param>` XML doc for it
-- [ ] All `[ProducesResponseType]` attributes are on the action, not on the controller or base class — each action declares only the status codes it can actually produce (e.g., 429 only with `[EnableRateLimiting]`, 404 only on lookup endpoints)
+- [ ] All `[ProducesResponseType]` attributes are on the action — each action declares only the status codes it can actually produce (e.g., 429 only with `[EnableRateLimiting]`, 404 only on lookup endpoints). The only controller-level response attribute is `[ProducesErrorResponseType(typeof(ErrorResponse))]`.
 - [ ] Route uses lowercase (`[Route("api/[controller]")]` + `LowercaseUrls = true`)
 - [ ] Enums serialize as strings with all members listed (handled by `JsonStringEnumConverter` + `EnumSchemaTransformer` — verify in Scalar)
 - [ ] No `#pragma warning disable` — CS1573 (partial param docs) is suppressed project-wide because omitting `CancellationToken` param tags is intentional

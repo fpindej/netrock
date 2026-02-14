@@ -5,7 +5,7 @@
 
 ## Summary
 
-Audited the full OpenAPI specification setup — document transformers, operation transformers, schema transformers, controller annotations, and Scalar UI configuration. Identified 6 issues, fixed 5 (the 3 original plus 2 discovered during review), and evaluated the remaining 3 as not worth fixing. Also made the runtime match the spec by ensuring all 401/403 responses return `ErrorResponse` JSON bodies.
+Audited the full OpenAPI specification setup — document transformers, operation transformers, schema transformers, controller annotations, and Scalar UI configuration. Identified 6 issues, fixed 5 (the 3 original plus 2 discovered during review), and evaluated the remaining 3 as not worth fixing. Also made the runtime match the spec by ensuring all 401/403 responses return `ErrorResponse` JSON bodies. Discovered late that `[ApiController]`'s `ProblemDetails` convention was silently overriding all error type annotations — fixed with `SuppressMapClientErrors` + `[ProducesErrorResponseType]` and cleaned up all controllers to use the centralized pattern.
 
 ## Changes Made
 
@@ -13,10 +13,10 @@ Audited the full OpenAPI specification setup — document transformers, operatio
 |------|--------|--------|
 | `WebApi/Features/OpenApi/Transformers/BearerSecurityOperationTransformer.cs` | New operation transformer that applies `bearerAuth` security requirement to `[Authorize]` endpoints | Security scheme was defined in the spec but never applied to operations — clients couldn't see which endpoints require auth |
 | `WebApi/Features/OpenApi/Extensions/WebApplicationBuilderExtensions.cs` | Registered `BearerSecurityOperationTransformer` | Wire up the new transformer |
-| `WebApi/Features/Admin/AdminController.cs` | Added `typeof(ErrorResponse)` to all 28 untyped 401/403 and 10 untyped 404 `ProducesResponseType` attributes; added `[Tags("Admin")]` | Spec consumers see the error response schema; endpoints grouped under "Admin" tag |
-| `WebApi/Features/Admin/JobsController.cs` | Added `typeof(ErrorResponse)` to all 14 untyped 401/403 and 5 untyped 404 `ProducesResponseType` attributes; added `[Tags("Jobs")]` | Same as above; grouped under "Jobs" tag |
-| `WebApi/Features/Users/UsersController.cs` | Added `typeof(ErrorResponse)` to 3 untyped 401 `ProducesResponseType` attributes; added `[Tags("Users")]` | Same as above; grouped under "Users" tag |
-| `WebApi/Features/Authentication/AuthController.cs` | Added `typeof(ErrorResponse)` to 2 untyped 401 `ProducesResponseType` attributes (logout, change-password); added `[Tags("Auth")]` | Same as above; grouped under "Auth" tag |
+| `WebApi/Features/Admin/AdminController.cs` | Added `[Tags("Admin")]`; error `ProducesResponseType` cleaned to untyped (inherits from `ApiController`) | Endpoints grouped under "Admin" tag; error types via `ProducesErrorResponseType` |
+| `WebApi/Features/Admin/JobsController.cs` | Added `[Tags("Jobs")]`; error `ProducesResponseType` cleaned to untyped (inherits from `ApiController`) | Same; grouped under "Jobs" tag |
+| `WebApi/Features/Users/UsersController.cs` | Added `[Tags("Users")]`, `[ProducesErrorResponseType(typeof(ErrorResponse))]`; error `ProducesResponseType` cleaned to untyped | Same; grouped under "Users" tag |
+| `WebApi/Features/Authentication/AuthController.cs` | Added `[Tags("Auth")]`, `[ProducesErrorResponseType(typeof(ErrorResponse))]`; error `ProducesResponseType` cleaned to untyped | Same; grouped under "Auth" tag |
 
 ## Decisions & Reasoning
 
@@ -26,11 +26,10 @@ Audited the full OpenAPI specification setup — document transformers, operatio
 - **Alternatives considered**: (a) Global security requirement on the document, (b) Per-endpoint `[OpenApiSecurity]` attributes
 - **Reasoning**: Global security would mark anonymous endpoints (login, register, refresh) as requiring auth. Per-endpoint attributes would be verbose and error-prone. The transformer automatically detects authorization metadata, so new endpoints get correct security annotations without manual work.
 
-### Fix 2: Typed ErrorResponse on 401/403
+### Fix 2: ErrorResponse as default error type
 
-- **Choice**: Added `typeof(ErrorResponse)` to all `ProducesResponseType` attributes for 401 and 403 status codes
-- **Alternatives considered**: Leaving them untyped
-- **Reasoning**: Untyped error responses mean generated clients don't know the error shape. All controllers already return `ErrorResponse` instances at runtime, so the spec should reflect that.
+- **Choice**: Initially added `typeof(ErrorResponse)` to individual `ProducesResponseType` attributes. Later replaced by `[ProducesErrorResponseType(typeof(ErrorResponse))]` on base controllers + `SuppressMapClientErrors = true` (see Fix 6).
+- **Reasoning**: All controllers return `ErrorResponse` at runtime. Centralizing the error type on the controller class is cleaner than repeating it on every endpoint. The individual `typeof(ErrorResponse)` approach was also silently overridden by `[ApiController]`'s ProblemDetails convention (discovered in Fix 6).
 
 ### Fix 3: Explicit Tags on controllers
 
@@ -82,7 +81,28 @@ flowchart TD
     CONTROLLER -->|Unhandled exception| EX_MW["ExceptionHandlingMiddleware\n→ 500 + ErrorResponse"]
 ```
 
+### Fix 6: SuppressMapClientErrors + ProducesErrorResponseType (spec accuracy)
+
+- **Problem**: After Fixes 1–5, `npm run api:generate` produced no diff. Fetching the live OAS JSON at `/openapi/v1.json` revealed all 401/403/404 responses still referenced `ProblemDetails`, not `ErrorResponse`. The `[ProducesResponseType(typeof(ErrorResponse), ...)]` annotations were being **silently overridden** by `[ApiController]`'s built-in "Problem details for error status codes" convention, which maps all 4xx to `ProblemDetails` in the OAS metadata.
+- **Root cause**: `[ApiController]` enables `ClientErrorMapping` by default, which replaces the type in any `ProducesResponseType` for 4xx status codes with `ProblemDetails`. Only non-error codes (200, 201, 204) and codes without the `[ApiController]` convention (e.g., 400 returned via `ValidationProblem`) were unaffected.
+- **Choice**: Two-part fix:
+  1. `SuppressMapClientErrors = true` in `ConfigureApiBehaviorOptions` → disables the `ProblemDetails` override
+  2. `[ProducesErrorResponseType(typeof(ErrorResponse))]` on `ApiController` (base), `AuthController`, and `UsersController` → sets the default error response type for all error status codes
+- **Cleanup**: Removed all `typeof(ErrorResponse)` from individual `[ProducesResponseType]` error attributes across all 4 controllers (AdminController, JobsController, AuthController, UsersController). Error status codes now inherit the type from the controller-level `ProducesErrorResponseType`.
+- **Security transformer fix**: `BearerSecurityOperationTransformer` was also not working — `EndpointMetadata` doesn't include `[Authorize]` inherited from base controllers. Rewrote to use `ControllerActionDescriptor` reflection with `inherit: true`.
+
+| File | Change | Reason |
+|------|--------|--------|
+| `WebApi/Program.cs` | Added `SuppressMapClientErrors = true` | Prevent `[ApiController]` from overriding error types with `ProblemDetails` |
+| `WebApi/Shared/ApiController.cs` | Added `[ProducesErrorResponseType(typeof(ErrorResponse))]` | Default error type for all endpoints inheriting from base controller |
+| `WebApi/Features/Authentication/AuthController.cs` | Added `[ProducesErrorResponseType(typeof(ErrorResponse))]`; removed `typeof(ErrorResponse)` from all error `ProducesResponseType` | Centralized error type; clean annotations |
+| `WebApi/Features/Users/UsersController.cs` | Added `[ProducesErrorResponseType(typeof(ErrorResponse))]`; removed `typeof(ErrorResponse)` from all error `ProducesResponseType` | Same |
+| `WebApi/Features/Admin/AdminController.cs` | Removed `typeof(ErrorResponse)` from all error `ProducesResponseType` | Inherits from `ApiController` |
+| `WebApi/Features/Admin/JobsController.cs` | Removed `typeof(ErrorResponse)` from all error `ProducesResponseType` | Same |
+| `WebApi/Features/OpenApi/Transformers/BearerSecurityOperationTransformer.cs` | Use `ControllerActionDescriptor` reflection with `inherit: true` | `EndpointMetadata` doesn't include inherited `[Authorize]` from base classes |
+| `AGENTS.md` | Updated ProducesResponseType guidance, OAS checklist | Document new `ProducesErrorResponseType` pattern |
+
 ## Follow-Up Items
 
-- [ ] Regenerate frontend API types (`npm run api:generate`) after merging to pick up the new `ErrorResponse` schemas on 401/403/404 responses
+- [ ] Regenerate frontend API types (`npm run api:generate`) after merging to pick up the new `ErrorResponse` schemas on 401/403/404 responses and `bearerAuth` security requirements
 - [ ] Update 4 XML doc comments in `JobsController` that are missing `/// <response code="400">` entries (low priority — attributes are correct, only comments are incomplete)

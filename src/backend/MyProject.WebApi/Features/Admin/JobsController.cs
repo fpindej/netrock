@@ -28,8 +28,8 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
     [HttpGet("jobs")]
     [RequirePermission(AppPermissions.Jobs.View)]
     [ProducesResponseType(typeof(IReadOnlyList<RecurringJobResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<IReadOnlyList<RecurringJobResponse>>> ListJobs()
     {
         var jobs = await jobManagementService.GetRecurringJobsAsync();
@@ -48,9 +48,9 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
     [HttpGet("jobs/{jobId:jobId}")]
     [RequirePermission(AppPermissions.Jobs.View)]
     [ProducesResponseType(typeof(RecurringJobDetailResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<RecurringJobDetailResponse>> GetJob(string jobId)
     {
         var result = await jobManagementService.GetRecurringJobDetailAsync(jobId);
@@ -76,10 +76,10 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
     [RequirePermission(AppPermissions.Jobs.Manage)]
     [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult> RestoreJobs()
     {
         var result = await jobManagementService.RestoreJobsAsync();
@@ -106,11 +106,11 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
     [RequirePermission(AppPermissions.Jobs.Manage)]
     [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult> TriggerJob(string jobId)
     {
         var result = await jobManagementService.TriggerJobAsync(jobId);
@@ -136,11 +136,11 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
     [RequirePermission(AppPermissions.Jobs.Manage)]
     [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult> RemoveJob(string jobId)
     {
         var result = await jobManagementService.RemoveJobAsync(jobId);
@@ -166,11 +166,11 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
     [RequirePermission(AppPermissions.Jobs.Manage)]
     [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult> PauseJob(string jobId)
     {
         var result = await jobManagementService.PauseJobAsync(jobId);
@@ -196,11 +196,11 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
     [RequirePermission(AppPermissions.Jobs.Manage)]
     [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult> ResumeJob(string jobId)
     {
         var result = await jobManagementService.ResumeJobAsync(jobId);
