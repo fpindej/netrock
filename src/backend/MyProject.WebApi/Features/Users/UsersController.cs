@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MyProject.Application.Identity;
 using MyProject.WebApi.Features.Users.Dtos;
 using MyProject.WebApi.Features.Users.Dtos.DeleteAccount;
+using MyProject.WebApi.Options;
 using MyProject.WebApi.Shared;
 
 namespace MyProject.WebApi.Features.Users;
@@ -71,9 +73,11 @@ public class UsersController(IUserService userService) : ControllerBase
     /// <response code="400">If the password is incorrect or the request is invalid</response>
     /// <response code="401">If the user is not authenticated</response>
     [HttpDelete("me")]
+    [EnableRateLimiting(RateLimitingOptions.SensitiveLimitOptions.PolicyName)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult> DeleteAccount(
         [FromBody] DeleteAccountRequest request,
         CancellationToken cancellationToken)

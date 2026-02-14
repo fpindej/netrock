@@ -32,6 +32,8 @@ internal static class RateLimiterExtensions
             ConfigureGlobalLimiter(opt, rateLimitOptions.Global);
             ConfigureOnRejected(opt);
             AddRegistrationPolicy(opt, rateLimitOptions.Registration);
+            AddAuthPolicy(opt, rateLimitOptions.Auth);
+            AddSensitivePolicy(opt, rateLimitOptions.Sensitive);
             AddAdminMutationsPolicy(opt, rateLimitOptions.AdminMutations);
         });
 
@@ -94,6 +96,40 @@ internal static class RateLimiterExtensions
 
                 return RateLimitPartition.GetFixedWindowLimiter(ipAddress,
                     _ => CreateFixedWindowOptions(registrationOptions));
+            });
+    }
+
+    /// <summary>
+    /// Adds a fixed-window rate limit policy for login and token refresh endpoints,
+    /// partitioned by IP address to prevent brute-force attacks.
+    /// </summary>
+    private static void AddAuthPolicy(RateLimiterOptions options,
+        RateLimitingOptions.AuthLimitOptions authOptions)
+    {
+        options.AddPolicy(RateLimitingOptions.AuthLimitOptions.PolicyName,
+            context =>
+            {
+                var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+
+                return RateLimitPartition.GetFixedWindowLimiter(ipAddress,
+                    _ => CreateFixedWindowOptions(authOptions));
+            });
+    }
+
+    /// <summary>
+    /// Adds a fixed-window rate limit policy for sensitive authenticated operations
+    /// like password changes and account deletion, partitioned by authenticated user identity.
+    /// </summary>
+    private static void AddSensitivePolicy(RateLimiterOptions options,
+        RateLimitingOptions.SensitiveLimitOptions sensitiveOptions)
+    {
+        options.AddPolicy(RateLimitingOptions.SensitiveLimitOptions.PolicyName,
+            context =>
+            {
+                var userIdentifier = context.User.Identity?.Name ?? "anonymous";
+
+                return RateLimitPartition.GetFixedWindowLimiter(userIdentifier,
+                    _ => CreateFixedWindowOptions(sensitiveOptions));
             });
     }
 

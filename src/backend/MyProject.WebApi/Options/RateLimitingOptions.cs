@@ -30,6 +30,24 @@ public sealed class RateLimitingOptions
     public RegistrationLimitOptions Registration { get; init; } = new();
 
     /// <summary>
+    /// Gets or sets the authentication rate limiter configuration.
+    /// Applies a stricter fixed-window limit to login and token refresh endpoints to prevent brute-force attacks,
+    /// partitioned by IP address.
+    /// </summary>
+    [Required]
+    [ValidateObjectMembers]
+    public AuthLimitOptions Auth { get; init; } = new();
+
+    /// <summary>
+    /// Gets or sets the sensitive operations rate limiter configuration.
+    /// Applies a stricter fixed-window limit to password changes and account deletions,
+    /// partitioned by authenticated user.
+    /// </summary>
+    [Required]
+    [ValidateObjectMembers]
+    public SensitiveLimitOptions Sensitive { get; init; } = new();
+
+    /// <summary>
     /// Gets or sets the admin mutations rate limiter configuration.
     /// Applies a stricter fixed-window limit to state-changing admin and job management operations,
     /// partitioned by authenticated user.
@@ -107,6 +125,52 @@ public sealed class RateLimitingOptions
         {
             PermitLimit = 5;
             Window = TimeSpan.FromMinutes(1);
+            QueueLimit = 0;
+        }
+    }
+
+    /// <summary>
+    /// Configuration options for the authentication fixed-window rate limiter.
+    /// Applied to login and token refresh endpoints, partitioned by IP address.
+    /// </summary>
+    public sealed class AuthLimitOptions : FixedWindowPolicyOptions
+    {
+        /// <summary>
+        /// The policy name used to reference this limiter in <c>[EnableRateLimiting]</c> attributes.
+        /// </summary>
+        public const string PolicyName = "auth";
+
+        /// <summary>
+        /// Initializes default values for the authentication rate limiter.
+        /// Defaults to 10 requests per 1 minute with no queuing.
+        /// </summary>
+        public AuthLimitOptions()
+        {
+            PermitLimit = 10;
+            Window = TimeSpan.FromMinutes(1);
+            QueueLimit = 0;
+        }
+    }
+
+    /// <summary>
+    /// Configuration options for the sensitive operations fixed-window rate limiter.
+    /// Applied to password changes and account deletions, partitioned by authenticated user.
+    /// </summary>
+    public sealed class SensitiveLimitOptions : FixedWindowPolicyOptions
+    {
+        /// <summary>
+        /// The policy name used to reference this limiter in <c>[EnableRateLimiting]</c> attributes.
+        /// </summary>
+        public const string PolicyName = "sensitive";
+
+        /// <summary>
+        /// Initializes default values for the sensitive operations rate limiter.
+        /// Defaults to 5 requests per 5 minutes with no queuing.
+        /// </summary>
+        public SensitiveLimitOptions()
+        {
+            PermitLimit = 5;
+            Window = TimeSpan.FromMinutes(5);
             QueueLimit = 0;
         }
     }
