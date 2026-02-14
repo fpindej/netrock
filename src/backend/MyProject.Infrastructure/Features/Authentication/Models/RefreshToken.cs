@@ -37,6 +37,12 @@ public class RefreshToken
     public bool Invalidated { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the session should persist across browser restarts.
+    /// When true, cookies are set with an explicit expiry; when false, session cookies are used.
+    /// </summary>
+    public bool Persistent { get; set; }
+
+    /// <summary>
     /// Gets or sets the ID of the user who owns this token.
     /// </summary>
     public Guid UserId { get; set; }

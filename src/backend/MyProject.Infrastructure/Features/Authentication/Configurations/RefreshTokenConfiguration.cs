@@ -32,6 +32,10 @@ internal class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken
         builder.Property(x => x.Invalidated)
             .IsRequired();
 
+        builder.Property(x => x.Persistent)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(x => x.UserId)
             .IsRequired();
 
