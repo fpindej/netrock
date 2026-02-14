@@ -197,6 +197,63 @@ dotnet ef database update \
 8. If adding a sidebar nav item: add `permission: Permissions.Orders.View` to the nav item in `SidebarNav.svelte` — items are filtered per-permission, not as a group
 9. Verify: `cd src/frontend && npm run format && npm run lint && npm run check`
 
+### Add a Background Job
+
+The template uses [Hangfire](https://www.hangfire.io/) for recurring background jobs with PostgreSQL persistence. Jobs implement the `IRecurringJobDefinition` interface and are auto-discovered at startup.
+
+**1. Create the job class** in `src/backend/MyProject.Infrastructure/Features/Jobs/RecurringJobs/{JobName}Job.cs`:
+
+```csharp
+using Hangfire;
+using Microsoft.Extensions.Logging;
+
+namespace MyProject.Infrastructure.Features.Jobs.RecurringJobs;
+
+/// <summary>
+/// Brief description of what this job does and why.
+/// </summary>
+internal sealed class MyCleanupJob(
+    MyProjectDbContext dbContext,
+    TimeProvider timeProvider,
+    ILogger<MyCleanupJob> logger) : IRecurringJobDefinition
+{
+    /// <inheritdoc />
+    public string JobId => "my-cleanup";
+
+    /// <inheritdoc />
+    public string CronExpression => Cron.Daily();
+
+    /// <inheritdoc />
+    public async Task ExecuteAsync()
+    {
+        // Job logic here — each execution gets its own DI scope
+        logger.LogInformation("Job completed");
+    }
+}
+```
+
+Key conventions:
+- Mark `internal sealed`
+- Use primary constructor for DI (scoped services work — each execution gets its own scope)
+- Use `TimeProvider` (never `DateTime.UtcNow`)
+- Use descriptive `JobId` (kebab-case, e.g. `"expired-token-cleanup"`)
+- Use `Hangfire.Cron` helpers: `Cron.Hourly()`, `Cron.Daily()`, `Cron.Weekly()`, etc.
+
+**2. Register in DI** — add two lines to `src/backend/MyProject.Infrastructure/Features/Jobs/Extensions/ServiceCollectionExtensions.cs`:
+
+```csharp
+services.AddScoped<MyCleanupJob>();
+services.AddScoped<IRecurringJobDefinition>(sp => sp.GetRequiredService<MyCleanupJob>());
+```
+
+**3. Verify:** `dotnet build src/backend/MyProject.slnx`
+
+That's it — `UseJobScheduling()` discovers all `IRecurringJobDefinition` implementations and registers them with Hangfire automatically.
+
+**Admin UI:** The job will appear in the admin panel at `/admin/jobs` (requires `jobs.view` permission). Users with `jobs.manage` can trigger, pause, resume, and delete jobs.
+
+**Dev dashboard:** In development, the built-in Hangfire dashboard is available at `http://localhost:8080/hangfire`.
+
 ---
 
 ## Frontend Skills
