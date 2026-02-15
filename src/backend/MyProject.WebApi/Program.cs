@@ -147,6 +147,9 @@ try
     Log.Debug("Setting UseCors");
     CorsExtensions.UseCors(app);
 
+    Log.Debug("Setting UseMiddleware => OriginValidationMiddleware");
+    app.UseMiddleware<OriginValidationMiddleware>();
+
     Log.Debug("Setting UseSerilogRequestLogging");
     app.UseSerilogRequestLogging();
 
