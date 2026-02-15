@@ -51,4 +51,22 @@ public interface IAuthenticationService
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A result indicating success or failure.</returns>
     Task<Result> ChangePasswordAsync(ChangePasswordInput input, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Initiates a password reset flow by generating a token and sending a reset email.
+    /// Always returns success to prevent user enumeration — if the user does not exist, no email is sent.
+    /// </summary>
+    /// <param name="email">The email address to send the reset link to.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A result that is always successful (to prevent user enumeration).</returns>
+    Task<Result> ForgotPasswordAsync(string email, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resets a user's password using a previously issued reset token.
+    /// Revokes all existing refresh tokens to force re-authentication on other devices.
+    /// </summary>
+    /// <param name="input">The reset password input containing email, token, and new password.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A result indicating success or failure.</returns>
+    Task<Result> ResetPasswordAsync(ResetPasswordInput input, CancellationToken cancellationToken = default);
 }

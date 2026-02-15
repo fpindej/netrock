@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using MyProject.Application.Caching;
@@ -7,12 +8,14 @@ using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication.Dtos;
+using MyProject.Application.Features.Email;
 using MyProject.Application.Identity;
 using MyProject.Component.Tests.Fixtures;
 using MyProject.Infrastructure.Cryptography;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Features.Authentication.Options;
 using MyProject.Infrastructure.Features.Authentication.Services;
+using MyProject.Infrastructure.Features.Email.Options;
 using MyProject.Infrastructure.Persistence;
 using MyProject.Shared;
 
@@ -27,6 +30,7 @@ public class AuthenticationServiceTests : IDisposable
     private readonly ICookieService _cookieService;
     private readonly IUserContext _userContext;
     private readonly ICacheService _cacheService;
+    private readonly IEmailService _emailService;
     private readonly MyProjectDbContext _dbContext;
     private readonly AuthenticationService _sut;
 
@@ -39,6 +43,7 @@ public class AuthenticationServiceTests : IDisposable
         _cookieService = Substitute.For<ICookieService>();
         _userContext = Substitute.For<IUserContext>();
         _cacheService = Substitute.For<ICacheService>();
+        _emailService = Substitute.For<IEmailService>();
         _dbContext = TestDbContextFactory.Create();
 
         var authOptions = Options.Create(new AuthenticationOptions
@@ -56,6 +61,13 @@ public class AuthenticationServiceTests : IDisposable
             }
         });
 
+        var emailOptions = Options.Create(new EmailOptions
+        {
+            FromAddress = "noreply@test.com",
+            FromName = "Test",
+            FrontendBaseUrl = "https://test.example.com"
+        });
+
         _sut = new AuthenticationService(
             _userManager,
             _signInManager,
@@ -64,7 +76,10 @@ public class AuthenticationServiceTests : IDisposable
             _cookieService,
             _userContext,
             _cacheService,
+            _emailService,
             authOptions,
+            emailOptions,
+            Substitute.For<ILogger<AuthenticationService>>(),
             _dbContext);
     }
 

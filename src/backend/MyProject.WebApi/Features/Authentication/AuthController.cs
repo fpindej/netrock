@@ -5,8 +5,10 @@ using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication;
 using MyProject.Shared;
 using MyProject.WebApi.Features.Authentication.Dtos.ChangePassword;
+using MyProject.WebApi.Features.Authentication.Dtos.ForgotPassword;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
+using MyProject.WebApi.Features.Authentication.Dtos.ResetPassword;
 using MyProject.WebApi.Shared;
 
 namespace MyProject.WebApi.Features.Authentication;
@@ -136,6 +138,50 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         var response = new RegisterResponse { Id = result.Value };
         return Created(string.Empty, response);
+    }
+
+    /// <summary>
+    /// Initiates a password reset flow by sending a reset link to the provided email address.
+    /// Always returns 200 regardless of whether the email exists to prevent user enumeration.
+    /// </summary>
+    /// <param name="request">The forgot password request containing the email address</param>
+    /// <response code="200">Request accepted (email sent if account exists)</response>
+    /// <response code="400">If the request is invalid</response>
+    /// <response code="429">If too many requests have been made</response>
+    [HttpPost("forgot-password")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
+    {
+        await authenticationService.ForgotPasswordAsync(request.Email, cancellationToken);
+        return Ok();
+    }
+
+    /// <summary>
+    /// Resets a user's password using a token received via email.
+    /// Revokes all existing refresh tokens to force re-authentication on other devices.
+    /// </summary>
+    /// <param name="request">The reset password request containing email, token, and new password</param>
+    /// <response code="200">Password reset successfully</response>
+    /// <response code="400">If the request is invalid or the token is expired/invalid</response>
+    /// <response code="429">If too many requests have been made</response>
+    [HttpPost("reset-password")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
+    {
+        var result = await authenticationService.ResetPasswordAsync(request.ToResetPasswordInput(), cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return Ok();
     }
 
     /// <summary>

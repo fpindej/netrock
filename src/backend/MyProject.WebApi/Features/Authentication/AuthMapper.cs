@@ -2,6 +2,7 @@ using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.WebApi.Features.Authentication.Dtos.ChangePassword;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
+using MyProject.WebApi.Features.Authentication.Dtos.ResetPassword;
 
 namespace MyProject.WebApi.Features.Authentication;
 
@@ -38,6 +39,16 @@ internal static class AuthMapper
     public static ChangePasswordInput ToChangePasswordInput(this ChangePasswordRequest request) =>
         new(
             CurrentPassword: request.CurrentPassword,
+            NewPassword: request.NewPassword
+        );
+
+    /// <summary>
+    /// Maps a <see cref="ResetPasswordRequest"/> to a <see cref="ResetPasswordInput"/>.
+    /// </summary>
+    public static ResetPasswordInput ToResetPasswordInput(this ResetPasswordRequest request) =>
+        new(
+            Email: request.Email,
+            Token: request.Token,
             NewPassword: request.NewPassword
         );
 }

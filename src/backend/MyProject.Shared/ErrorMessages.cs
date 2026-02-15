@@ -29,6 +29,8 @@ public static class ErrorMessages
         public const string InsufficientPermissions = "You do not have the required permissions for this action.";
         public const string UserNotFound = "User not found.";
         public const string PasswordIncorrect = "Current password is incorrect.";
+        public const string ResetPasswordFailed = "Password reset failed. The link may have expired or already been used.";
+        public const string ResetPasswordTokenInvalid = "Invalid or expired password reset token.";
     }
 
     /// <summary>
