@@ -123,7 +123,7 @@
 				<Dialog.Close>
 					{#snippet child({ props })}
 						<Button {...props} variant="outline" disabled={isLoading}>
-							{m.settings_deleteAccount_cancel()}
+							{m.common_cancel()}
 						</Button>
 					{/snippet}
 				</Dialog.Close>

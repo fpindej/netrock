@@ -40,6 +40,8 @@
 	"common_close": "Zavřít",
 	"common_cancel": "Zrušit",
 	"common_delete": "Smazat",
+	"common_backToLogin": "Zpět na přihlášení",
+	"common_dangerZone": "Nebezpečná zóna",
 	"common_toggleNavMenu": "Přepnout navigační menu",
 	"common_waitSeconds": "Počkejte {seconds}s",
 
@@ -107,7 +109,6 @@
 "auth_forgotPassword_error": "Nepodařilo se odeslat odkaz pro obnovení",
 	"auth_forgotPassword_successTitle": "Zkontrolujte svou schránku",
 	"auth_forgotPassword_successDescription": "Pokud účet s tímto e-mailem existuje, odeslali jsme odkaz pro obnovení hesla.",
-	"auth_forgotPassword_backToLogin": "Zpět na přihlášení",
 
 	"auth_resetPassword_title": "Obnovení hesla",
 	"auth_resetPassword_subtitle": "Zvolte si nové heslo ke svému účtu.",
@@ -131,7 +132,6 @@
 	"auth_verifyEmail_goToLogin": "Přejít na přihlášení",
 	"auth_verifyEmail_error": "Nepodařilo se ověřit e-mail",
 	"auth_verifyEmail_invalidLink": "Tento ověřovací odkaz je neplatný nebo vypršel.",
-	"auth_verifyEmail_backToLogin": "Zpět na přihlášení",
 
 	"auth_emailBanner_message": "Vaše e-mailová adresa není ověřena.",
 	"auth_emailBanner_resend": "Znovu odeslat ověření",
@@ -180,7 +180,6 @@
 	"profile_avatar_urlHint": "Zadejte platnou URL začínající https://",
 	"profile_avatar_urlInvalid": "Zadejte platnou URL (http:// nebo https://)",
 	"profile_avatar_save": "Uložit avatar",
-	"profile_avatar_cancel": "Zrušit",
 	"profile_avatar_remove": "Odebrat avatar",
 	"profile_avatar_updateSuccess": "Avatar byl úspěšně aktualizován",
 	"profile_avatar_updateError": "Nepodařilo se aktualizovat avatar",
@@ -239,7 +238,6 @@
 	"error_default_description": "Něco se pokazilo. Nejsme si jistí co, ale pravděpodobně to není dobré.",
 	"error_goHome": "Zpět na úvod",
 
-	"settings_deleteAccount_dangerZone": "Nebezpečná zóna",
 	"settings_deleteAccount_dangerDescription": "Jakmile smažete svůj účet, není cesty zpět. Všechna vaše data budou trvale odstraněna.",
 	"settings_deleteAccount_title": "Smazat účet",
 	"settings_deleteAccount_description": "Trvale smazat váš účet a všechna přidružená data.",
@@ -248,7 +246,6 @@
 	"settings_deleteAccount_password": "Heslo",
 	"settings_deleteAccount_passwordPlaceholder": "Zadejte své heslo",
 	"settings_deleteAccount_confirm": "Smazat můj účet",
-	"settings_deleteAccount_cancel": "Zrušit",
 	"settings_deleteAccount_success": "Váš účet byl smazán.",
 	"settings_deleteAccount_error": "Nepodařilo se smazat účet",
 
@@ -319,7 +316,6 @@
 	"admin_userDetail_deleteSuccess": "Uživatelský účet byl smazán",
 	"admin_userDetail_deleteError": "Nepodařilo se smazat uživatelský účet",
 	"admin_userDetail_selectRole": "Vyberte roli...",
-	"admin_userDetail_dangerZone": "Nebezpečná zóna",
 	"admin_userDetail_cannotManage": "Nemáte dostatečná oprávnění ke správě tohoto uživatele.",
 
 	"admin_roles_title": "Role",

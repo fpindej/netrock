@@ -40,6 +40,8 @@
 	"common_close": "Close",
 	"common_cancel": "Cancel",
 	"common_delete": "Delete",
+	"common_backToLogin": "Back to login",
+	"common_dangerZone": "Danger Zone",
 	"common_toggleNavMenu": "Toggle navigation menu",
 	"common_waitSeconds": "Wait {seconds}s",
 
@@ -107,7 +109,6 @@
 "auth_forgotPassword_error": "Failed to send reset link",
 	"auth_forgotPassword_successTitle": "Check your inbox",
 	"auth_forgotPassword_successDescription": "If an account exists with that email, we've sent a password reset link.",
-	"auth_forgotPassword_backToLogin": "Back to login",
 
 	"auth_resetPassword_title": "Reset your password",
 	"auth_resetPassword_subtitle": "Choose a new password for your account.",
@@ -131,7 +132,6 @@
 	"auth_verifyEmail_goToLogin": "Go to login",
 	"auth_verifyEmail_error": "Failed to verify email",
 	"auth_verifyEmail_invalidLink": "This verification link is invalid or has expired.",
-	"auth_verifyEmail_backToLogin": "Back to login",
 
 	"auth_emailBanner_message": "Your email address is not verified.",
 	"auth_emailBanner_resend": "Resend verification",
@@ -180,7 +180,6 @@
 	"profile_avatar_urlHint": "Enter a valid URL starting with https://",
 	"profile_avatar_urlInvalid": "Please enter a valid URL (http:// or https://)",
 	"profile_avatar_save": "Save Avatar",
-	"profile_avatar_cancel": "Cancel",
 	"profile_avatar_remove": "Remove Avatar",
 	"profile_avatar_updateSuccess": "Avatar updated successfully",
 	"profile_avatar_updateError": "Failed to update avatar",
@@ -239,7 +238,6 @@
 	"error_default_description": "Something went wrong. We're not sure what, but it's probably not good.",
 	"error_goHome": "Go back home",
 
-	"settings_deleteAccount_dangerZone": "Danger Zone",
 	"settings_deleteAccount_dangerDescription": "Once you delete your account, there is no going back. All your data will be permanently removed.",
 	"settings_deleteAccount_title": "Delete Account",
 	"settings_deleteAccount_description": "Permanently delete your account and all associated data.",
@@ -248,7 +246,6 @@
 	"settings_deleteAccount_password": "Password",
 	"settings_deleteAccount_passwordPlaceholder": "Enter your password",
 	"settings_deleteAccount_confirm": "Delete My Account",
-	"settings_deleteAccount_cancel": "Cancel",
 	"settings_deleteAccount_success": "Your account has been deleted.",
 	"settings_deleteAccount_error": "Failed to delete account",
 
@@ -319,7 +316,6 @@
 	"admin_userDetail_deleteSuccess": "User account deleted",
 	"admin_userDetail_deleteError": "Failed to delete user account",
 	"admin_userDetail_selectRole": "Select a role...",
-	"admin_userDetail_dangerZone": "Danger Zone",
 	"admin_userDetail_cannotManage": "You do not have sufficient privileges to manage this user.",
 
 	"admin_roles_title": "Roles",

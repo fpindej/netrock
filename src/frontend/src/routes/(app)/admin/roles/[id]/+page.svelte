@@ -208,7 +208,7 @@
 	{#if canDelete}
 		<Card.Root class="border-destructive">
 			<Card.Header>
-				<Card.Title>{m.admin_userDetail_dangerZone()}</Card.Title>
+				<Card.Title>{m.common_dangerZone()}</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				<Dialog.Root bind:open={deleteDialogOpen}>

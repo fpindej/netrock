@@ -174,7 +174,7 @@
 				<Dialog.Close>
 					{#snippet child({ props })}
 						<Button {...props} variant="outline">
-							{m.profile_avatar_cancel()}
+							{m.common_cancel()}
 						</Button>
 					{/snippet}
 				</Dialog.Close>
