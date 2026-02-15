@@ -22,6 +22,7 @@ internal sealed class ProblemDetailsAuthorizationHandler(
     {
         if (authorizeResult.Challenged)
         {
+            httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
             httpContext.Response.Headers.WWWAuthenticate = "Bearer";
 
             await problemDetailsService.WriteAsync(new ProblemDetailsContext
@@ -38,6 +39,8 @@ internal sealed class ProblemDetailsAuthorizationHandler(
 
         if (authorizeResult.Forbidden)
         {
+            httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+
             await problemDetailsService.WriteAsync(new ProblemDetailsContext
             {
                 HttpContext = httpContext,

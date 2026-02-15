@@ -52,6 +52,7 @@ public class ExceptionHandlingMiddleware(
         string? customMessage = null)
     {
         var status = (int)statusCode;
+        context.Response.StatusCode = status;
 
         var problemDetails = new ProblemDetails
         {

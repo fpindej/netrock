@@ -77,6 +77,8 @@ internal static class RateLimiterExtensions
     {
         options.OnRejected = async (context, token) =>
         {
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
             var retryAfterSeconds = 60;
 
             if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
