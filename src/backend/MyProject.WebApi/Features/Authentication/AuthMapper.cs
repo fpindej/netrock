@@ -3,6 +3,7 @@ using MyProject.WebApi.Features.Authentication.Dtos.ChangePassword;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
 using MyProject.WebApi.Features.Authentication.Dtos.ResetPassword;
+using MyProject.WebApi.Features.Authentication.Dtos.VerifyEmail;
 
 namespace MyProject.WebApi.Features.Authentication;
 
@@ -50,5 +51,14 @@ internal static class AuthMapper
             Email: request.Email,
             Token: request.Token,
             NewPassword: request.NewPassword
+        );
+
+    /// <summary>
+    /// Maps a <see cref="VerifyEmailRequest"/> to a <see cref="VerifyEmailInput"/>.
+    /// </summary>
+    public static VerifyEmailInput ToVerifyEmailInput(this VerifyEmailRequest request) =>
+        new(
+            Email: request.Email,
+            Token: request.Token
         );
 }

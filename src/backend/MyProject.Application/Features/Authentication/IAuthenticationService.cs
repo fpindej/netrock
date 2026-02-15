@@ -69,4 +69,20 @@ public interface IAuthenticationService
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A result indicating success or failure.</returns>
     Task<Result> ResetPasswordAsync(ResetPasswordInput input, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Verifies a user's email address using a confirmation token received via email.
+    /// </summary>
+    /// <param name="input">The verify email input containing email and token.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A result indicating success or failure.</returns>
+    Task<Result> VerifyEmailAsync(VerifyEmailInput input, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resends a verification email to the current authenticated user.
+    /// Fails if the user's email is already verified.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A result indicating success or failure.</returns>
+    Task<Result> ResendVerificationEmailAsync(CancellationToken cancellationToken = default);
 }

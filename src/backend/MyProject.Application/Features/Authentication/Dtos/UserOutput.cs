@@ -12,6 +12,7 @@ namespace MyProject.Application.Features.Authentication.Dtos;
 /// <param name="AvatarUrl">The user's avatar URL, or <c>null</c> if not set.</param>
 /// <param name="Roles">The roles assigned to the user.</param>
 /// <param name="Permissions">The atomic permissions granted to the user through their roles.</param>
+/// <param name="IsEmailConfirmed">Whether the user's email address has been confirmed.</param>
 public record UserOutput(
     Guid Id,
     string UserName,
@@ -21,7 +22,8 @@ public record UserOutput(
     string? Bio,
     string? AvatarUrl,
     IEnumerable<string> Roles,
-    IReadOnlyList<string> Permissions
+    IReadOnlyList<string> Permissions,
+    bool IsEmailConfirmed = false
 )
 {
     /// <summary>

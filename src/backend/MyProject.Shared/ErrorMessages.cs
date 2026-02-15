@@ -31,6 +31,8 @@ public static class ErrorMessages
         public const string PasswordIncorrect = "Current password is incorrect.";
         public const string ResetPasswordFailed = "Password reset failed. The link may have expired or already been used.";
         public const string ResetPasswordTokenInvalid = "Invalid or expired password reset token.";
+        public const string EmailVerificationFailed = "Email verification failed. The link may have expired or already been used.";
+        public const string EmailAlreadyVerified = "Email address is already verified.";
     }
 
     /// <summary>

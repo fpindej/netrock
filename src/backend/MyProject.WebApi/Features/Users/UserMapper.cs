@@ -22,6 +22,7 @@ internal static class UserMapper
         Bio = user.Bio,
         AvatarUrl = user.AvatarUrl,
         Roles = user.Roles,
-        Permissions = user.Permissions
+        Permissions = user.Permissions,
+        EmailConfirmed = user.IsEmailConfirmed
     };
 }

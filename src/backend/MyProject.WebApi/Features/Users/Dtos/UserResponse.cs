@@ -56,4 +56,9 @@ public class UserResponse
     /// The atomic permissions granted to the user through their roles.
     /// </summary>
     public IReadOnlyList<string> Permissions { [UsedImplicitly] get; init; } = [];
+
+    /// <summary>
+    /// Whether the user's email address has been confirmed.
+    /// </summary>
+    public bool EmailConfirmed { [UsedImplicitly] get; init; }
 }

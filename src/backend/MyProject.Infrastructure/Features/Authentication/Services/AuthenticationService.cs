@@ -128,6 +128,8 @@ internal class AuthenticationService(
             return Result<Guid>.Failure(ErrorMessages.Auth.RegisterRoleAssignFailed);
         }
 
+        await SendVerificationEmailAsync(user, cancellationToken);
+
         return Result<Guid>.Success(user.Id);
     }
 
@@ -349,6 +351,58 @@ internal class AuthenticationService(
         return Result.Success();
     }
 
+    /// <inheritdoc />
+    public async Task<Result> VerifyEmailAsync(VerifyEmailInput input, CancellationToken cancellationToken = default)
+    {
+        var user = await userManager.FindByEmailAsync(input.Email);
+
+        if (user is null)
+        {
+            return Result.Failure(ErrorMessages.Auth.EmailVerificationFailed);
+        }
+
+        if (user.EmailConfirmed)
+        {
+            return Result.Failure(ErrorMessages.Auth.EmailAlreadyVerified);
+        }
+
+        var confirmResult = await userManager.ConfirmEmailAsync(user, input.Token);
+
+        if (!confirmResult.Succeeded)
+        {
+            return Result.Failure(ErrorMessages.Auth.EmailVerificationFailed);
+        }
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> ResendVerificationEmailAsync(CancellationToken cancellationToken = default)
+    {
+        var userId = userContext.UserId;
+
+        if (!userId.HasValue)
+        {
+            return Result.Failure(ErrorMessages.Auth.NotAuthenticated, ErrorType.Unauthorized);
+        }
+
+        var user = await userManager.FindByIdAsync(userId.Value.ToString());
+
+        if (user is null)
+        {
+            return Result.Failure(ErrorMessages.Auth.UserNotFound);
+        }
+
+        if (user.EmailConfirmed)
+        {
+            return Result.Failure(ErrorMessages.Auth.EmailAlreadyVerified);
+        }
+
+        await SendVerificationEmailAsync(user, cancellationToken);
+
+        return Result.Success();
+    }
+
     /// <summary>
     /// Sets access and refresh token cookies. When <paramref name="persistent"/> is true,
     /// cookies receive explicit expiry dates so they survive browser restarts.
@@ -387,6 +441,42 @@ internal class AuthenticationService(
             await userManager.UpdateSecurityStampAsync(user);
             await cacheService.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Sends a verification email to the specified user with a confirmation link.
+    /// </summary>
+    private async Task SendVerificationEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+        var encodedToken = Uri.EscapeDataString(token);
+        var encodedEmail = Uri.EscapeDataString(user.Email!);
+        var verifyUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/verify-email?token={encodedToken}&email={encodedEmail}";
+
+        var htmlBody = $"""
+            <h2>Verify Your Email Address</h2>
+            <p>Thank you for registering. Please click the link below to verify your email address:</p>
+            <p><a href="{verifyUrl}">Verify Email</a></p>
+            <p>If you didn't create an account, you can safely ignore this email.</p>
+            """;
+
+        var plainTextBody = $"""
+            Verify Your Email Address
+
+            Thank you for registering. Visit the following link to verify your email address:
+            {verifyUrl}
+
+            If you didn't create an account, you can safely ignore this email.
+            """;
+
+        var message = new EmailMessage(
+            To: user.Email!,
+            Subject: "Verify Your Email Address",
+            HtmlBody: htmlBody,
+            PlainTextBody: plainTextBody
+        );
+
+        await emailService.SendEmailAsync(message, cancellationToken);
     }
 
     /// <summary>

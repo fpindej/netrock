@@ -9,6 +9,7 @@ using MyProject.WebApi.Features.Authentication.Dtos.ForgotPassword;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
 using MyProject.WebApi.Features.Authentication.Dtos.ResetPassword;
+using MyProject.WebApi.Features.Authentication.Dtos.VerifyEmail;
 using MyProject.WebApi.Shared;
 
 namespace MyProject.WebApi.Features.Authentication;
@@ -175,6 +176,57 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
     {
         var result = await authenticationService.ResetPasswordAsync(request.ToResetPasswordInput(), cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Verifies a user's email address using a confirmation token received via email.
+    /// </summary>
+    /// <param name="request">The email verification request containing email and token</param>
+    /// <response code="200">Email verified successfully</response>
+    /// <response code="400">If the request is invalid or the token is expired/invalid</response>
+    /// <response code="429">If too many requests have been made</response>
+    [HttpPost("verify-email")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult> VerifyEmail([FromBody] VerifyEmailRequest request, CancellationToken cancellationToken)
+    {
+        var result = await authenticationService.VerifyEmailAsync(request.ToVerifyEmailInput(), cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Resends a verification email to the current authenticated user.
+    /// Fails if the user's email is already verified.
+    /// </summary>
+    /// <response code="200">Verification email sent</response>
+    /// <response code="400">If the email is already verified</response>
+    /// <response code="401">If the user is not authenticated</response>
+    /// <response code="429">If too many requests have been made</response>
+    [Authorize]
+    [HttpPost("resend-verification")]
+    [EnableRateLimiting(RateLimitPolicies.Sensitive)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult> ResendVerification(CancellationToken cancellationToken)
+    {
+        var result = await authenticationService.ResendVerificationEmailAsync(cancellationToken);
 
         if (!result.IsSuccess)
         {

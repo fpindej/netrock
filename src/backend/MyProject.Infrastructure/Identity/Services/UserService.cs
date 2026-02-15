@@ -65,7 +65,8 @@ internal class UserService(
             Bio: user.Bio,
             AvatarUrl: user.AvatarUrl,
             Roles: roles,
-            Permissions: permissions);
+            Permissions: permissions,
+            IsEmailConfirmed: user.EmailConfirmed);
 
         // NOTE: UserOutput (including roles and permissions) is cached to improve performance.
         // Role or permission changes may take up to this duration to be reflected.
@@ -139,7 +140,8 @@ internal class UserService(
             Bio: user.Bio,
             AvatarUrl: user.AvatarUrl,
             Roles: roles,
-            Permissions: permissions);
+            Permissions: permissions,
+            IsEmailConfirmed: user.EmailConfirmed);
 
         return Result<UserOutput>.Success(output);
     }

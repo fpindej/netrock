@@ -6,7 +6,8 @@ internal record RegisterUserResponse(Guid Id);
 
 // Users
 internal record UserMeResponse(Guid Id, string Username, string Email, string? FirstName, string? LastName,
-    string? PhoneNumber, string? Bio, string? AvatarUrl, List<string> Roles, List<string> Permissions);
+    string? PhoneNumber, string? Bio, string? AvatarUrl, List<string> Roles, List<string> Permissions,
+    bool EmailConfirmed);
 
 // Admin - Users
 internal record AdminUserResponse(Guid Id, string Username, string Email, string? FirstName, string? LastName,
