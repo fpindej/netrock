@@ -3,15 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { cn, hasPermission, Permissions } from '$lib/utils';
 	import { buttonVariants } from '$lib/components/ui/button';
-	import {
-		LayoutDashboard,
-		ChartPie,
-		FileText,
-		Users,
-		Shield,
-		Clock,
-		type IconProps
-	} from '@lucide/svelte';
+	import { LayoutDashboard, Users, Shield, Clock, type IconProps } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import type { Component } from 'svelte';
@@ -33,16 +25,6 @@
 			title: m.nav_dashboard,
 			href: resolve('/'),
 			icon: LayoutDashboard
-		},
-		{
-			title: m.nav_analytics,
-			href: resolve('/analytics'),
-			icon: ChartPie
-		},
-		{
-			title: m.nav_reports,
-			href: resolve('/reports'),
-			icon: FileText
 		}
 	];
 

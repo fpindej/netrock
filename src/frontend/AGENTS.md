@@ -36,7 +36,6 @@ src/
 │   ├── components/
 │   │   ├── ui/                    # shadcn components (generated, customizable)
 │   │   ├── auth/                  # LoginForm, LoginBackground, RegisterDialog
-│   │   ├── getting-started/       # GettingStarted, markdown renderer (removable)
 │   │   ├── layout/                # Header, Sidebar, SidebarNav, UserNav,
 │   │   │                          # ThemeToggle, LanguageSelector, ShortcutsHelp
 │   │   ├── profile/               # ProfileForm, ProfileHeader, AvatarDialog,
@@ -68,11 +67,9 @@ src/
 │   ├── (app)/                     # Authenticated (redirect to /login if no user)
 │   │   ├── +layout.server.ts      # Auth guard
 │   │   ├── +layout.svelte         # App shell (sidebar + header)
-│   │   ├── +page.svelte           # Dashboard / Getting Started
-│   │   ├── analytics/             # Analytics page (WIP placeholder)
+│   │   ├── +page.svelte           # Dashboard
 │   │   ├── profile/               # User profile page
-│   │   ├── reports/               # Reports page (WIP placeholder)
-│   │   ├── settings/              # Settings page (WIP placeholder)
+│   │   ├── settings/              # Settings page
 │   │   └── admin/                 # Admin section (permission-guarded)
 │   │       ├── +layout.server.ts  # Permission guard (users.view or roles.view)
 │   │       ├── users/             # User management
@@ -502,11 +499,10 @@ Components live in feature folders under `$lib/components/`:
 components/
 ├── admin/           # UserTable, Pagination, RoleTable, UserDetailCards,
 │   └── index.ts     # UserManagementCard, AccountInfoCard, CreateRoleDialog,
-│                    # RolePermissionEditor
+│                    # RolePermissionEditor, RoleDetailsCard,
+│                    # RolePermissionsSection, RoleDeleteSection
 ├── auth/            # LoginForm, LoginBackground, RegisterDialog
 │   └── index.ts     # Barrel export
-├── getting-started/ # GettingStarted, markdown.ts (removable starter page)
-│   └── index.ts
 ├── layout/          # Header, Sidebar, SidebarNav, UserNav,
 │   └── index.ts     # ThemeToggle, LanguageSelector, ShortcutsHelp
 ├── profile/         # ProfileForm, ProfileHeader, AvatarDialog,
@@ -1033,10 +1029,10 @@ Load initial data server-side, then update client-side:
 
 ### Raw File Imports
 
-Use Vite's `?raw` suffix to import file contents as strings (used in GettingStarted for README display):
+Use Vite's `?raw` suffix to import file contents as strings:
 
 ```typescript
-import readmeContent from '../../../../README.md?raw';
+import content from './some-file.md?raw';
 ```
 
 This is a Vite feature — the file content is bundled as a string at build time.

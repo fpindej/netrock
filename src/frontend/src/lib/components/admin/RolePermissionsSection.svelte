@@ -66,11 +66,7 @@
 			onchange={(perms) => (selectedPermissions = perms)}
 		/>
 		{#if canEditPermissions}
-			<Button
-				size="sm"
-				disabled={isSavingPermissions || cooldown.active}
-				onclick={savePermissions}
-			>
+			<Button size="sm" disabled={isSavingPermissions || cooldown.active} onclick={savePermissions}>
 				{#if cooldown.active}
 					{m.common_waitSeconds({ seconds: cooldown.remaining })}
 				{:else if isSavingPermissions}
