@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -292,12 +293,13 @@ internal class AuthenticationService(
         var encodedEmail = Uri.EscapeDataString(email);
         var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={encodedToken}&email={encodedEmail}";
 
+        var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
         var htmlBody = $"""
             <h2>Reset Your Password</h2>
             <p>You requested a password reset. Click the link below to set a new password:</p>
-            <p><a href="{resetUrl}">Reset Password</a></p>
+            <p><a href="{safeResetUrl}">Reset Password</a></p>
             <p>If you didn't request this, you can safely ignore this email.</p>
-            <p>This link will expire according to your account's security settings.</p>
+            <p>This link will expire in 24 hours.</p>
             """;
 
         var plainTextBody = $"""
@@ -448,15 +450,22 @@ internal class AuthenticationService(
     /// </summary>
     private async Task SendVerificationEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(user.Email))
+        {
+            logger.LogWarning("Cannot send verification email: user {UserId} has no email address", user.Id);
+            return;
+        }
+
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
         var encodedToken = Uri.EscapeDataString(token);
-        var encodedEmail = Uri.EscapeDataString(user.Email!);
+        var encodedEmail = Uri.EscapeDataString(user.Email);
         var verifyUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/verify-email?token={encodedToken}&email={encodedEmail}";
 
+        var safeVerifyUrl = WebUtility.HtmlEncode(verifyUrl);
         var htmlBody = $"""
             <h2>Verify Your Email Address</h2>
             <p>Thank you for registering. Please click the link below to verify your email address:</p>
-            <p><a href="{verifyUrl}">Verify Email</a></p>
+            <p><a href="{safeVerifyUrl}">Verify Email</a></p>
             <p>If you didn't create an account, you can safely ignore this email.</p>
             """;
 
@@ -470,7 +479,7 @@ internal class AuthenticationService(
             """;
 
         var message = new EmailMessage(
-            To: user.Email!,
+            To: user.Email,
             Subject: "Verify Your Email Address",
             HtmlBody: htmlBody,
             PlainTextBody: plainTextBody

@@ -388,6 +388,19 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task ResetPassword_MissingEmail_Returns400()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/reset-password", JsonContent.Create(new
+            {
+                Token = "valid-token",
+                NewPassword = "NewPassword1!"
+            })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     #endregion
 
     #region VerifyEmail

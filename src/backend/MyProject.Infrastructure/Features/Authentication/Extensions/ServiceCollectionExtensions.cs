@@ -66,6 +66,9 @@ public static class ServiceCollectionExtensions
             .AddEntityFrameworkStores<TContext>()
                 .AddDefaultTokenProviders();
 
+            services.Configure<DataProtectionTokenProviderOptions>(opt =>
+                opt.TokenLifespan = TimeSpan.FromHours(24));
+
             return services;
         }
 
