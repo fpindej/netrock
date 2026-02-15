@@ -24,7 +24,8 @@ public static class ProblemFactory
         {
             Status = code,
             Detail = detail,
-            Title = ReasonPhrases.GetReasonPhrase(code)
+            Title = ReasonPhrases.GetReasonPhrase(code),
+            Type = $"https://tools.ietf.org/html/rfc9110#section-15.5.{code - 399}"
         };
 
         return new ObjectResult(problemDetails) { StatusCode = code };

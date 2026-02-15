@@ -15,6 +15,7 @@ COPY ["Directory.Packages.props", "."]
 COPY ["nuget.config", "."]
 
 # Copy csproj files
+COPY ["MyProject.Shared/MyProject.Shared.csproj", "MyProject.Shared/"]
 COPY ["MyProject.Domain/MyProject.Domain.csproj", "MyProject.Domain/"]
 COPY ["MyProject.Application/MyProject.Application.csproj", "MyProject.Application/"]
 COPY ["MyProject.Infrastructure/MyProject.Infrastructure.csproj", "MyProject.Infrastructure/"]

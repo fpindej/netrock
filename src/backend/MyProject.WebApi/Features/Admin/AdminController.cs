@@ -318,7 +318,7 @@ public class AdminController(IAdminService adminService, IRoleManagementService 
             return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
-        return CreatedAtAction(nameof(GetRole), new { id = result.Value }, null);
+        return Created(string.Empty, new { id = result.Value });
     }
 
     /// <summary>
