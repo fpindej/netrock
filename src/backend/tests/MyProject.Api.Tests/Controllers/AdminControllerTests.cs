@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Identity.Constants;
@@ -15,6 +16,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     public AdminControllerTests(CustomWebApplicationFactory factory)
     {
         _factory = factory;
+        _factory.ResetMocks();
         _client = factory.CreateClient();
     }
 
@@ -31,6 +33,17 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
 
     private HttpRequestMessage Delete(string url, string auth) =>
         new(HttpMethod.Delete, url) { Headers = { { "Authorization", auth } } };
+
+    private static async Task AssertProblemDetailsAsync(
+        HttpResponseMessage response, int expectedStatus, string? expectedDetail = null)
+    {
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(expectedStatus, json.GetProperty("status").GetInt32());
+        if (expectedDetail is not null)
+        {
+            Assert.Equal(expectedDetail, json.GetProperty("detail").GetString());
+        }
+    }
 
     #region ListUsers
 
@@ -97,7 +110,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
-    public async Task GetUser_NotFound_Returns404()
+    public async Task GetUser_NotFound_Returns404WithProblemDetails()
     {
         var userId = Guid.NewGuid();
         _factory.AdminService.GetUserByIdAsync(userId, Arg.Any<CancellationToken>())
@@ -107,6 +120,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get($"/api/v1/admin/users/{userId}", TestAuth.WithPermissions(AppPermissions.Users.View)));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Admin.UserNotFound);
     }
 
     [Fact]
@@ -150,7 +164,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
-    public async Task AssignRole_ServiceFailure_Returns400()
+    public async Task AssignRole_ServiceFailure_Returns400WithProblemDetails()
     {
         var userId = Guid.NewGuid();
         _factory.AdminService.AssignRoleAsync(
@@ -163,6 +177,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
                 JsonContent.Create(new { Role = "Admin" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Admin.RoleAssignAboveRank);
     }
 
     #endregion
@@ -254,7 +269,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
-    public async Task DeleteUser_NotFound_Returns404()
+    public async Task DeleteUser_NotFound_Returns404WithProblemDetails()
     {
         var userId = Guid.NewGuid();
         _factory.AdminService.DeleteUserAsync(Arg.Any<Guid>(), userId, Arg.Any<CancellationToken>())
@@ -264,6 +279,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Delete($"/api/v1/admin/users/{userId}", TestAuth.WithPermissions(AppPermissions.Users.Manage)));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Admin.UserNotFound);
     }
 
     [Fact]
@@ -315,7 +331,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
-    public async Task GetRole_NotFound_Returns404()
+    public async Task GetRole_NotFound_Returns404WithProblemDetails()
     {
         var roleId = Guid.NewGuid();
         _factory.RoleManagementService.GetRoleDetailAsync(roleId, Arg.Any<CancellationToken>())
@@ -325,6 +341,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get($"/api/v1/admin/roles/{roleId}", TestAuth.WithPermissions(AppPermissions.Roles.View)));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Roles.RoleNotFound);
     }
 
     [Fact]

@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using MyProject.Application.Caching;
+using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
+using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity;
+using MyProject.Application.Identity.Constants;
 using MyProject.Application.Identity.Dtos;
 using MyProject.Component.Tests.Fixtures;
 using MyProject.Infrastructure.Features.Authentication.Models;
@@ -207,6 +210,66 @@ public class UserServiceTests : IDisposable
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.User.NotAuthenticated, result.Error);
         Assert.Equal(ErrorType.Unauthorized, result.ErrorType);
+    }
+
+    [Fact]
+    public async Task DeleteAccount_LastAdmin_ReturnsFailure()
+    {
+        var user = new ApplicationUser { Id = _userId, UserName = "admin@example.com" };
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns(user);
+        _userManager.CheckPasswordAsync(user, "correct").Returns(true);
+        _userManager.GetRolesAsync(user).Returns(new List<string> { AppRoles.Admin });
+
+        // Set up single admin in role
+        var adminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin };
+        _roleManager.FindByNameAsync(AppRoles.Admin).Returns(adminRole);
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = adminRole.Id, UserId = _userId });
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _sut.DeleteAccountAsync(new DeleteAccountInput("correct"));
+
+        Assert.True(result.IsFailure);
+        Assert.Contains("last user", result.Error);
+    }
+
+    [Fact]
+    public async Task DeleteAccount_Valid_RevokesTokensAndClearsState()
+    {
+        var user = new ApplicationUser { Id = _userId, UserName = "test@example.com" };
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns(user);
+        _userManager.CheckPasswordAsync(user, "correct").Returns(true);
+        _userManager.GetRolesAsync(user).Returns(new List<string> { AppRoles.User });
+        _userManager.DeleteAsync(user).Returns(IdentityResult.Success);
+
+        // Seed a refresh token
+        _dbContext.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            Token = "hashed-token",
+            UserId = _userId,
+            CreatedAt = DateTime.UtcNow,
+            ExpiredAt = DateTime.UtcNow.AddDays(7),
+            IsUsed = false,
+            IsInvalidated = false
+        });
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _sut.DeleteAccountAsync(new DeleteAccountInput("correct"));
+
+        Assert.True(result.IsSuccess);
+
+        // Verify refresh tokens were invalidated
+        var token = Assert.Single(_dbContext.RefreshTokens);
+        Assert.True(token.IsInvalidated);
+
+        // Verify cookies were cleared
+        _cookieService.Received(1).DeleteCookie(CookieNames.AccessToken);
+        _cookieService.Received(1).DeleteCookie(CookieNames.RefreshToken);
+
+        // Verify cache was invalidated
+        await _cacheService.Received(1).RemoveAsync(CacheKeys.User(_userId));
     }
 
     #endregion

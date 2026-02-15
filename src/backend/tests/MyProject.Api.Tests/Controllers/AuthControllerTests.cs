@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using MyProject.Api.Tests.Fixtures;
+using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Shared;
 
@@ -14,10 +16,31 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public AuthControllerTests(CustomWebApplicationFactory factory)
     {
         _factory = factory;
+        _factory.ResetMocks();
         _client = factory.CreateClient();
     }
 
     public void Dispose() => _client.Dispose();
+
+    private static HttpRequestMessage Post(string url, HttpContent? content = null, string? auth = null)
+    {
+        var msg = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+        if (auth is not null) msg.Headers.Add("Authorization", auth);
+        return msg;
+    }
+
+    private static async Task AssertProblemDetailsAsync(
+        HttpResponseMessage response, int expectedStatus, string? expectedDetail = null)
+    {
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(expectedStatus, json.GetProperty("status").GetInt32());
+        if (expectedDetail is not null)
+        {
+            Assert.Equal(expectedDetail, json.GetProperty("detail").GetString());
+        }
+    }
+
+    #region Login
 
     [Fact]
     public async Task Login_ValidCredentials_Returns200()
@@ -26,43 +49,39 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(Result<AuthenticationOutput>.Success(new AuthenticationOutput("access", "refresh")));
 
-        var response = await _client.PostAsJsonAsync("/api/auth/login", new
-        {
-            Username = "test@example.com",
-            Password = "Password1!"
-        });
+        var response = await _client.SendAsync(
+            Post("/api/auth/login", JsonContent.Create(new { Username = "test@example.com", Password = "Password1!" })));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
-    public async Task Login_InvalidCredentials_Returns401()
+    public async Task Login_InvalidCredentials_Returns401WithProblemDetails()
     {
         _factory.AuthenticationService.Login(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(Result<AuthenticationOutput>.Failure(
                 ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized));
 
-        var response = await _client.PostAsJsonAsync("/api/auth/login", new
-        {
-            Username = "test@example.com",
-            Password = "wrong"
-        });
+        var response = await _client.SendAsync(
+            Post("/api/auth/login", JsonContent.Create(new { Username = "test@example.com", Password = "wrong" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.LoginInvalidCredentials);
     }
 
     [Fact]
     public async Task Login_MissingEmail_Returns400()
     {
-        var response = await _client.PostAsJsonAsync("/api/auth/login", new
-        {
-            Username = "",
-            Password = "Password1!"
-        });
+        var response = await _client.SendAsync(
+            Post("/api/auth/login", JsonContent.Create(new { Username = "", Password = "Password1!" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    #endregion
+
+    #region Register
 
     [Fact]
     public async Task Register_ValidInput_Returns201()
@@ -70,11 +89,8 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         _factory.AuthenticationService.Register(Arg.Any<RegisterInput>(), Arg.Any<CancellationToken>())
             .Returns(Result<Guid>.Success(Guid.NewGuid()));
 
-        var response = await _client.PostAsJsonAsync("/api/auth/register", new
-        {
-            Email = "new@example.com",
-            Password = "Password1!"
-        });
+        var response = await _client.SendAsync(
+            Post("/api/auth/register", JsonContent.Create(new { Email = "new@example.com", Password = "Password1!" })));
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
@@ -82,11 +98,8 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     [Fact]
     public async Task Register_InvalidEmail_Returns400()
     {
-        var response = await _client.PostAsJsonAsync("/api/auth/register", new
-        {
-            Email = "not-an-email",
-            Password = "Password1!"
-        });
+        var response = await _client.SendAsync(
+            Post("/api/auth/register", JsonContent.Create(new { Email = "not-an-email", Password = "Password1!" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -94,21 +107,115 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     [Fact]
     public async Task Register_WeakPassword_Returns400()
     {
-        var response = await _client.PostAsJsonAsync("/api/auth/register", new
-        {
-            Email = "test@example.com",
-            Password = "weak"
-        });
+        var response = await _client.SendAsync(
+            Post("/api/auth/register", JsonContent.Create(new { Email = "test@example.com", Password = "weak" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
+    public async Task Register_ServiceFailure_Returns400WithProblemDetails()
+    {
+        _factory.AuthenticationService.Register(Arg.Any<RegisterInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result<Guid>.Failure("Email already registered."));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/register", JsonContent.Create(new { Email = "dup@example.com", Password = "Password1!" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, "Email already registered.");
+    }
+
+    #endregion
+
+    #region Refresh
+
+    [Fact]
+    public async Task Refresh_ValidBodyToken_Returns200()
+    {
+        _factory.AuthenticationService.RefreshTokenAsync("valid-token", false, Arg.Any<CancellationToken>())
+            .Returns(Result<AuthenticationOutput>.Success(new AuthenticationOutput("new-access", "new-refresh")));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/refresh", JsonContent.Create(new { RefreshToken = "valid-token" })));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_CookieFallback_Returns200()
+    {
+        _factory.AuthenticationService.RefreshTokenAsync("cookie-token", false, Arg.Any<CancellationToken>())
+            .Returns(Result<AuthenticationOutput>.Success(new AuthenticationOutput("new-access", "new-refresh")));
+
+        var request = Post("/api/auth/refresh", JsonContent.Create(new { }));
+        request.Headers.Add("Cookie", $"{CookieNames.RefreshToken}=cookie-token");
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_MissingToken_Returns401WithProblemDetails()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/refresh", JsonContent.Create(new { })));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.TokenMissing);
+    }
+
+    [Fact]
+    public async Task Refresh_WithUseCookies_PassesFlagToService()
+    {
+        _factory.AuthenticationService.RefreshTokenAsync("valid-token", true, Arg.Any<CancellationToken>())
+            .Returns(Result<AuthenticationOutput>.Success(new AuthenticationOutput("new-access", "new-refresh")));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/refresh?useCookies=true", JsonContent.Create(new { RefreshToken = "valid-token" })));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await _factory.AuthenticationService.Received(1)
+            .RefreshTokenAsync("valid-token", true, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Refresh_InvalidToken_Returns401WithProblemDetails()
+    {
+        _factory.AuthenticationService.RefreshTokenAsync("invalid", false, Arg.Any<CancellationToken>())
+            .Returns(Result<AuthenticationOutput>.Failure(
+                ErrorMessages.Auth.TokenInvalidated, ErrorType.Unauthorized));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/refresh", JsonContent.Create(new { RefreshToken = "invalid" })));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.TokenInvalidated);
+    }
+
+    [Fact]
+    public async Task Refresh_NullBody_WithCookie_Returns200()
+    {
+        _factory.AuthenticationService.RefreshTokenAsync("cookie-token", false, Arg.Any<CancellationToken>())
+            .Returns(Result<AuthenticationOutput>.Success(new AuthenticationOutput("a", "r")));
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+        request.Headers.Add("Cookie", $"{CookieNames.RefreshToken}=cookie-token");
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    #endregion
+
+    #region Logout
+
+    [Fact]
     public async Task Logout_Authenticated_Returns204()
     {
-        _client.DefaultRequestHeaders.Add("Authorization", "Test token");
-
-        var response = await _client.PostAsync("/api/auth/logout", null);
+        var response = await _client.SendAsync(Post("/api/auth/logout", auth: TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
@@ -116,27 +223,27 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     [Fact]
     public async Task Logout_Unauthenticated_Returns401()
     {
-        var client = _factory.CreateClient();
-
-        var response = await client.PostAsync("/api/auth/logout", null);
+        var response = await _client.SendAsync(Post("/api/auth/logout"));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        client.Dispose();
+        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
     }
+
+    #endregion
+
+    #region ChangePassword
 
     [Fact]
     public async Task ChangePassword_Authenticated_Returns204()
     {
-        _client.DefaultRequestHeaders.Add("Authorization", "Test token");
         _factory.AuthenticationService.ChangePasswordAsync(
                 Arg.Any<ChangePasswordInput>(), Arg.Any<CancellationToken>())
             .Returns(Result.Success());
 
-        var response = await _client.PostAsJsonAsync("/api/auth/change-password", new
-        {
-            CurrentPassword = "OldPass1!",
-            NewPassword = "NewPass1!"
-        });
+        var response = await _client.SendAsync(
+            Post("/api/auth/change-password",
+                JsonContent.Create(new { CurrentPassword = "OldPass1!", NewPassword = "NewPass1!" }),
+                TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
@@ -144,15 +251,28 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     [Fact]
     public async Task ChangePassword_Unauthenticated_Returns401()
     {
-        var client = _factory.CreateClient();
-
-        var response = await client.PostAsJsonAsync("/api/auth/change-password", new
-        {
-            CurrentPassword = "OldPass1!",
-            NewPassword = "NewPass1!"
-        });
+        var response = await _client.SendAsync(
+            Post("/api/auth/change-password",
+                JsonContent.Create(new { CurrentPassword = "OldPass1!", NewPassword = "NewPass1!" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        client.Dispose();
     }
+
+    [Fact]
+    public async Task ChangePassword_ServiceFailure_Returns400WithProblemDetails()
+    {
+        _factory.AuthenticationService.ChangePasswordAsync(
+                Arg.Any<ChangePasswordInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure("Current password is incorrect."));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/change-password",
+                JsonContent.Create(new { CurrentPassword = "WrongPass1!", NewPassword = "NewPass1!" }),
+                TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, "Current password is incorrect.");
+    }
+
+    #endregion
 }

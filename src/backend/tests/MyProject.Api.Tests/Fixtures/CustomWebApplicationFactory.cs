@@ -11,6 +11,7 @@ using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Jobs;
 using MyProject.Application.Identity;
 using MyProject.Infrastructure.Persistence;
+using NSubstitute.ClearExtensions;
 using IAuthenticationService = MyProject.Application.Features.Authentication.IAuthenticationService;
 
 namespace MyProject.Api.Tests.Fixtures;
@@ -101,5 +102,19 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<TimeProvider>();
             services.AddSingleton(TimeProvider.System);
         });
+    }
+
+    /// <summary>
+    /// Clears all NSubstitute return values and received calls on every mock.
+    /// Call from each test class constructor to prevent mock state leaking between tests.
+    /// </summary>
+    public void ResetMocks()
+    {
+        AuthenticationService.ClearSubstitute(ClearOptions.All);
+        UserService.ClearSubstitute(ClearOptions.All);
+        AdminService.ClearSubstitute(ClearOptions.All);
+        RoleManagementService.ClearSubstitute(ClearOptions.All);
+        JobManagementService.ClearSubstitute(ClearOptions.All);
+        CacheService.ClearSubstitute(ClearOptions.All);
     }
 }

@@ -14,6 +14,7 @@ public class JobsControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public JobsControllerTests(CustomWebApplicationFactory factory)
     {
         _factory = factory;
+        _factory.ResetMocks();
         _client = factory.CreateClient();
     }
 

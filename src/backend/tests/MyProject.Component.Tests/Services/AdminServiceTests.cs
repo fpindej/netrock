@@ -379,6 +379,161 @@ public class AdminServiceTests : IDisposable
 
     #endregion
 
+    #region GetUsersAsync
+
+    [Fact(Skip = "EF InMemory provider does not support GroupBy — requires Testcontainers (issue #174)")]
+    public async Task GetUsers_ReturnsPagedResults()
+    {
+        // Seed users into InMemory database
+        for (var i = 0; i < 5; i++)
+        {
+            _dbContext.Users.Add(new ApplicationUser
+            {
+                Id = Guid.NewGuid(),
+                UserName = $"user{i}@test.com",
+                Email = $"user{i}@test.com",
+                NormalizedUserName = $"USER{i}@TEST.COM"
+            });
+        }
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _sut.GetUsersAsync(1, 3);
+
+        Assert.Equal(5, result.TotalCount);
+        Assert.Equal(3, result.Users.Count);
+        Assert.Equal(1, result.PageNumber);
+        Assert.Equal(3, result.PageSize);
+    }
+
+    [Fact(Skip = "EF InMemory provider does not support GroupBy — requires Testcontainers (issue #174)")]
+    public async Task GetUsers_WithSearch_FiltersResults()
+    {
+        _dbContext.Users.Add(new ApplicationUser
+        {
+            Id = Guid.NewGuid(), UserName = "alice@test.com",
+            NormalizedUserName = "ALICE@TEST.COM", FirstName = "Alice"
+        });
+        _dbContext.Users.Add(new ApplicationUser
+        {
+            Id = Guid.NewGuid(), UserName = "bob@test.com",
+            NormalizedUserName = "BOB@TEST.COM", FirstName = "Bob"
+        });
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _sut.GetUsersAsync(1, 10, "alice");
+
+        Assert.Equal(1, result.TotalCount);
+        Assert.Single(result.Users);
+        Assert.Equal("alice@test.com", result.Users[0].UserName);
+    }
+
+    [Fact(Skip = "EF InMemory provider does not support GroupBy — requires Testcontainers (issue #174)")]
+    public async Task GetUsers_MapsRolesCorrectly()
+    {
+        var userId = Guid.NewGuid();
+        var roleId = Guid.NewGuid();
+
+        _dbContext.Users.Add(new ApplicationUser
+        {
+            Id = userId, UserName = "withRole@test.com",
+            NormalizedUserName = "WITHROLE@TEST.COM"
+        });
+        _dbContext.Roles.Add(new ApplicationRole { Id = roleId, Name = "Admin", NormalizedName = "ADMIN" });
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { UserId = userId, RoleId = roleId });
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _sut.GetUsersAsync(1, 10);
+
+        var user = Assert.Single(result.Users);
+        Assert.Contains("Admin", user.Roles);
+    }
+
+    [Fact(Skip = "EF InMemory provider does not support GroupBy — requires Testcontainers (issue #174)")]
+    public async Task GetUsers_CalculatesLockoutStatus()
+    {
+        _dbContext.Users.Add(new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "locked@test.com",
+            NormalizedUserName = "LOCKED@TEST.COM",
+            LockoutEnd = _timeProvider.GetUtcNow().AddYears(100)
+        });
+        _dbContext.Users.Add(new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "unlocked@test.com",
+            NormalizedUserName = "UNLOCKED@TEST.COM",
+            LockoutEnd = null
+        });
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _sut.GetUsersAsync(1, 10);
+
+        Assert.Equal(2, result.Users.Count);
+        var locked = result.Users.First(u => u.UserName == "locked@test.com");
+        var unlocked = result.Users.First(u => u.UserName == "unlocked@test.com");
+        Assert.True(locked.IsLockedOut);
+        Assert.False(unlocked.IsLockedOut);
+    }
+
+    #endregion
+
+    #region GetRolesAsync
+
+    [Fact]
+    public async Task GetRoles_ReturnsAllRoles()
+    {
+        var role1 = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin, NormalizedName = "ADMIN" };
+        var role2 = new ApplicationRole { Id = Guid.NewGuid(), Name = "Custom", NormalizedName = "CUSTOM" };
+
+        // Use the InMemory DbContext roles so roleManager.Roles resolves via EF
+        _dbContext.Roles.Add(role1);
+        _dbContext.Roles.Add(role2);
+        await _dbContext.SaveChangesAsync();
+        _roleManager.Roles.Returns(_dbContext.Roles);
+
+        var result = await _sut.GetRolesAsync();
+
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public async Task GetRoles_IdentifiesSystemRoles()
+    {
+        var adminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin, NormalizedName = "ADMIN" };
+        var customRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "Custom", NormalizedName = "CUSTOM" };
+
+        _dbContext.Roles.Add(adminRole);
+        _dbContext.Roles.Add(customRole);
+        await _dbContext.SaveChangesAsync();
+        _roleManager.Roles.Returns(_dbContext.Roles);
+
+        var result = await _sut.GetRolesAsync();
+
+        var admin = result.First(r => r.Name == AppRoles.Admin);
+        var custom = result.First(r => r.Name == "Custom");
+        Assert.True(admin.IsSystem);
+        Assert.False(custom.IsSystem);
+    }
+
+    [Fact]
+    public async Task GetRoles_CountsUsersPerRole()
+    {
+        var roleId = Guid.NewGuid();
+        _dbContext.Roles.Add(new ApplicationRole { Id = roleId, Name = "TestRole", NormalizedName = "TESTROLE" });
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = roleId, UserId = Guid.NewGuid() });
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = roleId, UserId = Guid.NewGuid() });
+        await _dbContext.SaveChangesAsync();
+        _roleManager.Roles.Returns(_dbContext.Roles);
+
+        var result = await _sut.GetRolesAsync();
+
+        var role = Assert.Single(result);
+        Assert.Equal(2, role.UserCount);
+    }
+
+    #endregion
+
     #region GetUserById
 
     [Fact]

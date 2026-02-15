@@ -90,9 +90,15 @@ Step-by-step recipes for common operations. Each recipe lists exact paths, patte
       --output-dir Features/Postgres/Migrations
     ```
 
-**Verify:** `dotnet build src/backend/MyProject.slnx`
+**Tests:**
 
-**Commit strategy:** entity+config+errors → interface+DTOs → service+DI → controller+DTOs+mapper+validators → migration
+18. Add component test for the service in `src/backend/tests/MyProject.Component.Tests/Services/{Feature}ServiceTests.cs` (see [Add a Component Test](#add-a-component-test))
+19. Add API integration tests in `src/backend/tests/MyProject.Api.Tests/Controllers/{Feature}ControllerTests.cs` (see [Add an API Integration Test](#add-an-api-integration-test))
+20. Add validator tests in `src/backend/tests/MyProject.Api.Tests/Validators/{Validator}Tests.cs` (see [Add a Validator Test](#add-a-validator-test))
+
+**Verify:** `dotnet test src/backend/MyProject.slnx -c Release`
+
+**Commit strategy:** entity+config+errors → interface+DTOs → service+DI → controller+DTOs+mapper+validators → migration → tests
 
 ### Add an Endpoint to an Existing Feature
 
@@ -104,8 +110,11 @@ Step-by-step recipes for common operations. Each recipe lists exact paths, patte
 6. Add controller action to `WebApi/Features/{Feature}/{Feature}Controller.cs`:
    - `/// <summary>` + `[ProducesResponseType]` + `CancellationToken`
 7. Add validator if needed
-8. Verify: `dotnet build src/backend/MyProject.slnx`
-9. **After deploying/running:** regenerate frontend types (see [Regenerate API Types](#regenerate-api-types))
+8. Add/update component tests for the service method (see [Add a Component Test](#add-a-component-test))
+9. Add/update API integration tests for the new action (see [Add an API Integration Test](#add-an-api-integration-test))
+10. If validator added, add validator tests (see [Add a Validator Test](#add-a-validator-test))
+11. Verify: `dotnet test src/backend/MyProject.slnx -c Release`
+12. **After deploying/running:** regenerate frontend types (see [Regenerate API Types](#regenerate-api-types))
 
 > **Breaking change check:** If modifying an existing endpoint's request/response shape, this is a breaking change for the frontend. Either version the endpoint or update the frontend in the same PR.
 
@@ -488,28 +497,40 @@ For testing the full HTTP pipeline (routes, auth, validation, status codes).
 
 ### Add a Validator Test
 
-For testing FluentValidation rules without starting the test server.
+For testing FluentValidation rules without starting the test server. Uses FluentValidation's `TestHelper` extensions.
 
 1. Create `src/backend/tests/MyProject.Api.Tests/Validators/{Validator}Tests.cs`
-2. Instantiate the validator directly:
+2. Instantiate the validator directly and use `TestValidate` + assertion helpers:
    ```csharp
+   using FluentValidation.TestHelper;
+
    public class OrderRequestValidatorTests
    {
        private readonly OrderRequestValidator _validator = new();
 
        [Fact]
-       public async Task Validate_ValidRequest_Passes()
+       public void ValidRequest_ShouldPassValidation()
        {
-           var result = await _validator.ValidateAsync(new OrderRequest { ... });
-           Assert.True(result.IsValid);
+           var result = _validator.TestValidate(new OrderRequest { Name = "Widget", Quantity = 1 });
+
+           result.ShouldNotHaveAnyValidationErrors();
        }
 
        [Fact]
-       public async Task Validate_MissingName_Fails()
+       public void MissingName_ShouldFail()
        {
-           var result = await _validator.ValidateAsync(new OrderRequest { Name = "" });
-           Assert.False(result.IsValid);
-           Assert.Contains(result.Errors, e => e.PropertyName == "Name");
+           var result = _validator.TestValidate(new OrderRequest { Name = "", Quantity = 1 });
+
+           result.ShouldHaveValidationErrorFor(x => x.Name);
+       }
+
+       [Fact]
+       public void InvalidQuantity_ShouldFailWithMessage()
+       {
+           var result = _validator.TestValidate(new OrderRequest { Name = "Widget", Quantity = -1 });
+
+           result.ShouldHaveValidationErrorFor(x => x.Quantity)
+               .WithErrorMessage("Quantity must be positive.");
        }
    }
    ```
