@@ -9,7 +9,7 @@ namespace MyProject.WebApi.Shared;
 /// Produces a consistent <see cref="ProblemDetails"/> body with Title set from the
 /// status code's reason phrase.
 /// </summary>
-public static class ProblemFactory
+internal static class ProblemFactory
 {
     /// <summary>
     /// Returns a <see cref="ProblemDetails"/> response with the specified detail and error type.
@@ -33,6 +33,7 @@ public static class ProblemFactory
 
     private static int ToStatusCode(ErrorType? errorType) => errorType switch
     {
+        ErrorType.Validation => StatusCodes.Status400BadRequest,
         ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
         ErrorType.NotFound => StatusCodes.Status404NotFound,
         _ => StatusCodes.Status400BadRequest

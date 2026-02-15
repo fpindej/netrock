@@ -48,13 +48,13 @@ public class Result
 
     /// <summary>
     /// Creates a failed result with the specified error message.
-    /// Defaults to <see cref="Shared.ErrorType.Validation"/> (400) at the controller layer.
+    /// Defaults to 400 (Validation) at the controller layer.
     /// </summary>
     /// <param name="error">The error message.</param>
     /// <returns>A failed result containing the error message.</returns>
     public static Result Failure(string error)
     {
-        return new Result(false, error);
+        return new Result(false, error, Shared.ErrorType.Validation);
     }
 
     /// <summary>
@@ -82,6 +82,8 @@ public class Result<T> : Result
     /// Gets the value returned by the operation.
     /// Throws <see cref="InvalidOperationException"/> if the result is a failure.
     /// </summary>
+    // _value! is sound here: Success() guarantees _value is non-null, and the
+    // IsSuccess guard prevents access on failure paths. Same pattern as Nullable<T>.Value.
     public T Value => IsSuccess
         ? _value!
         : throw new InvalidOperationException("Cannot access Value on a failed result.");
@@ -104,13 +106,13 @@ public class Result<T> : Result
 
     /// <summary>
     /// Creates a failed result with the specified error message.
-    /// Defaults to <see cref="Shared.ErrorType.Validation"/> (400) at the controller layer.
+    /// Defaults to 400 (Validation) at the controller layer.
     /// </summary>
     /// <param name="error">The error message.</param>
     /// <returns>A failed result containing the error message.</returns>
     public new static Result<T> Failure(string error)
     {
-        return new Result<T>(false, error, default);
+        return new Result<T>(false, error, default, Shared.ErrorType.Validation);
     }
 
     /// <summary>

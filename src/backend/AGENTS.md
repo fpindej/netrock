@@ -70,7 +70,7 @@ src/backend/
     │   ├── PermissionPolicyProvider.cs
     │   ├── PermissionAuthorizationHandler.cs
     │   └── PermissionRequirement.cs
-    ├── Shared/                    # ApiController, PaginatedRequest/Response, ValidationConstants
+    ├── Shared/                    # ApiController, ProblemFactory, PaginatedRequest/Response, ValidationConstants
     ├── Middlewares/                # ExceptionHandlingMiddleware
     ├── Extensions/                # CORS, rate limiting, health checks
     └── Options/                   # CorsOptions, RateLimitingOptions
