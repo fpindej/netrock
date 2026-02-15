@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.HttpOverrides;
 using MyProject.Infrastructure.Features.Admin.Extensions;
+using MyProject.Infrastructure.Features.Email.Extensions;
 using MyProject.Infrastructure.Features.Jobs.Extensions;
 using MyProject.Infrastructure.Persistence.Extensions;
 using MyProject.Infrastructure.Caching.Extensions;
@@ -55,6 +56,9 @@ try
 
         Log.Debug("Adding admin services");
         builder.Services.AddAdminServices();
+
+        Log.Debug("Adding email services");
+        builder.Services.AddEmailServices(builder.Configuration);
 
         Log.Debug("Adding job scheduling");
         builder.Services.AddJobScheduling(builder.Configuration);
