@@ -642,9 +642,11 @@ In Development, the exception middleware adds `extensions.stackTrace`. `ProblemD
 return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
 ```
 
-**In middleware / handlers** — inject `IProblemDetailsService` and call `WriteAsync()`:
+**In middleware / handlers** — inject `IProblemDetailsService` and call `WriteAsync()`. **You must set `Response.StatusCode` explicitly** — `WriteAsync()` does _not_ propagate `ProblemDetails.Status` to the HTTP status code:
 
 ```csharp
+context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
 await problemDetailsService.WriteAsync(new ProblemDetailsContext
 {
     HttpContext = context,

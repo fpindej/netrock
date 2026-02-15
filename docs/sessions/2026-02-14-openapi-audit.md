@@ -128,6 +128,20 @@ Replaced `ErrorResponse { Message, Details }` with standard `ProblemDetails` acr
 - `ProblemDetails` is an RFC standard (9457), has `[JsonPropertyName]` attributes, and removes the need for custom JSON options
 - Nobody is using this template yet — cleanest time to switch
 
+### Fix 7: Set HTTP status code before `IProblemDetailsService.WriteAsync()`
+
+- **Problem**: After the ProblemDetails migration (Fix 6 follow-up), all middleware-level error responses returned HTTP `200 OK` with a ProblemDetails body containing the correct `status` field (e.g., `401`). HTTP clients, proxies, and API gateways check the HTTP status code — not the JSON body — making this a breaking change.
+- **Root cause**: The refactoring replaced explicit `context.Response.StatusCode = ...` + `WriteAsJsonAsync(...)` with `IProblemDetailsService.WriteAsync(...)`, assuming the service would propagate `ProblemDetails.Status` to `Response.StatusCode`. It does not — it only writes the JSON body.
+- **Affected code paths**: All middleware-level error responses (401 Unauthorized, 403 Forbidden, 429 Too Many Requests, and all exception-mapped codes: 400, 404, 500).
+- **Fix**: Added explicit `Response.StatusCode` assignment before every `WriteAsync()` call.
+
+| File | Change | Reason |
+|------|--------|--------|
+| `WebApi/Authorization/ProblemDetailsAuthorizationHandler.cs` | Added `StatusCode = 401` and `StatusCode = 403` before `WriteAsync()` | Auth failures were returning 200 |
+| `WebApi/Middlewares/ExceptionHandlingMiddleware.cs` | Added `StatusCode = status` before `WriteAsync()` | Exception responses were returning 200 |
+| `WebApi/Extensions/RateLimiterExtensions.cs` | Added `StatusCode = 429` before `WriteAsync()` | Rate limit rejections were returning 200 |
+| `AGENTS.md` | Updated `WriteAsync()` code example to include `Response.StatusCode` and a warning | Prevent future developers from reproducing the bug |
+
 ## Remaining Items
 
 - [ ] Regenerate frontend API types (`npm run api:generate`) after merging — `ProblemDetails` replaces `ErrorResponse` in the OAS
