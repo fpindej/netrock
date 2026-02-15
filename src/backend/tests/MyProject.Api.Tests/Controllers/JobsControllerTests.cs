@@ -37,14 +37,20 @@ public class JobsControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task ListJobs_WithPermission_Returns200()
     {
         _factory.JobManagementService.GetRecurringJobsAsync()
-            .Returns(new List<RecurringJobOutput>());
+            .Returns(new List<RecurringJobOutput>
+            {
+                new("cleanup-job", "0 0 * * *", null, null, null, false, null)
+            });
 
         var response = await _client.SendAsync(
             Get("/api/v1/admin/jobs", TestAuth.WithPermissions(AppPermissions.Jobs.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<List<Contracts.RecurringJobResponse>>();
+        var body = await response.Content.ReadFromJsonAsync<List<RecurringJobResponse>>();
         Assert.NotNull(body);
+        Assert.Single(body);
+        Assert.Equal("cleanup-job", body[0].Id);
+        Assert.Equal("0 0 * * *", body[0].Cron);
     }
 
     [Fact]
@@ -81,7 +87,7 @@ public class JobsControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Get("/api/v1/admin/jobs/test-job", TestAuth.WithPermissions(AppPermissions.Jobs.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<Contracts.RecurringJobDetailResponse>();
+        var body = await response.Content.ReadFromJsonAsync<RecurringJobDetailResponse>();
         Assert.NotNull(body);
         Assert.Equal("test-job", body.Id);
         Assert.Equal("0 * * * *", body.Cron);

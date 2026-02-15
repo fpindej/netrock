@@ -120,7 +120,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get($"/api/v1/admin/users/{userId}", TestAuth.WithPermissions(AppPermissions.Users.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<Contracts.AdminUserResponse>();
+        var body = await response.Content.ReadFromJsonAsync<AdminUserResponse>();
         Assert.NotNull(body);
         Assert.Equal(userId, body.Id);
         Assert.Equal("user@test.com", body.Username);
@@ -317,14 +317,20 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     public async Task ListRoles_WithPermission_Returns200()
     {
         _factory.AdminService.GetRolesAsync(Arg.Any<CancellationToken>())
-            .Returns(new List<AdminRoleOutput>());
+            .Returns(new List<AdminRoleOutput>
+            {
+                new(Guid.NewGuid(), "Admin", "Administrator role", true, 3)
+            });
 
         var response = await _client.SendAsync(
             Get("/api/v1/admin/roles", TestAuth.WithPermissions(AppPermissions.Roles.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<List<Contracts.AdminRoleResponse>>();
+        var body = await response.Content.ReadFromJsonAsync<List<AdminRoleResponse>>();
         Assert.NotNull(body);
+        Assert.Single(body);
+        Assert.Equal("Admin", body[0].Name);
+        Assert.NotEqual(Guid.Empty, body[0].Id);
     }
 
     [Fact]
@@ -348,7 +354,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get($"/api/v1/admin/roles/{roleId}", TestAuth.WithPermissions(AppPermissions.Roles.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<Contracts.RoleDetailResponse>();
+        var body = await response.Content.ReadFromJsonAsync<RoleDetailResponse>();
         Assert.NotNull(body);
         Assert.Equal(roleId, body.Id);
         Assert.Equal("Admin", body.Name);
@@ -458,7 +464,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get("/api/v1/admin/permissions", TestAuth.WithPermissions(AppPermissions.Roles.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<List<Contracts.PermissionGroupResponse>>();
+        var body = await response.Content.ReadFromJsonAsync<List<PermissionGroupResponse>>();
         Assert.NotNull(body);
         Assert.Single(body);
         Assert.Equal("Users", body[0].Category);
