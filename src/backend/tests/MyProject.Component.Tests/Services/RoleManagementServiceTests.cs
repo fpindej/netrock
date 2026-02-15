@@ -109,6 +109,19 @@ public class RoleManagementServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task UpdateRole_DescriptionOnly_ReturnsSuccess()
+    {
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "Admin", Description = "Old" };
+        _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
+        _roleManager.UpdateAsync(role).Returns(IdentityResult.Success);
+
+        var result = await _sut.UpdateRoleAsync(roleId, new UpdateRoleInput(null, "New description"));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
     public async Task UpdateRole_SystemRoleRename_ReturnsFailure()
     {
         var roleId = Guid.NewGuid();
@@ -131,6 +144,21 @@ public class RoleManagementServiceTests : IDisposable
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Roles.RoleNotFound, result.Error);
         Assert.Equal(ErrorType.NotFound, result.ErrorType);
+    }
+
+    [Fact]
+    public async Task UpdateRole_NameTakenByOtherRole_ReturnsFailure()
+    {
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "CustomRole" };
+        _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
+        _roleManager.FindByNameAsync("TakenName")
+            .Returns(new ApplicationRole { Id = Guid.NewGuid(), Name = "TakenName" });
+
+        var result = await _sut.UpdateRoleAsync(roleId, new UpdateRoleInput("TakenName", null));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Roles.RoleNameTaken, result.Error);
     }
 
     #endregion
@@ -169,7 +197,6 @@ public class RoleManagementServiceTests : IDisposable
         var role = new ApplicationRole { Id = roleId, Name = "CustomRole" };
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
-        // Simulate a user in this role
         _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = roleId, UserId = Guid.NewGuid() });
         await _dbContext.SaveChangesAsync();
 
@@ -195,6 +222,19 @@ public class RoleManagementServiceTests : IDisposable
     #endregion
 
     #region SetRolePermissions
+
+    [Fact(Skip = "InMemory EF provider does not support ExecuteDeleteAsync — requires Testcontainers (issue #174)")]
+    public async Task SetPermissions_ValidPermissions_ReturnsSuccess()
+    {
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "CustomRole" };
+        _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
+
+        var result = await _sut.SetRolePermissionsAsync(roleId,
+            new SetRolePermissionsInput([AppPermissions.Users.View, AppPermissions.Users.Manage]));
+
+        Assert.True(result.IsSuccess);
+    }
 
     [Fact]
     public async Task SetPermissions_SuperAdminRole_ReturnsFailure()
@@ -255,6 +295,20 @@ public class RoleManagementServiceTests : IDisposable
     #endregion
 
     #region GetRoleDetail
+
+    [Fact]
+    public async Task GetRoleDetail_Found_ReturnsSuccess()
+    {
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "CustomRole", Description = "A role" };
+        _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
+
+        var result = await _sut.GetRoleDetailAsync(roleId);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("CustomRole", result.Value.Name);
+        Assert.Equal("A role", result.Value.Description);
+    }
 
     [Fact]
     public async Task GetRoleDetail_NotFound_ReturnsNotFound()

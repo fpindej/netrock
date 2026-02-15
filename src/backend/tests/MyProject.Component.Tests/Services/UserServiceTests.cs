@@ -151,9 +151,37 @@ public class UserServiceTests : IDisposable
         Assert.Equal(ErrorType.Unauthorized, result.ErrorType);
     }
 
+    [Fact]
+    public async Task UpdateProfile_UserNotFound_ReturnsFailure()
+    {
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns((ApplicationUser?)null);
+
+        var result = await _sut.UpdateProfileAsync(
+            new UpdateProfileInput("Jane", null, null, null, null));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.User.NotFound, result.Error);
+    }
+
     #endregion
 
     #region DeleteAccount
+
+    [Fact]
+    public async Task DeleteAccount_Valid_ReturnsSuccess()
+    {
+        var user = new ApplicationUser { Id = _userId, UserName = "test@example.com" };
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns(user);
+        _userManager.CheckPasswordAsync(user, "correct").Returns(true);
+        _userManager.GetRolesAsync(user).Returns(new List<string> { "User" });
+        _userManager.DeleteAsync(user).Returns(IdentityResult.Success);
+
+        var result = await _sut.DeleteAccountAsync(new DeleteAccountInput("correct"));
+
+        Assert.True(result.IsSuccess);
+    }
 
     [Fact]
     public async Task DeleteAccount_WrongPassword_ReturnsFailure()

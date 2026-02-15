@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using MyProject.Application.Caching;
+using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
+using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity;
 using MyProject.Component.Tests.Fixtures;
@@ -71,17 +74,28 @@ public class AuthenticationServiceTests : IDisposable
         _userManager.Dispose();
     }
 
+    private ApplicationUser CreateTestUser(Guid? id = null, string? userName = null) => new()
+    {
+        Id = id ?? Guid.NewGuid(),
+        UserName = userName ?? "test@example.com"
+    };
+
+    private void SetupSuccessfulLogin(ApplicationUser user, string password = "password123")
+    {
+        _userManager.FindByNameAsync(user.UserName!).Returns(user);
+        _signInManager.CheckPasswordSignInAsync(user, password, true)
+            .Returns(SignInResult.Success);
+        _tokenProvider.GenerateAccessToken(user).Returns("access-token");
+        _tokenProvider.GenerateRefreshToken().Returns("refresh-token");
+    }
+
     #region Login
 
     [Fact]
     public async Task Login_ValidCredentials_ReturnsSuccessWithTokens()
     {
-        var user = new ApplicationUser { Id = Guid.NewGuid(), UserName = "test@example.com" };
-        _userManager.FindByNameAsync("test@example.com").Returns(user);
-        _signInManager.CheckPasswordSignInAsync(user, "password123", true)
-            .Returns(SignInResult.Success);
-        _tokenProvider.GenerateAccessToken(user).Returns("access-token");
-        _tokenProvider.GenerateRefreshToken().Returns("refresh-token");
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
 
         var result = await _sut.Login("test@example.com", "password123");
 
@@ -93,12 +107,8 @@ public class AuthenticationServiceTests : IDisposable
     [Fact]
     public async Task Login_ValidCredentials_StoresRefreshTokenInDatabase()
     {
-        var user = new ApplicationUser { Id = Guid.NewGuid(), UserName = "test@example.com" };
-        _userManager.FindByNameAsync("test@example.com").Returns(user);
-        _signInManager.CheckPasswordSignInAsync(user, "password123", true)
-            .Returns(SignInResult.Success);
-        _tokenProvider.GenerateAccessToken(user).Returns("access-token");
-        _tokenProvider.GenerateRefreshToken().Returns("refresh-token");
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
 
         await _sut.Login("test@example.com", "password123");
 
@@ -107,6 +117,20 @@ public class AuthenticationServiceTests : IDisposable
         Assert.Equal(user.Id, storedToken.UserId);
         Assert.False(storedToken.IsUsed);
         Assert.False(storedToken.IsInvalidated);
+    }
+
+    [Fact]
+    public async Task Login_ValidCredentials_SetsCorrectTokenExpiration()
+    {
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
+
+        await _sut.Login("test@example.com", "password123");
+
+        var storedToken = Assert.Single(_dbContext.RefreshTokens);
+        var expectedExpiry = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7);
+        Assert.Equal(expectedExpiry, storedToken.ExpiredAt);
+        Assert.Equal(_timeProvider.GetUtcNow().UtcDateTime, storedToken.CreatedAt);
     }
 
     [Fact]
@@ -124,7 +148,7 @@ public class AuthenticationServiceTests : IDisposable
     [Fact]
     public async Task Login_WrongPassword_ReturnsUnauthorized()
     {
-        var user = new ApplicationUser { Id = Guid.NewGuid(), UserName = "test@example.com" };
+        var user = CreateTestUser();
         _userManager.FindByNameAsync("test@example.com").Returns(user);
         _signInManager.CheckPasswordSignInAsync(user, "wrong", true)
             .Returns(SignInResult.Failed);
@@ -139,7 +163,7 @@ public class AuthenticationServiceTests : IDisposable
     [Fact]
     public async Task Login_LockedOut_ReturnsLockedMessage()
     {
-        var user = new ApplicationUser { Id = Guid.NewGuid(), UserName = "test@example.com" };
+        var user = CreateTestUser();
         _userManager.FindByNameAsync("test@example.com").Returns(user);
         _signInManager.CheckPasswordSignInAsync(user, "password123", true)
             .Returns(SignInResult.LockedOut);
@@ -152,19 +176,77 @@ public class AuthenticationServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task Login_WithCookies_SetsCookies()
+    public async Task Login_WithCookies_SetsCookiesWithCorrectValues()
     {
-        var user = new ApplicationUser { Id = Guid.NewGuid(), UserName = "test@example.com" };
-        _userManager.FindByNameAsync("test@example.com").Returns(user);
-        _signInManager.CheckPasswordSignInAsync(user, "password123", true)
-            .Returns(SignInResult.Success);
-        _tokenProvider.GenerateAccessToken(user).Returns("access-token");
-        _tokenProvider.GenerateRefreshToken().Returns("refresh-token");
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
 
         await _sut.Login("test@example.com", "password123", useCookies: true);
 
-        _cookieService.Received(2).SetSecureCookie(
+        _cookieService.Received(1).SetSecureCookie(
+            CookieNames.AccessToken, "access-token", Arg.Any<DateTimeOffset?>());
+        _cookieService.Received(1).SetSecureCookie(
+            CookieNames.RefreshToken, "refresh-token", Arg.Any<DateTimeOffset?>());
+    }
+
+    [Fact]
+    public async Task Login_WithoutCookies_DoesNotSetCookies()
+    {
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
+
+        await _sut.Login("test@example.com", "password123", useCookies: false);
+
+        _cookieService.DidNotReceive().SetSecureCookie(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<DateTimeOffset?>());
+    }
+
+    [Fact]
+    public async Task Login_WithRememberMe_SetsIsPersistentOnToken()
+    {
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
+
+        await _sut.Login("test@example.com", "password123", useCookies: true, rememberMe: true);
+
+        var storedToken = Assert.Single(_dbContext.RefreshTokens);
+        Assert.True(storedToken.IsPersistent);
+    }
+
+    [Fact]
+    public async Task Login_WithRememberMe_SetsPersistentCookiesWithExpiry()
+    {
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
+
+        await _sut.Login("test@example.com", "password123", useCookies: true, rememberMe: true);
+
+        // Access token cookie should have expiry (persistent)
+        _cookieService.Received(1).SetSecureCookie(
+            CookieNames.AccessToken, "access-token",
+            Arg.Is<DateTimeOffset?>(d => d.HasValue));
+        // Refresh token cookie should have expiry (persistent)
+        _cookieService.Received(1).SetSecureCookie(
+            CookieNames.RefreshToken, "refresh-token",
+            Arg.Is<DateTimeOffset?>(d => d.HasValue));
+    }
+
+    [Fact]
+    public async Task Login_WithoutRememberMe_SetsSessionCookiesWithoutExpiry()
+    {
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
+
+        await _sut.Login("test@example.com", "password123", useCookies: true, rememberMe: false);
+
+        var storedToken = Assert.Single(_dbContext.RefreshTokens);
+        Assert.False(storedToken.IsPersistent);
+
+        // Session cookies: expires should be null
+        _cookieService.Received(1).SetSecureCookie(
+            CookieNames.AccessToken, "access-token", null);
+        _cookieService.Received(1).SetSecureCookie(
+            CookieNames.RefreshToken, "refresh-token", null);
     }
 
     #endregion
@@ -206,7 +288,6 @@ public class AuthenticationServiceTests : IDisposable
     [Fact]
     public async Task Register_DuplicatePhone_ReturnsFailure()
     {
-        // Seed a user with the same phone into the DbContext (which uses the real InMemory queryable)
         _dbContext.Users.Add(new ApplicationUser
         {
             Id = Guid.NewGuid(),
@@ -215,7 +296,6 @@ public class AuthenticationServiceTests : IDisposable
         });
         await _dbContext.SaveChangesAsync();
 
-        // Point userManager.Users at the DbContext's real Users DbSet
         _userManager.Users.Returns(_dbContext.Users);
 
         var input = new RegisterInput("test@example.com", "Password1!", null, null, "+420123456789");
@@ -226,6 +306,48 @@ public class AuthenticationServiceTests : IDisposable
         Assert.Equal(ErrorMessages.User.PhoneNumberTaken, result.Error);
     }
 
+    [Fact]
+    public async Task Register_NormalizesPhoneNumber()
+    {
+        // Users queryable needed for phone uniqueness check
+        _userManager.Users.Returns(_dbContext.Users);
+
+        var input = new RegisterInput("test@example.com", "Password1!", null, null, "+420 123 456 789");
+        _userManager.CreateAsync(Arg.Any<ApplicationUser>(), "Password1!")
+            .Returns(callInfo =>
+            {
+                callInfo.Arg<ApplicationUser>().Id = Guid.NewGuid();
+                return IdentityResult.Success;
+            });
+        _userManager.AddToRoleAsync(Arg.Any<ApplicationUser>(), "User")
+            .Returns(IdentityResult.Success);
+
+        await _sut.Register(input);
+
+        await _userManager.Received(1).CreateAsync(
+            Arg.Is<ApplicationUser>(u => u.PhoneNumber == "+420123456789"),
+            Arg.Any<string>());
+    }
+
+    [Fact]
+    public async Task Register_RoleAssignFails_ReturnsFailure()
+    {
+        var input = new RegisterInput("test@example.com", "Password1!", null, null, null);
+        _userManager.CreateAsync(Arg.Any<ApplicationUser>(), "Password1!")
+            .Returns(callInfo =>
+            {
+                callInfo.Arg<ApplicationUser>().Id = Guid.NewGuid();
+                return IdentityResult.Success;
+            });
+        _userManager.AddToRoleAsync(Arg.Any<ApplicationUser>(), "User")
+            .Returns(IdentityResult.Failed(new IdentityError { Description = "Role error." }));
+
+        var result = await _sut.Register(input);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Auth.RegisterRoleAssignFailed, result.Error);
+    }
+
     #endregion
 
     #region RefreshToken
@@ -234,7 +356,7 @@ public class AuthenticationServiceTests : IDisposable
     public async Task RefreshToken_ValidToken_ReturnsNewTokens()
     {
         var userId = Guid.NewGuid();
-        var user = new ApplicationUser { Id = userId, UserName = "test@example.com" };
+        var user = CreateTestUser(userId);
         var hashedToken = HashHelper.Sha256("valid-refresh-token");
 
         _dbContext.RefreshTokens.Add(new RefreshToken
@@ -261,10 +383,105 @@ public class AuthenticationServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RefreshToken_ValidToken_MarksOldTokenAsUsed()
+    {
+        var userId = Guid.NewGuid();
+        var user = CreateTestUser(userId);
+        var tokenId = Guid.NewGuid();
+
+        _dbContext.RefreshTokens.Add(new RefreshToken
+        {
+            Id = tokenId,
+            Token = HashHelper.Sha256("valid-refresh-token"),
+            UserId = userId,
+            User = user,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime.AddHours(-1),
+            ExpiredAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7),
+            IsUsed = false,
+            IsInvalidated = false,
+            IsPersistent = true
+        });
+        await _dbContext.SaveChangesAsync();
+
+        _tokenProvider.GenerateAccessToken(user).Returns("new-access");
+        _tokenProvider.GenerateRefreshToken().Returns("new-refresh");
+
+        await _sut.RefreshTokenAsync("valid-refresh-token");
+
+        var oldToken = await _dbContext.RefreshTokens.FindAsync(tokenId);
+        Assert.True(oldToken!.IsUsed);
+    }
+
+    [Fact]
+    public async Task RefreshToken_ValidToken_NewTokenInheritsExpiryAndPersistence()
+    {
+        var userId = Guid.NewGuid();
+        var user = CreateTestUser(userId);
+        var originalExpiry = _timeProvider.GetUtcNow().UtcDateTime.AddDays(5);
+
+        _dbContext.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            Token = HashHelper.Sha256("valid-refresh-token"),
+            UserId = userId,
+            User = user,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(-2),
+            ExpiredAt = originalExpiry,
+            IsUsed = false,
+            IsInvalidated = false,
+            IsPersistent = true
+        });
+        await _dbContext.SaveChangesAsync();
+
+        _tokenProvider.GenerateAccessToken(user).Returns("new-access");
+        _tokenProvider.GenerateRefreshToken().Returns("new-refresh");
+
+        await _sut.RefreshTokenAsync("valid-refresh-token");
+
+        var newToken = await _dbContext.RefreshTokens
+            .FirstAsync(rt => rt.Token == HashHelper.Sha256("new-refresh"));
+        Assert.Equal(originalExpiry, newToken.ExpiredAt);
+        Assert.True(newToken.IsPersistent);
+        Assert.False(newToken.IsUsed);
+        Assert.False(newToken.IsInvalidated);
+    }
+
+    [Fact]
+    public async Task RefreshToken_WithCookies_SetsCookies()
+    {
+        var userId = Guid.NewGuid();
+        var user = CreateTestUser(userId);
+
+        _dbContext.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            Token = HashHelper.Sha256("valid-refresh-token"),
+            UserId = userId,
+            User = user,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime.AddHours(-1),
+            ExpiredAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7),
+            IsUsed = false,
+            IsInvalidated = false,
+            IsPersistent = true
+        });
+        await _dbContext.SaveChangesAsync();
+
+        _tokenProvider.GenerateAccessToken(user).Returns("new-access");
+        _tokenProvider.GenerateRefreshToken().Returns("new-refresh");
+
+        await _sut.RefreshTokenAsync("valid-refresh-token", useCookies: true);
+
+        _cookieService.Received(1).SetSecureCookie(
+            CookieNames.AccessToken, "new-access", Arg.Any<DateTimeOffset?>());
+        _cookieService.Received(1).SetSecureCookie(
+            CookieNames.RefreshToken, "new-refresh", Arg.Any<DateTimeOffset?>());
+    }
+
+    [Fact]
     public async Task RefreshToken_ExpiredToken_ReturnsFailure()
     {
         var userId = Guid.NewGuid();
-        var user = new ApplicationUser { Id = userId, UserName = "expired@test.com" };
+        var user = CreateTestUser(userId, "expired@test.com");
         var hashedToken = HashHelper.Sha256("expired-token");
 
         _dbContext.Users.Add(user);
@@ -288,10 +505,36 @@ public class AuthenticationServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RefreshToken_ExpiredToken_MarksAsInvalidatedInDb()
+    {
+        var userId = Guid.NewGuid();
+        var user = CreateTestUser(userId, "expired@test.com");
+        var tokenId = Guid.NewGuid();
+
+        _dbContext.Users.Add(user);
+        _dbContext.RefreshTokens.Add(new RefreshToken
+        {
+            Id = tokenId,
+            Token = HashHelper.Sha256("expired-token"),
+            UserId = userId,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(-10),
+            ExpiredAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(-3),
+            IsUsed = false,
+            IsInvalidated = false
+        });
+        await _dbContext.SaveChangesAsync();
+
+        await _sut.RefreshTokenAsync("expired-token");
+
+        var token = await _dbContext.RefreshTokens.FindAsync(tokenId);
+        Assert.True(token!.IsInvalidated);
+    }
+
+    [Fact]
     public async Task RefreshToken_InvalidatedToken_ReturnsFailure()
     {
         var userId = Guid.NewGuid();
-        var user = new ApplicationUser { Id = userId, UserName = "invalidated@test.com" };
+        var user = CreateTestUser(userId, "invalidated@test.com");
         var hashedToken = HashHelper.Sha256("invalidated-token");
 
         _dbContext.Users.Add(user);
@@ -314,17 +557,16 @@ public class AuthenticationServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task RefreshToken_ReusedToken_RevokesAllUserTokens()
+    public async Task RefreshToken_ReusedToken_RevokesAllUserTokensInDb()
     {
         var userId = Guid.NewGuid();
-        var user = new ApplicationUser { Id = userId, UserName = "reused@test.com" };
-        var hashedToken = HashHelper.Sha256("reused-token");
+        var user = CreateTestUser(userId, "reused@test.com");
 
         _dbContext.Users.Add(user);
         _dbContext.RefreshTokens.Add(new RefreshToken
         {
             Id = Guid.NewGuid(),
-            Token = hashedToken,
+            Token = HashHelper.Sha256("reused-token"),
             UserId = userId,
             CreatedAt = _timeProvider.GetUtcNow().UtcDateTime.AddHours(-1),
             ExpiredAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7),
@@ -334,7 +576,7 @@ public class AuthenticationServiceTests : IDisposable
         _dbContext.RefreshTokens.Add(new RefreshToken
         {
             Id = Guid.NewGuid(),
-            Token = HashHelper.Sha256("other-token"),
+            Token = HashHelper.Sha256("other-valid-token"),
             UserId = userId,
             CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
             ExpiredAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7),
@@ -343,10 +585,66 @@ public class AuthenticationServiceTests : IDisposable
         });
         await _dbContext.SaveChangesAsync();
 
+        _userManager.FindByIdAsync(userId.ToString())
+            .Returns(user);
+
         var result = await _sut.RefreshTokenAsync("reused-token");
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Auth.TokenReused, result.Error);
+
+        // All tokens for this user should be invalidated
+        var allTokens = await _dbContext.RefreshTokens
+            .Where(rt => rt.UserId == userId)
+            .ToListAsync();
+        Assert.All(allTokens, t => Assert.True(t.IsInvalidated));
+    }
+
+    [Fact]
+    public async Task RefreshToken_ReusedToken_RotatesSecurityStamp()
+    {
+        var userId = Guid.NewGuid();
+        var user = CreateTestUser(userId, "reused@test.com");
+
+        _dbContext.Users.Add(user);
+        _dbContext.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            Token = HashHelper.Sha256("reused-token"),
+            UserId = userId,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime.AddHours(-1),
+            ExpiredAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7),
+            IsUsed = true,
+            IsInvalidated = false
+        });
+        await _dbContext.SaveChangesAsync();
+
+        _userManager.FindByIdAsync(userId.ToString()).Returns(user);
+
+        await _sut.RefreshTokenAsync("reused-token");
+
+        await _userManager.Received(1).UpdateSecurityStampAsync(user);
+        await _cacheService.Received(1).RemoveAsync(
+            CacheKeys.SecurityStamp(userId), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RefreshToken_FailureWithCookies_ClearsCookies()
+    {
+        var result = await _sut.RefreshTokenAsync("nonexistent-token", useCookies: true);
+
+        Assert.True(result.IsFailure);
+        _cookieService.Received(1).DeleteCookie(CookieNames.AccessToken);
+        _cookieService.Received(1).DeleteCookie(CookieNames.RefreshToken);
+    }
+
+    [Fact]
+    public async Task RefreshToken_FailureWithoutCookies_DoesNotClearCookies()
+    {
+        var result = await _sut.RefreshTokenAsync("nonexistent-token", useCookies: false);
+
+        Assert.True(result.IsFailure);
+        _cookieService.DidNotReceive().DeleteCookie(Arg.Any<string>());
     }
 
     [Fact]
@@ -356,6 +654,7 @@ public class AuthenticationServiceTests : IDisposable
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Auth.TokenMissing, result.Error);
+        Assert.Equal(ErrorType.Unauthorized, result.ErrorType);
     }
 
     [Fact]
@@ -375,7 +674,7 @@ public class AuthenticationServiceTests : IDisposable
     public async Task ChangePassword_Valid_ReturnsSuccess()
     {
         var userId = Guid.NewGuid();
-        var user = new ApplicationUser { Id = userId, UserName = "test@example.com" };
+        var user = CreateTestUser(userId);
         _userContext.UserId.Returns(userId);
         _userManager.FindByIdAsync(userId.ToString()).Returns(user);
         _userManager.CheckPasswordAsync(user, "current").Returns(true);
@@ -388,10 +687,41 @@ public class AuthenticationServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ChangePassword_Valid_RevokesExistingTokens()
+    {
+        var userId = Guid.NewGuid();
+        var user = CreateTestUser(userId);
+        _userContext.UserId.Returns(userId);
+        _userManager.FindByIdAsync(userId.ToString()).Returns(user);
+        _userManager.CheckPasswordAsync(user, "current").Returns(true);
+        _userManager.ChangePasswordAsync(user, "current", "newPass1!")
+            .Returns(IdentityResult.Success);
+
+        // Seed a refresh token
+        _dbContext.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            Token = HashHelper.Sha256("existing-token"),
+            UserId = userId,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
+            ExpiredAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7),
+            IsUsed = false,
+            IsInvalidated = false
+        });
+        await _dbContext.SaveChangesAsync();
+
+        await _sut.ChangePasswordAsync(new ChangePasswordInput("current", "newPass1!"));
+
+        var token = Assert.Single(_dbContext.RefreshTokens);
+        Assert.True(token.IsInvalidated);
+        await _userManager.Received(1).UpdateSecurityStampAsync(user);
+    }
+
+    [Fact]
     public async Task ChangePassword_WrongCurrentPassword_ReturnsFailure()
     {
         var userId = Guid.NewGuid();
-        var user = new ApplicationUser { Id = userId };
+        var user = CreateTestUser(userId);
         _userContext.UserId.Returns(userId);
         _userManager.FindByIdAsync(userId.ToString()).Returns(user);
         _userManager.CheckPasswordAsync(user, "wrong").Returns(false);
@@ -414,6 +744,36 @@ public class AuthenticationServiceTests : IDisposable
         Assert.Equal(ErrorType.Unauthorized, result.ErrorType);
     }
 
+    [Fact]
+    public async Task ChangePassword_UserNotFound_ReturnsFailure()
+    {
+        var userId = Guid.NewGuid();
+        _userContext.UserId.Returns(userId);
+        _userManager.FindByIdAsync(userId.ToString()).Returns((ApplicationUser?)null);
+
+        var result = await _sut.ChangePasswordAsync(new ChangePasswordInput("current", "newPass1!"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Auth.UserNotFound, result.Error);
+    }
+
+    [Fact]
+    public async Task ChangePassword_IdentityFails_ReturnsFailure()
+    {
+        var userId = Guid.NewGuid();
+        var user = CreateTestUser(userId);
+        _userContext.UserId.Returns(userId);
+        _userManager.FindByIdAsync(userId.ToString()).Returns(user);
+        _userManager.CheckPasswordAsync(user, "current").Returns(true);
+        _userManager.ChangePasswordAsync(user, "current", "newPass1!")
+            .Returns(IdentityResult.Failed(new IdentityError { Description = "Password too common." }));
+
+        var result = await _sut.ChangePasswordAsync(new ChangePasswordInput("current", "newPass1!"));
+
+        Assert.True(result.IsFailure);
+        Assert.Contains("Password too common", result.Error);
+    }
+
     #endregion
 
     #region Logout
@@ -424,11 +784,43 @@ public class AuthenticationServiceTests : IDisposable
         var userId = Guid.NewGuid();
         _userContext.UserId.Returns(userId);
         _userManager.FindByIdAsync(userId.ToString())
-            .Returns(new ApplicationUser { Id = userId });
+            .Returns(CreateTestUser(userId));
+
+        // Seed a token to verify revocation
+        _dbContext.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            Token = HashHelper.Sha256("active-token"),
+            UserId = userId,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
+            ExpiredAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7),
+            IsUsed = false,
+            IsInvalidated = false
+        });
+        await _dbContext.SaveChangesAsync();
 
         await _sut.Logout();
 
-        _cookieService.Received(2).DeleteCookie(Arg.Any<string>());
+        _cookieService.Received(1).DeleteCookie(CookieNames.AccessToken);
+        _cookieService.Received(1).DeleteCookie(CookieNames.RefreshToken);
+
+        var token = Assert.Single(_dbContext.RefreshTokens);
+        Assert.True(token.IsInvalidated);
+    }
+
+    [Fact]
+    public async Task Logout_WithAuthenticatedUser_RotatesSecurityStampAndClearsCache()
+    {
+        var userId = Guid.NewGuid();
+        var user = CreateTestUser(userId);
+        _userContext.UserId.Returns(userId);
+        _userManager.FindByIdAsync(userId.ToString()).Returns(user);
+
+        await _sut.Logout();
+
+        await _userManager.Received(1).UpdateSecurityStampAsync(user);
+        await _cacheService.Received(1).RemoveAsync(
+            CacheKeys.SecurityStamp(userId), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -438,7 +830,9 @@ public class AuthenticationServiceTests : IDisposable
 
         await _sut.Logout();
 
-        _cookieService.Received(2).DeleteCookie(Arg.Any<string>());
+        _cookieService.Received(1).DeleteCookie(CookieNames.AccessToken);
+        _cookieService.Received(1).DeleteCookie(CookieNames.RefreshToken);
+        await _userManager.DidNotReceive().UpdateSecurityStampAsync(Arg.Any<ApplicationUser>());
     }
 
     #endregion

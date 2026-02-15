@@ -1594,7 +1594,7 @@ Unit.Tests/
 ├── Shared/
 │   ├── ResultTests.cs              # Result.Success/Failure, IsSuccess, Error, ErrorType
 │   ├── ResultGenericTests.cs       # Result<T>.Value, inheritance from Result
-│   ├── ErrorMessagesTests.cs       # Reflection scan: all constants non-null, all nested classes exist
+│   ├── ErrorMessagesTests.cs       # Reflection scan: all constants non-null, all nested classes exist, per-class uniqueness
 │   ├── ErrorTypeTests.cs           # Enum values and count
 │   └── PhoneNumberHelperTests.cs   # Normalize: null/empty/whitespace, strip chars, preserve leading +
 ├── Domain/
@@ -1613,11 +1613,13 @@ Component.Tests/
 ├── Fixtures/
 │   ├── TestDbContextFactory.cs     # Creates InMemory MyProjectDbContext instances
 │   └── IdentityMockHelpers.cs      # UserManager<T> and RoleManager<T> mock factories
+├── Persistence/
+│   └── BaseEntityRepositoryTests.cs     # CRUD, soft-delete, pagination (skipped — needs Testcontainers #174)
 └── Services/
-    ├── AuthenticationServiceTests.cs     # Login, register, refresh token, change password, logout
-    ├── AdminServiceTests.cs              # AssignRole, removeRole, lock/unlock, delete, getUsers
-    ├── RoleManagementServiceTests.cs     # CRUD, permissions, system role protection
-    └── UserServiceTests.cs              # GetCurrentUser, updateProfile, deleteAccount
+    ├── AuthenticationServiceTests.cs     # Login (cookies, rememberMe, persistent tokens), register (phone normalization, role failure), refresh (rotation, reuse detection, expiry), change password (token revocation), logout
+    ├── AdminServiceTests.cs              # AssignRole (hierarchy, already-has), RemoveRole (self, rank, not-in-role), lock/unlock (hierarchy, token revocation, access count reset), delete (last-admin, self), getUser
+    ├── RoleManagementServiceTests.cs     # CRUD, system role protection, permissions (SuperAdmin fixed, invalid), name-taken, description-only update
+    └── UserServiceTests.cs              # GetCurrentUser, updateProfile (duplicate phone, not found), deleteAccount (happy path, wrong password)
 ```
 
 **Key patterns:**
@@ -1635,14 +1637,18 @@ Test the full HTTP pipeline using `WebApplicationFactory<Program>`.
 Api.Tests/
 ├── Fixtures/
 │   ├── CustomWebApplicationFactory.cs   # Test host configuration
-│   └── TestAuthHandler.cs              # Fake auth scheme for test requests
+│   └── TestAuthHandler.cs              # Configurable auth handler (roles, permissions via header)
 ├── Controllers/
 │   ├── AuthControllerTests.cs          # Login, register, logout, refresh, change password
-│   └── UsersControllerTests.cs         # GetMe, updateMe, deleteMe
+│   ├── UsersControllerTests.cs         # GetMe, updateMe, deleteMe
+│   ├── AdminControllerTests.cs         # Users CRUD, roles CRUD, permissions — all with permission gates
+│   └── JobsControllerTests.cs          # List, get, trigger, pause, resume, remove, restore — permission gates
 └── Validators/
-    ├── RegisterRequestValidatorTests.cs    # Email, password rules
-    ├── LoginRequestValidatorTests.cs       # Email, password presence
-    └── ChangePasswordRequestValidatorTests.cs  # Current + new password rules
+    ├── RegisterRequestValidatorTests.cs        # Email, password rules
+    ├── LoginRequestValidatorTests.cs           # Email, password presence
+    ├── ChangePasswordRequestValidatorTests.cs  # Current + new password rules
+    ├── AdminValidatorTests.cs                  # AssignRole, CreateRole, UpdateRole, SetPermissions, ListUsers
+    └── UserValidatorTests.cs                   # RefreshRequest, DeleteAccount, UpdateUser (phone, URL, lengths)
 ```
 
 #### `CustomWebApplicationFactory`
@@ -1654,7 +1660,7 @@ The factory configures a test host that starts without any external infrastructu
 | **Environment** | `UseEnvironment("Testing")` → loads `appsettings.Testing.json` |
 | **Database** | Removes all Npgsql/DbContext registrations, manually registers InMemory provider (avoids dual-provider conflict from `AddDbContext`'s `TryAdd` behavior) |
 | **Hangfire** | Removes Hangfire `IHostedService` descriptors by scanning `ImplementationType.FullName` |
-| **Services** | Replaces `IAuthenticationService`, `IUserService`, `ICacheService` with NSubstitute mocks (exposed as public properties for per-test configuration) |
+| **Services** | Replaces `IAuthenticationService`, `IUserService`, `IAdminService`, `IRoleManagementService`, `IJobManagementService`, `ICacheService` with NSubstitute mocks (exposed as public properties for per-test configuration) |
 | **Auth** | `PostConfigure<AuthenticationOptions>` overrides JWT Bearer defaults with `TestAuthHandler` (runs after the app's `Configure`, ensuring test scheme wins) |
 | **Time** | Replaces `TimeProvider` with `TimeProvider.System` |
 
@@ -1662,12 +1668,25 @@ The factory configures a test host that starts without any external infrastructu
 
 #### `TestAuthHandler`
 
-A custom `AuthenticationHandler<AuthenticationSchemeOptions>` registered as the `"Test"` scheme:
+A custom `AuthenticationHandler<AuthenticationSchemeOptions>` registered as the `"Test"` scheme. Identity claims are configured **per-request** via the `Authorization` header value:
 
-- Requests **with** an `Authorization` header → authenticated as `test@example.com` with role `User`
-- Requests **without** an `Authorization` header → `AuthenticateResult.NoResult()` → 401
+```
+Authorization: Test                                          → User role, no permissions
+Authorization: Test roles=Admin permissions=users.view       → Admin with specific permission
+Authorization: Test roles=SuperAdmin                         → Bypasses all permission checks
+(no header)                                                  → 401 Unauthorized
+```
 
-Test classes create two `HttpClient` instances: `_authenticatedClient` (has `Authorization` header) and `_anonymousClient` (no header).
+Use the `TestAuth` helper for common patterns:
+
+```csharp
+TestAuth.User()                                      // "Test" (default User role)
+TestAuth.WithPermissions(AppPermissions.Users.View)   // User + specific permission claims
+TestAuth.Admin(AppPermissions.Users.Manage)           // Admin role + permissions
+TestAuth.SuperAdmin()                                 // SuperAdmin (implicit all permissions)
+```
+
+This approach avoids shared static state — each request carries its own identity, so tests across classes can run in parallel safely.
 
 #### `appsettings.Testing.json`
 

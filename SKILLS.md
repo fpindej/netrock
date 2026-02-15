@@ -450,31 +450,41 @@ For testing the full HTTP pipeline (routes, auth, validation, status codes).
    public class OrdersControllerTests : IClassFixture<CustomWebApplicationFactory>, IDisposable
    {
        private readonly CustomWebApplicationFactory _factory;
-       private readonly HttpClient _authenticatedClient;
-       private readonly HttpClient _anonymousClient;
+       private readonly HttpClient _client;
 
        public OrdersControllerTests(CustomWebApplicationFactory factory)
        {
            _factory = factory;
-           _authenticatedClient = factory.CreateClient();
-           _authenticatedClient.DefaultRequestHeaders.Add("Authorization", "Test token");
-           _anonymousClient = factory.CreateClient();
+           _client = factory.CreateClient();
        }
 
-       public void Dispose()
-       {
-           _authenticatedClient.Dispose();
-           _anonymousClient.Dispose();
-       }
+       public void Dispose() => _client.Dispose();
    }
    ```
-3. Configure mock returns per test:
+3. Auth is controlled per-request via the `Authorization` header (parsed by `TestAuthHandler`):
    ```csharp
-   _factory.UserService.GetCurrentUserAsync(Arg.Any<CancellationToken>())
-       .Returns(Result<UserOutput>.Success(new UserOutput(...)));
+   // Basic authenticated user (User role, no permissions)
+   new HttpRequestMessage(HttpMethod.Get, "/api/v1/endpoint")
+       { Headers = { { "Authorization", "Test" } } };
+
+   // User with specific permissions
+   new HttpRequestMessage(HttpMethod.Get, "/api/v1/admin/users")
+       { Headers = { { "Authorization", TestAuth.WithPermissions(AppPermissions.Users.View) } } };
+
+   // SuperAdmin (bypasses all permission checks)
+   new HttpRequestMessage(HttpMethod.Get, "/api/v1/admin/users")
+       { Headers = { { "Authorization", TestAuth.SuperAdmin() } } };
+
+   // Unauthenticated (no Authorization header — returns 401)
+   using var anonClient = _factory.CreateClient();
    ```
-4. If the service interface isn't already mocked in `CustomWebApplicationFactory`, add it there first
-5. Verify: `dotnet test src/backend/tests/MyProject.Api.Tests -c Release`
+4. Configure mock returns per test:
+   ```csharp
+   _factory.AdminService.GetUsersAsync(1, 10, null, Arg.Any<CancellationToken>())
+       .Returns(new AdminUserListOutput([], 0, 1, 10));
+   ```
+5. If the service interface isn't already mocked in `CustomWebApplicationFactory`, add it there first
+6. Verify: `dotnet test src/backend/tests/MyProject.Api.Tests -c Release`
 
 ### Add a Validator Test
 

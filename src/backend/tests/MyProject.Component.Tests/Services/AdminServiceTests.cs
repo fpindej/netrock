@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
 using MyProject.Application.Caching;
+using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Identity.Constants;
 using MyProject.Component.Tests.Fixtures;
@@ -43,11 +45,12 @@ public class AdminServiceTests : IDisposable
         _userManager.Dispose();
     }
 
-    private void SetupCallerAsAdmin()
+    private ApplicationUser SetupCallerAsAdmin()
     {
         var caller = new ApplicationUser { Id = _callerId, UserName = "admin@test.com" };
         _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
         _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Admin });
+        return caller;
     }
 
     private ApplicationUser SetupTargetAsUser()
@@ -110,9 +113,37 @@ public class AdminServiceTests : IDisposable
         Assert.Equal(ErrorMessages.Admin.RoleAssignAboveRank, result.Error);
     }
 
+    [Fact]
+    public async Task AssignRole_UserAlreadyHasRole_ReturnsFailure()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _userManager.IsInRoleAsync(target, "User").Returns(true);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("User"));
+
+        Assert.True(result.IsFailure);
+        Assert.Contains("already has", result.Error);
+    }
+
     #endregion
 
     #region RemoveRole
+
+    [Fact]
+    public async Task RemoveRole_Valid_ReturnsSuccess()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _userManager.IsInRoleAsync(target, "User").Returns(true);
+        _userManager.RemoveFromRoleAsync(target, "User").Returns(IdentityResult.Success);
+
+        var result = await _sut.RemoveRoleAsync(_callerId, _targetId, "User");
+
+        Assert.True(result.IsSuccess);
+    }
 
     [Fact]
     public async Task RemoveRole_SelfRemoval_ReturnsFailure()
@@ -141,6 +172,20 @@ public class AdminServiceTests : IDisposable
         Assert.Equal(ErrorMessages.Admin.RoleRemoveAboveRank, result.Error);
     }
 
+    [Fact]
+    public async Task RemoveRole_UserDoesNotHaveRole_ReturnsFailure()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _userManager.IsInRoleAsync(target, "User").Returns(false);
+
+        var result = await _sut.RemoveRoleAsync(_callerId, _targetId, "User");
+
+        Assert.True(result.IsFailure);
+        Assert.Contains("does not have", result.Error);
+    }
+
     #endregion
 
     #region LockUser
@@ -156,6 +201,32 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.LockUserAsync(_callerId, _targetId);
 
         Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task LockUser_Valid_RevokesRefreshTokens()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+        _userManager.SetLockoutEndDateAsync(target, Arg.Any<DateTimeOffset>())
+            .Returns(IdentityResult.Success);
+
+        _dbContext.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            Token = "hashed",
+            UserId = _targetId,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
+            ExpiredAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7),
+            IsUsed = false,
+            IsInvalidated = false
+        });
+        await _dbContext.SaveChangesAsync();
+
+        await _sut.LockUserAsync(_callerId, _targetId);
+
+        var token = Assert.Single(_dbContext.RefreshTokens);
+        Assert.True(token.IsInvalidated);
     }
 
     [Fact]
@@ -182,6 +253,24 @@ public class AdminServiceTests : IDisposable
         Assert.Equal(ErrorType.NotFound, result.ErrorType);
     }
 
+    [Fact]
+    public async Task LockUser_InsufficientHierarchy_ReturnsFailure()
+    {
+        // Caller is User (rank 1), target is Admin (rank 2)
+        var caller = new ApplicationUser { Id = _callerId, UserName = "user@test.com" };
+        _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
+        _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.User });
+
+        var target = new ApplicationUser { Id = _targetId, UserName = "admin@test.com" };
+        _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
+        _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.Admin });
+
+        var result = await _sut.LockUserAsync(_callerId, _targetId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.HierarchyInsufficient, result.Error);
+    }
+
     #endregion
 
     #region UnlockUser
@@ -200,6 +289,19 @@ public class AdminServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task UnlockUser_Valid_ResetsAccessFailedCount()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+        _userManager.SetLockoutEndDateAsync(target, null).Returns(IdentityResult.Success);
+        _userManager.ResetAccessFailedCountAsync(target).Returns(IdentityResult.Success);
+
+        await _sut.UnlockUserAsync(_callerId, _targetId);
+
+        await _userManager.Received(1).ResetAccessFailedCountAsync(target);
+    }
+
+    [Fact]
     public async Task UnlockUser_UserNotFound_ReturnsNotFound()
     {
         _userManager.FindByIdAsync(_targetId.ToString()).Returns((ApplicationUser?)null);
@@ -213,6 +315,18 @@ public class AdminServiceTests : IDisposable
     #endregion
 
     #region DeleteUser
+
+    [Fact]
+    public async Task DeleteUser_Valid_ReturnsSuccess()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+        _userManager.DeleteAsync(target).Returns(IdentityResult.Success);
+
+        var result = await _sut.DeleteUserAsync(_callerId, _targetId);
+
+        Assert.True(result.IsSuccess);
+    }
 
     [Fact]
     public async Task DeleteUser_SelfDelete_ReturnsFailure()
@@ -238,9 +352,55 @@ public class AdminServiceTests : IDisposable
         Assert.Equal(ErrorType.NotFound, result.ErrorType);
     }
 
+    [Fact]
+    public async Task DeleteUser_LastAdmin_ReturnsFailure()
+    {
+        // Caller must be SuperAdmin (rank 3) to pass hierarchy check against Admin target (rank 2)
+        var caller = new ApplicationUser { Id = _callerId, UserName = "superadmin@test.com" };
+        _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
+        _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.SuperAdmin });
+
+        // Target is the only Admin
+        var target = new ApplicationUser { Id = _targetId, UserName = "target@test.com" };
+        _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
+        _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.Admin });
+
+        // Simulate only 1 user in Admin role
+        var adminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin };
+        _roleManager.FindByNameAsync(AppRoles.Admin).Returns(adminRole);
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = adminRole.Id, UserId = _targetId });
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _sut.DeleteUserAsync(_callerId, _targetId);
+
+        Assert.True(result.IsFailure);
+        Assert.Contains("last user", result.Error);
+    }
+
     #endregion
 
     #region GetUserById
+
+    [Fact]
+    public async Task GetUserById_Found_ReturnsSuccess()
+    {
+        var user = new ApplicationUser
+        {
+            Id = _targetId,
+            UserName = "user@test.com",
+            Email = "user@test.com",
+            FirstName = "John",
+            LastName = "Doe"
+        };
+        _userManager.FindByIdAsync(_targetId.ToString()).Returns(user);
+        _userManager.GetRolesAsync(user).Returns(new List<string> { AppRoles.User });
+
+        var result = await _sut.GetUserByIdAsync(_targetId);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("user@test.com", result.Value.UserName);
+        Assert.Equal("John", result.Value.FirstName);
+    }
 
     [Fact]
     public async Task GetUserById_NotFound_ReturnsNotFound()

@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using MyProject.Application.Caching;
+using MyProject.Application.Features.Admin;
+using MyProject.Application.Features.Jobs;
 using MyProject.Application.Identity;
 using MyProject.Infrastructure.Persistence;
 using IAuthenticationService = MyProject.Application.Features.Authentication.IAuthenticationService;
@@ -19,6 +21,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
     public IAuthenticationService AuthenticationService { get; } = Substitute.For<IAuthenticationService>();
     public IUserService UserService { get; } = Substitute.For<IUserService>();
+    public IAdminService AdminService { get; } = Substitute.For<IAdminService>();
+    public IRoleManagementService RoleManagementService { get; } = Substitute.For<IRoleManagementService>();
+    public IJobManagementService JobManagementService { get; } = Substitute.For<IJobManagementService>();
     public ICacheService CacheService { get; } = Substitute.For<ICacheService>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -66,6 +71,15 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
             services.RemoveAll<IUserService>();
             services.AddSingleton(UserService);
+
+            services.RemoveAll<IAdminService>();
+            services.AddSingleton(AdminService);
+
+            services.RemoveAll<IRoleManagementService>();
+            services.AddSingleton(RoleManagementService);
+
+            services.RemoveAll<IJobManagementService>();
+            services.AddSingleton(JobManagementService);
 
             services.RemoveAll<ICacheService>();
             services.AddSingleton(CacheService);
