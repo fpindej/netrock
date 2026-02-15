@@ -154,9 +154,10 @@ One commit = one logical change that could be reverted independently.
 Before **every** commit, verify the code compiles and passes checks:
 
 - **Backend**: `dotnet build src/backend/MyProject.slnx`
+- **Backend tests**: `dotnet test src/backend/MyProject.slnx -c Release`
 - **Frontend**: `cd src/frontend && npm run format && npm run lint && npm run check`
 
-Never commit code that doesn't compile, has lint errors, or fails type checks.
+Never commit code that doesn't compile, has lint errors, fails type checks, or breaks tests.
 
 ### Session Documentation
 

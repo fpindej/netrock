@@ -374,6 +374,137 @@ backgroundJobClient.Schedule<WelcomeEmailJob>(
 
 See `ExampleFireAndForgetJob.cs` in the codebase for a working reference. The Hangfire dashboard and admin UI at `/admin/jobs` show one-time job executions alongside recurring jobs.
 
+### Run Tests
+
+```bash
+# All tests (Release mode — matches CI)
+dotnet test src/backend/MyProject.slnx -c Release
+
+# Single project
+dotnet test src/backend/tests/MyProject.Unit.Tests -c Release
+
+# Filter by class name
+dotnet test src/backend/tests/MyProject.Component.Tests -c Release --filter "FullyQualifiedName~AuthenticationServiceTests"
+
+# Filter by method name
+dotnet test src/backend/tests/MyProject.Unit.Tests -c Release --filter "ResultTests.Success_ReturnsIsSuccessTrue"
+```
+
+No external dependencies (Docker, PostgreSQL, Redis) needed — all tests run in-process.
+
+### Add a Unit Test
+
+For pure logic in Shared, Domain, or Application layers.
+
+1. Create `src/backend/tests/MyProject.Unit.Tests/{Layer}/{ClassUnderTest}Tests.cs`
+2. Structure:
+   ```csharp
+   namespace MyProject.Unit.Tests.{Layer};
+
+   public class {ClassUnderTest}Tests
+   {
+       [Fact]
+       public void {Method}_{Scenario}_{Expected}()
+       {
+           // Arrange / Act / Assert
+       }
+   }
+   ```
+3. No mocking, no DI — test pure inputs and outputs
+4. Verify: `dotnet test src/backend/tests/MyProject.Unit.Tests -c Release`
+
+### Add a Component Test
+
+For service business logic with mocked dependencies.
+
+1. Create `src/backend/tests/MyProject.Component.Tests/Services/{Service}Tests.cs`
+2. Create mocks in constructor or setup method:
+   ```csharp
+   public class OrderServiceTests
+   {
+       private readonly MyProjectDbContext _dbContext = TestDbContextFactory.Create();
+       private readonly IOrderRepository _orderRepo = Substitute.For<IOrderRepository>();
+       private readonly ICacheService _cache = Substitute.For<ICacheService>();
+       // ... create service instance with mocks
+   }
+   ```
+3. For Identity mocking, use `IdentityMockHelpers`:
+   ```csharp
+   var userManager = IdentityMockHelpers.CreateMockUserManager();
+   var roleManager = IdentityMockHelpers.CreateMockRoleManager();
+   ```
+4. Assert on `Result` properties:
+   ```csharp
+   Assert.True(result.IsSuccess);
+   Assert.Equal(expectedId, result.Value);
+   ```
+5. Verify: `dotnet test src/backend/tests/MyProject.Component.Tests -c Release`
+
+### Add an API Integration Test
+
+For testing the full HTTP pipeline (routes, auth, validation, status codes).
+
+1. Create `src/backend/tests/MyProject.Api.Tests/Controllers/{Controller}Tests.cs`
+2. Structure:
+   ```csharp
+   public class OrdersControllerTests : IClassFixture<CustomWebApplicationFactory>, IDisposable
+   {
+       private readonly CustomWebApplicationFactory _factory;
+       private readonly HttpClient _authenticatedClient;
+       private readonly HttpClient _anonymousClient;
+
+       public OrdersControllerTests(CustomWebApplicationFactory factory)
+       {
+           _factory = factory;
+           _authenticatedClient = factory.CreateClient();
+           _authenticatedClient.DefaultRequestHeaders.Add("Authorization", "Test token");
+           _anonymousClient = factory.CreateClient();
+       }
+
+       public void Dispose()
+       {
+           _authenticatedClient.Dispose();
+           _anonymousClient.Dispose();
+       }
+   }
+   ```
+3. Configure mock returns per test:
+   ```csharp
+   _factory.UserService.GetCurrentUserAsync(Arg.Any<CancellationToken>())
+       .Returns(Result<UserOutput>.Success(new UserOutput(...)));
+   ```
+4. If the service interface isn't already mocked in `CustomWebApplicationFactory`, add it there first
+5. Verify: `dotnet test src/backend/tests/MyProject.Api.Tests -c Release`
+
+### Add a Validator Test
+
+For testing FluentValidation rules without starting the test server.
+
+1. Create `src/backend/tests/MyProject.Api.Tests/Validators/{Validator}Tests.cs`
+2. Instantiate the validator directly:
+   ```csharp
+   public class OrderRequestValidatorTests
+   {
+       private readonly OrderRequestValidator _validator = new();
+
+       [Fact]
+       public async Task Validate_ValidRequest_Passes()
+       {
+           var result = await _validator.ValidateAsync(new OrderRequest { ... });
+           Assert.True(result.IsValid);
+       }
+
+       [Fact]
+       public async Task Validate_MissingName_Fails()
+       {
+           var result = await _validator.ValidateAsync(new OrderRequest { Name = "" });
+           Assert.False(result.IsValid);
+           Assert.Contains(result.Errors, e => e.PropertyName == "Name");
+       }
+   }
+   ```
+3. Verify: `dotnet test src/backend/tests/MyProject.Api.Tests -c Release`
+
 ---
 
 ## Frontend Skills

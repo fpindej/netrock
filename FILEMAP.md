@@ -27,11 +27,14 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **WebApi request DTO** (add/rename/remove property) | Validator, mapper, frontend types, frontend form |
 | **WebApi response DTO** (add/rename/remove property) | Mapper, frontend types, frontend component displaying data |
 | **WebApi validator** (change rules) | Consider matching frontend validation UX |
-| **`Program.cs`** (change middleware order) | Test full request pipeline — order matters for auth, CORS, rate limiting |
+| **`Program.cs`** (change middleware order) | Test full request pipeline — order matters for auth, CORS, rate limiting; update `CustomWebApplicationFactory` if new services need mocking |
 | **`Directory.Packages.props`** (change version) | `dotnet build` to verify compatibility |
 | **`Directory.Build.props`** (change TFM/settings) | All projects in solution |
 | **`BaseEntity.cs`** | `BaseEntityConfiguration`, `AuditingInterceptor`, all entities |
 | **`BaseEntityConfiguration.cs`** | All entity configurations that extend it |
+| **`CustomWebApplicationFactory.cs`** (change mock setup) | All API integration tests that depend on factory mocks |
+| **`appsettings.Testing.json`** (change test config) | `CustomWebApplicationFactory` behavior; all API integration tests |
+| **Test fixture** (change shared helper) | All tests using that fixture |
 | **`AppRoles.cs`** (add role) | Role seeding picks up automatically; consider what permissions to seed for the new role; `RoleManagementService` checks `AppRoles.All` for system role collisions |
 | **`AppPermissions.cs`** (add permission) | Seed in `ApplicationBuilderExtensions.SeedRolePermissionsAsync()`, add `[RequirePermission]` to endpoints, update frontend `$lib/utils/permissions.ts` |
 | **`RequirePermission` attribute** (add to endpoint) | Remove any class-level `[Authorize(Roles)]`; ensure permission is defined in `AppPermissions.cs` |
@@ -158,6 +161,27 @@ src/backend/MyProject.WebApi/Features/Admin/
   Dtos/Jobs/                                          Response DTOs
 ```
 
+### Test Naming Patterns
+
+```
+src/backend/tests/
+  MyProject.Unit.Tests/
+    {Layer}/{ClassUnderTest}Tests.cs             Unit tests (pure logic)
+  MyProject.Component.Tests/
+    Fixtures/TestDbContextFactory.cs             InMemory DbContext factory
+    Fixtures/IdentityMockHelpers.cs              UserManager/RoleManager mock setup
+    Services/{Service}Tests.cs                   Service tests (mocked deps)
+  MyProject.Api.Tests/
+    Fixtures/CustomWebApplicationFactory.cs      WebApplicationFactory config
+    Fixtures/TestAuthHandler.cs                  Fake auth handler
+    Controllers/{Controller}Tests.cs             HTTP integration tests
+    Validators/{Validator}Tests.cs               FluentValidation tests
+  MyProject.Architecture.Tests/
+    DependencyTests.cs                           Layer dependency rules
+    NamingConventionTests.cs                     Class naming enforcement
+    AccessModifierTests.cs                       Visibility rules
+```
+
 ### Singleton Files (no pattern — memorize these)
 
 | File | Why it matters |
@@ -174,3 +198,5 @@ src/backend/MyProject.WebApi/Features/Admin/
 | `src/frontend/src/lib/api/v1.d.ts` | Generated types (never hand-edit) |
 | `.env.example` | Environment variable defaults |
 | `docker-compose.local.yml` | Local dev service wiring |
+| `src/backend/MyProject.WebApi/appsettings.Testing.json` | Test environment config (disables Redis, Hangfire, CORS) |
+| `src/backend/tests/MyProject.Api.Tests/Fixtures/CustomWebApplicationFactory.cs` | Test host configuration for API tests |

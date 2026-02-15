@@ -13,4 +13,10 @@
   <Project Path="MyProject.Infrastructure/MyProject.Infrastructure.csproj" />
   <Project Path="MyProject.Shared/MyProject.Shared.csproj" />
   <Project Path="MyProject.WebApi/MyProject.WebApi.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="tests/MyProject.Unit.Tests/MyProject.Unit.Tests.csproj" />
+    <Project Path="tests/MyProject.Component.Tests/MyProject.Component.Tests.csproj" />
+    <Project Path="tests/MyProject.Api.Tests/MyProject.Api.Tests.csproj" />
+    <Project Path="tests/MyProject.Architecture.Tests/MyProject.Architecture.Tests.csproj" />
+  </Folder>
 </Solution>
