@@ -30,7 +30,8 @@ public class ExceptionHandlingMiddleware(
         catch (KeyNotFoundException keyNotFoundEx)
         {
             logger.LogWarning(keyNotFoundEx, "A KeyNotFoundException occurred.");
-            await HandleExceptionAsync(context, keyNotFoundEx, HttpStatusCode.NotFound);
+            await HandleExceptionAsync(context, keyNotFoundEx, HttpStatusCode.NotFound,
+                customMessage: ErrorMessages.Entity.NotFound);
         }
         catch (PaginationException paginationEx)
         {

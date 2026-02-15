@@ -72,13 +72,13 @@ Inlang v2.5+ auto-generates `.gitignore`, `.meta.json`, `README.md`, and `projec
 flowchart TD
     REQ[Incoming Request] --> AUTH_MW[Authentication Middleware]
     AUTH_MW --> AUTHZ_MW[Authorization Middleware]
-    AUTHZ_MW -->|Challenged - no valid JWT| HANDLER_401["ErrorResponseAuthorizationMiddlewareResultHandler\n→ 401 + WWW-Authenticate: Bearer\n+ ErrorResponse body"]
-    AUTHZ_MW -->|Forbidden - missing permission| HANDLER_403["ErrorResponseAuthorizationMiddlewareResultHandler\n→ 403 + ErrorResponse body"]
+    AUTHZ_MW -->|Challenged - no valid JWT| HANDLER_401["ProblemDetailsAuthorizationHandler\n→ 401 + WWW-Authenticate: Bearer\n+ ProblemDetails body"]
+    AUTHZ_MW -->|Forbidden - missing permission| HANDLER_403["ProblemDetailsAuthorizationHandler\n→ 403 + ProblemDetails body"]
     AUTHZ_MW -->|Authorized| CONTROLLER[Controller Action]
-    CONTROLLER -->|Business error| RESULT["Result.Failure → ErrorResponse (400)"]
-    CONTROLLER -->|Not found| NOTFOUND["NotFound(ErrorResponse) (404)"]
+    CONTROLLER -->|Business error| RESULT["Result.Failure → Problem() (400)"]
+    CONTROLLER -->|Not found| NOTFOUND["Problem() (404)"]
     CONTROLLER -->|Success| SUCCESS["200/201/204"]
-    CONTROLLER -->|Unhandled exception| EX_MW["ExceptionHandlingMiddleware\n→ 500 + ErrorResponse"]
+    CONTROLLER -->|Unhandled exception| EX_MW["ExceptionHandlingMiddleware\n→ 500 + ProblemDetails"]
 ```
 
 ### Fix 6: SuppressMapClientErrors + ProducesErrorResponseType (spec accuracy)
@@ -141,6 +141,21 @@ Replaced `ErrorResponse { Message, Details }` with standard `ProblemDetails` acr
 | `WebApi/Middlewares/ExceptionHandlingMiddleware.cs` | Added `StatusCode = status` before `WriteAsync()` | Exception responses were returning 200 |
 | `WebApi/Extensions/RateLimiterExtensions.cs` | Added `StatusCode = 429` before `WriteAsync()` | Rate limit rejections were returning 200 |
 | `AGENTS.md` | Updated `WriteAsync()` code example to include `Response.StatusCode` and a warning | Prevent future developers from reproducing the bug |
+
+### Fix 8: Harden exception middleware and add `UseStatusCodePages()` safety net
+
+- **Problem 1**: `ExceptionHandlingMiddleware` used `exception.Message` directly for `KeyNotFoundException`, which could leak internal details (DB table names, IDs) if a future developer throws `KeyNotFoundException` with a message containing sensitive information.
+- **Fix**: Use `ErrorMessages.Entity.NotFound` as a safe generic message, matching the pattern already used for 500 errors.
+- **Problem 2**: Edge-case status codes not covered by any custom handler (e.g., routing 404, 405 Method Not Allowed, 406 Not Acceptable) returned empty bodies.
+- **Fix**: Added `app.UseStatusCodePages()` after `ExceptionHandlingMiddleware` in the middleware pipeline. With `AddProblemDetails()` registered, this automatically generates ProblemDetails for any error status code that reaches the client without a body.
+- **Docs**: Updated AGENTS.md to explicitly warn against using `NotFound()`, `BadRequest()`, `Unauthorized()` shorthand helpers — always use `Problem(detail: ..., statusCode: ...)` instead.
+
+| File | Change | Reason |
+|------|--------|--------|
+| `WebApi/Middlewares/ExceptionHandlingMiddleware.cs` | Use `ErrorMessages.Entity.NotFound` for `KeyNotFoundException` | Prevent leaking exception messages to clients |
+| `WebApi/Program.cs` | Added `app.UseStatusCodePages()` | Catch-all ProblemDetails for uncovered error status codes |
+| `AGENTS.md` | Explicit rule against `NotFound()`, `BadRequest()`, `Unauthorized()` helpers | Ensure consistent ProblemDetails responses |
+| Session notes | Updated Mermaid diagram to reference `ProblemDetails` instead of `ErrorResponse` | Diagram showed stale intermediate state |
 
 ## Remaining Items
 

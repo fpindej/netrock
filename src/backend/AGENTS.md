@@ -545,7 +545,8 @@ Rules:
 - **Never add `/// <param name="cancellationToken">`** — ASP.NET excludes `CancellationToken` from OAS parameters, but the `<param>` text leaks into `requestBody.description`. CS1573 is suppressed project-wide.
 - Only add `/// <param>` tags for parameters that should appear in the OAS (request body, route/query params)
 - **Never return anonymous objects or raw strings** from controllers — always use `Problem()` for errors and typed response DTOs for success. Anonymous objects produce untyped schemas in the OAS.
-- **Never use `StatusCode(int, object)`** for responses with a body — the `object` parameter loses type information and the OAS generator cannot introspect the response schema. Use typed helpers instead: `Ok(response)`, `Created(string.Empty, response)`, `BadRequest(error)`, etc.
+- **Never use `NotFound()`, `BadRequest()`, `Unauthorized()`, or other shorthand helpers for error responses** — always use `Problem(detail: ..., statusCode: ...)`. The `Problem()` helper produces a standard `ProblemDetails` body with `Type`, `Title`, `Instance`, and `traceId` populated by the pipeline. The shorthand helpers bypass ProblemDetails and return unstructured or empty bodies.
+- **Never use `StatusCode(int, object)`** for responses with a body — the `object` parameter loses type information and the OAS generator cannot introspect the response schema. Use typed helpers for success only: `Ok(response)`, `Created(string.Empty, response)`.
 - **For 201 Created responses**, use `Created(string.Empty, response)` — not `CreatedAtAction` (which generates `Location` headers for MVC/Razor patterns this API doesn't use) and not `StatusCode(201, response)` (which loses type info).
 - **Never use `#pragma warning disable`** for XML doc warnings — fix the docs instead
 - Use primary constructors for dependency injection

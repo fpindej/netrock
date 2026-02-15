@@ -153,6 +153,9 @@ try
     Log.Debug("Setting UseMiddleware => ExceptionHandlingMiddleware");
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+    Log.Debug("Setting UseStatusCodePages");
+    app.UseStatusCodePages();
+
     if (!app.Environment.IsDevelopment())
     {
         Log.Debug("Setting UseHttpsRedirection");
