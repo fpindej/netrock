@@ -25,6 +25,9 @@
  * </button>
  * ```
  */
+/// Reactive cooldown state returned by {@link createCooldown}.
+export type Cooldown = ReturnType<typeof createCooldown>;
+
 export function createCooldown() {
 	let remaining = $state(0);
 	let intervalId: ReturnType<typeof setInterval> | null = null;
