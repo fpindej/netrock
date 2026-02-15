@@ -2,6 +2,7 @@
 	import { browserClient, getErrorMessage } from '$lib/api';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { onMount } from 'svelte';
 	import * as m from '$lib/paraglide/messages';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
@@ -15,7 +16,7 @@
 	let status = $state<'verifying' | 'success' | 'error'>('verifying');
 	let errorMessage = $state('');
 
-	$effect(() => {
+	onMount(() => {
 		if (data.email && data.token) {
 			verify();
 		} else {
