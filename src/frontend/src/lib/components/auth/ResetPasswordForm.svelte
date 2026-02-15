@@ -53,12 +53,9 @@
 		isLoading = true;
 
 		try {
-			const { response, error: apiError } = await browserClient.POST(
-				'/api/auth/reset-password',
-				{
-					body: { email, token, newPassword }
-				}
-			);
+			const { response, error: apiError } = await browserClient.POST('/api/auth/reset-password', {
+				body: { email, token, newPassword }
+			});
 
 			if (response.ok) {
 				isSuccess = true;
@@ -94,10 +91,7 @@
 	</div>
 
 	{#if isMissingParams}
-		<div
-			class="sm:mx-auto sm:w-full sm:max-w-md"
-			in:fly={{ y: 20, duration: 600, delay: 100 }}
-		>
+		<div class="sm:mx-auto sm:w-full sm:max-w-md" in:fly={{ y: 20, duration: 600, delay: 100 }}>
 			<Card.Root class="border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm">
 				<Card.Header class="items-center">
 					<div
@@ -114,10 +108,7 @@
 				</Card.Header>
 				<Card.Content>
 					<div class="text-center text-sm">
-						<a
-							href={resolve('/forgot-password')}
-							class="font-medium text-primary hover:underline"
-						>
+						<a href={resolve('/forgot-password')} class="font-medium text-primary hover:underline">
 							{m.auth_resetPassword_requestNew()}
 						</a>
 					</div>
@@ -130,7 +121,9 @@
 			in:fly={{ y: 20, duration: 600, delay: 100 }}
 			out:scale={{ duration: 400, start: 1, opacity: 0 }}
 		>
-			<Card.Root class="border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm transition-colors duration-300">
+			<Card.Root
+				class="border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm transition-colors duration-300"
+			>
 				<Card.Header>
 					<Card.Title class="text-center text-2xl">
 						{m.auth_resetPassword_title()}
@@ -171,9 +164,7 @@
 								bind:value={confirmPassword}
 								class={cn('bg-background/50', fieldShakes.class('confirmPassword'))}
 								aria-invalid={!!fieldErrors.confirmPassword}
-								aria-describedby={fieldErrors.confirmPassword
-									? 'confirmPassword-error'
-									: undefined}
+								aria-describedby={fieldErrors.confirmPassword ? 'confirmPassword-error' : undefined}
 							/>
 							{#if fieldErrors.confirmPassword}
 								<p id="confirmPassword-error" class="text-xs text-destructive">

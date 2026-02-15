@@ -27,12 +27,9 @@
 		isLoading = true;
 
 		try {
-			const { response, error: apiError } = await browserClient.POST(
-				'/api/auth/forgot-password',
-				{
-					body: { email }
-				}
-			);
+			const { response, error: apiError } = await browserClient.POST('/api/auth/forgot-password', {
+				body: { email }
+			});
 
 			if (response.ok) {
 				isSubmitted = true;
@@ -109,10 +106,7 @@
 						</Button>
 					</form>
 					<div class="mt-4 text-center text-sm">
-						<a
-							href={resolve('/login')}
-							class="font-medium text-primary hover:underline"
-						>
+						<a href={resolve('/login')} class="font-medium text-primary hover:underline">
 							{m.auth_forgotPassword_backToLogin()}
 						</a>
 					</div>
@@ -140,10 +134,7 @@
 				</Card.Header>
 				<Card.Content>
 					<div class="text-center text-sm">
-						<a
-							href={resolve('/login')}
-							class="font-medium text-primary hover:underline"
-						>
+						<a href={resolve('/login')} class="font-medium text-primary hover:underline">
 							{m.auth_forgotPassword_backToLogin()}
 						</a>
 					</div>
