@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Header, Sidebar } from '$lib/components/layout';
+	import { EmailVerificationBanner } from '$lib/components/auth';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { initSidebar, sidebarState } from '$lib/state';
@@ -24,6 +25,9 @@
 	</div>
 	<div class="flex flex-col overflow-hidden">
 		<Header user={data.user} />
+		{#if !data.user.emailConfirmed}
+			<EmailVerificationBanner />
+		{/if}
 		<main class="flex flex-1 flex-col gap-4 overflow-y-auto p-4 lg:gap-6 lg:p-6">
 			{#key page.url.pathname}
 				<div

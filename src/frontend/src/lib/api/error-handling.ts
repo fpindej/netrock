@@ -51,7 +51,8 @@ const DEFAULT_FIELD_MAP: Record<string, string> = {
 	Password: 'password',
 	ConfirmPassword: 'confirmPassword',
 	CurrentPassword: 'currentPassword',
-	NewPassword: 'newPassword'
+	NewPassword: 'newPassword',
+	Token: 'token'
 };
 
 /**
