@@ -632,7 +632,31 @@ The `ProblemDetails` shape (RFC 9457):
 }
 ```
 
-In Development, the exception middleware adds `extensions.stackTrace`. `ProblemDetails` is the **only** error body type across the entire API — controllers use `Problem()`, middleware and authorization handlers write `ProblemDetails` directly. Never return raw strings, anonymous objects, or other shapes for errors.
+In Development, the exception middleware adds `extensions.stackTrace`. `ProblemDetails` is the **only** error body type across the entire API. Never return raw strings, anonymous objects, or other shapes for errors.
+
+### Writing ProblemDetails
+
+**In controllers** — use the built-in `Problem()` helper:
+
+```csharp
+return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
+```
+
+**In middleware / handlers** — inject `IProblemDetailsService` and call `WriteAsync()`:
+
+```csharp
+await problemDetailsService.WriteAsync(new ProblemDetailsContext
+{
+    HttpContext = context,
+    ProblemDetails = new ProblemDetails
+    {
+        Status = StatusCodes.Status500InternalServerError,
+        Detail = "Something went wrong."
+    }
+});
+```
+
+The service is registered via `AddProblemDetails()` in `Program.cs` and automatically populates `Type` (RFC 9110 URI), `Title`, and `Instance` fields. Never write `ProblemDetails` JSON manually with `WriteAsJsonAsync` — that bypasses the pipeline and loses those fields.
 
 ## Error Messages
 
