@@ -138,7 +138,15 @@
 						</div>
 
 						<div class="grid gap-2">
-							<Label for="password">{m.auth_login_password()}</Label>
+							<div class="flex items-center justify-between">
+								<Label for="password">{m.auth_login_password()}</Label>
+								<a
+									href={resolve('/forgot-password')}
+									class="text-sm font-medium text-primary hover:underline"
+								>
+									{m.auth_login_forgotPassword()}
+								</a>
+							</div>
 							<Input
 								id="password"
 								type="password"
