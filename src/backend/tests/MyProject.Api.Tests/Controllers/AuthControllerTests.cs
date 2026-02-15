@@ -299,4 +299,184 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     }
 
     #endregion
+
+    #region ForgotPassword
+
+    [Fact]
+    public async Task ForgotPassword_ValidEmail_Returns200()
+    {
+        _factory.AuthenticationService.ForgotPasswordAsync(
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "test@example.com" })));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_InvalidEmail_Returns400()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "not-an-email" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_EmptyEmail_Returns400()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    #endregion
+
+    #region ResetPassword
+
+    [Fact]
+    public async Task ResetPassword_ValidInput_Returns200()
+    {
+        _factory.AuthenticationService.ResetPasswordAsync(
+                Arg.Any<ResetPasswordInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/reset-password", JsonContent.Create(new
+            {
+                Email = "test@example.com",
+                Token = "valid-token",
+                NewPassword = "NewPassword1!"
+            })));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ResetPassword_InvalidToken_Returns400WithProblemDetails()
+    {
+        _factory.AuthenticationService.ResetPasswordAsync(
+                Arg.Any<ResetPasswordInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.Auth.ResetPasswordTokenInvalid));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/reset-password", JsonContent.Create(new
+            {
+                Email = "test@example.com",
+                Token = "invalid-token",
+                NewPassword = "NewPassword1!"
+            })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.ResetPasswordTokenInvalid);
+    }
+
+    [Fact]
+    public async Task ResetPassword_WeakPassword_Returns400()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/reset-password", JsonContent.Create(new
+            {
+                Email = "test@example.com",
+                Token = "valid-token",
+                NewPassword = "weak"
+            })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    #endregion
+
+    #region VerifyEmail
+
+    [Fact]
+    public async Task VerifyEmail_ValidInput_Returns200()
+    {
+        _factory.AuthenticationService.VerifyEmailAsync(
+                Arg.Any<VerifyEmailInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/verify-email", JsonContent.Create(new
+            {
+                Email = "test@example.com",
+                Token = "valid-token"
+            })));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_InvalidToken_Returns400WithProblemDetails()
+    {
+        _factory.AuthenticationService.VerifyEmailAsync(
+                Arg.Any<VerifyEmailInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.Auth.EmailVerificationFailed));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/verify-email", JsonContent.Create(new
+            {
+                Email = "test@example.com",
+                Token = "invalid-token"
+            })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.EmailVerificationFailed);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_InvalidEmail_Returns400()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/verify-email", JsonContent.Create(new
+            {
+                Email = "not-an-email",
+                Token = "valid-token"
+            })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    #endregion
+
+    #region ResendVerification
+
+    [Fact]
+    public async Task ResendVerification_Authenticated_Returns200()
+    {
+        _factory.AuthenticationService.ResendVerificationEmailAsync(Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/resend-verification", auth: TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ResendVerification_Unauthenticated_Returns401()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/resend-verification"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ResendVerification_AlreadyVerified_Returns400()
+    {
+        _factory.AuthenticationService.ResendVerificationEmailAsync(Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.Auth.EmailAlreadyVerified));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/resend-verification", auth: TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.EmailAlreadyVerified);
+    }
+
+    #endregion
 }

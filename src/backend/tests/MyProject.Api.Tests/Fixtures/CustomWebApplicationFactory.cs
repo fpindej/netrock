@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using MyProject.Application.Caching;
 using MyProject.Application.Features.Admin;
+using MyProject.Application.Features.Email;
 using MyProject.Application.Features.Jobs;
 using MyProject.Application.Identity;
 using MyProject.Infrastructure.Persistence;
@@ -25,6 +26,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     public IAdminService AdminService { get; } = Substitute.For<IAdminService>();
     public IRoleManagementService RoleManagementService { get; } = Substitute.For<IRoleManagementService>();
     public IJobManagementService JobManagementService { get; } = Substitute.For<IJobManagementService>();
+    public IEmailService EmailService { get; } = Substitute.For<IEmailService>();
     public ICacheService CacheService { get; } = Substitute.For<ICacheService>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -82,6 +84,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IJobManagementService>();
             services.AddSingleton(JobManagementService);
 
+            services.RemoveAll<IEmailService>();
+            services.AddSingleton(EmailService);
+
             services.RemoveAll<ICacheService>();
             services.AddSingleton(CacheService);
 
@@ -115,6 +120,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         AdminService.ClearSubstitute(ClearOptions.All);
         RoleManagementService.ClearSubstitute(ClearOptions.All);
         JobManagementService.ClearSubstitute(ClearOptions.All);
+        EmailService.ClearSubstitute(ClearOptions.All);
         CacheService.ClearSubstitute(ClearOptions.All);
     }
 }
