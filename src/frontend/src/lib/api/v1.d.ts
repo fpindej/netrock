@@ -259,6 +259,15 @@ export interface paths {
 						'application/json': components['schemas']['AuthenticationResponse'];
 					};
 				};
+				/** @description If the request body is malformed */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
 				/** @description If the refresh token is invalid, expired, or missing */
 				401: {
 					headers: {
@@ -371,6 +380,247 @@ export interface paths {
 					};
 				};
 				/** @description If too many registration requests have been made */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/forgot-password': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Initiates a password reset flow by sending a reset link to the provided email address.
+		 *     Always returns 200 regardless of whether the email exists to prevent user enumeration.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			/** @description The forgot password request containing the email address */
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['ForgotPasswordRequest'];
+				};
+			};
+			responses: {
+				/** @description Request accepted (email sent if account exists) */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description If the request is invalid */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If too many requests have been made */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/reset-password': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Resets a user's password using a token received via email.
+		 *     Revokes all existing refresh tokens to force re-authentication on other devices.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			/** @description The reset password request containing email, token, and new password */
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['ResetPasswordRequest'];
+				};
+			};
+			responses: {
+				/** @description Password reset successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description If the request is invalid or the token is expired/invalid */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If too many requests have been made */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/verify-email': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Verifies a user's email address using a confirmation token received via email. */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			/** @description The email verification request containing email and token */
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['VerifyEmailRequest'];
+				};
+			};
+			responses: {
+				/** @description Email verified successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description If the request is invalid or the token is expired/invalid */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If too many requests have been made */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/resend-verification': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Resends a verification email to the current authenticated user.
+		 *     Fails if the user's email is already verified.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Verification email sent */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description If the email is already verified */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If too many requests have been made */
 				429: {
 					headers: {
 						[name: string]: unknown;
@@ -1599,15 +1849,6 @@ export interface paths {
 					};
 					content?: never;
 				};
-				/** @description Bad Request */
-				400: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['ProblemDetails'];
-					};
-				};
 				/** @description If the user is not authenticated */
 				401: {
 					headers: {
@@ -1635,7 +1876,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
-				/** @description Too Many Requests */
+				/** @description If too many requests have been made */
 				429: {
 					headers: {
 						[name: string]: unknown;
@@ -1835,15 +2076,6 @@ export interface paths {
 					};
 					content?: never;
 				};
-				/** @description Bad Request */
-				400: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['ProblemDetails'];
-					};
-				};
 				/** @description If the user is not authenticated */
 				401: {
 					headers: {
@@ -1871,7 +2103,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
-				/** @description Too Many Requests */
+				/** @description If too many requests have been made */
 				429: {
 					headers: {
 						[name: string]: unknown;
@@ -1917,15 +2149,6 @@ export interface paths {
 					};
 					content?: never;
 				};
-				/** @description Bad Request */
-				400: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['ProblemDetails'];
-					};
-				};
 				/** @description If the user is not authenticated */
 				401: {
 					headers: {
@@ -1953,7 +2176,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
-				/** @description Too Many Requests */
+				/** @description If too many requests have been made */
 				429: {
 					headers: {
 						[name: string]: unknown;
@@ -2072,6 +2295,11 @@ export interface components {
 		DeleteAccountRequest: {
 			/** @description The user's current password for confirmation. */
 			password: string;
+		};
+		/** @description Represents a request to initiate a password reset flow. */
+		ForgotPasswordRequest: {
+			/** @description The email address associated with the account. */
+			email: string;
 		};
 		/** @description Represents a single job execution history entry. */
 		JobExecutionResponse: {
@@ -2232,6 +2460,15 @@ export interface components {
 			 */
 			id?: string;
 		};
+		/** @description Represents a request to reset a password using a token. */
+		ResetPasswordRequest: {
+			/** @description The email address associated with the account. */
+			email: string;
+			/** @description The password reset token received via email. */
+			token: string;
+			/** @description The new password to set. */
+			newPassword: string;
+		};
 		/** @description Detailed role response including permissions and user count. */
 		RoleDetailResponse: {
 			/**
@@ -2306,6 +2543,15 @@ export interface components {
 			roles?: string[];
 			/** @description The atomic permissions granted to the user through their roles. */
 			permissions?: string[];
+			/** @description Whether the user's email address has been confirmed. */
+			emailConfirmed?: boolean;
+		};
+		/** @description Represents a request to verify an email address using a confirmation token. */
+		VerifyEmailRequest: {
+			/** @description The email address to verify. */
+			email: string;
+			/** @description The email confirmation token received via email. */
+			token: string;
 		};
 	};
 	responses: never;
