@@ -6,11 +6,11 @@ namespace MyProject.Shared;
 public enum ErrorType
 {
     /// <summary>Validation or business rule violation (400 Bad Request).</summary>
-    Validation,
+    Validation = 0,
 
     /// <summary>Authentication or token failure (401 Unauthorized).</summary>
-    Unauthorized,
+    Unauthorized = 1,
 
     /// <summary>Requested resource not found (404 Not Found).</summary>
-    NotFound
+    NotFound = 2
 }
