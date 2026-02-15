@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyProject.Application.Features.Jobs;
 using MyProject.Application.Features.Jobs.Dtos;
-using MyProject.Domain;
+using MyProject.Shared;
 using MyProject.Infrastructure.Features.Jobs.Extensions;
 using MyProject.Infrastructure.Features.Jobs.Models;
 using MyProject.Infrastructure.Persistence;
@@ -73,7 +73,7 @@ internal sealed class JobManagementService(
 
         if (job is null)
         {
-            return Task.FromResult(Result<RecurringJobDetailOutput>.Failure(ErrorMessages.Jobs.NotFound));
+            return Task.FromResult(Result<RecurringJobDetailOutput>.Failure(ErrorMessages.Jobs.NotFound, ErrorType.NotFound));
         }
 
         var isPaused = PausedJobCrons.ContainsKey(job.Id);
@@ -107,7 +107,7 @@ internal sealed class JobManagementService(
         if (!JobExists(jobId))
         {
             logger.LogWarning("Attempted to trigger non-existent job '{JobId}'", jobId);
-            return Task.FromResult(Result.Failure(ErrorMessages.Jobs.NotFound));
+            return Task.FromResult(Result.Failure(ErrorMessages.Jobs.NotFound, ErrorType.NotFound));
         }
 
         try
@@ -129,7 +129,7 @@ internal sealed class JobManagementService(
         if (!JobExists(jobId))
         {
             logger.LogWarning("Attempted to remove non-existent job '{JobId}'", jobId);
-            return Result.Failure(ErrorMessages.Jobs.NotFound);
+            return Result.Failure(ErrorMessages.Jobs.NotFound, ErrorType.NotFound);
         }
 
         RecurringJob.RemoveIfExists(jobId);
@@ -156,7 +156,7 @@ internal sealed class JobManagementService(
         if (job is null)
         {
             logger.LogWarning("Attempted to pause non-existent job '{JobId}'", jobId);
-            return Result.Failure(ErrorMessages.Jobs.NotFound);
+            return Result.Failure(ErrorMessages.Jobs.NotFound, ErrorType.NotFound);
         }
 
         if (PausedJobCrons.ContainsKey(jobId))
@@ -186,7 +186,7 @@ internal sealed class JobManagementService(
         if (!JobExists(jobId))
         {
             logger.LogWarning("Attempted to resume non-existent job '{JobId}'", jobId);
-            return Result.Failure(ErrorMessages.Jobs.NotFound);
+            return Result.Failure(ErrorMessages.Jobs.NotFound, ErrorType.NotFound);
         }
 
         if (!PausedJobCrons.TryGetValue(jobId, out var originalCron))

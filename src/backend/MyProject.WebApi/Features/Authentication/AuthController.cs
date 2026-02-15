@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication;
-using MyProject.Domain;
+using MyProject.Shared;
 using MyProject.WebApi.Features.Authentication.Dtos.ChangePassword;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
@@ -45,10 +45,10 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (!result.IsSuccess)
         {
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status401Unauthorized);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
-        return Ok(result.Value!.ToResponse());
+        return Ok(result.Value.ToResponse());
     }
 
     /// <summary>
@@ -83,17 +83,17 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (string.IsNullOrEmpty(refreshToken))
         {
-            return Problem(detail: ErrorMessages.Auth.TokenMissing, statusCode: StatusCodes.Status401Unauthorized);
+            return ProblemFactory.Create(ErrorMessages.Auth.TokenMissing, ErrorType.Unauthorized);
         }
 
         var result = await authenticationService.RefreshTokenAsync(refreshToken, useCookies, cancellationToken);
 
         if (!result.IsSuccess)
         {
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status401Unauthorized);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
-        return Ok(result.Value!.ToResponse());
+        return Ok(result.Value.ToResponse());
     }
 
     /// <summary>
@@ -131,7 +131,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (!result.IsSuccess)
         {
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
         var response = new RegisterResponse { Id = result.Value };
@@ -160,7 +160,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
 
         if (!result.IsSuccess)
         {
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
         return NoContent();

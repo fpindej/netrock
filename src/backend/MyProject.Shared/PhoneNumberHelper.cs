@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace MyProject.Domain;
+namespace MyProject.Shared;
 
 /// <summary>
 /// Provides phone number normalization utilities for consistent comparison and storage.

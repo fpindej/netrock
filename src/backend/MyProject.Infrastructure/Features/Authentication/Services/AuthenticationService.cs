@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using MyProject.Domain;
+using MyProject.Shared;
 using MyProject.Infrastructure.Cryptography;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Features.Authentication.Options;
@@ -40,18 +40,18 @@ internal class AuthenticationService(
 
         if (user is null)
         {
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized);
         }
 
         var signInResult = await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
         if (signInResult.IsLockedOut)
         {
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginAccountLocked);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginAccountLocked, ErrorType.Unauthorized);
         }
 
         if (!signInResult.Succeeded)
         {
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized);
         }
 
         var accessToken = await tokenProvider.GenerateAccessToken(user);
@@ -144,7 +144,7 @@ internal class AuthenticationService(
     {
         if (string.IsNullOrEmpty(refreshToken))
         {
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.TokenMissing);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.TokenMissing, ErrorType.Unauthorized);
         }
 
         var hashedToken = HashHelper.Sha256(refreshToken);
@@ -183,7 +183,7 @@ internal class AuthenticationService(
         var user = storedToken.User;
         if (user is null)
         {
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.TokenUserNotFound);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.TokenUserNotFound, ErrorType.Unauthorized);
         }
 
         var newAccessToken = await tokenProvider.GenerateAccessToken(user);
@@ -225,7 +225,7 @@ internal class AuthenticationService(
                 cookieService.DeleteCookie(CookieNames.AccessToken);
                 cookieService.DeleteCookie(CookieNames.RefreshToken);
             }
-            return Result<AuthenticationOutput>.Failure(message);
+            return Result<AuthenticationOutput>.Failure(message, ErrorType.Unauthorized);
         }
     }
 
@@ -236,7 +236,7 @@ internal class AuthenticationService(
 
         if (!userId.HasValue)
         {
-            return Result.Failure(ErrorMessages.Auth.NotAuthenticated);
+            return Result.Failure(ErrorMessages.Auth.NotAuthenticated, ErrorType.Unauthorized);
         }
 
         var user = await userManager.FindByIdAsync(userId.Value.ToString());

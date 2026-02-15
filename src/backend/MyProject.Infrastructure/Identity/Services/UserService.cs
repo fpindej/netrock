@@ -8,7 +8,7 @@ using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity;
 using MyProject.Application.Identity.Constants;
 using MyProject.Application.Identity.Dtos;
-using MyProject.Domain;
+using MyProject.Shared;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Persistence;
 
@@ -35,7 +35,7 @@ internal class UserService(
 
         if (!userId.HasValue)
         {
-            return Result<UserOutput>.Failure(ErrorMessages.User.NotAuthenticated);
+            return Result<UserOutput>.Failure(ErrorMessages.User.NotAuthenticated, ErrorType.Unauthorized);
         }
 
         var cacheKey = CacheKeys.User(userId.Value);
@@ -92,7 +92,7 @@ internal class UserService(
 
         if (!userId.HasValue)
         {
-            return Result<UserOutput>.Failure(ErrorMessages.User.NotAuthenticated);
+            return Result<UserOutput>.Failure(ErrorMessages.User.NotAuthenticated, ErrorType.Unauthorized);
         }
 
         var user = await userManager.FindByIdAsync(userId.Value.ToString());
@@ -151,7 +151,7 @@ internal class UserService(
 
         if (!userId.HasValue)
         {
-            return Result.Failure(ErrorMessages.User.NotAuthenticated);
+            return Result.Failure(ErrorMessages.User.NotAuthenticated, ErrorType.Unauthorized);
         }
 
         var user = await userManager.FindByIdAsync(userId.Value.ToString());

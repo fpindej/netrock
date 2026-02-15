@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MyProject.Application.Features.Jobs;
 using MyProject.Application.Identity.Constants;
-using MyProject.Domain;
 using MyProject.WebApi.Authorization;
 using MyProject.WebApi.Features.Admin.Dtos.Jobs;
 using MyProject.WebApi.Shared;
@@ -57,10 +56,10 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
 
         if (!result.IsSuccess)
         {
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status404NotFound);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
-        return Ok(result.Value!.ToResponse());
+        return Ok(result.Value.ToResponse());
     }
 
     /// <summary>
@@ -86,7 +85,7 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
 
         if (!result.IsSuccess)
         {
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
         return NoContent();
@@ -117,7 +116,7 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
 
         if (!result.IsSuccess)
         {
-            return ToErrorResult(result.Error);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
         return NoContent();
@@ -147,7 +146,7 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
 
         if (!result.IsSuccess)
         {
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status404NotFound);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
         return NoContent();
@@ -177,7 +176,7 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
 
         if (!result.IsSuccess)
         {
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status404NotFound);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
         return NoContent();
@@ -207,22 +206,9 @@ public class JobsController(IJobManagementService jobManagementService) : ApiCon
 
         if (!result.IsSuccess)
         {
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status404NotFound);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
         return NoContent();
-    }
-
-    /// <summary>
-    /// Returns a 404 <see cref="ProblemDetails"/> for not-found errors, 400 otherwise.
-    /// </summary>
-    private ActionResult ToErrorResult(string? error)
-    {
-        if (error is ErrorMessages.Jobs.NotFound)
-        {
-            return Problem(detail: error, statusCode: StatusCodes.Status404NotFound);
-        }
-
-        return Problem(detail: error, statusCode: StatusCodes.Status400BadRequest);
     }
 }

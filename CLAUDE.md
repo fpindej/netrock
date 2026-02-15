@@ -8,7 +8,7 @@ NETrock — full-stack web app template: .NET 10 API (Clean Architecture) + Svel
 Frontend (SvelteKit :5173) → /api/* proxy → Backend API (.NET :8080) → PostgreSQL / Redis / Seq
 ```
 
-Backend: `WebApi → Application ← Infrastructure → Domain` (Clean Architecture)
+Backend: `WebApi → Application ← Infrastructure → Domain` + `Shared` (Clean Architecture)
 
 ## Hard Rules
 

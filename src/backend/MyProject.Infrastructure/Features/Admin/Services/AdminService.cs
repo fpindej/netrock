@@ -6,7 +6,7 @@ using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Identity.Constants;
-using MyProject.Domain;
+using MyProject.Shared;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Persistence;
 using MyProject.Infrastructure.Persistence.Extensions;
@@ -68,7 +68,7 @@ internal class AdminService(
 
         if (user is null)
         {
-            return Result<AdminUserOutput>.Failure(ErrorMessages.Admin.UserNotFound);
+            return Result<AdminUserOutput>.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
         }
 
         var output = await MapUserToOutputAsync(user, cancellationToken);
@@ -89,7 +89,7 @@ internal class AdminService(
 
         if (user is null)
         {
-            return Result.Failure(ErrorMessages.Admin.UserNotFound);
+            return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
         }
 
         var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
@@ -141,7 +141,7 @@ internal class AdminService(
 
         if (user is null)
         {
-            return Result.Failure(ErrorMessages.Admin.UserNotFound);
+            return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
         }
 
         if (callerUserId == userId)
@@ -198,7 +198,7 @@ internal class AdminService(
 
         if (user is null)
         {
-            return Result.Failure(ErrorMessages.Admin.UserNotFound);
+            return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
         }
 
         if (callerUserId == userId)
@@ -238,7 +238,7 @@ internal class AdminService(
 
         if (user is null)
         {
-            return Result.Failure(ErrorMessages.Admin.UserNotFound);
+            return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
         }
 
         var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
@@ -273,7 +273,7 @@ internal class AdminService(
 
         if (user is null)
         {
-            return Result.Failure(ErrorMessages.Admin.UserNotFound);
+            return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
         }
 
         if (callerUserId == userId)

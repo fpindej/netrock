@@ -1,5 +1,5 @@
 using MyProject.Application.Features.Authentication.Dtos;
-using MyProject.Domain;
+using MyProject.Shared;
 
 namespace MyProject.Application.Features.Authentication;
 

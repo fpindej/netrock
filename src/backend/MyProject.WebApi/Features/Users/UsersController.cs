@@ -32,10 +32,10 @@ public class UsersController(IUserService userService) : ControllerBase
 
         if (!userResult.IsSuccess)
         {
-            return Problem(detail: userResult.Error, statusCode: StatusCodes.Status401Unauthorized);
+            return ProblemFactory.Create(userResult.Error, userResult.ErrorType);
         }
 
-        return Ok(userResult.Value!.ToResponse());
+        return Ok(userResult.Value.ToResponse());
     }
 
     /// <summary>
@@ -58,10 +58,10 @@ public class UsersController(IUserService userService) : ControllerBase
 
         if (!result.IsSuccess)
         {
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
-        return Ok(result.Value!.ToResponse());
+        return Ok(result.Value.ToResponse());
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public class UsersController(IUserService userService) : ControllerBase
 
         if (!result.IsSuccess)
         {
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
         return NoContent();

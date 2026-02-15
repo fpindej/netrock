@@ -14,8 +14,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 |---|---|
 | **Domain entity** (add/rename property) | EF configuration, migration, Application DTOs, WebApi DTOs, mapper, frontend types (`npm run api:generate`) |
 | **Domain entity** (add enum property) | EF config (`.HasComment()`), `EnumSchemaTransformer` handles the rest automatically |
-| **`ErrorMessages.cs`** (add/rename constant) | Service that uses it; frontend may display message directly |
-| **`Result.cs`** (change pattern) | Every service + every controller that matches on `Result` |
+| **`ErrorMessages.cs`** (Shared — add/rename constant) | Service that uses it; frontend may display message directly |
+| **`Result.cs`** (Shared — change pattern) | Every service + every controller that matches on `Result` |
 | **Application interface** (change signature) | Infrastructure service implementation, controller calling the service |
 | **Application DTO** (add/rename/remove field) | Infrastructure service, WebApi mapper, WebApi request/response DTO, frontend types |
 | **Infrastructure EF config** (change mapping) | Run new migration |
@@ -99,7 +99,8 @@ Files that are frequently referenced in impact tables above. For anything not li
 
 ```
 src/backend/MyProject.{Layer}/
-  Domain:          Entities/{Entity}.cs, ErrorMessages.cs, Result.cs
+  Shared:          Result.cs, ErrorType.cs, ErrorMessages.cs, PhoneNumberHelper.cs
+  Domain:          Entities/{Entity}.cs
   Application:     Features/{Feature}/I{Feature}Service.cs
                    Features/{Feature}/Dtos/{Operation}Input.cs, {Entity}Output.cs
                    Features/{Feature}/Persistence/I{Feature}Repository.cs
@@ -163,7 +164,7 @@ src/backend/MyProject.WebApi/Features/Admin/
 |---|---|
 | `src/backend/MyProject.WebApi/Program.cs` | DI wiring, middleware pipeline |
 | `src/backend/MyProject.Infrastructure/Persistence/MyProjectDbContext.cs` | DbSets, migrations |
-| `src/backend/MyProject.Domain/ErrorMessages.cs` | All static error strings |
+| `src/backend/MyProject.Shared/ErrorMessages.cs` | All static error strings |
 | `src/backend/MyProject.Application/Identity/Constants/AppRoles.cs` | Role definitions |
 | `src/backend/MyProject.Application/Identity/Constants/AppPermissions.cs` | Permission definitions (reflection-discovered) |
 | `src/frontend/src/lib/utils/permissions.ts` | Frontend permission constants + helpers |

@@ -1,4 +1,4 @@
-using MyProject.Domain;
+using MyProject.Shared;
 using MyProject.Infrastructure.Persistence.Exceptions;
 
 namespace MyProject.Infrastructure.Persistence.Extensions;

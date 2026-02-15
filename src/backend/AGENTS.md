@@ -4,11 +4,15 @@
 
 ```
 src/backend/
-├── MyProject.Domain/              # Entities, value objects, Result pattern
-│   ├── Entities/
-│   │   └── BaseEntity.cs
-│   ├── PhoneNumberHelper.cs       # Phone normalization (source-generated regex)
-│   └── Result.cs
+├── MyProject.Shared/              # Cross-cutting plumbing (no business logic)
+│   ├── Result.cs                  # Result/Result<T> pattern
+│   ├── ErrorType.cs               # Error categorization enum
+│   ├── ErrorMessages.cs           # Static error string constants
+│   └── PhoneNumberHelper.cs       # Phone normalization (source-generated regex)
+│
+├── MyProject.Domain/              # Business domain entities (zero dependencies)
+│   └── Entities/
+│       └── BaseEntity.cs
 │
 ├── MyProject.Application/         # Interfaces and DTOs (contracts only)
 │   ├── Features/
@@ -308,14 +312,25 @@ dotnet ef migrations add AddOrder \
 
 Use `Result` / `Result<T>` for all operations that can fail expectedly. Never throw exceptions for business logic failures.
 
+`Result<T>` inherits from `Result` — all shared properties (`IsSuccess`, `IsFailure`, `Error`, `ErrorType`) live on the base class. `Result<T>` adds the typed `Value` property.
+
+Key properties:
+- `IsSuccess` — `true` when the operation succeeded
+- `IsFailure` — `true` when the operation failed (convenience inverse of `IsSuccess`)
+- `Value` (on `Result<T>` only) — returns the value on success; throws `InvalidOperationException` on failure. **Never use `null!`** — the guard is built into the property.
+
 ```csharp
 // Success
 return Result<Guid>.Success(entity.Id);
 return Result.Success();
 
-// Failure — use ErrorMessages constants for static messages
-return Result<Guid>.Failure(ErrorMessages.Auth.LoginInvalidCredentials);
-return Result.Failure(ErrorMessages.User.NotFound);
+// Failure — use ErrorMessages constants for static messages (defaults to 400)
+return Result<Guid>.Failure(ErrorMessages.Roles.RoleNameTaken);
+return Result.Failure(ErrorMessages.Admin.HierarchyInsufficient);
+
+// Failure with explicit error type — for not-found and auth failures
+return Result<AdminUserOutput>.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
+return Result.Failure(ErrorMessages.Auth.NotAuthenticated, ErrorType.Unauthorized);
 
 // Failure — use inline interpolation for dynamic messages
 return Result.Failure($"Role '{roleName}' does not exist.");
@@ -323,14 +338,28 @@ return Result.Failure($"Role '{roleName}' does not exist.");
 
 Every `Result.Failure()` call **must** use an `ErrorMessages.*` constant when the message is static. For messages that include runtime values (usernames, role names, etc.), use inline string interpolation directly in the service.
 
-In controllers, map Result to HTTP responses:
+### Error Type Convention
+
+Services encode the error category in the `Result` via `ErrorType` when the default 400 is wrong:
+
+| Failure type | ErrorType | Example |
+|---|---|---|
+| Not found | `ErrorType.NotFound` | `Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound)` |
+| Authentication/token failure | `ErrorType.Unauthorized` | `Result.Failure(ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized)` |
+| Validation / business rule | *(omit)* | `Result.Failure(ErrorMessages.Roles.RoleNameTaken)` → defaults to 400 |
+
+`ErrorType` is a Shared-layer enum with three values: `Validation` (400), `Unauthorized` (401), `NotFound` (404). The mapping to HTTP status codes happens in `ProblemFactory.Create` at the WebApi layer.
+
+In controllers, use `ProblemFactory.Create` to convert failed results to `ProblemDetails`:
 
 ```csharp
 var result = await service.CreateAsync(input, cancellationToken);
 if (!result.IsSuccess)
-    return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
-return CreatedAtAction(nameof(Get), new { id = result.Value });
+    return ProblemFactory.Create(result.Error, result.ErrorType);
+return Created(string.Empty, new { id = result.Value }); // .Value is safe — IsSuccess was checked
 ```
+
+`ProblemFactory.Create(detail, errorType)` maps `ErrorType` to the HTTP status code and falls back to 400 when not set. It produces a standard `ProblemDetails` body with `Title` set from the status code's reason phrase.
 
 ## Service Composition
 
@@ -531,7 +560,7 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     {
         var result = await authenticationService.Login(request.Username, request.Password, cancellationToken);
         if (!result.IsSuccess)
-            return Problem(detail: result.Error, statusCode: StatusCodes.Status401Unauthorized);
+            return ProblemFactory.Create(result.Error, result.ErrorType);
         return Ok();
     }
 }
@@ -544,8 +573,8 @@ Rules:
 - Always accept `CancellationToken` as the last parameter on async endpoints
 - **Never add `/// <param name="cancellationToken">`** — ASP.NET excludes `CancellationToken` from OAS parameters, but the `<param>` text leaks into `requestBody.description`. CS1573 is suppressed project-wide.
 - Only add `/// <param>` tags for parameters that should appear in the OAS (request body, route/query params)
-- **Never return anonymous objects or raw strings** from controllers — always use `Problem()` for errors and typed response DTOs for success. Anonymous objects produce untyped schemas in the OAS.
-- **Never use `NotFound()`, `BadRequest()`, `Unauthorized()`, or other shorthand helpers for error responses** — always use `Problem(detail: ..., statusCode: ...)`. The `Problem()` helper produces a standard `ProblemDetails` body with `Type`, `Title`, `Instance`, and `traceId` populated by the pipeline. The shorthand helpers bypass ProblemDetails and return unstructured or empty bodies.
+- **Never return anonymous objects or raw strings** from controllers — always use `ProblemFactory.Create()` for errors and typed response DTOs for success. Anonymous objects produce untyped schemas in the OAS.
+- **Never use `NotFound()`, `BadRequest()`, `Unauthorized()`, or other shorthand helpers for error responses** — always use `ProblemFactory.Create(detail, errorType)`. The factory produces a standard `ProblemDetails` body with `Title` set from the status code's reason phrase. The shorthand helpers bypass ProblemDetails and return unstructured or empty bodies.
 - **Never use `StatusCode(int, object)`** for responses with a body — the `object` parameter loses type information and the OAS generator cannot introspect the response schema. Use typed helpers for success only: `Ok(response)`, `Created(string.Empty, response)`.
 - **For 201 Created responses**, use `Created(string.Empty, response)` — not `CreatedAtAction` (which generates `Location` headers for MVC/Razor patterns this API doesn't use) and not `StatusCode(201, response)` (which loses type info).
 - **Never use `#pragma warning disable`** for XML doc warnings — fix the docs instead
@@ -637,10 +666,10 @@ In Development, the exception middleware adds `extensions.stackTrace`. `ProblemD
 
 ### Writing ProblemDetails
 
-**In controllers** — use the built-in `Problem()` helper:
+**In controllers** — use `ProblemFactory.Create()`:
 
 ```csharp
-return Problem(detail: result.Error, statusCode: StatusCodes.Status400BadRequest);
+return ProblemFactory.Create(result.Error, result.ErrorType);
 ```
 
 **In middleware / handlers** — inject `IProblemDetailsService` and call `WriteAsync()`. **You must set `Response.StatusCode` explicitly** — `WriteAsync()` does _not_ propagate `ProblemDetails.Status` to the HTTP status code:
@@ -663,9 +692,9 @@ The service is registered via `AddProblemDetails()` in `Program.cs` and automati
 
 ## Error Messages
 
-Every failure in the system carries a descriptive, user-facing English message. Messages are organized as constants in `ErrorMessages.cs` (Domain layer) for static strings, or constructed inline for dynamic messages.
+Every failure in the system carries a descriptive, user-facing English message. Messages are organized as constants in `ErrorMessages.cs` (Shared layer) for static strings, or constructed inline for dynamic messages.
 
-### `ErrorMessages` Static Class (Domain)
+### `ErrorMessages` Static Class (Shared)
 
 Error messages are defined as `const string` fields in `ErrorMessages.cs`, organized into nested static classes by domain area:
 
@@ -1477,7 +1506,7 @@ Before adding or modifying any endpoint, verify:
 - [ ] `/// <response code="...">` for every possible status code
 - [ ] `[ProducesResponseType]` for every status code — with `typeof(T)` for success bodies (200, 201), **no type** on error codes (ASP.NET Core maps them to `ProblemDetails` automatically)
 - [ ] `ActionResult<T>` return type (not bare `ActionResult`) when returning a success body
-- [ ] Error responses always use `Problem(detail: ..., statusCode: ...)` — never raw strings or anonymous objects
+- [ ] Error responses always use `ProblemFactory.Create(detail, errorType)` — never raw strings or anonymous objects
 - [ ] `/// <summary>` on every DTO class
 - [ ] `/// <summary>` on every DTO property
 - [ ] Correct nullability (`string` vs `string?`) matching the API contract

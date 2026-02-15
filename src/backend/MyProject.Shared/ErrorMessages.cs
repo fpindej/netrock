@@ -1,4 +1,4 @@
-namespace MyProject.Domain;
+namespace MyProject.Shared;
 
 /// <summary>
 /// User-facing error messages organized by domain area.

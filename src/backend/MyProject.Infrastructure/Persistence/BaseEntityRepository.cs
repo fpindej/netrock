@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
-using MyProject.Domain;
-using static MyProject.Domain.ErrorMessages;
 using MyProject.Domain.Entities;
+using MyProject.Shared;
+using static MyProject.Shared.ErrorMessages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyProject.Application.Persistence;

@@ -40,14 +40,17 @@ Backend API (.NET :8080)
 WebApi → Application ← Infrastructure
               ↓
            Domain
+
+All layers reference Shared (cross-cutting plumbing: Result, ErrorType, ErrorMessages, PhoneNumberHelper)
 ```
 
 | Layer | Responsibility |
 |---|---|
-| **Domain** | Entities, value objects, `Result` pattern. Zero dependencies. |
-| **Application** | Interfaces, DTOs (Input/Output), service contracts. References Domain only. |
-| **Infrastructure** | EF Core, Identity, Redis, service implementations. References Application + Domain. |
-| **WebApi** | Controllers, middleware, validation, request/response DTOs. Entry point. |
+| **Shared** | Cross-cutting plumbing: `Result`/`Result<T>`, `ErrorType`, `ErrorMessages`, `PhoneNumberHelper`. Zero dependencies. |
+| **Domain** | Business entities (`BaseEntity`). Zero dependencies. |
+| **Application** | Interfaces, DTOs (Input/Output), service contracts. References Domain + Shared. |
+| **Infrastructure** | EF Core, Identity, Redis, service implementations. References Application + Domain + Shared. |
+| **WebApi** | Controllers, middleware, validation, request/response DTOs. Entry point. Gets Shared transitively. |
 
 ### Frontend — SvelteKit
 
@@ -297,8 +300,8 @@ The backend returns descriptive English messages in `ProblemDetails.detail` (RFC
 
 ```
 Backend service
-  → Result.Failure(ErrorMessages.Auth.LoginInvalidCredentials)
-  → Controller returns Problem(detail: "Invalid username or password.", statusCode: 401)
+  → Result.Failure(ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized)  [Shared layer]
+  → Controller returns ProblemFactory.Create(result.Error, result.ErrorType)
   → ProblemDetails { type, title: "Unauthorized", status: 401, detail: "Invalid username or password.", instance }
 
 Frontend getErrorMessage()
@@ -309,7 +312,7 @@ For dynamic messages (containing runtime values like usernames or role names), s
 
 **Adding a new error message end-to-end:**
 
-1. Add `const string` to `ErrorMessages.cs` in the appropriate nested class (Domain) — the value is the user-facing English message
+1. Add `const string` to `ErrorMessages.cs` in the appropriate nested class (Shared) — the value is the user-facing English message
 2. Use it in the service's `Result.Failure()` call (Infrastructure)
 
 ## Local Development

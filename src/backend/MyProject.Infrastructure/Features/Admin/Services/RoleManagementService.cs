@@ -6,7 +6,7 @@ using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Identity.Constants;
-using MyProject.Domain;
+using MyProject.Shared;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Persistence;
 
@@ -29,7 +29,7 @@ internal class RoleManagementService(
         var role = await roleManager.FindByIdAsync(roleId.ToString());
         if (role is null)
         {
-            return Result<RoleDetailOutput>.Failure(ErrorMessages.Roles.RoleNotFound);
+            return Result<RoleDetailOutput>.Failure(ErrorMessages.Roles.RoleNotFound, ErrorType.NotFound);
         }
 
         var claims = await roleManager.GetClaimsAsync(role);
@@ -92,7 +92,7 @@ internal class RoleManagementService(
         var role = await roleManager.FindByIdAsync(roleId.ToString());
         if (role is null)
         {
-            return Result.Failure(ErrorMessages.Roles.RoleNotFound);
+            return Result.Failure(ErrorMessages.Roles.RoleNotFound, ErrorType.NotFound);
         }
 
         var isSystem = AppRoles.All.Contains(role.Name ?? string.Empty);
@@ -142,7 +142,7 @@ internal class RoleManagementService(
         var role = await roleManager.FindByIdAsync(roleId.ToString());
         if (role is null)
         {
-            return Result.Failure(ErrorMessages.Roles.RoleNotFound);
+            return Result.Failure(ErrorMessages.Roles.RoleNotFound, ErrorType.NotFound);
         }
 
         if (AppRoles.All.Contains(role.Name ?? string.Empty))
@@ -177,7 +177,7 @@ internal class RoleManagementService(
         var role = await roleManager.FindByIdAsync(roleId.ToString());
         if (role is null)
         {
-            return Result.Failure(ErrorMessages.Roles.RoleNotFound);
+            return Result.Failure(ErrorMessages.Roles.RoleNotFound, ErrorType.NotFound);
         }
 
         if (role.Name == AppRoles.SuperAdmin)

@@ -22,7 +22,7 @@ Step-by-step recipes for common operations. Each recipe lists exact paths, patte
 
 ### Add an Error Message
 
-1. Open `src/backend/MyProject.Domain/ErrorMessages.cs`
+1. Open `src/backend/MyProject.Shared/ErrorMessages.cs`
 2. Add `const string` to the appropriate nested class (or create a new one):
    ```csharp
    public static class Orders
