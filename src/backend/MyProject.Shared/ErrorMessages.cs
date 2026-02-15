@@ -99,6 +99,14 @@ public static class ErrorMessages
     }
 
     /// <summary>
+    /// Security infrastructure error messages (CSRF, origin validation).
+    /// </summary>
+    public static class Security
+    {
+        public const string CrossOriginRequestBlocked = "Cross-origin requests are not allowed.";
+    }
+
+    /// <summary>
     /// Generic entity operation error messages (repository layer).
     /// </summary>
     public static class Entity

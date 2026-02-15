@@ -6,7 +6,7 @@ namespace MyProject.Unit.Tests.Shared;
 public class ErrorMessagesTests
 {
     private static readonly string[] ExpectedNestedClasses =
-        ["Auth", "User", "Admin", "Roles", "Pagination", "Server", "Jobs", "Entity"];
+        ["Auth", "User", "Admin", "Roles", "Pagination", "Server", "Jobs", "Security", "Entity"];
 
     [Fact]
     public void AllNestedClasses_ShouldExist()
