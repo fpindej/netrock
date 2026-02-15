@@ -26,6 +26,20 @@ Every SaaS starts the same way: authentication, role management, rate limiting, 
 
 Run the init script, pick a name, and start building your product. Everything else is already done.
 
+### How is this different?
+
+Most project templates give you a folder structure and stop there. They show you the architecture as a diagram, drop in a `Todo` entity, and call it a day. You still have to build authentication, wire up permissions, create the admin panel, set up the API proxy, configure Docker, write the CI pipeline, and handle all the edge cases — which is the actual work.
+
+**NETrock ships working infrastructure.** Login works. Token rotation works. The permission system enforces role hierarchy. The admin panel manages users, roles, and background jobs. The frontend generates type-safe API clients from your OpenAPI spec. The Docker stack spins up with health checks. CI runs your tests. All of it is tested and documented.
+
+Other approaches come with different trade-offs:
+
+- **Full-blown frameworks** give you everything out of the box, but you're locked into their abstractions forever. Every version upgrade is a migration project. You depend on the framework at runtime, and when it doesn't do what you need, you fight it.
+- **Minimal starters** get you running fast, but they skip the hard parts. You'll spend the next month building what they left out — and you'll build it worse than if you'd had a reference implementation.
+- **Building from scratch** means total control, but also total time investment. The patterns NETrock implements (token rotation with reuse detection, security stamp propagation, soft refresh, role hierarchy enforcement) take weeks to get right.
+
+NETrock takes a different path: **fork it, init it, own it.** After initialization, there is no dependency on "the template." It's your code, your architecture, your product. Every decision is documented so you can understand it, change it, or throw it away. You get the benefit of a well-built foundation without any of the lock-in.
+
 ---
 
 ## What You Get
