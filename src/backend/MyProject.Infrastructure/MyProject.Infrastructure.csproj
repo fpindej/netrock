@@ -26,6 +26,8 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="MyProject.Api.Tests"/>
+        <InternalsVisibleTo Include="MyProject.Component.Tests"/>
+        <InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
     </ItemGroup>
 
 </Project>

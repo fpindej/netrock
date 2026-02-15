@@ -57,8 +57,8 @@ jobs:
       - name: Build
         run: dotnet build src/backend/MyProject.slnx --no-restore -c Release
 
-      # - name: Test
-      #   run: dotnet test src/backend/MyProject.slnx --no-build -c Release
+      - name: Test
+        run: dotnet test src/backend/MyProject.slnx --no-build -c Release
 
   frontend-checks:
     name: Frontend checks
