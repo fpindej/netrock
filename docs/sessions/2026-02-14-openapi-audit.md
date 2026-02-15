@@ -159,5 +159,5 @@ Replaced `ErrorResponse { Message, Details }` with standard `ProblemDetails` acr
 
 ## Remaining Items
 
-- [ ] Regenerate frontend API types (`npm run api:generate`) after merging — `ProblemDetails` replaces `ErrorResponse` in the OAS
+- [x] ~~Regenerate frontend API types (`npm run api:generate`) after merging~~ — done, `v1.d.ts` updated
 - [ ] Update 4 XML doc comments in `JobsController` that are missing `/// <response code="400">` entries (low priority — attributes are correct, only comments are incomplete)

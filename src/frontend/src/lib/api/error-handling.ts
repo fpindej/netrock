@@ -133,7 +133,10 @@ export interface FetchErrorCause {
  *   await fetch(url);
  * } catch (err) {
  *   if (isFetchErrorWithCode(err, 'ECONNREFUSED')) {
- *     return new Response('Backend unavailable', { status: 503 });
+ *     return Response.json(
+ *       { title: 'Service Unavailable', status: 503, detail: 'Backend unavailable' },
+ *       { status: 503, headers: { 'Content-Type': 'application/problem+json' } }
+ *     );
  *   }
  * }
  * ```

@@ -36,7 +36,10 @@ public class ExceptionHandlingMiddleware(
         catch (PaginationException paginationEx)
         {
             logger.LogWarning(paginationEx, "A PaginationException occurred.");
-            await HandleExceptionAsync(context, paginationEx, HttpStatusCode.BadRequest);
+            await HandleExceptionAsync(context, paginationEx, HttpStatusCode.BadRequest,
+                customMessage: paginationEx.ParamName is "pageSize"
+                    ? ErrorMessages.Pagination.InvalidPageSize
+                    : ErrorMessages.Pagination.InvalidPage);
         }
         catch (Exception e)
         {
