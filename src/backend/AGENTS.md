@@ -1521,7 +1521,233 @@ Before adding or modifying any endpoint, verify:
 
 ## Testing
 
-No test infrastructure is currently set up — no unit test or integration test projects exist in the solution. When tests are added, this section will document the testing frameworks, patterns, and conventions.
+### Project Structure
+
+```
+src/backend/tests/
+├── MyProject.Unit.Tests/           # Shared + Domain + Application (pure logic, zero I/O)
+├── MyProject.Component.Tests/      # Service tests (mocked deps via NSubstitute, InMemory EF)
+├── MyProject.Api.Tests/            # Controller + validator tests (WebApplicationFactory)
+└── MyProject.Architecture.Tests/   # Dependency direction + naming convention enforcement
+```
+
+| Project | References | What it tests |
+|---|---|---|
+| `Unit.Tests` | Shared, Domain, Application | Result pattern, ErrorMessages, PhoneNumberHelper, ErrorType, BaseEntity, AppRoles, AppPermissions |
+| `Component.Tests` | Infrastructure, Application, Domain, Shared | Service business logic with mocked dependencies |
+| `Api.Tests` | WebApi, Infrastructure | HTTP pipeline (status codes, auth gates, ProblemDetails shape) + FluentValidation validators |
+| `Architecture.Tests` | All assemblies (reflection only) | Layer dependency rules, naming conventions, access modifiers |
+
+### Frameworks & Libraries
+
+| Package | Purpose |
+|---|---|
+| xUnit | Test framework |
+| NSubstitute | Mocking library (BSD-3-Clause, no SponsorLink controversy) |
+| NSubstitute.Analyzers.CSharp | Compile-time warnings for incorrect mock setups |
+| Microsoft.AspNetCore.Mvc.Testing | `WebApplicationFactory<Program>` for API integration tests |
+| Microsoft.EntityFrameworkCore.InMemory | In-memory EF Core provider for test isolation |
+| Microsoft.Extensions.TimeProvider.Testing | `FakeTimeProvider` for deterministic time tests |
+| NetArchTest.Rules | Architecture rule enforcement via reflection |
+
+All package versions are centralized in `Directory.Packages.props`.
+
+### Running Tests
+
+```bash
+# All tests (Release mode matches CI)
+dotnet test src/backend/MyProject.slnx -c Release
+
+# Specific project
+dotnet test src/backend/tests/MyProject.Unit.Tests -c Release
+
+# Specific test class
+dotnet test src/backend/tests/MyProject.Component.Tests -c Release --filter "FullyQualifiedName~AuthenticationServiceTests"
+
+# Specific test method
+dotnet test src/backend/tests/MyProject.Unit.Tests -c Release --filter "ResultTests.Success_ReturnsIsSuccessTrue"
+```
+
+No external dependencies needed — tests run without Docker, PostgreSQL, or Redis.
+
+### Test Naming Convention
+
+`{MethodUnderTest}_{Scenario}_{ExpectedBehavior}`
+
+```csharp
+[Fact]
+public async Task Login_ValidCredentials_ReturnsSuccess()
+
+[Fact]
+public async Task Login_LockedOutUser_ReturnsLockedMessage()
+
+[Fact]
+public void SoftDelete_WhenNotDeleted_SetsIsDeletedTrue()
+```
+
+### Unit Tests (`MyProject.Unit.Tests`)
+
+Pure logic tests — no I/O, no mocking, no DI. Organized by layer:
+
+```
+Unit.Tests/
+├── Shared/
+│   ├── ResultTests.cs              # Result.Success/Failure, IsSuccess, Error, ErrorType
+│   ├── ResultGenericTests.cs       # Result<T>.Value, inheritance from Result
+│   ├── ErrorMessagesTests.cs       # Reflection scan: all constants non-null, all nested classes exist
+│   ├── ErrorTypeTests.cs           # Enum values and count
+│   └── PhoneNumberHelperTests.cs   # Normalize: null/empty/whitespace, strip chars, preserve leading +
+├── Domain/
+│   └── BaseEntityTests.cs          # SoftDelete/Restore idempotency, round-trip
+└── Application/
+    ├── AppRolesTests.cs            # All collection, GetRoleRank, GetHighestRank
+    └── AppPermissionsTests.cs      # All non-empty, no duplicates, ByCategory, ClaimType
+```
+
+### Component Tests (`MyProject.Component.Tests`)
+
+Test service business logic with mocked dependencies via NSubstitute and InMemory EF Core.
+
+```
+Component.Tests/
+├── Fixtures/
+│   ├── TestDbContextFactory.cs     # Creates InMemory MyProjectDbContext instances
+│   └── IdentityMockHelpers.cs      # UserManager<T> and RoleManager<T> mock factories
+└── Services/
+    ├── AuthenticationServiceTests.cs     # Login, register, refresh token, change password, logout
+    ├── AdminServiceTests.cs              # AssignRole, removeRole, lock/unlock, delete, getUsers
+    ├── RoleManagementServiceTests.cs     # CRUD, permissions, system role protection
+    └── UserServiceTests.cs              # GetCurrentUser, updateProfile, deleteAccount
+```
+
+**Key patterns:**
+
+- **InMemory EF Core** via `TestDbContextFactory.Create()` — returns a fresh `MyProjectDbContext` with a unique database name per test
+- **Identity mocking** via `IdentityMockHelpers` — creates properly configured `UserManager<T>` and `RoleManager<T>` mocks with their required dependencies
+- **NSubstitute** for all other dependencies (`ITokenProvider`, `ICookieService`, `IUserContext`, `ICacheService`, `TimeProvider`)
+- Each test class creates its own service instance with mocked dependencies in a constructor or helper method
+
+### API Integration Tests (`MyProject.Api.Tests`)
+
+Test the full HTTP pipeline using `WebApplicationFactory<Program>`.
+
+```
+Api.Tests/
+├── Fixtures/
+│   ├── CustomWebApplicationFactory.cs   # Test host configuration
+│   └── TestAuthHandler.cs              # Fake auth scheme for test requests
+├── Controllers/
+│   ├── AuthControllerTests.cs          # Login, register, logout, refresh, change password
+│   └── UsersControllerTests.cs         # GetMe, updateMe, deleteMe
+└── Validators/
+    ├── RegisterRequestValidatorTests.cs    # Email, password rules
+    ├── LoginRequestValidatorTests.cs       # Email, password presence
+    └── ChangePasswordRequestValidatorTests.cs  # Current + new password rules
+```
+
+#### `CustomWebApplicationFactory`
+
+The factory configures a test host that starts without any external infrastructure:
+
+| Configuration | How |
+|---|---|
+| **Environment** | `UseEnvironment("Testing")` → loads `appsettings.Testing.json` |
+| **Database** | Removes all Npgsql/DbContext registrations, manually registers InMemory provider (avoids dual-provider conflict from `AddDbContext`'s `TryAdd` behavior) |
+| **Hangfire** | Removes Hangfire `IHostedService` descriptors by scanning `ImplementationType.FullName` |
+| **Services** | Replaces `IAuthenticationService`, `IUserService`, `ICacheService` with NSubstitute mocks (exposed as public properties for per-test configuration) |
+| **Auth** | `PostConfigure<AuthenticationOptions>` overrides JWT Bearer defaults with `TestAuthHandler` (runs after the app's `Configure`, ensuring test scheme wins) |
+| **Time** | Replaces `TimeProvider` with `TimeProvider.System` |
+
+**Why manual DbContext registration?** `AddDbContext` uses `TryAdd` internally. When you `RemoveAll + AddDbContext` in `ConfigureTestServices`, both Npgsql and InMemory providers end up registered, causing a `ServiceException`. The factory bypasses this by manually registering `DbContextOptions<MyProjectDbContext>` with `UseInMemoryDatabase`.
+
+#### `TestAuthHandler`
+
+A custom `AuthenticationHandler<AuthenticationSchemeOptions>` registered as the `"Test"` scheme:
+
+- Requests **with** an `Authorization` header → authenticated as `test@example.com` with role `User`
+- Requests **without** an `Authorization` header → `AuthenticateResult.NoResult()` → 401
+
+Test classes create two `HttpClient` instances: `_authenticatedClient` (has `Authorization` header) and `_anonymousClient` (no header).
+
+#### `appsettings.Testing.json`
+
+Provides valid configuration that works both pre-init (template placeholders) and post-init:
+
+```json
+{
+  "ConnectionStrings": { "Database": "Host=localhost;Database=test_db;..." },
+  "Caching": { "Redis": { "Enabled": false } },
+  "JobScheduling": { "Enabled": false },
+  "Cors": { "AllowAllOrigins": false, "AllowedOrigins": ["https://test.example.com"] }
+}
+```
+
+Key: `AllowAllOrigins` must be `false` — the CORS security check rejects `AllowAllOrigins` in non-Development environments.
+
+#### Validator Tests
+
+Validators are tested by direct instantiation — no `WebApplicationFactory` needed:
+
+```csharp
+var validator = new RegisterRequestValidator();
+var result = await validator.ValidateAsync(new RegisterRequest { ... });
+Assert.True(result.IsValid);
+```
+
+### Architecture Tests (`MyProject.Architecture.Tests`)
+
+Enforce structural rules via reflection using NetArchTest.Rules:
+
+```
+Architecture.Tests/
+├── DependencyTests.cs        # Layer dependency direction enforcement
+├── NamingConventionTests.cs  # Controllers end with "Controller", validators with "Validator", etc.
+└── AccessModifierTests.cs    # Infrastructure services are internal, domain entities are public
+```
+
+**Dependency rules enforced:**
+
+| Layer | Must NOT depend on |
+|---|---|
+| Shared | Application, Domain, Infrastructure, WebApi |
+| Domain | Application, Infrastructure, WebApi |
+| Application | Infrastructure, WebApi |
+| Infrastructure | WebApi |
+
+### Adding a New Test
+
+**Unit test:**
+
+1. Create test class in `Unit.Tests/{Layer}/{ClassUnderTest}Tests.cs`
+2. Add `[Fact]` methods following naming convention
+3. No DI, no mocking — test pure logic only
+
+**Component test:**
+
+1. Create test class in `Component.Tests/Services/{Service}Tests.cs`
+2. Create mocks via NSubstitute in constructor/setup
+3. Use `TestDbContextFactory.Create()` if EF Core is needed
+4. Use `IdentityMockHelpers` for Identity mocking
+5. Call service methods and assert on `Result` properties
+
+**API integration test:**
+
+1. Create test class in `Api.Tests/Controllers/{Controller}Tests.cs`
+2. Implement `IClassFixture<CustomWebApplicationFactory>` + `IDisposable`
+3. Configure mock returns on `_factory.AuthenticationService` / `_factory.UserService` / `_factory.CacheService`
+4. Send HTTP requests via `_authenticatedClient` or `_anonymousClient`
+5. Assert status codes and response bodies
+
+**Validator test:**
+
+1. Create test class in `Api.Tests/Validators/{Validator}Tests.cs`
+2. Instantiate validator directly: `new RegisterRequestValidator()`
+3. Assert `IsValid`, error count, and specific error messages
+
+**Architecture test:**
+
+1. Add rules to existing test classes in `Architecture.Tests/`
+2. Use `Types.InAssembly(assembly).That()...ShouldNot()...` pattern
 
 ## Adding a New Feature
 

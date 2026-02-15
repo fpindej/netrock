@@ -42,6 +42,7 @@ Backend: `WebApi → Application ← Infrastructure → Domain` + `Shared` (Clea
 
 ```bash
 dotnet build src/backend/MyProject.slnx
+dotnet test src/backend/MyProject.slnx -c Release
 cd src/frontend && npm run format && npm run lint && npm run check
 ```
 
@@ -50,7 +51,7 @@ cd src/frontend && npm run format && npm run lint && npm run check
 | File | When to read |
 |---|---|
 | `AGENTS.md` | Architecture, workflow, git discipline, security, error handling, local dev |
-| `src/backend/AGENTS.md` | Entities, Result pattern, EF Core, services, controllers, validation, OpenAPI |
+| `src/backend/AGENTS.md` | Entities, Result pattern, EF Core, services, controllers, validation, OpenAPI, testing |
 | `src/frontend/AGENTS.md` | Routing, API client, type generation, components, state, i18n, styling |
 | `SKILLS.md` | Step-by-step recipes for common operations (add entity, endpoint, page, etc.) |
 | `FILEMAP.md` | Change impact tables ("when you change X, also update Y") and file location index |
