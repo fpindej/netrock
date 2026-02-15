@@ -1,4 +1,6 @@
 using System.Net;
+using System.Net.Http.Json;
+using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Features.Jobs.Dtos;
 using MyProject.Application.Identity.Constants;
@@ -41,6 +43,8 @@ public class JobsControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Get("/api/v1/admin/jobs", TestAuth.WithPermissions(AppPermissions.Jobs.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<List<Contracts.RecurringJobResponse>>();
+        Assert.NotNull(body);
     }
 
     [Fact]
@@ -77,6 +81,10 @@ public class JobsControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Get("/api/v1/admin/jobs/test-job", TestAuth.WithPermissions(AppPermissions.Jobs.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<Contracts.RecurringJobDetailResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("test-job", body.Id);
+        Assert.Equal("0 * * * *", body.Cron);
     }
 
     [Fact]

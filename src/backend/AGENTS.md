@@ -1635,6 +1635,8 @@ Test the full HTTP pipeline using `WebApplicationFactory<Program>`.
 
 ```
 Api.Tests/
+├── Contracts/
+│   └── ResponseContracts.cs                   # Frozen response shapes for contract testing
 ├── Fixtures/
 │   ├── CustomWebApplicationFactory.cs   # Test host configuration
 │   └── TestAuthHandler.cs              # Configurable auth handler (roles, permissions via header)
@@ -1703,6 +1705,23 @@ Provides valid configuration that works both pre-init (template placeholders) an
 
 Key: `AllowAllOrigins` must be `false` — the CORS security check rejects `AllowAllOrigins` in non-Development environments.
 
+#### Response Contract Testing
+
+Success responses (200/201 with a body) are deserialized into **frozen contract records** defined in `Contracts/ResponseContracts.cs`. These records are independent copies of the expected response shape — they do not reference production DTOs. If a production response DTO field is renamed, its nullability changes, or a property is removed, deserialization produces nulls/defaults and assertions catch the drift.
+
+```csharp
+// Contract record (frozen copy of expected response shape)
+internal record AuthTokensResponse(string AccessToken, string RefreshToken);
+
+// In the test — deserialize and assert key fields
+var body = await response.Content.ReadFromJsonAsync<AuthTokensResponse>();
+Assert.NotNull(body);
+Assert.NotEmpty(body.AccessToken);
+Assert.NotEmpty(body.RefreshToken);
+```
+
+When adding or modifying a response DTO in the WebApi layer, update the corresponding contract record in `ResponseContracts.cs` to match.
+
 #### Validator Tests
 
 Validators are tested by direct instantiation — no `WebApplicationFactory` needed:
@@ -1756,6 +1775,7 @@ Architecture.Tests/
 3. Configure mock returns on `_factory.AuthenticationService` / `_factory.UserService` / `_factory.CacheService`
 4. Send HTTP requests via `_authenticatedClient` or `_anonymousClient`
 5. Assert status codes and response bodies
+6. For success responses (200/201 with a body), add a frozen contract record to `Contracts/ResponseContracts.cs` and deserialize with `ReadFromJsonAsync<T>()` + field assertions
 
 **Validator test:**
 

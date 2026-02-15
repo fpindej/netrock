@@ -111,7 +111,7 @@ flowchart LR
 ## Follow-Up Items
 
 - [ ] Testcontainers integration for real PostgreSQL tests (new `MyProject.Integration.Tests` project)
-- [ ] AdminController integration tests (requires mocking `IAdminService`)
-- [ ] JobsController integration tests (requires mocking `IJobManagementService`)
+- [x] AdminController integration tests (requires mocking `IAdminService`)
+- [x] JobsController integration tests (requires mocking `IJobManagementService`)
 - [ ] BaseEntityRepository tests with InMemory provider (CRUD, soft-delete, pagination)
 - [ ] Code coverage reporting (coverlet + reportgenerator)

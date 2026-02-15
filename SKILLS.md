@@ -493,7 +493,16 @@ For testing the full HTTP pipeline (routes, auth, validation, status codes).
        .Returns(new AdminUserListOutput([], 0, 1, 10));
    ```
 5. If the service interface isn't already mocked in `CustomWebApplicationFactory`, add it there first
-6. Verify: `dotnet test src/backend/tests/MyProject.Api.Tests -c Release`
+6. For success responses (200/201 with a body), add **response contract assertions**:
+   - Add a frozen contract record to `tests/MyProject.Api.Tests/Contracts/ResponseContracts.cs` matching the response shape
+   - Deserialize with `ReadFromJsonAsync<ContractRecord>()` and assert key fields are populated
+   - This catches silent field renames, nullability changes, and removed properties
+   ```csharp
+   var body = await response.Content.ReadFromJsonAsync<MyContractRecord>();
+   Assert.NotNull(body);
+   Assert.NotEqual(Guid.Empty, body.Id);
+   ```
+7. Verify: `dotnet test src/backend/tests/MyProject.Api.Tests -c Release`
 
 ### Add a Validator Test
 

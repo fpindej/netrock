@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication.Dtos;
@@ -53,6 +54,10 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/login", JsonContent.Create(new { Username = "test@example.com", Password = "Password1!" })));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AuthTokensResponse>();
+        Assert.NotNull(body);
+        Assert.NotEmpty(body.AccessToken);
+        Assert.NotEmpty(body.RefreshToken);
     }
 
     [Fact]
@@ -93,6 +98,9 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/register", JsonContent.Create(new { Email = "new@example.com", Password = "Password1!" })));
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<RegisterUserResponse>();
+        Assert.NotNull(body);
+        Assert.NotEqual(Guid.Empty, body.Id);
     }
 
     [Fact]
@@ -140,6 +148,10 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/refresh", JsonContent.Create(new { RefreshToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AuthTokensResponse>();
+        Assert.NotNull(body);
+        Assert.NotEmpty(body.AccessToken);
+        Assert.NotEmpty(body.RefreshToken);
     }
 
     [Fact]
@@ -154,6 +166,10 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         var response = await _client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AuthTokensResponse>();
+        Assert.NotNull(body);
+        Assert.NotEmpty(body.AccessToken);
+        Assert.NotEmpty(body.RefreshToken);
     }
 
     [Fact]
@@ -176,6 +192,10 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/refresh?useCookies=true", JsonContent.Create(new { RefreshToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AuthTokensResponse>();
+        Assert.NotNull(body);
+        Assert.NotEmpty(body.AccessToken);
+        Assert.NotEmpty(body.RefreshToken);
         await _factory.AuthenticationService.Received(1)
             .RefreshTokenAsync("valid-token", true, Arg.Any<CancellationToken>());
     }
@@ -206,6 +226,10 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         var response = await _client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AuthTokensResponse>();
+        Assert.NotNull(body);
+        Assert.NotEmpty(body.AccessToken);
+        Assert.NotEmpty(body.RefreshToken);
     }
 
     #endregion

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Identity.Constants;
@@ -57,6 +58,12 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get("/api/v1/admin/users?pageNumber=1&pageSize=10", TestAuth.WithPermissions(AppPermissions.Users.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AdminUserListResponse>();
+        Assert.NotNull(body);
+        Assert.Equal(0, body.TotalCount);
+        Assert.Equal(1, body.PageNumber);
+        Assert.Equal(10, body.PageSize);
+        Assert.NotNull(body.Items);
     }
 
     [Fact]
@@ -88,6 +95,12 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get("/api/v1/admin/users?pageNumber=1&pageSize=10", TestAuth.SuperAdmin()));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AdminUserListResponse>();
+        Assert.NotNull(body);
+        Assert.Equal(0, body.TotalCount);
+        Assert.Equal(1, body.PageNumber);
+        Assert.Equal(10, body.PageSize);
+        Assert.NotNull(body.Items);
     }
 
     #endregion
@@ -107,6 +120,11 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get($"/api/v1/admin/users/{userId}", TestAuth.WithPermissions(AppPermissions.Users.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<Contracts.AdminUserResponse>();
+        Assert.NotNull(body);
+        Assert.Equal(userId, body.Id);
+        Assert.Equal("user@test.com", body.Username);
+        Assert.Contains("User", body.Roles);
     }
 
     [Fact]
@@ -305,6 +323,8 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get("/api/v1/admin/roles", TestAuth.WithPermissions(AppPermissions.Roles.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<List<Contracts.AdminRoleResponse>>();
+        Assert.NotNull(body);
     }
 
     [Fact]
@@ -328,6 +348,11 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get($"/api/v1/admin/roles/{roleId}", TestAuth.WithPermissions(AppPermissions.Roles.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<Contracts.RoleDetailResponse>();
+        Assert.NotNull(body);
+        Assert.Equal(roleId, body.Id);
+        Assert.Equal("Admin", body.Name);
+        Assert.NotNull(body.Permissions);
     }
 
     [Fact]
@@ -356,6 +381,9 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
                 JsonContent.Create(new { Name = "CustomRole", Description = "A custom role" })));
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<CreateRoleResponse>();
+        Assert.NotNull(body);
+        Assert.NotEqual(Guid.Empty, body.Id);
     }
 
     [Fact]
@@ -430,6 +458,12 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get("/api/v1/admin/permissions", TestAuth.WithPermissions(AppPermissions.Roles.View)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<List<Contracts.PermissionGroupResponse>>();
+        Assert.NotNull(body);
+        Assert.Single(body);
+        Assert.Equal("Users", body[0].Category);
+        Assert.NotNull(body[0].Permissions);
+        Assert.Contains("users.view", body[0].Permissions);
     }
 
     [Fact]

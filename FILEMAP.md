@@ -25,7 +25,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **DI extension** (new service registration) | `Program.cs` must call the extension |
 | **WebApi controller** (change route/method) | Frontend API calls, `v1.d.ts` regeneration |
 | **WebApi request DTO** (add/rename/remove property) | Validator, mapper, frontend types, frontend form |
-| **WebApi response DTO** (add/rename/remove property) | Mapper, frontend types, frontend component displaying data |
+| **WebApi response DTO** (add/rename/remove property) | Mapper, frontend types, frontend component displaying data, `Api.Tests/Contracts/ResponseContracts.cs` |
 | **WebApi validator** (change rules) | Consider matching frontend validation UX |
 | **`Program.cs`** (change middleware order) | Test full request pipeline — order matters for auth, CORS, rate limiting; update `CustomWebApplicationFactory` if new services need mocking |
 | **`Directory.Packages.props`** (change version) | `dotnet build` to verify compatibility |
@@ -174,6 +174,7 @@ src/backend/tests/
   MyProject.Api.Tests/
     Fixtures/CustomWebApplicationFactory.cs      WebApplicationFactory config
     Fixtures/TestAuthHandler.cs                  Fake auth handler
+    Contracts/ResponseContracts.cs               Frozen response shapes for contract testing
     Controllers/{Controller}Tests.cs             HTTP integration tests
     Validators/{Validator}Tests.cs               FluentValidation tests
   MyProject.Architecture.Tests/

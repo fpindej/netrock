@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity.Dtos;
@@ -67,6 +68,12 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var response = await _client.SendAsync(Get("/api/users/me", TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<UserMeResponse>();
+        Assert.NotNull(body);
+        Assert.NotEqual(Guid.Empty, body.Id);
+        Assert.Equal("test@example.com", body.Username);
+        Assert.Equal("John", body.FirstName);
+        Assert.Contains("User", body.Roles);
     }
 
     [Fact]
@@ -107,6 +114,9 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Patch("/api/users/me", JsonContent.Create(new { FirstName = "Jane" }), TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<UserMeResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("Jane", body.FirstName);
     }
 
     [Fact]
