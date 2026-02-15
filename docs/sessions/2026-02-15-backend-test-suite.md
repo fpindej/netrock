@@ -14,7 +14,7 @@ Added 190 backend tests across 4 test projects covering all layers of the Clean 
 | `src/backend/tests/MyProject.Unit.Tests/` | New project — 77 unit tests | Cover Shared (Result, ErrorMessages, PhoneNumberHelper, ErrorType), Domain (BaseEntity), and Application (AppRoles, AppPermissions) pure logic |
 | `src/backend/tests/MyProject.Component.Tests/` | New project — 62 component tests | Cover AuthenticationService, AdminService, RoleManagementService, UserService business logic with mocked dependencies |
 | `src/backend/tests/MyProject.Api.Tests/` | New project — 40 tests (16 controller + 24 validator) | Cover AuthController, UsersController HTTP pipeline + RegisterRequest, LoginRequest, ChangePasswordRequest validators |
-| `src/backend/tests/MyProject.Architecture.Tests/` | New project — 11 tests | Enforce layer dependency rules, naming conventions, access modifiers |
+| `src/backend/tests/MyProject.Architecture.Tests/` | New project — 10 tests | Enforce layer dependency rules, naming conventions, access modifiers |
 | `src/backend/Directory.Packages.props` | Added test package versions | xUnit, NSubstitute, Mvc.Testing, InMemory EF, NetArchTest, TimeProvider.Testing |
 | `src/backend/MyProject.slnx` | Added 4 test projects to solution | IDE and CI discovery |
 | `src/backend/MyProject.WebApi/appsettings.Testing.json` | New config file | Test-specific settings that disable Redis, Hangfire, restrict CORS |
@@ -66,7 +66,7 @@ flowchart TD
         UT[Unit.Tests<br/>77 tests]
         CT[Component.Tests<br/>62 tests]
         AT[Api.Tests<br/>40 tests]
-        ARCH[Architecture.Tests<br/>11 tests]
+        ARCH[Architecture.Tests<br/>10 tests]
     end
 
     subgraph "Production Code"

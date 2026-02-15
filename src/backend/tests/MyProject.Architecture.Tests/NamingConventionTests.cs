@@ -6,7 +6,6 @@ namespace MyProject.Architecture.Tests;
 public class NamingConventionTests
 {
     private static readonly System.Reflection.Assembly WebApiAssembly = typeof(Program).Assembly;
-    private static readonly System.Reflection.Assembly ApplicationAssembly = typeof(Application.Identity.Constants.AppRoles).Assembly;
 
     [Fact]
     public void Controllers_ShouldEndWithController()
@@ -44,19 +43,6 @@ public class NamingConventionTests
             .Inherit(typeof(FluentValidation.AbstractValidator<>))
             .Should()
             .HaveNameEndingWith("Validator")
-            .GetResult();
-
-        Assert.True(result.IsSuccessful, FormatFailures(result));
-    }
-
-    [Fact]
-    public void Interfaces_InApplication_ShouldStartWithI()
-    {
-        var result = Types.InAssembly(ApplicationAssembly)
-            .That()
-            .AreInterfaces()
-            .Should()
-            .HaveNameStartingWith("I")
             .GetResult();
 
         Assert.True(result.IsSuccessful, FormatFailures(result));

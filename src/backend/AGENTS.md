@@ -1536,7 +1536,7 @@ src/backend/tests/
 | `Unit.Tests` | Shared, Domain, Application | Result pattern, ErrorMessages, PhoneNumberHelper, ErrorType, BaseEntity, AppRoles, AppPermissions |
 | `Component.Tests` | Infrastructure, Application, Domain, Shared | Service business logic with mocked dependencies |
 | `Api.Tests` | WebApi, Infrastructure | HTTP pipeline (status codes, auth gates, ProblemDetails shape) + FluentValidation validators |
-| `Architecture.Tests` | All assemblies (reflection only) | Layer dependency rules, naming conventions, access modifiers |
+| `Architecture.Tests` | All assemblies (reflection only) | Layer dependency rules, naming conventions, access modifiers (10 tests) |
 
 ### Frameworks & Libraries
 
