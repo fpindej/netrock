@@ -87,6 +87,34 @@ public interface IAdminService
     Task<Result> DeleteUserAsync(Guid callerUserId, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Manually verifies a user's email address. The caller must have a strictly higher role rank
+    /// than the target user.
+    /// </summary>
+    /// <param name="callerUserId">The ID of the admin performing the action.</param>
+    /// <param name="userId">The target user ID.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>Success or failure with an error message.</returns>
+    Task<Result> VerifyEmailAsync(Guid callerUserId, Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends a password reset email to a user on behalf of an admin. The caller must have a strictly
+    /// higher role rank than the target user.
+    /// </summary>
+    /// <param name="callerUserId">The ID of the admin performing the action.</param>
+    /// <param name="userId">The target user ID.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>Success or failure with an error message.</returns>
+    Task<Result> SendPasswordResetAsync(Guid callerUserId, Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a new user account and sends an invitation email with a password reset link.
+    /// </summary>
+    /// <param name="input">The user creation input containing email and optional name fields.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The new user's ID on success, or a failure with an error message.</returns>
+    Task<Result<Guid>> CreateUserAsync(CreateUserInput input, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all roles with user counts.
     /// </summary>
     /// <param name="cancellationToken">A cancellation token.</param>

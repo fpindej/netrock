@@ -7,6 +7,7 @@ using MyProject.WebApi.Authorization;
 using MyProject.WebApi.Features.Admin.Dtos;
 using MyProject.WebApi.Features.Admin.Dtos.AssignRole;
 using MyProject.WebApi.Features.Admin.Dtos.CreateRole;
+using MyProject.WebApi.Features.Admin.Dtos.CreateUser;
 using MyProject.WebApi.Features.Admin.Dtos.ListUsers;
 using MyProject.WebApi.Features.Admin.Dtos.SetPermissions;
 using MyProject.WebApi.Features.Admin.Dtos.UpdateRole;
@@ -241,6 +242,102 @@ public class AdminController(IAdminService adminService, IRoleManagementService 
         }
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Manually verifies a user's email address. The caller must outrank the target user.
+    /// </summary>
+    /// <param name="id">The user ID</param>
+    /// <returns>No content on success</returns>
+    /// <response code="204">Email verified successfully</response>
+    /// <response code="400">If the email is already verified or hierarchy check fails</response>
+    /// <response code="401">If the user is not authenticated</response>
+    /// <response code="403">If the user does not have the required permission</response>
+    /// <response code="404">If the user was not found</response>
+    [HttpPost("users/{id:guid}/verify-email")]
+    [RequirePermission(AppPermissions.Users.Manage)]
+    [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult> VerifyEmail(Guid id, CancellationToken cancellationToken)
+    {
+        var callerUserId = userContext.AuthenticatedUserId;
+        var result = await adminService.VerifyEmailAsync(callerUserId, id, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Sends a password reset email to a user on behalf of an admin.
+    /// The caller must outrank the target user.
+    /// </summary>
+    /// <param name="id">The user ID</param>
+    /// <returns>No content on success</returns>
+    /// <response code="204">Password reset email sent successfully</response>
+    /// <response code="400">If the hierarchy check fails</response>
+    /// <response code="401">If the user is not authenticated</response>
+    /// <response code="403">If the user does not have the required permission</response>
+    /// <response code="404">If the user was not found</response>
+    [HttpPost("users/{id:guid}/send-password-reset")]
+    [RequirePermission(AppPermissions.Users.Manage)]
+    [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult> SendPasswordReset(Guid id, CancellationToken cancellationToken)
+    {
+        var callerUserId = userContext.AuthenticatedUserId;
+        var result = await adminService.SendPasswordResetAsync(callerUserId, id, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Creates a new user account and sends an invitation email with a password reset link.
+    /// </summary>
+    /// <param name="request">The user creation request containing email and optional name fields</param>
+    /// <returns>The created user's ID</returns>
+    /// <response code="201">User created successfully</response>
+    /// <response code="400">If the email is already taken or validation fails</response>
+    /// <response code="401">If the user is not authenticated</response>
+    /// <response code="403">If the user does not have the required permission</response>
+    [HttpPost("users")]
+    [RequirePermission(AppPermissions.Users.Manage)]
+    [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult> CreateUser(
+        [FromBody] CreateUserRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await adminService.CreateUserAsync(request.ToInput(), cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return Created(string.Empty, new { id = result.Value });
     }
 
     /// <summary>

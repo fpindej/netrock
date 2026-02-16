@@ -1,13 +1,18 @@
+using System.Net;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Admin.Dtos;
+using MyProject.Application.Features.Email;
 using MyProject.Application.Identity.Constants;
 using MyProject.Shared;
 using MyProject.Infrastructure.Features.Authentication.Models;
+using MyProject.Infrastructure.Features.Email.Options;
 using MyProject.Infrastructure.Persistence;
 using MyProject.Infrastructure.Persistence.Extensions;
 
@@ -31,8 +36,11 @@ internal class AdminService(
     MyProjectDbContext dbContext,
     ICacheService cacheService,
     TimeProvider timeProvider,
+    IEmailService emailService,
+    IOptions<EmailOptions> emailOptions,
     ILogger<AdminService> logger) : IAdminService
 {
+    private readonly EmailOptions _emailOptions = emailOptions.Value;
     /// <inheritdoc />
     public async Task<AdminUserListOutput> GetUsersAsync(int pageNumber, int pageSize, string? search = null,
         CancellationToken cancellationToken = default)
@@ -348,6 +356,171 @@ internal class AdminService(
             .ToList();
     }
 
+    /// <inheritdoc />
+    public async Task<Result> VerifyEmailAsync(Guid callerUserId, Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+
+        if (user is null)
+        {
+            return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
+        }
+
+        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
+        if (!hierarchyResult.IsSuccess)
+        {
+            return hierarchyResult;
+        }
+
+        if (user.EmailConfirmed)
+        {
+            return Result.Failure(ErrorMessages.Auth.EmailAlreadyVerified);
+        }
+
+        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+        var confirmResult = await userManager.ConfirmEmailAsync(user, token);
+
+        if (!confirmResult.Succeeded)
+        {
+            var errors = string.Join(", ", confirmResult.Errors.Select(e => e.Description));
+            return Result.Failure(errors);
+        }
+
+        await InvalidateUserCacheAsync(userId);
+        logger.LogInformation("Email for user '{UserId}' manually verified by admin '{CallerUserId}'",
+            userId, callerUserId);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> SendPasswordResetAsync(Guid callerUserId, Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+
+        if (user is null)
+        {
+            return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
+        }
+
+        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
+        if (!hierarchyResult.IsSuccess)
+        {
+            return hierarchyResult;
+        }
+
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        var encodedToken = Uri.EscapeDataString(token);
+        var encodedEmail = Uri.EscapeDataString(user.Email ?? user.UserName ?? string.Empty);
+        var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={encodedToken}&email={encodedEmail}";
+
+        var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
+        var htmlBody = $"""
+            <h2>Reset Your Password</h2>
+            <p>An administrator has requested a password reset for your account. Click the link below to set a new password:</p>
+            <p><a href="{safeResetUrl}">Reset Password</a></p>
+            <p>If you did not expect this, please contact your administrator.</p>
+            <p>This link will expire in 24 hours.</p>
+            """;
+
+        var plainTextBody = $"""
+            Reset Your Password
+
+            An administrator has requested a password reset for your account. Visit the following link to set a new password:
+            {resetUrl}
+
+            If you did not expect this, please contact your administrator.
+            """;
+
+        var message = new EmailMessage(
+            To: user.Email ?? user.UserName ?? string.Empty,
+            Subject: "Reset Your Password",
+            HtmlBody: htmlBody,
+            PlainTextBody: plainTextBody
+        );
+
+        await SendEmailSafeAsync(message, cancellationToken);
+
+        logger.LogInformation("Password reset email sent for user '{UserId}' by admin '{CallerUserId}'",
+            userId, callerUserId);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<Guid>> CreateUserAsync(CreateUserInput input,
+        CancellationToken cancellationToken = default)
+    {
+        var existingUser = await userManager.FindByEmailAsync(input.Email);
+        if (existingUser is not null)
+        {
+            return Result<Guid>.Failure(ErrorMessages.Admin.EmailAlreadyRegistered);
+        }
+
+        var tempPassword = GenerateTemporaryPassword();
+
+        var user = new ApplicationUser
+        {
+            UserName = input.Email,
+            Email = input.Email,
+            FirstName = input.FirstName,
+            LastName = input.LastName,
+            LockoutEnabled = true
+        };
+
+        var createResult = await userManager.CreateAsync(user, tempPassword);
+        if (!createResult.Succeeded)
+        {
+            var errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
+            return Result<Guid>.Failure(errors);
+        }
+
+        var roleResult = await userManager.AddToRoleAsync(user, AppRoles.User);
+        if (!roleResult.Succeeded)
+        {
+            logger.LogWarning("User '{UserId}' created but default role assignment failed", user.Id);
+        }
+
+        // Send invitation email with password reset link
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        var encodedToken = Uri.EscapeDataString(token);
+        var encodedEmail = Uri.EscapeDataString(input.Email);
+        var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={encodedToken}&email={encodedEmail}";
+
+        var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
+        var htmlBody = $"""
+            <h2>You've Been Invited</h2>
+            <p>An account has been created for you. Click the link below to set your password and get started:</p>
+            <p><a href="{safeResetUrl}">Set Your Password</a></p>
+            <p>This link will expire in 24 hours.</p>
+            """;
+
+        var plainTextBody = $"""
+            You've Been Invited
+
+            An account has been created for you. Visit the following link to set your password and get started:
+            {resetUrl}
+
+            This link will expire in 24 hours.
+            """;
+
+        var message = new EmailMessage(
+            To: input.Email,
+            Subject: "You've Been Invited",
+            HtmlBody: htmlBody,
+            PlainTextBody: plainTextBody
+        );
+
+        await SendEmailSafeAsync(message, cancellationToken);
+
+        logger.LogInformation("User '{UserId}' created via admin invitation for email '{Email}'",
+            user.Id, input.Email);
+
+        return Result<Guid>.Success(user.Id);
+    }
+
     /// <summary>
     /// Verifies that the caller has a strictly higher role rank than the target user.
     /// Returns <see cref="Result.Failure(string)"/> if the hierarchy check fails.
@@ -540,5 +713,60 @@ internal class AdminService(
     private async Task InvalidateUserCacheAsync(Guid userId)
     {
         await cacheService.RemoveAsync(CacheKeys.User(userId));
+    }
+
+    /// <summary>
+    /// Sends an email, swallowing delivery failures. Transient provider outages
+    /// (quota, auth, network) are logged but never propagate to the caller.
+    /// </summary>
+    private async Task SendEmailSafeAsync(EmailMessage message, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await emailService.SendEmailAsync(message, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send email to {To}", message.To);
+        }
+    }
+
+    /// <summary>
+    /// Generates a cryptographically random temporary password that satisfies default ASP.NET Identity complexity rules.
+    /// </summary>
+    private static string GenerateTemporaryPassword()
+    {
+        const string upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string lower = "abcdefghijklmnopqrstuvwxyz";
+        const string digits = "0123456789";
+        const string special = "!@#$%^&*";
+        const string all = upper + lower + digits + special;
+
+        Span<byte> randomBytes = stackalloc byte[32];
+        RandomNumberGenerator.Fill(randomBytes);
+
+        var password = new char[32];
+        // Ensure at least one of each required category
+        password[0] = upper[randomBytes[0] % upper.Length];
+        password[1] = lower[randomBytes[1] % lower.Length];
+        password[2] = digits[randomBytes[2] % digits.Length];
+        password[3] = special[randomBytes[3] % special.Length];
+
+        for (var i = 4; i < 32; i++)
+        {
+            password[i] = all[randomBytes[i] % all.Length];
+        }
+
+        // Shuffle to avoid predictable prefix
+        var rng = RandomNumberGenerator.Create();
+        var shuffleBytes = new byte[32];
+        rng.GetBytes(shuffleBytes);
+        for (var i = password.Length - 1; i > 0; i--)
+        {
+            var j = shuffleBytes[i] % (i + 1);
+            (password[i], password[j]) = (password[j], password[i]);
+        }
+
+        return new string(password);
     }
 }

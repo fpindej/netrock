@@ -328,6 +328,146 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
 
     #endregion
 
+    #region VerifyEmail
+
+    [Fact]
+    public async Task VerifyEmail_WithPermission_Returns204()
+    {
+        var userId = Guid.NewGuid();
+        _factory.AdminService.VerifyEmailAsync(Arg.Any<Guid>(), userId, Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Post($"/api/v1/admin/users/{userId}/verify-email", TestAuth.WithPermissions(AppPermissions.Users.Manage)));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_WithoutPermission_Returns403()
+    {
+        var response = await _client.SendAsync(
+            Post($"/api/v1/admin/users/{Guid.NewGuid()}/verify-email", TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_NotFound_Returns404()
+    {
+        var userId = Guid.NewGuid();
+        _factory.AdminService.VerifyEmailAsync(Arg.Any<Guid>(), userId, Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound));
+
+        var response = await _client.SendAsync(
+            Post($"/api/v1/admin/users/{userId}/verify-email", TestAuth.WithPermissions(AppPermissions.Users.Manage)));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Admin.UserNotFound);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_AlreadyVerified_Returns400()
+    {
+        var userId = Guid.NewGuid();
+        _factory.AdminService.VerifyEmailAsync(Arg.Any<Guid>(), userId, Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.Auth.EmailAlreadyVerified));
+
+        var response = await _client.SendAsync(
+            Post($"/api/v1/admin/users/{userId}/verify-email", TestAuth.WithPermissions(AppPermissions.Users.Manage)));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.EmailAlreadyVerified);
+    }
+
+    #endregion
+
+    #region SendPasswordReset
+
+    [Fact]
+    public async Task SendPasswordReset_WithPermission_Returns204()
+    {
+        var userId = Guid.NewGuid();
+        _factory.AdminService.SendPasswordResetAsync(Arg.Any<Guid>(), userId, Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Post($"/api/v1/admin/users/{userId}/send-password-reset", TestAuth.WithPermissions(AppPermissions.Users.Manage)));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SendPasswordReset_WithoutPermission_Returns403()
+    {
+        var response = await _client.SendAsync(
+            Post($"/api/v1/admin/users/{Guid.NewGuid()}/send-password-reset", TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SendPasswordReset_NotFound_Returns404()
+    {
+        var userId = Guid.NewGuid();
+        _factory.AdminService.SendPasswordResetAsync(Arg.Any<Guid>(), userId, Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound));
+
+        var response = await _client.SendAsync(
+            Post($"/api/v1/admin/users/{userId}/send-password-reset", TestAuth.WithPermissions(AppPermissions.Users.Manage)));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Admin.UserNotFound);
+    }
+
+    #endregion
+
+    #region CreateUser
+
+    [Fact]
+    public async Task CreateUser_WithPermission_Returns201()
+    {
+        _factory.AdminService.CreateUserAsync(Arg.Any<CreateUserInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result<Guid>.Success(Guid.NewGuid()));
+
+        var response = await _client.SendAsync(
+            Post("/api/v1/admin/users",
+                TestAuth.WithPermissions(AppPermissions.Users.Manage),
+                JsonContent.Create(new { Email = "new@test.com", FirstName = "John", LastName = "Doe" })));
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.NotEqual(Guid.Empty, body.GetProperty("id").GetGuid());
+    }
+
+    [Fact]
+    public async Task CreateUser_WithoutPermission_Returns403()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/v1/admin/users",
+                TestAuth.User(),
+                JsonContent.Create(new { Email = "new@test.com" })));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateUser_DuplicateEmail_Returns400()
+    {
+        _factory.AdminService.CreateUserAsync(Arg.Any<CreateUserInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result<Guid>.Failure(ErrorMessages.Admin.EmailAlreadyRegistered));
+
+        var response = await _client.SendAsync(
+            Post("/api/v1/admin/users",
+                TestAuth.WithPermissions(AppPermissions.Users.Manage),
+                JsonContent.Create(new { Email = "existing@test.com" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Admin.EmailAlreadyRegistered);
+    }
+
+    #endregion
+
     #region Roles CRUD
 
     [Fact]

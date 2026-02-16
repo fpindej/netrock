@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Admin.Dtos;
+using MyProject.Application.Features.Email;
 using MyProject.Application.Identity.Constants;
 using MyProject.Component.Tests.Fixtures;
 using MyProject.Infrastructure.Features.Admin.Services;
 using MyProject.Infrastructure.Features.Authentication.Models;
+using MyProject.Infrastructure.Features.Email.Options;
 using MyProject.Infrastructure.Persistence;
 using MyProject.Shared;
 
@@ -18,6 +21,7 @@ public class AdminServiceTests : IDisposable
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly ICacheService _cacheService;
+    private readonly IEmailService _emailService;
     private readonly FakeTimeProvider _timeProvider;
     private readonly MyProjectDbContext _dbContext;
     private readonly AdminService _sut;
@@ -30,12 +34,15 @@ public class AdminServiceTests : IDisposable
         _userManager = IdentityMockHelpers.CreateMockUserManager();
         _roleManager = IdentityMockHelpers.CreateMockRoleManager();
         _cacheService = Substitute.For<ICacheService>();
+        _emailService = Substitute.For<IEmailService>();
         _timeProvider = new FakeTimeProvider(new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero));
         _dbContext = TestDbContextFactory.Create();
         var logger = Substitute.For<ILogger<AdminService>>();
+        var emailOptions = Options.Create(new EmailOptions { FrontendBaseUrl = "https://example.com" });
 
         _sut = new AdminService(
-            _userManager, _roleManager, _dbContext, _cacheService, _timeProvider, logger);
+            _userManager, _roleManager, _dbContext, _cacheService, _timeProvider,
+            _emailService, emailOptions, logger);
     }
 
     public void Dispose()
@@ -561,6 +568,175 @@ public class AdminServiceTests : IDisposable
 
         var role = Assert.Single(result);
         Assert.Equal(2, role.UserCount);
+    }
+
+    #endregion
+
+    #region VerifyEmail
+
+    [Fact]
+    public async Task VerifyEmail_Valid_ReturnsSuccess()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+        target.EmailConfirmed = false;
+        _userManager.GenerateEmailConfirmationTokenAsync(target).Returns("token");
+        _userManager.ConfirmEmailAsync(target, "token").Returns(IdentityResult.Success);
+
+        var result = await _sut.VerifyEmailAsync(_callerId, _targetId);
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_UserNotFound_ReturnsNotFound()
+    {
+        _userManager.FindByIdAsync(_targetId.ToString()).Returns((ApplicationUser?)null);
+
+        var result = await _sut.VerifyEmailAsync(_callerId, _targetId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.UserNotFound, result.Error);
+        Assert.Equal(ErrorType.NotFound, result.ErrorType);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_AlreadyVerified_ReturnsFailure()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+        target.EmailConfirmed = true;
+
+        var result = await _sut.VerifyEmailAsync(_callerId, _targetId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Auth.EmailAlreadyVerified, result.Error);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_InsufficientHierarchy_ReturnsFailure()
+    {
+        // Caller is User (rank 1), target is Admin (rank 2)
+        var caller = new ApplicationUser { Id = _callerId, UserName = "user@test.com" };
+        _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
+        _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.User });
+
+        var target = new ApplicationUser { Id = _targetId, UserName = "admin@test.com", EmailConfirmed = false };
+        _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
+        _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.Admin });
+
+        var result = await _sut.VerifyEmailAsync(_callerId, _targetId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.HierarchyInsufficient, result.Error);
+    }
+
+    #endregion
+
+    #region SendPasswordReset
+
+    [Fact]
+    public async Task SendPasswordReset_Valid_ReturnsSuccess()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+        target.Email = "user@test.com";
+        _userManager.GeneratePasswordResetTokenAsync(target).Returns("reset-token");
+
+        var result = await _sut.SendPasswordResetAsync(_callerId, _targetId);
+
+        Assert.True(result.IsSuccess);
+        await _emailService.Received(1).SendEmailAsync(
+            Arg.Is<EmailMessage>(m => m.To == "user@test.com"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SendPasswordReset_UserNotFound_ReturnsNotFound()
+    {
+        _userManager.FindByIdAsync(_targetId.ToString()).Returns((ApplicationUser?)null);
+
+        var result = await _sut.SendPasswordResetAsync(_callerId, _targetId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.UserNotFound, result.Error);
+        Assert.Equal(ErrorType.NotFound, result.ErrorType);
+    }
+
+    [Fact]
+    public async Task SendPasswordReset_InsufficientHierarchy_ReturnsFailure()
+    {
+        var caller = new ApplicationUser { Id = _callerId, UserName = "user@test.com" };
+        _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
+        _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.User });
+
+        var target = new ApplicationUser { Id = _targetId, UserName = "admin@test.com" };
+        _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
+        _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.Admin });
+
+        var result = await _sut.SendPasswordResetAsync(_callerId, _targetId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.HierarchyInsufficient, result.Error);
+    }
+
+    #endregion
+
+    #region CreateUser
+
+    [Fact]
+    public async Task CreateUser_Valid_ReturnsUserId()
+    {
+        var newUserId = Guid.NewGuid();
+        _userManager.FindByEmailAsync("new@test.com").Returns((ApplicationUser?)null);
+        _userManager.CreateAsync(Arg.Any<ApplicationUser>(), Arg.Any<string>())
+            .Returns(callInfo =>
+            {
+                callInfo.Arg<ApplicationUser>().Id = newUserId;
+                return IdentityResult.Success;
+            });
+        _userManager.AddToRoleAsync(Arg.Any<ApplicationUser>(), AppRoles.User)
+            .Returns(IdentityResult.Success);
+        _userManager.GeneratePasswordResetTokenAsync(Arg.Any<ApplicationUser>())
+            .Returns("reset-token");
+
+        var result = await _sut.CreateUserAsync(new CreateUserInput("new@test.com", "John", "Doe"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(newUserId, result.Value);
+        await _emailService.Received(1).SendEmailAsync(
+            Arg.Is<EmailMessage>(m => m.To == "new@test.com"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CreateUser_DuplicateEmail_ReturnsFailure()
+    {
+        _userManager.FindByEmailAsync("existing@test.com")
+            .Returns(new ApplicationUser { Id = Guid.NewGuid(), Email = "existing@test.com" });
+
+        var result = await _sut.CreateUserAsync(new CreateUserInput("existing@test.com", null, null));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.EmailAlreadyRegistered, result.Error);
+    }
+
+    [Fact]
+    public async Task CreateUser_SendsInvitationEmail()
+    {
+        _userManager.FindByEmailAsync("invite@test.com").Returns((ApplicationUser?)null);
+        _userManager.CreateAsync(Arg.Any<ApplicationUser>(), Arg.Any<string>())
+            .Returns(IdentityResult.Success);
+        _userManager.AddToRoleAsync(Arg.Any<ApplicationUser>(), AppRoles.User)
+            .Returns(IdentityResult.Success);
+        _userManager.GeneratePasswordResetTokenAsync(Arg.Any<ApplicationUser>())
+            .Returns("reset-token");
+
+        await _sut.CreateUserAsync(new CreateUserInput("invite@test.com", null, null));
+
+        await _emailService.Received(1).SendEmailAsync(
+            Arg.Is<EmailMessage>(m => m.To == "invite@test.com" && m.Subject == "You've Been Invited"),
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
