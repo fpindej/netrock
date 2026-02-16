@@ -93,6 +93,7 @@
 	"auth_register_success": "Account created successfully",
 	"auth_register_failed": "Registration failed",
 	"auth_register_passwordMismatch": "Passwords do not match",
+	"auth_captcha_error": "CAPTCHA verification failed. Please try again.",
 
 	"auth_forgotPassword_title": "Forgot password?",
 	"auth_forgotPassword_subtitle": "Enter your email and we'll send you a reset link.",

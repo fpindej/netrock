@@ -93,6 +93,7 @@
 	"auth_register_success": "Účet byl úspěšně vytvořen",
 	"auth_register_failed": "Registrace se nezdařila",
 	"auth_register_passwordMismatch": "Hesla se neshodují",
+	"auth_captcha_error": "Ověření CAPTCHA se nezdařilo. Zkuste to prosím znovu.",
 
 	"auth_forgotPassword_title": "Zapomenuté heslo?",
 	"auth_forgotPassword_subtitle": "Zadejte svůj e-mail a pošleme vám odkaz pro obnovení hesla.",

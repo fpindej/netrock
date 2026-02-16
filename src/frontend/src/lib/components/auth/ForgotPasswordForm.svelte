@@ -11,10 +11,12 @@
 	import * as m from '$lib/paraglide/messages';
 	import { fly, scale } from 'svelte/transition';
 	import { MailCheck } from '@lucide/svelte';
-	import { LoginBackground } from '$lib/components/auth';
+	import { LoginBackground, TurnstileWidget } from '$lib/components/auth';
 	import { toast } from '$lib/components/ui/sonner';
+	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
 
 	let email = $state('');
+	let captchaToken = $state('');
 	let isLoading = $state(false);
 	let isSubmitted = $state(false);
 	const shake = createShake();
@@ -28,7 +30,7 @@
 
 		try {
 			const { response, error: apiError } = await browserClient.POST('/api/auth/forgot-password', {
-				body: { email }
+				body: { email, captchaToken }
 			});
 
 			if (response.ok) {
@@ -93,7 +95,16 @@
 							/>
 						</div>
 
-						<Button type="submit" class="w-full" disabled={isLoading || cooldown.active}>
+						<TurnstileWidget
+							siteKey={PUBLIC_TURNSTILE_SITE_KEY}
+							onVerified={(t) => (captchaToken = t)}
+						/>
+
+						<Button
+							type="submit"
+							class="w-full"
+							disabled={isLoading || cooldown.active || !captchaToken}
+						>
 							{#if cooldown.active}
 								{m.common_waitSeconds({ seconds: cooldown.remaining })}
 							{:else if isLoading}

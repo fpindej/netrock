@@ -9,6 +9,8 @@
 	import { toast } from '$lib/components/ui/sonner';
 	import { Loader2 } from '@lucide/svelte';
 	import { createFieldShakes, createCooldown } from '$lib/state';
+	import { TurnstileWidget } from '$lib/components/auth';
+	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
 
 	interface Props {
 		open?: boolean;
@@ -23,6 +25,7 @@
 	let firstName = $state('');
 	let lastName = $state('');
 	let phoneNumber = $state('');
+	let captchaToken = $state('');
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 	let fieldErrors = $state<Record<string, string>>({});
@@ -75,6 +78,7 @@
 		firstName = '';
 		lastName = '';
 		phoneNumber = '';
+		captchaToken = '';
 		error = null;
 		fieldErrors = {};
 	}
@@ -85,6 +89,7 @@
 		} else {
 			password = '';
 			confirmPassword = '';
+			captchaToken = '';
 			error = null;
 			fieldErrors = {};
 		}
@@ -108,6 +113,7 @@
 				body: {
 					email,
 					password,
+					captchaToken,
 					firstName: firstName || undefined,
 					lastName: lastName || undefined,
 					phoneNumber: phoneNumber || undefined
@@ -253,8 +259,17 @@
 					<p class="text-xs text-destructive">{fieldErrors.confirmPassword}</p>
 				{/if}
 			</div>
+			<TurnstileWidget
+				siteKey={PUBLIC_TURNSTILE_SITE_KEY}
+				onVerified={(t) => (captchaToken = t)}
+				onError={() => (error = m.auth_captcha_error())}
+			/>
 			<Dialog.Footer>
-				<Button type="submit" disabled={isLoading || cooldown.active} class="w-full">
+				<Button
+					type="submit"
+					disabled={isLoading || cooldown.active || !captchaToken}
+					class="w-full"
+				>
 					{#if cooldown.active}
 						{m.common_waitSeconds({ seconds: cooldown.remaining })}
 					{:else}
