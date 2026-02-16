@@ -807,6 +807,17 @@ Hosting__ForceHttps=false
 
 > **Principle**: keep the trust surface as narrow as possible — list only the specific proxy IPs or the smallest CIDR block that covers them. Never trust `0.0.0.0/0`.
 
+#### Production build hygiene
+
+`appsettings.Development.json` and `appsettings.Testing.json` are excluded from production artifacts via two layers, controlled by the `StripDevConfig` build arg/MSBuild property (default: `true`):
+
+1. **`.csproj`**: `CopyToPublishDirectory="Never"` (conditional on `StripDevConfig != false`) — prevents `dotnet publish` from including them
+2. **`Dockerfile`**: conditional `rm -f` after publish — defense-in-depth in case the MSBuild exclusion is bypassed
+
+`docker-compose.local.yml` passes `STRIP_DEV_CONFIG=false` so local Docker dev retains all appsettings files. Production builds (default) strip them.
+
+When adding a new `appsettings.{Environment}.json`, decide whether it belongs in production — if not, add a matching `CopyToPublishDirectory="Never"` entry in the `.csproj` `StripDevConfig` item group and a `rm -f` line in the Dockerfile's conditional block.
+
 ## Authorization — Roles & Permissions
 
 ### Role Hierarchy
