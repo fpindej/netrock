@@ -54,7 +54,8 @@ internal static class AdminMapper
         Name = output.Name,
         Description = output.Description,
         IsSystem = output.IsSystem,
-        UserCount = output.UserCount
+        UserCount = output.UserCount,
+        Permissions = output.Permissions
     };
 
     /// <summary>

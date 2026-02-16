@@ -173,161 +173,165 @@
 		<Card.Description>{m.admin_userDetail_roleManagementDescription()}</Card.Description>
 	</Card.Header>
 	<Card.Content class="space-y-4">
-		<!-- Current roles -->
-		<div>
-			<p class="mb-2 text-sm font-medium">{m.admin_userDetail_currentRoles()}</p>
-			<div class="flex flex-wrap gap-2">
-				{#each user.roles ?? [] as role (role)}
-					<Badge variant="secondary" class="gap-1 py-1 text-sm">
-						{role}
-						{#if canRemoveRole(role)}
-							<button
-								class="ms-1 inline-flex h-5 w-5 items-center justify-center rounded-full transition-colors hover:bg-muted-foreground/20"
-								aria-label="{m.admin_userDetail_removeRole()} {role}"
-								disabled={isRemovingRole === role}
-								onclick={() => removeRole(role)}
-							>
-								{#if isRemovingRole === role}
-									<Loader2 class="h-3 w-3 animate-spin" />
-								{:else}
-									<X class="h-3 w-3" />
-								{/if}
-							</button>
-						{/if}
-					</Badge>
-				{:else}
-					<span class="text-sm text-muted-foreground">{m.admin_userDetail_noRoles()}</span>
-				{/each}
-			</div>
-		</div>
-
-		<!-- Assign role -->
-		{#if canAssignRoles && availableRoles.length > 0}
-			<div class="flex flex-col gap-2 sm:flex-row sm:items-end">
-				<div class="flex-1">
-					<label for="role-select" class="mb-1 block text-sm font-medium">
-						{m.admin_userDetail_assignRole()}
-					</label>
-					<Select.Root type="single" bind:value={selectedRole}>
-						<Select.Trigger id="role-select">
-							{#if selectedRole}
-								<span>{selectedRole}</span>
-							{:else}
-								<span class="text-muted-foreground">{m.admin_userDetail_selectRole()}</span>
-							{/if}
-						</Select.Trigger>
-						<Select.Content>
-							{#each availableRoles as role (role)}
-								<Select.Item value={role}>{role}</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
-				</div>
-				<Button
-					size="sm"
-					class="min-h-10 shrink-0"
-					disabled={!selectedRole || isAssigningRole || cooldown.active}
-					onclick={assignRole}
-				>
-					{#if cooldown.active}
-						{m.common_waitSeconds({ seconds: cooldown.remaining })}
-					{:else if isAssigningRole}
-						<Loader2 class="me-1 h-4 w-4 animate-spin" />
-						{m.admin_userDetail_assignRole()}
-					{:else}
-						<Plus class="me-1 h-4 w-4" />
-						{m.admin_userDetail_assignRole()}
-					{/if}
-				</Button>
+		{#if !canManage && !canAssignRoles}
+			<div class="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+				<Lock class="h-4 w-4 shrink-0" />
+				<span>{m.admin_userDetail_cannotManage()}</span>
 			</div>
 		{/if}
 
-		<!-- Account actions -->
-		{#if canManage}
-			<Separator />
-
-			<div class="flex flex-wrap items-center gap-2">
-				{#if user.isLockedOut}
-					<Button
-						variant="outline"
-						size="sm"
-						class="min-h-10"
-						disabled={isUnlocking || cooldown.active}
-						onclick={unlockUser}
-					>
-						{#if cooldown.active}
-							{m.common_waitSeconds({ seconds: cooldown.remaining })}
-						{:else if isUnlocking}
-							<Loader2 class="me-2 h-4 w-4 animate-spin" />
-							{m.admin_userDetail_unlockAccount()}
-						{:else}
-							<Unlock class="me-2 h-4 w-4" />
-							{m.admin_userDetail_unlockAccount()}
-						{/if}
-					</Button>
-				{:else}
-					<Button
-						variant="outline"
-						size="sm"
-						class="min-h-10"
-						disabled={isLocking || cooldown.active}
-						onclick={lockUser}
-					>
-						{#if cooldown.active}
-							{m.common_waitSeconds({ seconds: cooldown.remaining })}
-						{:else if isLocking}
-							<Loader2 class="me-2 h-4 w-4 animate-spin" />
-							{m.admin_userDetail_lockAccount()}
-						{:else}
-							<Lock class="me-2 h-4 w-4" />
-							{m.admin_userDetail_lockAccount()}
-						{/if}
-					</Button>
-				{/if}
-
-				<Dialog.Root bind:open={deleteDialogOpen}>
-					<Dialog.Trigger>
-						{#snippet child({ props })}
-							<Button variant="destructive" size="sm" class="min-h-10" {...props}>
-								<Trash2 class="me-2 h-4 w-4" />
-								{m.admin_userDetail_deleteAccount()}
-							</Button>
-						{/snippet}
-					</Dialog.Trigger>
-					<Dialog.Content>
-						<Dialog.Header>
-							<Dialog.Title>{m.admin_userDetail_deleteConfirmTitle()}</Dialog.Title>
-							<Dialog.Description>
-								{m.admin_userDetail_deleteConfirmDescription()}
-							</Dialog.Description>
-						</Dialog.Header>
-						<Dialog.Footer class="flex-col-reverse sm:flex-row">
-							<Button variant="outline" onclick={() => (deleteDialogOpen = false)}>
-								{m.common_cancel()}
-							</Button>
-							<Button
-								variant="destructive"
-								disabled={isDeleting || cooldown.active}
-								onclick={deleteUser}
-							>
-								{#if cooldown.active}
-									{m.common_waitSeconds({ seconds: cooldown.remaining })}
-								{:else}
-									{#if isDeleting}
-										<Loader2 class="me-2 h-4 w-4 animate-spin" />
+		<div class={!canManage && !canAssignRoles ? 'opacity-60' : ''}>
+			<!-- Current roles -->
+			<div>
+				<p class="mb-2 text-sm font-medium">{m.admin_userDetail_currentRoles()}</p>
+				<div class="flex flex-wrap gap-2">
+					{#each user.roles ?? [] as role (role)}
+						<Badge variant="secondary" class="gap-1 py-1 text-sm">
+							{role}
+							{#if canRemoveRole(role)}
+								<button
+									class="ms-1 inline-flex h-5 w-5 items-center justify-center rounded-full transition-colors hover:bg-muted-foreground/20"
+									aria-label="{m.admin_userDetail_removeRole()} {role}"
+									disabled={isRemovingRole === role}
+									onclick={() => removeRole(role)}
+								>
+									{#if isRemovingRole === role}
+										<Loader2 class="h-3 w-3 animate-spin" />
+									{:else}
+										<X class="h-3 w-3" />
 									{/if}
-									{m.common_delete()}
-								{/if}
-							</Button>
-						</Dialog.Footer>
-					</Dialog.Content>
-				</Dialog.Root>
+								</button>
+							{/if}
+						</Badge>
+					{:else}
+						<span class="text-sm text-muted-foreground">{m.admin_userDetail_noRoles()}</span>
+					{/each}
+				</div>
 			</div>
-		{:else}
-			<Separator />
-			<p class="text-sm text-muted-foreground">
-				{m.admin_userDetail_cannotManage()}
-			</p>
-		{/if}
+
+			<!-- Assign role -->
+			{#if canAssignRoles && availableRoles.length > 0}
+				<div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+					<div class="flex-1">
+						<label for="role-select" class="mb-1 block text-sm font-medium">
+							{m.admin_userDetail_assignRole()}
+						</label>
+						<Select.Root type="single" bind:value={selectedRole}>
+							<Select.Trigger id="role-select">
+								{#if selectedRole}
+									<span>{selectedRole}</span>
+								{:else}
+									<span class="text-muted-foreground"
+										>{m.admin_userDetail_selectRole()}</span
+									>
+								{/if}
+							</Select.Trigger>
+							<Select.Content>
+								{#each availableRoles as role (role)}
+									<Select.Item value={role}>{role}</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
+					</div>
+					<Button
+						size="default"
+						class="shrink-0"
+						disabled={!selectedRole || isAssigningRole || cooldown.active}
+						onclick={assignRole}
+					>
+						{#if cooldown.active}
+							{m.common_waitSeconds({ seconds: cooldown.remaining })}
+						{:else if isAssigningRole}
+							<Loader2 class="me-1 h-4 w-4 animate-spin" />
+							{m.admin_userDetail_assignRole()}
+						{:else}
+							<Plus class="me-1 h-4 w-4" />
+							{m.admin_userDetail_assignRole()}
+						{/if}
+					</Button>
+				</div>
+			{/if}
+
+			<!-- Account actions -->
+			{#if canManage}
+				<Separator class="mt-4" />
+
+				<div class="mt-4 flex flex-wrap items-center gap-2">
+					{#if user.isLockedOut}
+						<Button
+							variant="outline"
+							size="default"
+							disabled={isUnlocking || cooldown.active}
+							onclick={unlockUser}
+						>
+							{#if cooldown.active}
+								{m.common_waitSeconds({ seconds: cooldown.remaining })}
+							{:else if isUnlocking}
+								<Loader2 class="me-2 h-4 w-4 animate-spin" />
+								{m.admin_userDetail_unlockAccount()}
+							{:else}
+								<Unlock class="me-2 h-4 w-4" />
+								{m.admin_userDetail_unlockAccount()}
+							{/if}
+						</Button>
+					{:else}
+						<Button
+							variant="outline"
+							size="default"
+							disabled={isLocking || cooldown.active}
+							onclick={lockUser}
+						>
+							{#if cooldown.active}
+								{m.common_waitSeconds({ seconds: cooldown.remaining })}
+							{:else if isLocking}
+								<Loader2 class="me-2 h-4 w-4 animate-spin" />
+								{m.admin_userDetail_lockAccount()}
+							{:else}
+								<Lock class="me-2 h-4 w-4" />
+								{m.admin_userDetail_lockAccount()}
+							{/if}
+						</Button>
+					{/if}
+
+					<Dialog.Root bind:open={deleteDialogOpen}>
+						<Dialog.Trigger>
+							{#snippet child({ props })}
+								<Button variant="destructive" size="default" {...props}>
+									<Trash2 class="me-2 h-4 w-4" />
+									{m.admin_userDetail_deleteAccount()}
+								</Button>
+							{/snippet}
+						</Dialog.Trigger>
+						<Dialog.Content>
+							<Dialog.Header>
+								<Dialog.Title>{m.admin_userDetail_deleteConfirmTitle()}</Dialog.Title>
+								<Dialog.Description>
+									{m.admin_userDetail_deleteConfirmDescription()}
+								</Dialog.Description>
+							</Dialog.Header>
+							<Dialog.Footer class="flex-col-reverse sm:flex-row">
+								<Button variant="outline" onclick={() => (deleteDialogOpen = false)}>
+									{m.common_cancel()}
+								</Button>
+								<Button
+									variant="destructive"
+									disabled={isDeleting || cooldown.active}
+									onclick={deleteUser}
+								>
+									{#if cooldown.active}
+										{m.common_waitSeconds({ seconds: cooldown.remaining })}
+									{:else}
+										{#if isDeleting}
+											<Loader2 class="me-2 h-4 w-4 animate-spin" />
+										{/if}
+										{m.common_delete()}
+									{/if}
+								</Button>
+							</Dialog.Footer>
+						</Dialog.Content>
+					</Dialog.Root>
+				</div>
+			{/if}
+		</div>
 	</Card.Content>
 </Card.Root>

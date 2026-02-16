@@ -31,4 +31,9 @@ public class AdminRoleResponse
     /// The number of users assigned to this role.
     /// </summary>
     public int UserCount { [UsedImplicitly] get; [UsedImplicitly] init; }
+
+    /// <summary>
+    /// The permission claim values assigned to this role.
+    /// </summary>
+    public IReadOnlyList<string> Permissions { [UsedImplicitly] get; [UsedImplicitly] init; } = [];
 }

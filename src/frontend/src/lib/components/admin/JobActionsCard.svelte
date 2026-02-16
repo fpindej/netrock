@@ -110,7 +110,7 @@
 		<Dialog.Root bind:open={triggerDialogOpen}>
 			<Dialog.Trigger>
 				{#snippet child({ props })}
-					<Button variant="outline" size="sm" {...props}>
+					<Button variant="outline" size="default" {...props}>
 						<Play class="me-2 h-4 w-4" />
 						{m.admin_jobDetail_trigger()}
 					</Button>
@@ -143,7 +143,7 @@
 		{#if isPaused}
 			<Button
 				variant="outline"
-				size="sm"
+				size="default"
 				disabled={isResuming || cooldown.active}
 				onclick={resumeJob}
 			>
@@ -160,7 +160,7 @@
 		{:else}
 			<Button
 				variant="outline"
-				size="sm"
+				size="default"
 				disabled={isPausing || cooldown.active}
 				onclick={pauseJob}
 			>
@@ -180,7 +180,7 @@
 		<Dialog.Root bind:open={deleteDialogOpen}>
 			<Dialog.Trigger>
 				{#snippet child({ props })}
-					<Button variant="destructive" size="sm" {...props}>
+					<Button variant="destructive" size="default" {...props}>
 						<Trash2 class="me-2 h-4 w-4" />
 						{m.admin_jobDetail_delete()}
 					</Button>

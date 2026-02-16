@@ -2,7 +2,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { RolePermissionEditor } from '$lib/components/admin';
-	import { Loader2, Save } from '@lucide/svelte';
+	import { Lock, Loader2, Save } from '@lucide/svelte';
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
@@ -54,6 +54,12 @@
 		<Card.Description>{m.admin_roles_permissionsDescription()}</Card.Description>
 	</Card.Header>
 	<Card.Content class="space-y-4">
+		{#if !canEditPermissions}
+			<div class="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+				<Lock class="h-4 w-4 shrink-0" />
+				<span>{m.common_readOnlyNotice()}</span>
+			</div>
+		{/if}
 		<RolePermissionEditor
 			{permissionGroups}
 			selected={selectedPermissions}
@@ -61,7 +67,7 @@
 			onchange={(perms) => (selectedPermissions = perms)}
 		/>
 		{#if canEditPermissions}
-			<Button size="sm" disabled={isSavingPermissions || cooldown.active} onclick={savePermissions}>
+			<Button size="default" disabled={isSavingPermissions || cooldown.active} onclick={savePermissions}>
 				{#if cooldown.active}
 					{m.common_waitSeconds({ seconds: cooldown.remaining })}
 				{:else if isSavingPermissions}

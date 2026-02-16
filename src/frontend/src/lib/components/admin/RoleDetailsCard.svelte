@@ -2,7 +2,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import { Loader2, Save } from '@lucide/svelte';
+	import { Lock, Loader2, Save } from '@lucide/svelte';
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
@@ -68,6 +68,12 @@
 		<Card.Description>{m.admin_roles_detailDescription()}</Card.Description>
 	</Card.Header>
 	<Card.Content class="space-y-4">
+		{#if !canManageRoles}
+			<div class="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+				<Lock class="h-4 w-4 shrink-0" />
+				<span>{m.common_readOnlyNotice()}</span>
+			</div>
+		{/if}
 		<div>
 			<label for="role-name" class="mb-1 block text-sm font-medium">
 				{m.admin_roles_name()}
@@ -108,7 +114,7 @@
 			{/if}
 		</div>
 		{#if canManageRoles}
-			<Button size="sm" disabled={isSaving || cooldown.active} onclick={saveRole}>
+			<Button size="default" disabled={isSaving || cooldown.active} onclick={saveRole}>
 				{#if cooldown.active}
 					{m.common_waitSeconds({ seconds: cooldown.remaining })}
 				{:else if isSaving}

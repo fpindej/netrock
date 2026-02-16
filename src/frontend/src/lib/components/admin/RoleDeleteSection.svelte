@@ -48,7 +48,7 @@
 		<Dialog.Root bind:open={deleteDialogOpen}>
 			<Dialog.Trigger>
 				{#snippet child({ props })}
-					<Button variant="destructive" size="sm" {...props}>
+					<Button variant="destructive" size="default" {...props}>
 						<Trash2 class="me-2 h-4 w-4" />
 						{m.admin_roles_deleteRole()}
 					</Button>

@@ -38,6 +38,7 @@
 	"common_dangerZone": "Danger Zone",
 	"common_toggleNavMenu": "Toggle navigation menu",
 	"common_waitSeconds": "Wait {seconds}s",
+	"common_readOnlyNotice": "You do not have permission to make changes.",
 
 	"shortcuts_title": "Keyboard Shortcuts",
 	"shortcuts_settings": "Open Settings",
@@ -310,6 +311,7 @@
 	"admin_roles_deleteConfirmDescription": "Are you sure you want to delete this role? This action cannot be undone.",
 	"admin_roles_deleteSuccess": "Role deleted successfully",
 	"admin_roles_deleteError": "Failed to delete role",
+	"admin_roles_noPermissions": "No permissions",
 
 	"admin_jobs_title": "Scheduled Jobs",
 	"admin_jobs_description": "Manage background jobs and view execution history.",

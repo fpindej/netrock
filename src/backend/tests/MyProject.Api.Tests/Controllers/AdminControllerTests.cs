@@ -319,7 +319,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         _factory.AdminService.GetRolesAsync(Arg.Any<CancellationToken>())
             .Returns(new List<AdminRoleOutput>
             {
-                new(Guid.NewGuid(), "Admin", "Administrator role", true, 3)
+                new(Guid.NewGuid(), "Admin", "Administrator role", true, 3, ["users.view", "roles.manage"])
             });
 
         var response = await _client.SendAsync(

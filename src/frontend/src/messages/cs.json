@@ -38,6 +38,7 @@
 	"common_dangerZone": "Nebezpečná zóna",
 	"common_toggleNavMenu": "Přepnout navigační menu",
 	"common_waitSeconds": "Počkejte {seconds}s",
+	"common_readOnlyNotice": "Nemáte oprávnění provádět změny.",
 
 	"shortcuts_title": "Klávesové zkratky",
 	"shortcuts_settings": "Otevřít nastavení",
@@ -310,6 +311,7 @@
 	"admin_roles_deleteConfirmDescription": "Opravdu chcete smazat tuto roli? Tuto akci nelze vrátit zpět.",
 	"admin_roles_deleteSuccess": "Role byla úspěšně smazána",
 	"admin_roles_deleteError": "Nepodařilo se smazat roli",
+	"admin_roles_noPermissions": "Žádná oprávnění",
 
 	"admin_jobs_title": "Naplánované úlohy",
 	"admin_jobs_description": "Správa úloh na pozadí a zobrazení historie spuštění.",
