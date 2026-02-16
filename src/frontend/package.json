@@ -3,6 +3,7 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"packageManager": "pnpm@10.29.3",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -39,6 +40,11 @@
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.55.0",
 		"vite": "^7.3.1"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild"
+		]
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.11.0",
