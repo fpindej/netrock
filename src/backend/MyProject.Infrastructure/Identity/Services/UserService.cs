@@ -8,9 +8,9 @@ using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity;
 using MyProject.Application.Identity.Constants;
 using MyProject.Application.Identity.Dtos;
-using MyProject.Shared;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Persistence;
+using MyProject.Shared;
 
 namespace MyProject.Infrastructure.Identity.Services;
 

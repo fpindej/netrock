@@ -1,7 +1,7 @@
 using FluentValidation.TestHelper;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
-using MyProject.WebApi.Features.Users.Dtos.DeleteAccount;
 using MyProject.WebApi.Features.Users.Dtos;
+using MyProject.WebApi.Features.Users.Dtos.DeleteAccount;
 
 namespace MyProject.Api.Tests.Validators;
 

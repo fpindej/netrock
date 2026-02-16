@@ -3,8 +3,8 @@ using Hangfire.PostgreSql;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyProject.Application.Features.Jobs;
-using MyProject.Infrastructure.Features.Jobs.Options;
 using MyProject.Infrastructure.Features.Jobs.Examples;
+using MyProject.Infrastructure.Features.Jobs.Options;
 using MyProject.Infrastructure.Features.Jobs.RecurringJobs;
 using MyProject.Infrastructure.Features.Jobs.Services;
 

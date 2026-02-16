@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyProject.Application.Features.Jobs;
 using MyProject.Application.Features.Jobs.Dtos;
-using MyProject.Shared;
 using MyProject.Infrastructure.Features.Jobs.Extensions;
 using MyProject.Infrastructure.Features.Jobs.Models;
 using MyProject.Infrastructure.Persistence;
+using MyProject.Shared;
 
 namespace MyProject.Infrastructure.Features.Jobs.Services;
 

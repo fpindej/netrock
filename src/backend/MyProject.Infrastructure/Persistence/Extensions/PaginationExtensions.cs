@@ -1,5 +1,5 @@
-using MyProject.Shared;
 using MyProject.Infrastructure.Persistence.Exceptions;
+using MyProject.Shared;
 
 namespace MyProject.Infrastructure.Persistence.Extensions;
 

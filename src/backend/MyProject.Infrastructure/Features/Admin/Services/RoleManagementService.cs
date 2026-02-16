@@ -6,9 +6,9 @@ using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Identity.Constants;
-using MyProject.Shared;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Persistence;
+using MyProject.Shared;
 
 namespace MyProject.Infrastructure.Features.Admin.Services;
 

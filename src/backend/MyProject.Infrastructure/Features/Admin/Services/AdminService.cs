@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
@@ -10,11 +11,11 @@ using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Features.Email;
 using MyProject.Application.Identity.Constants;
-using MyProject.Shared;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Features.Email.Options;
 using MyProject.Infrastructure.Persistence;
 using MyProject.Infrastructure.Persistence.Extensions;
+using MyProject.Shared;
 
 namespace MyProject.Infrastructure.Features.Admin.Services;
 

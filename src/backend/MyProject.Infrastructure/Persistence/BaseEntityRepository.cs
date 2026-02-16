@@ -1,11 +1,11 @@
 using System.Linq.Expressions;
-using MyProject.Domain.Entities;
-using MyProject.Shared;
-using static MyProject.Shared.ErrorMessages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyProject.Application.Persistence;
+using MyProject.Domain.Entities;
 using MyProject.Infrastructure.Persistence.Extensions;
+using MyProject.Shared;
+using static MyProject.Shared.ErrorMessages;
 
 namespace MyProject.Infrastructure.Persistence;
 

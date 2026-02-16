@@ -9,11 +9,11 @@ using Microsoft.IdentityModel.Tokens;
 using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies.Constants;
+using MyProject.Application.Features.Authentication;
 using MyProject.Infrastructure.Cryptography;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Features.Authentication.Options;
 using MyProject.Infrastructure.Features.Authentication.Services;
-using MyProject.Application.Features.Authentication;
 
 namespace MyProject.Infrastructure.Features.Authentication.Extensions;
 

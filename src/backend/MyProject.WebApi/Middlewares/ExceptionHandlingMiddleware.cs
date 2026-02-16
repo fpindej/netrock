@@ -1,7 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
-using MyProject.Shared;
 using MyProject.Infrastructure.Persistence.Exceptions;
+using MyProject.Shared;
 
 namespace MyProject.WebApi.Middlewares;
 
