@@ -28,6 +28,12 @@
         </Content>
     </ItemGroup>
 
+    <!-- Exclude non-production appsettings from publish output (defense-in-depth with Dockerfile) -->
+    <ItemGroup>
+        <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
+        <Content Update="appsettings.Testing.json" CopyToPublishDirectory="Never" />
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="../MyProject.Infrastructure/MyProject.Infrastructure.csproj" />
     </ItemGroup>
