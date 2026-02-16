@@ -2,7 +2,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import { browserClient, getErrorMessage, isRateLimited, getRetryAfterSeconds } from '$lib/api';
+	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -25,16 +25,6 @@
 	let deleteDialogOpen = $state(false);
 	const cooldown = createCooldown();
 
-	function handleRateLimited(response: Response) {
-		const retryAfter = getRetryAfterSeconds(response);
-		if (retryAfter) cooldown.start(retryAfter);
-		toast.error(m.error_rateLimited(), {
-			description: retryAfter
-				? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-				: m.error_rateLimitedDescription()
-		});
-	}
-
 	async function triggerJob() {
 		isTriggering = true;
 		const { response, error } = await browserClient.POST('/api/v1/admin/jobs/{jobId}/trigger', {
@@ -46,10 +36,11 @@
 		if (response.ok) {
 			toast.success(m.admin_jobDetail_triggerSuccess());
 			await invalidateAll();
-		} else if (isRateLimited(response)) {
-			handleRateLimited(response);
 		} else {
-			toast.error(getErrorMessage(error, m.admin_jobDetail_triggerError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_jobDetail_triggerError()
+			});
 		}
 	}
 
@@ -63,10 +54,11 @@
 		if (response.ok) {
 			toast.success(m.admin_jobDetail_pauseSuccess());
 			await invalidateAll();
-		} else if (isRateLimited(response)) {
-			handleRateLimited(response);
 		} else {
-			toast.error(getErrorMessage(error, m.admin_jobDetail_pauseError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_jobDetail_pauseError()
+			});
 		}
 	}
 
@@ -80,10 +72,11 @@
 		if (response.ok) {
 			toast.success(m.admin_jobDetail_resumeSuccess());
 			await invalidateAll();
-		} else if (isRateLimited(response)) {
-			handleRateLimited(response);
 		} else {
-			toast.error(getErrorMessage(error, m.admin_jobDetail_resumeError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_jobDetail_resumeError()
+			});
 		}
 	}
 
@@ -98,10 +91,11 @@
 		if (response.ok) {
 			toast.success(m.admin_jobDetail_deleteSuccess());
 			await goto(resolve('/admin/jobs'));
-		} else if (isRateLimited(response)) {
-			handleRateLimited(response);
 		} else {
-			toast.error(getErrorMessage(error, m.admin_jobDetail_deleteError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_jobDetail_deleteError()
+			});
 		}
 	}
 </script>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { browserClient, getErrorMessage, isRateLimited, getRetryAfterSeconds } from '$lib/api';
+	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { cn } from '$lib/utils';
 	import { createShake, createCooldown } from '$lib/state';
 	import { resolve } from '$app/paths';
@@ -33,20 +33,18 @@
 
 			if (response.ok) {
 				isSubmitted = true;
-			} else if (isRateLimited(response)) {
-				const retryAfter = getRetryAfterSeconds(response);
-				if (retryAfter) cooldown.start(retryAfter);
-				toast.error(m.error_rateLimited(), {
-					description: retryAfter
-						? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-						: m.error_rateLimitedDescription()
-				});
-				shake.trigger();
 			} else {
-				toast.error(m.auth_forgotPassword_error(), {
-					description: getErrorMessage(apiError, m.auth_forgotPassword_error())
+				handleMutationError(response, apiError, {
+					cooldown,
+					fallback: m.auth_forgotPassword_error(),
+					onRateLimited: () => shake.trigger(),
+					onError() {
+						toast.error(m.auth_forgotPassword_error(), {
+							description: getErrorMessage(apiError, m.auth_forgotPassword_error())
+						});
+						shake.trigger();
+					}
 				});
-				shake.trigger();
 			}
 		} catch {
 			toast.error(m.auth_forgotPassword_error());

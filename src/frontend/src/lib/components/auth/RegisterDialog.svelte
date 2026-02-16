@@ -4,14 +4,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { PhoneInput } from '$lib/components/ui/phone-input';
-	import {
-		browserClient,
-		isValidationProblemDetails,
-		mapFieldErrors,
-		getErrorMessage,
-		isRateLimited,
-		getRetryAfterSeconds
-	} from '$lib/api';
+	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import * as m from '$lib/paraglide/messages';
 	import { toast } from '$lib/components/ui/sonner';
 	import { Loader2 } from '@lucide/svelte';
@@ -82,24 +75,18 @@
 				const registeredEmail = email;
 				open = false;
 				onSuccess?.(registeredEmail);
-			} else if (isRateLimited(response)) {
-				const retryAfter = getRetryAfterSeconds(response);
-				if (retryAfter) cooldown.start(retryAfter);
-				toast.error(m.error_rateLimited(), {
-					description: retryAfter
-						? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-						: m.error_rateLimitedDescription()
-				});
-			} else if (apiError) {
-				// Extract validation errors from the errors object if present
-				if (isValidationProblemDetails(apiError)) {
-					fieldErrors = mapFieldErrors(apiError.errors);
-					fieldShakes.triggerFields(Object.keys(fieldErrors));
-				} else {
-					error = getErrorMessage(apiError, m.auth_register_failed());
-				}
 			} else {
-				error = m.auth_register_failed();
+				handleMutationError(response, apiError, {
+					cooldown,
+					fallback: m.auth_register_failed(),
+					onValidationError(errors) {
+						fieldErrors = errors;
+						fieldShakes.triggerFields(Object.keys(errors));
+					},
+					onError() {
+						error = getErrorMessage(apiError, m.auth_register_failed());
+					}
+				});
 			}
 		} catch {
 			error = m.auth_register_failed();

@@ -5,7 +5,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Separator } from '$lib/components/ui/separator';
-	import { browserClient, getErrorMessage, isRateLimited, getRetryAfterSeconds } from '$lib/api';
+	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -63,16 +63,6 @@
 		).filter((role) => !targetRoles.includes(role))
 	);
 
-	function handleRateLimited(response: Response) {
-		const retryAfter = getRetryAfterSeconds(response);
-		if (retryAfter) cooldown.start(retryAfter);
-		toast.error(m.error_rateLimited(), {
-			description: retryAfter
-				? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-				: m.error_rateLimitedDescription()
-		});
-	}
-
 	function canRemoveRole(role: string): boolean {
 		return canAssignRoles && getRoleRank(role) < callerRank;
 	}
@@ -91,10 +81,11 @@
 			toast.success(m.admin_userDetail_roleAssigned());
 			selectedRole = '';
 			await invalidateAll();
-		} else if (isRateLimited(response)) {
-			handleRateLimited(response);
 		} else {
-			toast.error(getErrorMessage(error, m.admin_userDetail_roleAssignError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_userDetail_roleAssignError()
+			});
 		}
 	}
 
@@ -111,10 +102,11 @@
 		if (response.ok) {
 			toast.success(m.admin_userDetail_roleRemoved());
 			await invalidateAll();
-		} else if (isRateLimited(response)) {
-			handleRateLimited(response);
 		} else {
-			toast.error(getErrorMessage(error, m.admin_userDetail_roleRemoveError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_userDetail_roleRemoveError()
+			});
 		}
 	}
 
@@ -129,10 +121,11 @@
 		if (response.ok) {
 			toast.success(m.admin_userDetail_lockSuccess());
 			await invalidateAll();
-		} else if (isRateLimited(response)) {
-			handleRateLimited(response);
 		} else {
-			toast.error(getErrorMessage(error, m.admin_userDetail_lockError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_userDetail_lockError()
+			});
 		}
 	}
 
@@ -146,10 +139,11 @@
 		if (response.ok) {
 			toast.success(m.admin_userDetail_unlockSuccess());
 			await invalidateAll();
-		} else if (isRateLimited(response)) {
-			handleRateLimited(response);
 		} else {
-			toast.error(getErrorMessage(error, m.admin_userDetail_unlockError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_userDetail_unlockError()
+			});
 		}
 	}
 
@@ -164,10 +158,11 @@
 		if (response.ok) {
 			toast.success(m.admin_userDetail_deleteSuccess());
 			await goto(resolve('/admin/users'));
-		} else if (isRateLimited(response)) {
-			handleRateLimited(response);
 		} else {
-			toast.error(getErrorMessage(error, m.admin_userDetail_deleteError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_userDetail_deleteError()
+			});
 		}
 	}
 </script>

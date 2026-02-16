@@ -3,7 +3,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Loader2, Trash2 } from '@lucide/svelte';
-	import { browserClient, getErrorMessage, isRateLimited, getRetryAfterSeconds } from '$lib/api';
+	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -31,16 +31,11 @@
 		if (response.ok) {
 			toast.success(m.admin_roles_deleteSuccess());
 			await goto(resolve('/admin/roles'));
-		} else if (isRateLimited(response)) {
-			const retryAfter = getRetryAfterSeconds(response);
-			if (retryAfter) cooldown.start(retryAfter);
-			toast.error(m.error_rateLimited(), {
-				description: retryAfter
-					? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-					: m.error_rateLimitedDescription()
-			});
 		} else {
-			toast.error(getErrorMessage(error, m.admin_roles_deleteError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_roles_deleteError()
+			});
 		}
 	}
 </script>

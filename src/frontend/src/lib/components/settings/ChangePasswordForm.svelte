@@ -4,14 +4,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as m from '$lib/paraglide/messages';
-	import {
-		browserClient,
-		isValidationProblemDetails,
-		mapFieldErrors,
-		getErrorMessage,
-		isRateLimited,
-		getRetryAfterSeconds
-	} from '$lib/api';
+	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -55,21 +48,23 @@
 				toast.success(m.settings_changePassword_success());
 				await invalidateAll();
 				await goto(resolve('/login'));
-			} else if (isRateLimited(response)) {
-				const retryAfter = getRetryAfterSeconds(response);
-				if (retryAfter) cooldown.start(retryAfter);
-				toast.error(m.error_rateLimited(), {
-					description: retryAfter
-						? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-						: m.error_rateLimitedDescription()
-				});
-			} else if (isValidationProblemDetails(apiError)) {
-				fieldErrors = mapFieldErrors(apiError.errors);
-				fieldShakes.triggerFields(Object.keys(fieldErrors));
-				toast.error(getErrorMessage(apiError, m.settings_changePassword_error()));
 			} else {
-				const description = getErrorMessage(apiError, '');
-				toast.error(m.settings_changePassword_error(), description ? { description } : undefined);
+				handleMutationError(response, apiError, {
+					cooldown,
+					fallback: m.settings_changePassword_error(),
+					onValidationError(errors) {
+						fieldErrors = errors;
+						fieldShakes.triggerFields(Object.keys(errors));
+						toast.error(getErrorMessage(apiError, m.settings_changePassword_error()));
+					},
+					onError() {
+						const description = getErrorMessage(apiError, '');
+						toast.error(
+							m.settings_changePassword_error(),
+							description ? { description } : undefined
+						);
+					}
+				});
 			}
 		} catch {
 			toast.error(m.settings_changePassword_error());

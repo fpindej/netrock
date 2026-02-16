@@ -5,7 +5,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as m from '$lib/paraglide/messages';
-	import { browserClient, getErrorMessage, isRateLimited, getRetryAfterSeconds } from '$lib/api';
+	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
 	import { createFieldShakes, createCooldown } from '$lib/state';
@@ -86,21 +86,16 @@
 				toast.success(m.profile_avatar_updateSuccess());
 				open = false;
 				await invalidateAll();
-			} else if (isRateLimited(response)) {
-				const retryAfter = getRetryAfterSeconds(response);
-				if (retryAfter) cooldown.start(retryAfter);
-				toast.error(m.error_rateLimited(), {
-					description: retryAfter
-						? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-						: m.error_rateLimitedDescription()
-				});
 			} else {
-				const errorMessage = getErrorMessage(apiError, '');
-				toast.error(
-					m.profile_avatar_updateError(),
-					errorMessage ? { description: errorMessage } : undefined
-				);
-				fieldShakes.trigger('avatarUrl');
+				handleMutationError(response, apiError, {
+					cooldown,
+					fallback: m.profile_avatar_updateError(),
+					onError() {
+						const msg = getErrorMessage(apiError, '');
+						toast.error(m.profile_avatar_updateError(), msg ? { description: msg } : undefined);
+						fieldShakes.trigger('avatarUrl');
+					}
+				});
 			}
 		} catch {
 			toast.error(m.profile_avatar_updateError());

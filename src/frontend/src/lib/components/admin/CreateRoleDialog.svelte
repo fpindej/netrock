@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Loader2 } from '@lucide/svelte';
-	import { browserClient, getErrorMessage, isRateLimited, getRetryAfterSeconds } from '$lib/api';
+	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
 	import { createCooldown } from '$lib/state';
@@ -36,16 +36,11 @@
 			description = '';
 			open = false;
 			await invalidateAll();
-		} else if (isRateLimited(response)) {
-			const retryAfter = getRetryAfterSeconds(response);
-			if (retryAfter) cooldown.start(retryAfter);
-			toast.error(m.error_rateLimited(), {
-				description: retryAfter
-					? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-					: m.error_rateLimitedDescription()
-			});
 		} else {
-			toast.error(getErrorMessage(error, m.admin_roles_createError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_roles_createError()
+			});
 		}
 	}
 </script>

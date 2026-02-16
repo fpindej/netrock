@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { RolePermissionEditor } from '$lib/components/admin';
 	import { Loader2, Save } from '@lucide/svelte';
-	import { browserClient, getErrorMessage, isRateLimited, getRetryAfterSeconds } from '$lib/api';
+	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
 	import type { Cooldown } from '$lib/state';
@@ -39,16 +39,11 @@
 		if (response.ok) {
 			toast.success(m.admin_roles_permissionsSaved());
 			await invalidateAll();
-		} else if (isRateLimited(response)) {
-			const retryAfter = getRetryAfterSeconds(response);
-			if (retryAfter) cooldown.start(retryAfter);
-			toast.error(m.error_rateLimited(), {
-				description: retryAfter
-					? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-					: m.error_rateLimitedDescription()
-			});
 		} else {
-			toast.error(getErrorMessage(error, m.admin_roles_permissionsSaveError()));
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_roles_permissionsSaveError()
+			});
 		}
 	}
 </script>

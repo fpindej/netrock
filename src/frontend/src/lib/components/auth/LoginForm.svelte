@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { browserClient, getErrorMessage, isRateLimited, getRetryAfterSeconds } from '$lib/api';
+	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { cn } from '$lib/utils';
 	import { createShake, createCooldown } from '$lib/state';
 	import { onMount } from 'svelte';
@@ -61,26 +61,20 @@
 				await delay(500);
 				await invalidateAll();
 				await goto(resolve('/'));
-			} else if (isRateLimited(response)) {
-				const retryAfter = getRetryAfterSeconds(response);
-				if (retryAfter) cooldown.start(retryAfter);
-				toast.error(m.error_rateLimited(), {
-					description: retryAfter
-						? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-						: m.error_rateLimitedDescription()
-				});
-				shake.trigger();
 			} else {
-				let errorMessage = '';
-				if (response.status === 401) {
-					errorMessage = getErrorMessage(apiError, m.auth_login_invalidCredentials());
-				} else {
-					errorMessage = getErrorMessage(apiError, m.auth_login_error());
-				}
-				toast.error(m.auth_login_failed(), {
-					description: errorMessage
+				handleMutationError(response, apiError, {
+					cooldown,
+					fallback: m.auth_login_error(),
+					onRateLimited: () => shake.trigger(),
+					onError() {
+						const errorMessage =
+							response.status === 401
+								? getErrorMessage(apiError, m.auth_login_invalidCredentials())
+								: getErrorMessage(apiError, m.auth_login_error());
+						toast.error(m.auth_login_failed(), { description: errorMessage });
+						shake.trigger();
+					}
 				});
-				shake.trigger();
 			}
 		} catch {
 			toast.error(m.auth_login_failed(), {

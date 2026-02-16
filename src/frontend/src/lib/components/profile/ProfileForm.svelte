@@ -8,16 +8,9 @@
 	import { ProfileHeader } from '$lib/components/profile';
 	import type { User } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
-	import { browserClient } from '$lib/api';
+	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
-	import {
-		isValidationProblemDetails,
-		mapFieldErrors,
-		getErrorMessage,
-		isRateLimited,
-		getRetryAfterSeconds
-	} from '$lib/api';
 	import { createFieldShakes, createCooldown } from '$lib/state';
 
 	interface Props {
@@ -66,24 +59,23 @@
 			if (response.ok) {
 				toast.success(m.profile_personalInfo_updateSuccess());
 				await invalidateAll();
-			} else if (isRateLimited(response)) {
-				const retryAfter = getRetryAfterSeconds(response);
-				if (retryAfter) cooldown.start(retryAfter);
-				toast.error(m.error_rateLimited(), {
-					description: retryAfter
-						? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-						: m.error_rateLimitedDescription()
-				});
-			} else if (isValidationProblemDetails(apiError)) {
-				fieldErrors = mapFieldErrors(apiError.errors);
-				fieldShakes.triggerFields(Object.keys(fieldErrors));
-				toast.error(getErrorMessage(apiError, m.profile_personalInfo_updateError()));
 			} else {
-				const description = getErrorMessage(apiError, '');
-				toast.error(
-					m.profile_personalInfo_updateError(),
-					description ? { description } : undefined
-				);
+				handleMutationError(response, apiError, {
+					cooldown,
+					fallback: m.profile_personalInfo_updateError(),
+					onValidationError(errors) {
+						fieldErrors = errors;
+						fieldShakes.triggerFields(Object.keys(errors));
+						toast.error(getErrorMessage(apiError, m.profile_personalInfo_updateError()));
+					},
+					onError() {
+						const description = getErrorMessage(apiError, '');
+						toast.error(
+							m.profile_personalInfo_updateError(),
+							description ? { description } : undefined
+						);
+					}
+				});
 			}
 		} catch {
 			toast.error(m.profile_personalInfo_updateError());
