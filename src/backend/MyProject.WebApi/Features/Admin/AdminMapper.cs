@@ -2,6 +2,7 @@ using MyProject.Application.Features.Admin.Dtos;
 using MyProject.WebApi.Features.Admin.Dtos;
 using MyProject.WebApi.Features.Admin.Dtos.AssignRole;
 using MyProject.WebApi.Features.Admin.Dtos.CreateRole;
+using MyProject.WebApi.Features.Admin.Dtos.CreateUser;
 using MyProject.WebApi.Features.Admin.Dtos.ListUsers;
 using MyProject.WebApi.Features.Admin.Dtos.SetPermissions;
 using MyProject.WebApi.Features.Admin.Dtos.UpdateRole;
@@ -72,6 +73,11 @@ internal static class AdminMapper
     /// Maps an <see cref="UpdateRoleRequest"/> to an <see cref="UpdateRoleInput"/>.
     /// </summary>
     public static UpdateRoleInput ToInput(this UpdateRoleRequest request) => new(request.Name, request.Description);
+
+    /// <summary>
+    /// Maps a <see cref="CreateUserRequest"/> to a <see cref="CreateUserInput"/>.
+    /// </summary>
+    public static CreateUserInput ToInput(this CreateUserRequest request) => new(request.Email, request.FirstName, request.LastName);
 
     /// <summary>
     /// Maps a <see cref="SetPermissionsRequest"/> to a <see cref="SetRolePermissionsInput"/>.
