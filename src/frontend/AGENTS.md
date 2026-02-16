@@ -22,7 +22,7 @@
 | -------------------------- | ------ | -------------------------------------------------------------------------------- |
 | `engine-strict`            | `true` | Fail install if Node version doesn't match `engines` in `package.json`           |
 | `strict-peer-dependencies` | `true` | Fail on unmet peer deps instead of warning                                       |
-| `prefer-frozen-lockfile`   | `true` | Warn if lockfile is out of date in dev; CI uses `--frozen-lockfile` to fail hard |
+| `frozen-lockfile`          | `true` | Fail if lockfile is out of date; enforced in dev, CI, and Docker builds          |
 
 Both `Dockerfile` and `Dockerfile.local` COPY `.npmrc` into the image so Docker builds respect these settings.
 
