@@ -91,7 +91,7 @@ function Write-Success {
     Write-Host "[OK] $Text" -ForegroundColor Green
 }
 
-function Write-Warning {
+function Write-WarnMsg {
     param([string]$Text)
     Write-Host "[WARN] $Text" -ForegroundColor Yellow
 }
@@ -154,6 +154,7 @@ function Test-Prerequisites {
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) { $missing += "git" }
     if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { $missing += "dotnet" }
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { $missing += "docker" }
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) { $missing += "node" }
 
     if ($missing.Count -gt 0) {
         Write-ErrorMessage "Missing required tools: $($missing -join ', ')"
@@ -276,13 +277,22 @@ function Read-Checklist {
 # -----------------------------------------------------------------------------
 # Main Script
 # -----------------------------------------------------------------------------
-Clear-Host
+$startTime = Get-Date
+
+Write-Host ""
 Write-Header "Web API Template Initialization"
+
+# Verify we're in the project root
+if (-not (Test-Path (Join-Path $ScriptDir "src/backend")) -or -not (Test-Path (Join-Path $ScriptDir "src/frontend"))) {
+    Write-ErrorMessage "This script must be run from the project root directory."
+    Write-Info "Expected to find src/backend and src/frontend directories."
+    exit 1
+}
 
 # Check prerequisites
 Write-Step "Checking prerequisites..."
 Test-Prerequisites
-Write-Success "All prerequisites found (git, dotnet, docker)"
+Write-Success "All prerequisites found (git, dotnet, docker, node)"
 
 # -----------------------------------------------------------------------------
 # Step 1: Project Name
@@ -408,7 +418,7 @@ Write-Host ""
 
 $proceed = Read-YesNo "Proceed with initialization?" $true
 if (-not $proceed) {
-    Write-Warning "Aborted by user"
+    Write-WarnMsg "Aborted by user"
     exit 0
 }
 
@@ -435,8 +445,10 @@ if (Test-Path $frontendEnvExample) {
 $rootEnvExample = Join-Path $ScriptDir ".env.example"
 $rootEnv = Join-Path $ScriptDir ".env"
 if (Test-Path $rootEnvExample) {
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
     $jwtBytes = New-Object byte[] 48
-    [System.Security.Cryptography.RandomNumberGenerator]::Fill($jwtBytes)
+    $rng.GetBytes($jwtBytes)
+    $rng.Dispose()
     $jwtSecret = [Convert]::ToBase64String($jwtBytes) -replace '[/+=]', '' | ForEach-Object { $_.Substring(0, [Math]::Min(64, $_.Length)) }
     $envContent = [System.IO.File]::ReadAllText($rootEnvExample)
     $envContent = $envContent -replace '(?m)^JWT_SECRET_KEY=.*$', "JWT_SECRET_KEY=$jwtSecret"
@@ -629,7 +641,7 @@ if ($CreateMigration) {
     $ErrorActionPreference = "Stop"
 
     if ($migrationFailed) {
-        Write-Warning "Migration step failed. You can create it manually later with:"
+        Write-WarnMsg "Migration step failed. You can create it manually later with:"
         Write-Host "  dotnet ef migrations add Initial --project src/backend/$NewName.Infrastructure --startup-project src/backend/$NewName.WebApi --output-dir Persistence/Migrations" -ForegroundColor DarkGray
     }
     else {
@@ -676,10 +688,16 @@ $ErrorActionPreference = "Stop"
 
 Write-Success "Init scripts removed"
 
-# Schedule self-deletion after script exits
+# Schedule self-deletion after script exits (cross-platform)
+$pwshExe = (Get-Process -Id $PID).Path
 $cleanupScript = "Start-Sleep -Seconds 2; Remove-Item -LiteralPath '$initPs1' -Force -ErrorAction SilentlyContinue"
 $encodedCmd = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cleanupScript))
-Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-EncodedCommand", $encodedCmd
+$startArgs = @{
+    FilePath     = $pwshExe
+    ArgumentList = "-NoProfile", "-EncodedCommand", $encodedCmd
+}
+if ($env:OS -eq 'Windows_NT') { $startArgs.WindowStyle = "Hidden" }
+Start-Process @startArgs
 
 # Step 6: Start Docker
 if ($StartDocker) {
@@ -687,7 +705,7 @@ if ($StartDocker) {
     $ErrorActionPreference = "Continue"
     docker compose -f docker-compose.local.yml up -d --build
     if ($LASTEXITCODE -ne 0) {
-        Write-Warning "Docker failed to start. Is Docker Desktop running?"
+        Write-WarnMsg "Docker failed to start. Is Docker Desktop running?"
         Write-Info "You can start containers manually later with:"
         Write-Host "  docker compose -f docker-compose.local.yml up -d --build" -ForegroundColor DarkGray
     }
@@ -720,6 +738,9 @@ Write-Host "  Frontend:    " -NoNewline; Write-Host "http://localhost:$FrontendP
 Write-Host "  API Docs:    " -NoNewline; Write-Host "http://localhost:$ApiPort/scalar" -ForegroundColor Cyan
 Write-Host "  Hangfire:    " -NoNewline; Write-Host "http://localhost:$ApiPort/hangfire" -ForegroundColor Cyan
 Write-Host "  Seq (logs):  " -NoNewline; Write-Host "http://localhost:$SeqPort" -ForegroundColor Cyan
+Write-Host ""
+$elapsed = [math]::Round(((Get-Date) - $startTime).TotalSeconds)
+Write-Host "  Completed in ${elapsed}s" -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "  Happy coding!" -ForegroundColor DarkGray
 Write-Host ""

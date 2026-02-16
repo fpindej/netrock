@@ -140,6 +140,7 @@ check_prerequisites() {
     command -v git >/dev/null 2>&1 || missing+=("git")
     command -v dotnet >/dev/null 2>&1 || missing+=("dotnet")
     command -v docker >/dev/null 2>&1 || missing+=("docker")
+    command -v node >/dev/null 2>&1 || missing+=("node")
 
     if [[ ${#missing[@]} -gt 0 ]]; then
         print_error "Missing required tools: ${missing[*]}"
@@ -300,13 +301,25 @@ done
 # ─────────────────────────────────────────────────────────────────────────────
 # Main Script
 # ─────────────────────────────────────────────────────────────────────────────
-clear
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+
+START_TIME=$(date +%s)
+
+echo ""
 print_header "Web API Template Initialization"
+
+# Verify we're in the project root
+if [[ ! -d "src/backend" || ! -d "src/frontend" ]]; then
+    print_error "This script must be run from the project root directory."
+    print_info "Expected to find src/backend and src/frontend directories."
+    exit 1
+fi
 
 # Check prerequisites
 print_step "Checking prerequisites..."
 check_prerequisites
-print_success "All prerequisites found (git, dotnet, docker)"
+print_success "All prerequisites found (git, dotnet, docker, node)"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Step 1: Project Name
@@ -646,8 +659,13 @@ print_success "Init scripts removed"
 # Step 6: Start Docker
 if [[ "$START_DOCKER" == "y" ]]; then
     print_step "Starting Docker containers..."
-    docker compose -f docker-compose.local.yml up -d --build
-    print_success "Docker containers started"
+    if docker compose -f docker-compose.local.yml up -d --build; then
+        print_success "Docker containers started"
+    else
+        print_warning "Docker failed to start. Is Docker Desktop running?"
+        print_info "You can start containers manually later with:"
+        echo "  docker compose -f docker-compose.local.yml up -d --build"
+    fi
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -673,6 +691,8 @@ echo -e "
   API Docs:    ${CYAN}http://localhost:$API_PORT/scalar${NC}
   Hangfire:    ${CYAN}http://localhost:$API_PORT/hangfire${NC}
   Seq (logs):  ${CYAN}http://localhost:$SEQ_PORT${NC}
+
+  ${DIM}Completed in $(($(date +%s) - START_TIME))s${NC}
 
   ${DIM}Happy coding!${NC}
 "
