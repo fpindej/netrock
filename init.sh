@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #══════════════════════════════════════════════════════════════════════════════
-#  Web API Template - Project Initialization Script
+#  Project Initialization Script
 #══════════════════════════════════════════════════════════════════════════════
 #
 #  Usage:
@@ -107,7 +107,7 @@ prompt_value() {
 }
 
 show_help() {
-    echo "Web API Template - Project Initialization Script"
+    echo "Project Initialization Script"
     echo ""
     echo "Usage:"
     echo "  ./init.sh                     Interactive mode"
@@ -309,7 +309,7 @@ cd "$SCRIPT_DIR"
 START_TIME=$(date +%s)
 
 echo ""
-print_header "Web API Template Initialization"
+print_header "Project Initialization"
 
 # Verify we're in the project root
 if [[ ! -d "src/backend" || ! -d "src/frontend" ]]; then
@@ -664,7 +664,7 @@ if [[ "$START_DOCKER" == "y" ]]; then
     if docker compose -f docker-compose.local.yml up -d --build; then
         print_success "Docker containers started"
     else
-        print_warning "Docker failed to start. Is Docker Desktop running?"
+        print_warning "Docker failed to start. Is Docker running?"
         print_info "You can start containers manually later with:"
         echo "  docker compose -f docker-compose.local.yml up -d --build"
     fi

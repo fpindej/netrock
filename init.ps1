@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Web API Template - Project Initialization Script
+    Project Initialization Script
 
 .DESCRIPTION
     Initializes a new project from the Web API template by:
@@ -281,7 +281,7 @@ function Read-Checklist {
 $startTime = Get-Date
 
 Write-Host ""
-Write-Header "Web API Template Initialization"
+Write-Header "Project Initialization"
 
 # Verify we're in the project root
 if (-not (Test-Path (Join-Path $ScriptDir "src/backend")) -or -not (Test-Path (Join-Path $ScriptDir "src/frontend"))) {
@@ -706,7 +706,7 @@ if ($StartDocker) {
     $ErrorActionPreference = "Continue"
     docker compose -f docker-compose.local.yml up -d --build
     if ($LASTEXITCODE -ne 0) {
-        Write-WarnMsg "Docker failed to start. Is Docker Desktop running?"
+        Write-WarnMsg "Docker failed to start. Is Docker running?"
         Write-Info "You can start containers manually later with:"
         Write-Host "  docker compose -f docker-compose.local.yml up -d --build" -ForegroundColor DarkGray
     }
