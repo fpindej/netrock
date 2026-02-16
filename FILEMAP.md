@@ -21,7 +21,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Infrastructure EF config** (change mapping) | Run new migration |
 | **`MyProjectDbContext`** (add DbSet) | Run new migration |
 | **Infrastructure service** (change behavior) | Verify controller still maps correctly, verify error messages still apply |
-| **Infrastructure Options class** | `appsettings.json`, `appsettings.Development.json`, `.env.example`, DI registration |
+| **Infrastructure Options class** | `appsettings.json`, `appsettings.Development.json` (excluded from production publish — see `StripDevConfig`), `.env.example`, DI registration |
 | **DI extension** (new service registration) | `Program.cs` must call the extension |
 | **WebApi controller** (change route/method) | Frontend API calls, `v1.d.ts` regeneration |
 | **WebApi request DTO** (add/rename/remove property) | Validator, mapper, frontend types, frontend form |

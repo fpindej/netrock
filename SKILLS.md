@@ -139,7 +139,7 @@ Step-by-step recipes for common operations. Each recipe lists exact paths, patte
        public string Value { get; init; } = string.Empty;
    }
    ```
-3. Add section to `src/backend/MyProject.WebApi/appsettings.json` (and `appsettings.Development.json` if dev differs)
+3. Add section to `src/backend/MyProject.WebApi/appsettings.json` (and `appsettings.Development.json` if dev differs — note: dev/test appsettings are excluded from production publish via `StripDevConfig`; see backend `AGENTS.md` → Hosting Configuration → Production build hygiene)
 4. Register in DI extension:
    ```csharp
    services.AddOptions<{Name}Options>()
