@@ -197,6 +197,8 @@
 	"error_500_description": "The server is having a bad day. Our code monkeys are working hard to fix it.",
 	"error_default_title": "Computer Says No",
 	"error_default_description": "Something went wrong. We're not sure what, but it's probably not good.",
+	"error_serverError": "Something went wrong",
+	"error_serverErrorDescription": "This one's on us, not you. Please try again in a moment.",
 	"error_goHome": "Go back home",
 
 	"settings_deleteAccount_dangerDescription": "Once you delete your account, there is no going back. All your data will be permanently removed.",

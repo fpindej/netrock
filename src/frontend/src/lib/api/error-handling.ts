@@ -160,6 +160,15 @@ export function getFetchErrorCode(error: unknown): string | undefined {
 }
 
 /**
+ * Returns true when the response indicates a server-side error (5xx).
+ * Use this to suppress raw backend error details that may contain
+ * internal information (e.g. third-party API keys, stack traces).
+ */
+export function isServerError(response: Response): boolean {
+	return response.status >= 500;
+}
+
+/**
  * Returns true when the response is a 429 Too Many Requests.
  */
 export function isRateLimited(response: Response): boolean {

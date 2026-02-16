@@ -11,6 +11,7 @@ import { toast } from '$lib/components/ui/sonner';
 import * as m from '$lib/paraglide/messages';
 import {
 	isRateLimited,
+	isServerError,
 	getRetryAfterSeconds,
 	isValidationProblemDetails,
 	mapFieldErrors,
@@ -86,6 +87,13 @@ export function handleMutationError(
 				: m.error_rateLimitedDescription()
 		});
 		onRateLimited?.();
+		return;
+	}
+
+	if (isServerError(response)) {
+		toast.error(m.error_serverError(), {
+			description: m.error_serverErrorDescription()
+		});
 		return;
 	}
 

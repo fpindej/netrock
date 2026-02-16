@@ -197,6 +197,8 @@
 	"error_500_description": "Něco se pokazilo na naší straně. Zkuste to prosím později.",
 	"error_default_title": "Počítač říká ne",
 	"error_default_description": "Něco se pokazilo. Nejsme si jistí co, ale pravděpodobně to není dobré.",
+	"error_serverError": "Něco se pokazilo",
+	"error_serverErrorDescription": "Chyba je na naší straně. Zkuste to prosím za chvíli znovu.",
 	"error_goHome": "Zpět na úvod",
 
 	"settings_deleteAccount_dangerDescription": "Jakmile smažete svůj účet, není cesty zpět. Všechna vaše data budou trvale odstraněna.",
