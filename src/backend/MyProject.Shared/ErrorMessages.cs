@@ -58,6 +58,8 @@ public static class ErrorMessages
         public const string RoleSelfRemove = "Cannot remove a role from your own account.";
         public const string LockSelfAction = "Cannot lock your own account.";
         public const string DeleteSelfAction = "Cannot delete your own account.";
+        public const string EmailVerificationRequired = "User must have a verified email address before being assigned this role.";
+        public const string EmailAlreadyRegistered = "A user with this email address already exists.";
     }
 
     /// <summary>

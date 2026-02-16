@@ -111,6 +111,11 @@ internal class AdminService(
             return Result.Failure($"User already has the '{input.Role}' role.");
         }
 
+        if (AppRoles.GetRoleRank(input.Role) > 0 && !user.EmailConfirmed)
+        {
+            return Result.Failure(ErrorMessages.Admin.EmailVerificationRequired);
+        }
+
         var result = await userManager.AddToRoleAsync(user, input.Role);
 
         if (!result.Succeeded)

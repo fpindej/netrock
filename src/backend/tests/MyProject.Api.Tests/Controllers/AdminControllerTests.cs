@@ -198,6 +198,23 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         await AssertProblemDetailsAsync(response, 400, ErrorMessages.Admin.RoleAssignAboveRank);
     }
 
+    [Fact]
+    public async Task AssignRole_EmailNotVerified_Returns400()
+    {
+        var userId = Guid.NewGuid();
+        _factory.AdminService.AssignRoleAsync(
+                Arg.Any<Guid>(), userId, Arg.Any<AssignRoleInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.Admin.EmailVerificationRequired));
+
+        var response = await _client.SendAsync(
+            Post($"/api/v1/admin/users/{userId}/roles",
+                TestAuth.WithPermissions(AppPermissions.Users.AssignRoles),
+                JsonContent.Create(new { Role = "User" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Admin.EmailVerificationRequired);
+    }
+
     #endregion
 
     #region RemoveRole

@@ -126,6 +126,38 @@ public class AdminServiceTests : IDisposable
         Assert.Contains("already has", result.Error);
     }
 
+    [Fact]
+    public async Task AssignRole_SystemRole_UnverifiedEmail_ReturnsFailure()
+    {
+        SetupCallerAsAdmin();
+        var target = new ApplicationUser { Id = _targetId, UserName = "user@test.com", EmailConfirmed = false };
+        _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
+        _userManager.GetRolesAsync(target).Returns(new List<string>());
+        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _userManager.IsInRoleAsync(target, "User").Returns(false);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("User"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.EmailVerificationRequired, result.Error);
+    }
+
+    [Fact]
+    public async Task AssignRole_CustomRole_UnverifiedEmail_Succeeds()
+    {
+        SetupCallerAsAdmin();
+        var target = new ApplicationUser { Id = _targetId, UserName = "user@test.com", EmailConfirmed = false };
+        _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
+        _userManager.GetRolesAsync(target).Returns(new List<string>());
+        _roleManager.FindByNameAsync("CustomRole").Returns(new ApplicationRole { Name = "CustomRole" });
+        _userManager.IsInRoleAsync(target, "CustomRole").Returns(false);
+        _userManager.AddToRoleAsync(target, "CustomRole").Returns(IdentityResult.Success);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("CustomRole"));
+
+        Assert.True(result.IsSuccess);
+    }
+
     #endregion
 
     #region RemoveRole
