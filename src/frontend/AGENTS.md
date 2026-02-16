@@ -16,6 +16,16 @@
 | @internationalized/date | Locale-aware date formatting                              |
 | flag-icons              | Country flag CSS sprites (phone input)                    |
 
+## pnpm Configuration (`.npmrc`)
+
+| Setting                    | Value  | Effect                                                                           |
+| -------------------------- | ------ | -------------------------------------------------------------------------------- |
+| `engine-strict`            | `true` | Fail install if Node version doesn't match `engines` in `package.json`           |
+| `strict-peer-dependencies` | `true` | Fail on unmet peer deps instead of warning                                       |
+| `prefer-frozen-lockfile`   | `true` | Warn if lockfile is out of date in dev; CI uses `--frozen-lockfile` to fail hard |
+
+Both `Dockerfile` and `Dockerfile.local` COPY `.npmrc` into the image so Docker builds respect these settings.
+
 ## Project Structure
 
 ```
