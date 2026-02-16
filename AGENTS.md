@@ -6,18 +6,18 @@ Full-stack web application template: **.NET 10 API** (Clean Architecture) + **Sv
 
 ## Tech Stack
 
-| | Backend | Frontend |
-|---|---|---|
-| **Framework** | .NET 10 / C# 13 | SvelteKit / Svelte 5 (Runes) |
-| **Database** | PostgreSQL + EF Core | — |
-| **Caching** | Redis (IDistributedCache) | — |
-| **Auth** | JWT in HttpOnly cookies + permission claims | Cookie-based (automatic via API proxy) |
-| **Authorization** | `[RequirePermission]` + role hierarchy | `hasPermission()` + `hasAnyPermission()` utilities |
-| **Validation** | FluentValidation + Data Annotations | TypeScript strict mode |
-| **API Docs** | Scalar (OpenAPI at `/openapi/v1.json`) | openapi-typescript (generated types) |
-| **Styling** | — | Tailwind CSS 4 + shadcn-svelte (bits-ui) |
-| **i18n** | — | paraglide-js (type-safe, compile-time) |
-| **Logging** | Serilog → Seq | — |
+|                   | Backend                                     | Frontend                                           |
+| ----------------- | ------------------------------------------- | -------------------------------------------------- |
+| **Framework**     | .NET 10 / C# 13                             | SvelteKit / Svelte 5 (Runes)                       |
+| **Database**      | PostgreSQL + EF Core                        | —                                                  |
+| **Caching**       | Redis (IDistributedCache)                   | —                                                  |
+| **Auth**          | JWT in HttpOnly cookies + permission claims | Cookie-based (automatic via API proxy)             |
+| **Authorization** | `[RequirePermission]` + role hierarchy      | `hasPermission()` + `hasAnyPermission()` utilities |
+| **Validation**    | FluentValidation + Data Annotations         | TypeScript strict mode                             |
+| **API Docs**      | Scalar (OpenAPI at `/openapi/v1.json`)      | openapi-typescript (generated types)               |
+| **Styling**       | —                                           | Tailwind CSS 4 + shadcn-svelte (bits-ui)           |
+| **i18n**          | —                                           | paraglide-js (type-safe, compile-time)             |
+| **Logging**       | Serilog → Seq                               | —                                                  |
 
 ## Architecture
 
@@ -44,25 +44,25 @@ WebApi → Application ← Infrastructure
 All layers reference Shared (cross-cutting plumbing: Result, ErrorType, ErrorMessages, PhoneNumberHelper)
 ```
 
-| Layer | Responsibility |
-|---|---|
-| **Shared** | Cross-cutting plumbing: `Result`/`Result<T>`, `ErrorType`, `ErrorMessages`, `PhoneNumberHelper`. Zero dependencies. |
-| **Domain** | Business entities (`BaseEntity`). Zero dependencies. |
-| **Application** | Interfaces, DTOs (Input/Output), service contracts. References Domain + Shared. |
-| **Infrastructure** | EF Core, Identity, Redis, service implementations. References Application + Domain + Shared. |
-| **WebApi** | Controllers, middleware, validation, request/response DTOs. Entry point. Gets Shared transitively. |
+| Layer              | Responsibility                                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| **Shared**         | Cross-cutting plumbing: `Result`/`Result<T>`, `ErrorType`, `ErrorMessages`, `PhoneNumberHelper`. Zero dependencies. |
+| **Domain**         | Business entities (`BaseEntity`). Zero dependencies.                                                                |
+| **Application**    | Interfaces, DTOs (Input/Output), service contracts. References Domain + Shared.                                     |
+| **Infrastructure** | EF Core, Identity, Redis, service implementations. References Application + Domain + Shared.                        |
+| **WebApi**         | Controllers, middleware, validation, request/response DTOs. Entry point. Gets Shared transitively.                  |
 
 ### Frontend — SvelteKit
 
-| Directory | Responsibility |
-|---|---|
-| `src/routes/(app)/` | Authenticated pages (redirect guard in layout) |
-| `src/routes/(public)/` | Public pages (login) |
-| `src/routes/api/` | API proxy to backend |
-| `src/lib/api/` | Type-safe API client + generated OpenAPI types |
-| `src/lib/components/` | Feature-organized components with barrel exports |
-| `src/lib/state/` | Reactive state (`.svelte.ts` files) |
-| `src/lib/config/` | App configuration (client-safe vs server-only split) |
+| Directory              | Responsibility                                       |
+| ---------------------- | ---------------------------------------------------- |
+| `src/routes/(app)/`    | Authenticated pages (redirect guard in layout)       |
+| `src/routes/(public)/` | Public pages (login)                                 |
+| `src/routes/api/`      | API proxy to backend                                 |
+| `src/lib/api/`         | Type-safe API client + generated OpenAPI types       |
+| `src/lib/components/`  | Feature-organized components with barrel exports     |
+| `src/lib/state/`       | Reactive state (`.svelte.ts` files)                  |
+| `src/lib/config/`      | App configuration (client-safe vs server-only split) |
 
 ## Code Quality Principles
 
@@ -99,14 +99,14 @@ Write code that is naturally testable through good structure, not by over-abstra
 
 ### Guiding Principles
 
-| Principle | What it means in practice |
-|---|---|
+| Principle                  | What it means in practice                                                                                                                             |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Restrictive by default** | Deny access, disable features, block origins, strip headers — then selectively open what's needed. Never start permissive and try to lock down later. |
-| **Defense in depth** | Don't rely on a single layer. Validate on both frontend and backend. Check auth in middleware *and* controllers. Use security headers *and* CSP. |
-| **Least privilege** | Services, tokens, cookies, and API responses should expose the minimum data and permissions required. |
-| **Fail closed** | If validation fails, token parsing fails, or an origin check fails — reject the request. Never fall through to a permissive default. |
-| **Secrets never in code** | Connection strings, API keys, JWT secrets — always in `.env` or environment variables, never in source. Rotate compromised secrets immediately. |
-| **Audit new dependencies** | Before adding a NuGet package or npm module, consider its attack surface. Prefer well-maintained, minimal-dependency libraries. |
+| **Defense in depth**       | Don't rely on a single layer. Validate on both frontend and backend. Check auth in middleware _and_ controllers. Use security headers _and_ CSP.      |
+| **Least privilege**        | Services, tokens, cookies, and API responses should expose the minimum data and permissions required.                                                 |
+| **Fail closed**            | If validation fails, token parsing fails, or an origin check fails — reject the request. Never fall through to a permissive default.                  |
+| **Secrets never in code**  | Connection strings, API keys, JWT secrets — always in `.env` or environment variables, never in source. Rotate compromised secrets immediately.       |
+| **Audit new dependencies** | Before adding a NuGet package or npm module, consider its attack surface. Prefer well-maintained, minimal-dependency libraries.                       |
 
 ### When Building Features
 
@@ -135,19 +135,19 @@ docs: add session notes for orders feature
 test(auth): add login integration tests
 ```
 
-Format: `type(scope): lowercase imperative description` — max 72 chars, no period. Scope is optional but encouraged. Add a body to explain *why* when the reason isn't obvious.
+Format: `type(scope): lowercase imperative description` — max 72 chars, no period. Scope is optional but encouraged. Add a body to explain _why_ when the reason isn't obvious.
 
 #### Atomic Commit Strategy
 
 One commit = one logical change that could be reverted independently.
 
-| ✅ Good (atomic) | ❌ Bad (bundled) |
-|---|---|
-| `feat(orders): add Order entity and EF config` | `feat: add entire orders feature` |
-| `feat(orders): add IOrderService and DTOs` | (entity + service + controller + frontend |
-| `feat(orders): implement OrderService` | all in one massive commit) |
-| `feat(orders): add OrdersController with endpoints` | |
-| `feat(orders): add order list page in frontend` | |
+| ✅ Good (atomic)                                    | ❌ Bad (bundled)                          |
+| --------------------------------------------------- | ----------------------------------------- |
+| `feat(orders): add Order entity and EF config`      | `feat: add entire orders feature`         |
+| `feat(orders): add IOrderService and DTOs`          | (entity + service + controller + frontend |
+| `feat(orders): implement OrderService`              | all in one massive commit)                |
+| `feat(orders): add OrdersController with endpoints` |                                           |
+| `feat(orders): add order list page in frontend`     |                                           |
 
 #### Pre-Commit Checks
 
@@ -173,13 +173,13 @@ Do **not** generate session docs automatically — only when explicitly requeste
 
 Include diagrams in session docs when they add clarity:
 
-| Diagram Type | Use For |
-|---|---|
-| `flowchart TD` | Request/data flows, layer interactions |
-| `erDiagram` | Entity relationships |
+| Diagram Type      | Use For                                |
+| ----------------- | -------------------------------------- |
+| `flowchart TD`    | Request/data flows, layer interactions |
+| `erDiagram`       | Entity relationships                   |
 | `sequenceDiagram` | Multi-step flows (auth, token refresh) |
-| `classDiagram` | Service/interface relationships |
-| `stateDiagram-v2` | State transitions (order lifecycle) |
+| `classDiagram`    | Service/interface relationships        |
+| `stateDiagram-v2` | State transitions (order lifecycle)    |
 
 Keep diagrams focused — one concern per diagram, prefer a few clear diagrams over many trivial ones.
 
@@ -226,12 +226,12 @@ This gives GitHub native progress tracking on the parent issue (completion count
 
 **When to split:**
 
-| Signal | Example |
-|---|---|
-| Crosses stack boundary | Backend endpoint + frontend page → separate issues |
-| Independent deliverables | Database migration + service + controller could each be reviewed alone |
-| Multiple logical concerns | New entity + new API + new UI page + new i18n keys |
-| Parallelizable work | Two developers could work on different sub-issues simultaneously |
+| Signal                    | Example                                                                |
+| ------------------------- | ---------------------------------------------------------------------- |
+| Crosses stack boundary    | Backend endpoint + frontend page → separate issues                     |
+| Independent deliverables  | Database migration + service + controller could each be reviewed alone |
+| Multiple logical concerns | New entity + new API + new UI page + new i18n keys                     |
+| Parallelizable work       | Two developers could work on different sub-issues simultaneously       |
 
 **When NOT to split:**
 
@@ -271,14 +271,14 @@ Never use regular merge commits or rebase-merge — squash is the only merge str
 
 Always label issues and PRs. Use the project labels below — apply **all** that fit (they are not mutually exclusive). If a new label would genuinely help categorize work and none of the existing ones cover it, create it with `gh label create` before applying.
 
-| Label | Color | Description | Use when |
-|---|---|---|---|
-| `backend` | `#0E8A16` | Backend (.NET) | Changes touch `src/backend/` |
-| `frontend` | `#1D76DB` | Frontend (SvelteKit) | Changes touch `src/frontend/` |
-| `security` | `#D93F0B` | Security-related | Fixes vulnerabilities, hardens config, adds auth features |
-| `feature` | `#5319E7` | New feature or enhancement | Adding new capabilities (not just fixing existing ones) |
-| `bug` | `#d73a4a` | Something isn't working | Fixing incorrect behavior |
-| `documentation` | `#0075ca` | Documentation | Changes to docs, AGENTS.md, session notes |
+| Label           | Color     | Description                | Use when                                                  |
+| --------------- | --------- | -------------------------- | --------------------------------------------------------- |
+| `backend`       | `#0E8A16` | Backend (.NET)             | Changes touch `src/backend/`                              |
+| `frontend`      | `#1D76DB` | Frontend (SvelteKit)       | Changes touch `src/frontend/`                             |
+| `security`      | `#D93F0B` | Security-related           | Fixes vulnerabilities, hardens config, adds auth features |
+| `feature`       | `#5319E7` | New feature or enhancement | Adding new capabilities (not just fixing existing ones)   |
+| `bug`           | `#d73a4a` | Something isn't working    | Fixing incorrect behavior                                 |
+| `documentation` | `#0075ca` | Documentation              | Changes to docs, AGENTS.md, session notes                 |
 
 Unused GitHub default labels (`enhancement`, `good first issue`, `help wanted`, `invalid`, `question`, `wontfix`, `duplicate`) can be ignored — they add noise for a small team. Delete them if they accumulate.
 
@@ -286,14 +286,14 @@ Unused GitHub default labels (`enhancement`, `good first issue`, `help wanted`, 
 
 ## Error Handling Philosophy
 
-| Layer | Strategy |
-|---|---|
-| **Backend services** | Return `Result` / `Result<T>` with descriptive `ErrorMessages.*` constant for expected failures |
-| **Backend exceptions** | `KeyNotFoundException` → 404, `PaginationException` → 400, unhandled → 500 |
-| **Backend middleware** | `ExceptionHandlingMiddleware` catches all, returns `ProblemDetails` (RFC 9457) JSON |
-| **Frontend API errors** | `isValidationProblemDetails()` → field-level errors with shake animation |
-| **Frontend generic errors** | `getErrorMessage()` resolves `detail` → `title` → fallback from `ProblemDetails` |
-| **Frontend network errors** | `isFetchErrorWithCode('ECONNREFUSED')` → 503 "Backend unavailable" |
+| Layer                       | Strategy                                                                                        |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Backend services**        | Return `Result` / `Result<T>` with descriptive `ErrorMessages.*` constant for expected failures |
+| **Backend exceptions**      | `KeyNotFoundException` → 404, `PaginationException` → 400, unhandled → 500                      |
+| **Backend middleware**      | `ExceptionHandlingMiddleware` catches all, returns `ProblemDetails` (RFC 9457) JSON             |
+| **Frontend API errors**     | `isValidationProblemDetails()` → field-level errors with shake animation                        |
+| **Frontend generic errors** | `getErrorMessage()` resolves `detail` → `title` → fallback from `ProblemDetails`                |
+| **Frontend network errors** | `isFetchErrorWithCode('ECONNREFUSED')` → 503 "Backend unavailable"                              |
 
 ### Error Message Flow
 
@@ -343,25 +343,25 @@ The API container loads `.env` in two ways:
 
 #### Precedence (highest to lowest)
 
-| Priority | Source | Example |
-|---|---|---|
-| 1 | `docker compose run --env` | CLI override (rare) |
-| 2 | Compose `environment` block | `Authentication__Jwt__Key: ${JWT_SECRET_KEY}` — interpolated from `.env`, set via `environment` |
-| 3 | Compose `env_file: .env` | `Authentication__Jwt__ExpiresInMinutes=100` — passes through directly |
-| 4 | `appsettings.{Environment}.json` | `ExpiresInMinutes: 100` in `appsettings.Development.json` |
-| 5 | `appsettings.json` | Base defaults (e.g. `ExpiresInMinutes: 10`) |
+| Priority | Source                           | Example                                                                                         |
+| -------- | -------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 1        | `docker compose run --env`       | CLI override (rare)                                                                             |
+| 2        | Compose `environment` block      | `Authentication__Jwt__Key: ${JWT_SECRET_KEY}` — interpolated from `.env`, set via `environment` |
+| 3        | Compose `env_file: .env`         | `Authentication__Jwt__ExpiresInMinutes=100` — passes through directly                           |
+| 4        | `appsettings.{Environment}.json` | `ExpiresInMinutes: 100` in `appsettings.Development.json`                                       |
+| 5        | `appsettings.json`               | Base defaults (e.g. `ExpiresInMinutes: 10`)                                                     |
 
 **In practice:** variables in the compose `environment` block (connection strings, secrets, Seq URL) always win. Everything else set in `.env` passes through to the container and overrides appsettings values. When running from Rider/VS (no Docker), only appsettings files apply — `.env` is not read.
 
 #### What lives where
 
-| File | Purpose | Who edits it |
-|---|---|---|
-| `.env.example` | Working dev defaults — copy to `.env` to get started | Rarely edited |
-| `.env` | Local overrides (git-ignored) — copied from `.env.example` | Everyone |
-| `appsettings.json` | Base/production defaults | Backend devs |
-| `appsettings.Development.json` | Dev defaults (generous JWT expiry, debug logging, localhost URLs) | Backend devs |
-| `docker-compose.local.yml` | Docker service wiring (host-specific values only) | Rarely edited |
+| File                           | Purpose                                                           | Who edits it  |
+| ------------------------------ | ----------------------------------------------------------------- | ------------- |
+| `.env.example`                 | Working dev defaults — copy to `.env` to get started              | Rarely edited |
+| `.env`                         | Local overrides (git-ignored) — copied from `.env.example`        | Everyone      |
+| `appsettings.json`             | Base/production defaults                                          | Backend devs  |
+| `appsettings.Development.json` | Dev defaults (generous JWT expiry, debug logging, localhost URLs) | Backend devs  |
+| `docker-compose.local.yml`     | Docker service wiring (host-specific values only)                 | Rarely edited |
 
 ### Developer Workflows
 
@@ -402,30 +402,30 @@ No config changes needed. Defaults work out of the box.
 
 ### SDK & Runtime
 
-| Tool | Version | Configured in |
-|---|---|---|
-| .NET SDK | `10.0.100` (`rollForward: latestMajor`) | `global.json` |
-| Node.js | Engine-strict enforced | `src/frontend/package.json` + `.npmrc` |
-| dotnet-ef | `10.0.0` | `.config/dotnet-tools.json` |
+| Tool      | Version                                 | Configured in                          |
+| --------- | --------------------------------------- | -------------------------------------- |
+| .NET SDK  | `10.0.100` (`rollForward: latestMajor`) | `global.json`                          |
+| Node.js   | Engine-strict enforced                  | `src/frontend/package.json` + `.npmrc` |
+| dotnet-ef | `10.0.0`                                | `.config/dotnet-tools.json`            |
 
 ### Build Configuration
 
-| File | Purpose |
-|---|---|
-| `Directory.Build.props` | Shared project properties: `net10.0`, `Nullable=enable`, `ImplicitUsings=enable` |
+| File                       | Purpose                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| `Directory.Build.props`    | Shared project properties: `net10.0`, `Nullable=enable`, `ImplicitUsings=enable`                 |
 | `Directory.Packages.props` | Centralized NuGet version management — all package versions defined here, not in `.csproj` files |
-| `nuget.config` | Locked to NuGet.org only (no custom feeds) |
-| `global.json` | Pins .NET SDK version |
-| `src/frontend/.npmrc` | `engine-strict=true` — npm refuses to install if Node version doesn't match |
+| `nuget.config`             | Locked to NuGet.org only (no custom feeds)                                                       |
+| `global.json`              | Pins .NET SDK version                                                                            |
+| `src/frontend/.npmrc`      | `engine-strict=true` — npm refuses to install if Node version doesn't match                      |
 
 ### CI/CD & Hooks
 
 GitHub Actions workflows enforce quality gates on every PR and push to `master`:
 
-| Workflow | File | Purpose |
-|---|---|---|
-| **CI** | `.github/workflows/ci.yml` | Build + lint + type-check, gated by `dorny/paths-filter` so backend-only PRs skip frontend and vice versa. Single `ci-passed` gate job for branch protection. |
-| **Docker** | `.github/workflows/docker.yml` | Validates Docker images build successfully (no push). Triggered only when Dockerfiles or dependency manifests change. Uses GHA layer cache. |
+| Workflow   | File                           | Purpose                                                                                                                                                       |
+| ---------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CI**     | `.github/workflows/ci.yml`     | Build + lint + type-check, gated by `dorny/paths-filter` so backend-only PRs skip frontend and vice versa. Single `ci-passed` gate job for branch protection. |
+| **Docker** | `.github/workflows/docker.yml` | Validates Docker images build successfully (no push). Triggered only when Dockerfiles or dependency manifests change. Uses GHA layer cache.                   |
 
 **Dependabot** (`.github/dependabot.yml`) opens weekly PRs for NuGet, npm, and GitHub Actions updates. Minor+patch versions are grouped to reduce noise.
 
@@ -433,12 +433,12 @@ Pre-commit checks (build, format, lint, type check) remain manual steps document
 
 ### Docker
 
-| File | Purpose |
-|---|---|
-| `src/backend/MyProject.WebApi/Dockerfile` | Multi-stage production build (restore → build → publish → runtime) |
-| `src/frontend/Dockerfile` | Multi-stage production build (deps → build → runtime with Node adapter) |
-| `src/frontend/Dockerfile.local` | Development — mounts source, runs `pnpm run dev` for hot-reload |
-| `docker-compose.local.yml` | 5-service local stack (api, frontend, db, redis, seq) |
+| File                                      | Purpose                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| `src/backend/MyProject.WebApi/Dockerfile` | Multi-stage production build (restore → build → publish → runtime)      |
+| `src/frontend/Dockerfile`                 | Multi-stage production build (deps → build → runtime with Node adapter) |
+| `src/frontend/Dockerfile.local`           | Development — mounts source, runs `pnpm run dev` for hot-reload         |
+| `docker-compose.local.yml`                | 5-service local stack (api, frontend, db, redis, seq)                   |
 
 The backend Dockerfile uses layer caching: `.csproj` files are restored first (cached), then source is copied and built. This avoids re-downloading NuGet packages on every source change.
 
@@ -450,11 +450,11 @@ The frontend Dockerfile accepts `PUBLIC_*` SvelteKit env vars as Docker build ar
 
 ### Frontend Environment Files
 
-| File | Purpose | Committed |
-|---|---|---|
-| `src/frontend/.env.example` | Documentation — shows required vars with placeholders | yes |
-| `src/frontend/.env.test` | CI + local test runs — valid test defaults | yes |
-| `src/frontend/.env.local` | Personal dev overrides | no (gitignored) |
+| File                        | Purpose                                               | Committed       |
+| --------------------------- | ----------------------------------------------------- | --------------- |
+| `src/frontend/.env.example` | Documentation — shows required vars with placeholders | yes             |
+| `src/frontend/.env.test`    | CI + local test runs — valid test defaults            | yes             |
+| `src/frontend/.env.local`   | Personal dev overrides                                | no (gitignored) |
 
 CI loads `.env.test` via `cp .env.test .env`. Vite picks it up during `svelte-kit sync`. Docker builds pass vars as `--build-arg` instead.
 
