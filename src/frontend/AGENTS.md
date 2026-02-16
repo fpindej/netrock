@@ -28,9 +28,6 @@ src/
 │   │   ├── index.ts               # Barrel export
 │   │   └── v1.d.ts                # ⚠️ GENERATED — never edit manually
 │   │
-│   ├── assets/                    # Static assets (favicon, images)
-│   │   └── favicon.svg
-│   │
 │   ├── auth/                      # Authentication helpers
 │   │   └── auth.ts                # getUser(), logout()
 │   │
