@@ -318,7 +318,7 @@ internal class AuthenticationService(
             PlainTextBody: plainTextBody
         );
 
-        await emailService.SendEmailAsync(message, cancellationToken);
+        await SendEmailSafeAsync(message, cancellationToken);
 
         return Result.Success();
     }
@@ -446,6 +446,22 @@ internal class AuthenticationService(
     }
 
     /// <summary>
+    /// Sends an email, swallowing delivery failures. Transient provider outages
+    /// (quota, auth, network) are logged but never propagate to the caller.
+    /// </summary>
+    private async Task SendEmailSafeAsync(EmailMessage message, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await emailService.SendEmailAsync(message, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send email to {To}", message.To);
+        }
+    }
+
+    /// <summary>
     /// Sends a verification email to the specified user with a confirmation link.
     /// </summary>
     private async Task SendVerificationEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
@@ -485,7 +501,7 @@ internal class AuthenticationService(
             PlainTextBody: plainTextBody
         );
 
-        await emailService.SendEmailAsync(message, cancellationToken);
+        await SendEmailSafeAsync(message, cancellationToken);
     }
 
     /// <summary>
