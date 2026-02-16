@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #══════════════════════════════════════════════════════════════════════════════
-#  Web API Template - Unified Deploy Script
+#  Unified Deploy Script
 #══════════════════════════════════════════════════════════════════════════════
 #
 #  Usage:
@@ -104,7 +104,7 @@ prompt_value() {
 }
 
 show_help() {
-    echo "Web API Template - Unified Deploy Script"
+    echo "Unified Deploy Script"
     echo ""
     echo "Usage:"
     echo "  ./deploy.sh                   Interactive mode (menu)"
@@ -613,7 +613,16 @@ done
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+START_TIME=$(date +%s)
+
 print_header "Deploy"
+
+# Verify we're in the project root
+if [[ ! -d "src/backend" || ! -d "src/frontend" ]]; then
+    print_error "This script must be run from the project root directory."
+    print_info "Expected to find src/backend and src/frontend directories."
+    exit 1
+fi
 
 # Check prerequisites
 print_step "Checking prerequisites..."
@@ -808,4 +817,6 @@ fi
 if [[ "$TARGET" == "frontend" || "$TARGET" == "all" ]]; then
     echo -e "  ${CYAN}$REGISTRY/$FRONTEND_IMAGE:$NEW_FRONTEND_VERSION${NC}"
 fi
+echo ""
+echo -e "  ${DIM}Completed in $(($(date +%s) - START_TIME))s${NC}"
 echo ""

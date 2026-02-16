@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Web API Template - Unified Deploy Script
+    Unified Deploy Script
 
 .DESCRIPTION
     Builds and pushes Docker images for the backend API and/or frontend.
@@ -98,7 +98,7 @@ function Write-Success {
     Write-Host "[OK] $Text" -ForegroundColor Green
 }
 
-function Write-Warning {
+function Write-WarnMsg {
     param([string]$Text)
     Write-Host "[WARN] $Text" -ForegroundColor Yellow
 }
@@ -190,7 +190,7 @@ $ConfigFile = Join-Path $ScriptDir "deploy.config.json"
 
 function Get-Config {
     if (-not (Test-Path $ConfigFile)) {
-        Write-Warning "Config file not found. Creating default..."
+        Write-WarnMsg "Config file not found. Creating default..."
 
         # Try to detect project name
         $detectedName = "MyProject"
@@ -362,7 +362,7 @@ function Test-DockerLogin {
 
     $ErrorActionPreference = "Continue"
 
-    $configPath = Join-Path $env:USERPROFILE ".docker\config.json"
+    $configPath = Join-Path $HOME ".docker/config.json"
     if (Test-Path $configPath) {
         $dockerConfig = Get-Content $configPath -Raw | ConvertFrom-Json
 
@@ -394,7 +394,7 @@ function Request-DockerLogin {
     param([string]$Registry)
 
     Write-Host ""
-    Write-Warning "Not logged in to Docker registry"
+    Write-WarnMsg "Not logged in to Docker registry"
     Write-Host ""
 
     # Determine which registry to login to
@@ -602,7 +602,16 @@ function Build-Frontend {
 # -----------------------------------------------------------------------------
 # Main Script
 # -----------------------------------------------------------------------------
+$startTime = Get-Date
+
 Write-Header "Deploy"
+
+# Verify we're in the project root
+if (-not (Test-Path (Join-Path $ScriptDir "src/backend")) -or -not (Test-Path (Join-Path $ScriptDir "src/frontend"))) {
+    Write-ErrorMessage "This script must be run from the project root directory."
+    Write-Info "Expected to find src/backend and src/frontend directories."
+    exit 1
+}
 
 # Check prerequisites
 Write-Step "Checking prerequisites..."
@@ -617,7 +626,7 @@ $Config = Get-Config
 
 # Check if registry is default
 if ($Config.registry -eq "myusername") {
-    Write-Warning "Registry is set to default 'myusername'"
+    Write-WarnMsg "Registry is set to default 'myusername'"
     Write-Host ""
     Write-Info "Let's configure your container registry first."
 
@@ -737,7 +746,7 @@ Write-Host ""
 # Confirmation
 $proceed = Read-YesNo "Proceed with deployment?" $true
 if (-not $proceed) {
-    Write-Warning "Aborted by user"
+    Write-WarnMsg "Aborted by user"
     exit 0
 }
 
@@ -818,7 +827,7 @@ if ($BumpType -ne "none") {
                 Write-Success "Version bump committed"
             }
             else {
-                Write-Warning "Failed to commit version bump (you may need to commit manually)"
+                Write-WarnMsg "Failed to commit version bump (you may need to commit manually)"
             }
         }
         else {
@@ -840,6 +849,9 @@ if ($Target -eq "backend" -or $Target -eq "all") {
 if ($Target -eq "frontend" -or $Target -eq "all") {
     Write-Host "  $($Config.registry)/$($Config.frontendImage):$NewFrontendVersion" -ForegroundColor Cyan
 }
+Write-Host ""
+$elapsed = [math]::Round(((Get-Date) - $startTime).TotalSeconds)
+Write-Host "  Completed in ${elapsed}s" -ForegroundColor DarkGray
 Write-Host ""
 
 }
