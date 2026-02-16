@@ -6,7 +6,7 @@
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
-	import { createCooldown } from '$lib/state';
+	import { createCooldown, createFieldShakes } from '$lib/state';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
@@ -18,11 +18,20 @@
 	let name = $state('');
 	let description = $state('');
 	let isCreating = $state(false);
+	let fieldErrors = $state<Record<string, string>>({});
 	const cooldown = createCooldown();
+	const fieldShakes = createFieldShakes();
+
+	function resetForm() {
+		name = '';
+		description = '';
+		fieldErrors = {};
+	}
 
 	async function createRole() {
 		if (!name.trim()) return;
 		isCreating = true;
+		fieldErrors = {};
 
 		const { response, error } = await browserClient.POST('/api/v1/admin/roles', {
 			body: { name: name.trim(), description: description.trim() || null }
@@ -32,20 +41,23 @@
 
 		if (response.ok) {
 			toast.success(m.admin_roles_createSuccess());
-			name = '';
-			description = '';
+			resetForm();
 			open = false;
 			await invalidateAll();
 		} else {
 			handleMutationError(response, error, {
 				cooldown,
-				fallback: m.admin_roles_createError()
+				fallback: m.admin_roles_createError(),
+				onValidationError(errors) {
+					fieldErrors = errors;
+					fieldShakes.triggerFields(Object.keys(errors));
+				}
 			});
 		}
 	}
 </script>
 
-<Dialog.Root bind:open>
+<Dialog.Root bind:open onOpenChange={(isOpen) => !isOpen && resetForm()}>
 	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>{m.admin_roles_createRole()}</Dialog.Title>
@@ -61,7 +73,15 @@
 					bind:value={name}
 					placeholder={m.admin_roles_namePlaceholder()}
 					maxlength={50}
+					class={fieldShakes.class('name')}
+					aria-invalid={!!fieldErrors.name}
+					aria-describedby={fieldErrors.name ? 'role-name-error' : undefined}
 				/>
+				{#if fieldErrors.name}
+					<p id="role-name-error" class="mt-1 text-xs text-destructive">
+						{fieldErrors.name}
+					</p>
+				{/if}
 			</div>
 			<div>
 				<label for="role-description" class="mb-1 block text-sm font-medium">
@@ -72,7 +92,15 @@
 					bind:value={description}
 					placeholder={m.admin_roles_descriptionPlaceholder()}
 					maxlength={200}
+					class={fieldShakes.class('description')}
+					aria-invalid={!!fieldErrors.description}
+					aria-describedby={fieldErrors.description ? 'role-description-error' : undefined}
 				/>
+				{#if fieldErrors.description}
+					<p id="role-description-error" class="mt-1 text-xs text-destructive">
+						{fieldErrors.description}
+					</p>
+				{/if}
 			</div>
 		</div>
 		<Dialog.Footer class="flex-col-reverse sm:flex-row">
