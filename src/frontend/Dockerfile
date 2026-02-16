@@ -3,6 +3,12 @@ WORKDIR /app
 COPY package*.json .
 RUN npm ci
 COPY . .
+
+# SvelteKit $env/static/public vars are inlined at build time.
+# Pass via: docker build --build-arg PUBLIC_TURNSTILE_SITE_KEY=...
+ARG PUBLIC_TURNSTILE_SITE_KEY
+ENV PUBLIC_TURNSTILE_SITE_KEY=${PUBLIC_TURNSTILE_SITE_KEY}
+
 RUN npm run build
 RUN npm prune --production
 

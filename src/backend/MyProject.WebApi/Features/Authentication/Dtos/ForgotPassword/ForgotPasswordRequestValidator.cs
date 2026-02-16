@@ -16,5 +16,9 @@ public class ForgotPasswordRequestValidator : AbstractValidator<ForgotPasswordRe
             .NotEmpty()
             .EmailAddress()
             .MaximumLength(255);
+
+        RuleFor(x => x.CaptchaToken)
+            .NotEmpty()
+            .MaximumLength(8192);
     }
 }

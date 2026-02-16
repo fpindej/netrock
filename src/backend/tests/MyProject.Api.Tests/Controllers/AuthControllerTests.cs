@@ -91,11 +91,13 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     [Fact]
     public async Task Register_ValidInput_Returns201()
     {
+        _factory.CaptchaService.ValidateTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
         _factory.AuthenticationService.Register(Arg.Any<RegisterInput>(), Arg.Any<CancellationToken>())
             .Returns(Result<Guid>.Success(Guid.NewGuid()));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/register", JsonContent.Create(new { Email = "new@example.com", Password = "Password1!" })));
+            Post("/api/auth/register", JsonContent.Create(new { Email = "new@example.com", Password = "Password1!", CaptchaToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<RegisterUserResponse>();
@@ -107,7 +109,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task Register_InvalidEmail_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/register", JsonContent.Create(new { Email = "not-an-email", Password = "Password1!" })));
+            Post("/api/auth/register", JsonContent.Create(new { Email = "not-an-email", Password = "Password1!", CaptchaToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -116,7 +118,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task Register_WeakPassword_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/register", JsonContent.Create(new { Email = "test@example.com", Password = "weak" })));
+            Post("/api/auth/register", JsonContent.Create(new { Email = "test@example.com", Password = "weak", CaptchaToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -124,14 +126,38 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     [Fact]
     public async Task Register_ServiceFailure_Returns400WithProblemDetails()
     {
+        _factory.CaptchaService.ValidateTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
         _factory.AuthenticationService.Register(Arg.Any<RegisterInput>(), Arg.Any<CancellationToken>())
             .Returns(Result<Guid>.Failure("Email already registered."));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/register", JsonContent.Create(new { Email = "dup@example.com", Password = "Password1!" })));
+            Post("/api/auth/register", JsonContent.Create(new { Email = "dup@example.com", Password = "Password1!", CaptchaToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         await AssertProblemDetailsAsync(response, 400, "Email already registered.");
+    }
+
+    [Fact]
+    public async Task Register_InvalidCaptcha_Returns400()
+    {
+        _factory.CaptchaService.ValidateTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/register", JsonContent.Create(new { Email = "new@example.com", Password = "Password1!", CaptchaToken = "invalid-token" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.CaptchaInvalid);
+    }
+
+    [Fact]
+    public async Task Register_MissingCaptcha_Returns400()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/register", JsonContent.Create(new { Email = "new@example.com", Password = "Password1!" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     #endregion
@@ -305,12 +331,14 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     [Fact]
     public async Task ForgotPassword_ValidEmail_Returns200()
     {
+        _factory.CaptchaService.ValidateTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
         _factory.AuthenticationService.ForgotPasswordAsync(
                 Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Result.Success());
 
         var response = await _client.SendAsync(
-            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "test@example.com" })));
+            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "test@example.com", CaptchaToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -319,7 +347,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task ForgotPassword_InvalidEmail_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "not-an-email" })));
+            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "not-an-email", CaptchaToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -328,7 +356,29 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task ForgotPassword_EmptyEmail_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "" })));
+            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "", CaptchaToken = "valid-token" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_InvalidCaptcha_Returns400()
+    {
+        _factory.CaptchaService.ValidateTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "test@example.com", CaptchaToken = "invalid-token" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.CaptchaInvalid);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_MissingCaptcha_Returns400()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "test@example.com" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

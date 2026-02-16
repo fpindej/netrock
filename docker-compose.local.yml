@@ -18,6 +18,7 @@ x-db-environment: &db-environment
 x-frontend-environment: &frontend-environment
   API_URL: ${API_URL:-http://api:8080}
   ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+  PUBLIC_TURNSTILE_SITE_KEY: ${PUBLIC_TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
 
 x-common-settings: &common-settings
   restart: unless-stopped

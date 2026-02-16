@@ -46,12 +46,16 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`RateLimiterExtensions.cs`** (add policy) | Requires matching constant in `RateLimitPolicies.cs` and config in `RateLimitingOptions.cs` |
 | **`HostingOptions.cs`** (change hosting config shape) | `HostingExtensions.cs`, `appsettings.json`, `appsettings.Development.json`, `.env.example`, `docker-compose.local.yml` |
 | **`HostingExtensions.cs`** (change middleware behavior) | `Program.cs`, `AGENTS.md` Hosting Configuration section |
-| **`Dockerfile`** (change build/publish steps) | `.dockerignore`, verify published files don't include dev/test config |
+| **`Dockerfile`** (backend — change build/publish steps) | `.dockerignore`, verify published files don't include dev/test config |
+| **`Dockerfile`** (frontend — change build steps) | `.dockerignore`, `docker.yml` build args, `deploy.sh`/`deploy.ps1` build args. New `PUBLIC_*` SvelteKit env vars need `ARG`+`ENV` in Dockerfile, `--build-arg` in deploy scripts and `docker.yml` |
 | **`MyProject.WebApi.csproj`** (add appsettings file) | If non-production: add `CopyToPublishDirectory="Never"` and matching `rm -f` in `Dockerfile` |
 | **Route constraint** (add/modify in `Routing/`) | `Program.cs` constraint registration, route templates using that constraint |
 | **`HealthCheckExtensions.cs`** (change endpoints/checks) | `docker-compose.local.yml` healthcheck URLs, frontend health proxy `+server.ts` |
 | **`ProblemDetailsAuthorizationHandler`** | `ProblemDetails` shape, `ErrorMessages.Auth` constants, `Program.cs` registration |
 | **OpenAPI transformers** | Regenerate frontend types to verify; check Scalar UI |
+| **`CaptchaOptions`** (Infrastructure — Captcha config) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `TurnstileCaptchaService`, `ServiceCollectionExtensions` |
+| **`TurnstileCaptchaService`** (Infrastructure — Captcha service) | `ICaptchaService` interface, `CaptchaOptions`, `AuthController` captcha gate |
+| **`TurnstileWidget.svelte`** (Frontend — Captcha widget) | `RegisterDialog.svelte`, `ForgotPasswordForm.svelte`, `app.d.ts` (`Window.turnstile`), `PUBLIC_TURNSTILE_SITE_KEY` env var |
 
 ### Frontend Changes
 
@@ -67,7 +71,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`$lib/config/server.ts`** | Server load functions that import `SERVER_CONFIG` |
 | **`$lib/config/i18n.ts`** | `LanguageSelector`, root layout |
 | **`hooks.server.ts`** | All server responses (security headers, locale) |
-| **`svelte.config.js`** (CSP) | Test that scripts/styles/images still load |
+| **`svelte.config.js`** (CSP) | Test that scripts/styles/images still load; Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com` |
 | **`app.html`** | FOUC prevention, nonce attribute, theme init |
 | **Component barrel `index.ts`** | All imports from that feature folder |
 | **i18n keys** (rename/remove in `en.json`) | Same key in `cs.json`, all `m.{key}()` usages |
@@ -89,7 +93,9 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Backend endpoint route** | Frontend API calls + regenerate types |
 | **Backend response shape** | Regenerate types → update frontend components |
 | **Backend auth/cookie behavior** | Frontend `$lib/api/client.ts` (refresh logic), `$lib/auth/auth.ts` |
-| **`.env.example`** | `docker-compose.local.yml` if variable needs Docker wiring |
+| **`.env.example`** (root) | `docker-compose.local.yml` if variable needs Docker wiring |
+| **`.env.example`** (frontend) | `src/frontend/.env.test` if new `PUBLIC_*` var added |
+| **`.env.test`** (frontend) | `ci.yml` loads it via `cp .env.test .env`; keep in sync with `.env.example` vars |
 | **`docker-compose.local.yml`** | `.env.example` if new variable introduced |
 | **CORS config** (`CorsExtensions.cs`) | Frontend dev server origin, `ALLOWED_ORIGINS` env var |
 | **Rate limiting config** | Frontend may need retry/backoff logic |
@@ -202,7 +208,8 @@ src/backend/tests/
 | `src/backend/Directory.Packages.props` | NuGet versions (never in .csproj) |
 | `src/frontend/src/lib/components/layout/SidebarNav.svelte` | Navigation entries |
 | `src/frontend/src/lib/api/v1.d.ts` | Generated types (never hand-edit) |
-| `.env.example` | Environment variable defaults |
+| `.env.example` | Environment variable defaults (root = Docker/backend, frontend = SvelteKit) |
+| `src/frontend/.env.test` | CI + test environment defaults (loaded by `ci.yml`) |
 | `docker-compose.local.yml` | Local dev service wiring |
 | `src/backend/MyProject.WebApi/appsettings.Testing.json` | Test environment config (disables Redis, Hangfire, CORS) |
 | `src/backend/tests/MyProject.Api.Tests/Fixtures/CustomWebApplicationFactory.cs` | Test host configuration for API tests |

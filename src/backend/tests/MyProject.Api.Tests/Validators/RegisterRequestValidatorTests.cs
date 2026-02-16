@@ -13,7 +13,8 @@ public class RegisterRequestValidatorTests
         var request = new RegisterRequest
         {
             Email = "test@example.com",
-            Password = "Password1"
+            Password = "Password1",
+            CaptchaToken = "valid-token"
         };
 
         var result = _validator.TestValidate(request);

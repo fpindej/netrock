@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication;
+using MyProject.Application.Features.Captcha;
 using MyProject.Shared;
 using MyProject.WebApi.Features.Authentication.Dtos.ChangePassword;
 using MyProject.WebApi.Features.Authentication.Dtos.ForgotPassword;
@@ -21,7 +22,7 @@ namespace MyProject.WebApi.Features.Authentication;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Auth")]
-public class AuthController(IAuthenticationService authenticationService) : ControllerBase
+public class AuthController(IAuthenticationService authenticationService, ICaptchaService captchaService) : ControllerBase
 {
     /// <summary>
     /// Authenticates a user and returns JWT tokens.
@@ -130,6 +131,11 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
+        if (!await captchaService.ValidateTokenAsync(request.CaptchaToken, cancellationToken))
+        {
+            return ProblemFactory.Create(ErrorMessages.Auth.CaptchaInvalid, ErrorType.Validation);
+        }
+
         var result = await authenticationService.Register(request.ToRegisterInput(), cancellationToken);
 
         if (!result.IsSuccess)
@@ -156,6 +162,11 @@ public class AuthController(IAuthenticationService authenticationService) : Cont
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
+        if (!await captchaService.ValidateTokenAsync(request.CaptchaToken, cancellationToken))
+        {
+            return ProblemFactory.Create(ErrorMessages.Auth.CaptchaInvalid, ErrorType.Validation);
+        }
+
         await authenticationService.ForgotPasswordAsync(request.Email, cancellationToken);
         return Ok();
     }

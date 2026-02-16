@@ -103,6 +103,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Load test environment
+        run: cp .env.test .env
+
       - name: Generate paraglide messages
         run: npx paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
 

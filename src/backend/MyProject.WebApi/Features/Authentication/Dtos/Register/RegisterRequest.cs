@@ -26,6 +26,13 @@ public class RegisterRequest
     public string Password { get; [UsedImplicitly] init; } = string.Empty;
 
     /// <summary>
+    /// The CAPTCHA verification token from Cloudflare Turnstile.
+    /// </summary>
+    [Required]
+    [MaxLength(8192)]
+    public string CaptchaToken { get; [UsedImplicitly] init; } = string.Empty;
+
+    /// <summary>
     /// The phone number for the new account.
     /// </summary>
     [MaxLength(20)]
