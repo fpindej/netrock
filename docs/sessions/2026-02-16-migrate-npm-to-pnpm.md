@@ -72,9 +72,27 @@ flowchart TD
     end
 ```
 
+## Hardening (Stacked PR #216)
+
+After the initial migration, a follow-up PR hardened the pnpm configuration:
+
+| File | Change | Reason |
+|------|--------|--------|
+| `src/frontend/.npmrc` | Added `strict-peer-dependencies=true`, `frozen-lockfile=true` | Fail on unmet peer deps; enforce lockfile integrity everywhere |
+| `src/frontend/.dockerignore` | Created | Exclude `node_modules`, `.svelte-kit`, build output, `.env*`, editor configs from Docker context |
+| `src/frontend/Dockerfile` | Added `.npmrc` to COPY, trailing slash on destination | Docker builds respect `.npmrc` settings |
+| `src/frontend/Dockerfile.local` | Added `.npmrc` to COPY, trailing slash on destination | Same as above |
+| `FILEMAP.md` | Added `.npmrc` to impact tables | Bidirectional: Dockerfile ↔ .npmrc |
+| `src/frontend/AGENTS.md` | Added pnpm configuration section | Document `.npmrc` settings for contributors |
+
+### Decisions
+
+- **`frozen-lockfile=true` over `prefer-frozen-lockfile=true`**: `prefer-frozen-lockfile` was deprecated in pnpm v7 and is a no-op in pnpm 10. `frozen-lockfile=true` actively enforces lockfile integrity in all contexts (dev, CI, Docker).
+- **`.dockerignore` for frontend**: Without it, the entire `node_modules/` directory (~273 packages) was being sent as Docker context on every build, only to be overwritten by `pnpm install` inside the container.
+
 ## Follow-Up Items
 
-- [ ] Verify CI passes on PR #215
+- [x] Verify CI passes on PR #215
 - [ ] Test Docker production build with `docker build -f src/frontend/Dockerfile src/frontend/ --build-arg PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA`
 - [ ] Test Docker local dev with `docker compose -f docker-compose.local.yml down -v && docker compose -f docker-compose.local.yml up -d frontend`
 - [ ] After merge, all developers need a one-time `corepack enable` and fresh `pnpm install` in `src/frontend/`
