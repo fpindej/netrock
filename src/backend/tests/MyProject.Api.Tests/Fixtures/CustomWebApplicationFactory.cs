@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using MyProject.Application.Caching;
 using MyProject.Application.Features.Admin;
+using MyProject.Application.Features.Captcha;
 using MyProject.Application.Features.Email;
 using MyProject.Application.Features.Jobs;
 using MyProject.Application.Identity;
@@ -28,6 +29,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     public IJobManagementService JobManagementService { get; } = Substitute.For<IJobManagementService>();
     public IEmailService EmailService { get; } = Substitute.For<IEmailService>();
     public ICacheService CacheService { get; } = Substitute.For<ICacheService>();
+    public ICaptchaService CaptchaService { get; } = Substitute.For<ICaptchaService>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -90,6 +92,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<ICacheService>();
             services.AddSingleton(CacheService);
 
+            services.RemoveAll<ICaptchaService>();
+            services.AddSingleton(CaptchaService);
+
             // Override auth scheme — PostConfigure runs after the app's Configure,
             // ensuring the test scheme wins over the JWT Bearer defaults.
             services.PostConfigure<AuthenticationOptions>(options =>
@@ -122,5 +127,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         JobManagementService.ClearSubstitute(ClearOptions.All);
         EmailService.ClearSubstitute(ClearOptions.All);
         CacheService.ClearSubstitute(ClearOptions.All);
+        CaptchaService.ClearSubstitute(ClearOptions.All);
     }
 }

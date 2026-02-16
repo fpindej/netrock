@@ -10,7 +10,7 @@ public class ForgotPasswordRequestValidatorTests
     [Fact]
     public void ValidRequest_ShouldPassValidation()
     {
-        var request = new ForgotPasswordRequest { Email = "test@example.com" };
+        var request = new ForgotPasswordRequest { Email = "test@example.com", CaptchaToken = "valid-token" };
 
         var result = _validator.TestValidate(request);
 
