@@ -62,12 +62,10 @@
 		}
 	}
 
-	// Auto-save draft while dialog is open (never persists passwords)
+	// Auto-save draft while dialog is open (never persists passwords).
+	// saveDraft() reads the draft fields, so $effect subscribes to their changes automatically.
 	$effect(() => {
-		if (open) {
-			const _ = { firstName, lastName, email, phoneNumber };
-			saveDraft();
-		}
+		if (open) saveDraft();
 	});
 
 	function resetForm() {
@@ -120,8 +118,8 @@
 				toast.success(m.auth_register_success());
 				const registeredEmail = email;
 				clearDraft();
-				resetForm();
 				open = false;
+				resetForm();
 				onSuccess?.(registeredEmail);
 			} else {
 				handleMutationError(response, apiError, {
