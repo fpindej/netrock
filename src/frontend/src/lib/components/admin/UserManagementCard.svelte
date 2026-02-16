@@ -174,7 +174,9 @@
 	</Card.Header>
 	<Card.Content class="space-y-4">
 		{#if !canManage && !canAssignRoles}
-			<div class="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+			<div
+				class="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground"
+			>
 				<Lock class="h-4 w-4 shrink-0" />
 				<span>{m.admin_userDetail_cannotManage()}</span>
 			</div>
@@ -221,9 +223,7 @@
 								{#if selectedRole}
 									<span>{selectedRole}</span>
 								{:else}
-									<span class="text-muted-foreground"
-										>{m.admin_userDetail_selectRole()}</span
-									>
+									<span class="text-muted-foreground">{m.admin_userDetail_selectRole()}</span>
 								{/if}
 							</Select.Trigger>
 							<Select.Content>

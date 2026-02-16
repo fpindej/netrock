@@ -1,7 +1,6 @@
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { RoleTable, CreateRoleDialog } from '$lib/components/admin';
+	import { RoleCardGrid, CreateRoleDialog } from '$lib/components/admin';
 	import { hasPermission, Permissions } from '$lib/utils';
 	import { Plus } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
@@ -33,11 +32,7 @@
 	</div>
 	<div class="h-px w-full bg-border"></div>
 
-	<Card.Root>
-		<Card.Content class="p-0">
-			<RoleTable roles={data.roles} />
-		</Card.Content>
-	</Card.Root>
+	<RoleCardGrid roles={data.roles} />
 </div>
 
 {#if canManageRoles}

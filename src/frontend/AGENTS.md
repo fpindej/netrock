@@ -516,7 +516,7 @@ Components live in feature folders under `$lib/components/`:
 
 ```
 components/
-├── admin/           # UserTable, Pagination, RoleTable, UserDetailCards,
+├── admin/           # UserTable, Pagination, RoleCardGrid, UserDetailCards,
 │   └── index.ts     # UserManagementCard, AccountInfoCard, CreateRoleDialog,
 │                    # RolePermissionEditor, RoleDetailsCard,
 │                    # RolePermissionsSection, RoleDeleteSection

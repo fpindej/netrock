@@ -2215,6 +2215,8 @@ export interface components {
 			 * @description The number of users assigned to this role.
 			 */
 			userCount?: number;
+			/** @description The permission claim values assigned to this role. */
+			permissions?: string[];
 		};
 		/** @description Represents a user's full profile and account details for admin views. */
 		AdminUserResponse: {

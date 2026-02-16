@@ -325,13 +325,12 @@ internal class AdminService(
             .Select(g => new { RoleId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.RoleId, x => x.Count, cancellationToken);
 
-        var roleClaims = await dbContext.RoleClaims
-            .Where(rc => rc.ClaimType == AppPermissions.ClaimType)
+        var roleClaims = (await dbContext.RoleClaims
+                .Where(rc => rc.ClaimType == AppPermissions.ClaimType)
+                .Select(rc => new { rc.RoleId, rc.ClaimValue })
+                .ToListAsync(cancellationToken))
             .GroupBy(rc => rc.RoleId)
-            .ToDictionaryAsync(
-                g => g.Key,
-                g => g.Select(c => c.ClaimValue!).ToList(),
-                cancellationToken);
+            .ToDictionary(g => g.Key, g => g.Select(c => c.ClaimValue!).ToList());
 
         return roles
             .Select(role => new AdminRoleOutput(
