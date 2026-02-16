@@ -12,11 +12,12 @@ const config = {
 			mode: 'nonce',
 			directives: {
 				'default-src': ['self'],
-				'script-src': ['self', 'nonce'],
+				'script-src': ['self', 'nonce', 'https://challenges.cloudflare.com'],
 				'style-src': ['self', 'unsafe-inline'],
 				'img-src': ['self', 'https:', 'data:'],
 				'font-src': ['self'],
 				'connect-src': ['self'],
+				'frame-src': ['https://challenges.cloudflare.com'],
 				'frame-ancestors': ['none'],
 				'base-uri': ['self'],
 				'form-action': ['self'],
