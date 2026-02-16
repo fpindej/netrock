@@ -700,7 +700,7 @@ public class AdminServiceTests : IDisposable
         _userManager.GeneratePasswordResetTokenAsync(Arg.Any<ApplicationUser>())
             .Returns("reset-token");
 
-        var result = await _sut.CreateUserAsync(new CreateUserInput("new@test.com", "John", "Doe"));
+        var result = await _sut.CreateUserAsync(_callerId, new CreateUserInput("new@test.com", "John", "Doe"));
 
         Assert.True(result.IsSuccess);
         Assert.Equal(newUserId, result.Value);
@@ -715,7 +715,7 @@ public class AdminServiceTests : IDisposable
         _userManager.FindByEmailAsync("existing@test.com")
             .Returns(new ApplicationUser { Id = Guid.NewGuid(), Email = "existing@test.com" });
 
-        var result = await _sut.CreateUserAsync(new CreateUserInput("existing@test.com", null, null));
+        var result = await _sut.CreateUserAsync(_callerId, new CreateUserInput("existing@test.com", null, null));
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Admin.EmailAlreadyRegistered, result.Error);
@@ -732,7 +732,7 @@ public class AdminServiceTests : IDisposable
         _userManager.GeneratePasswordResetTokenAsync(Arg.Any<ApplicationUser>())
             .Returns("reset-token");
 
-        await _sut.CreateUserAsync(new CreateUserInput("invite@test.com", null, null));
+        await _sut.CreateUserAsync(_callerId, new CreateUserInput("invite@test.com", null, null));
 
         await _emailService.Received(1).SendEmailAsync(
             Arg.Is<EmailMessage>(m => m.To == "invite@test.com" && m.Subject == "You've Been Invited"),

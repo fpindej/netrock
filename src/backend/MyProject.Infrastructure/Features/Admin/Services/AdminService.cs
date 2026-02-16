@@ -42,6 +42,7 @@ internal class AdminService(
     ILogger<AdminService> logger) : IAdminService
 {
     private readonly EmailOptions _emailOptions = emailOptions.Value;
+
     /// <inheritdoc />
     public async Task<AdminUserListOutput> GetUsersAsync(int pageNumber, int pageSize, string? search = null,
         CancellationToken cancellationToken = default)
@@ -413,9 +414,8 @@ internal class AdminService(
         }
 
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
-        var encodedToken = Uri.EscapeDataString(token);
-        var encodedEmail = Uri.EscapeDataString(user.Email ?? user.UserName ?? string.Empty);
-        var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={encodedToken}&email={encodedEmail}";
+        var email = user.Email ?? user.UserName ?? string.Empty;
+        var resetUrl = BuildPasswordResetUrl(token, email);
 
         var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
         var htmlBody = $"""
@@ -436,7 +436,7 @@ internal class AdminService(
             """;
 
         var message = new EmailMessage(
-            To: user.Email ?? user.UserName ?? string.Empty,
+            To: email,
             Subject: "Reset Your Password",
             HtmlBody: htmlBody,
             PlainTextBody: plainTextBody
@@ -451,7 +451,7 @@ internal class AdminService(
     }
 
     /// <inheritdoc />
-    public async Task<Result<Guid>> CreateUserAsync(CreateUserInput input,
+    public async Task<Result<Guid>> CreateUserAsync(Guid callerUserId, CreateUserInput input,
         CancellationToken cancellationToken = default)
     {
         var existingUser = await userManager.FindByEmailAsync(input.Email);
@@ -466,6 +466,7 @@ internal class AdminService(
         {
             UserName = input.Email,
             Email = input.Email,
+            EmailConfirmed = true,
             FirstName = input.FirstName,
             LastName = input.LastName,
             LockoutEnabled = true
@@ -486,9 +487,7 @@ internal class AdminService(
 
         // Send invitation email with password reset link
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
-        var encodedToken = Uri.EscapeDataString(token);
-        var encodedEmail = Uri.EscapeDataString(input.Email);
-        var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={encodedToken}&email={encodedEmail}";
+        var resetUrl = BuildPasswordResetUrl(token, input.Email);
 
         var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
         var htmlBody = $"""
@@ -516,8 +515,8 @@ internal class AdminService(
 
         await SendEmailSafeAsync(message, cancellationToken);
 
-        logger.LogInformation("User '{UserId}' created via admin invitation for email '{Email}'",
-            user.Id, input.Email);
+        logger.LogInformation("User '{UserId}' created via admin invitation for email '{Email}' by admin '{CallerUserId}'",
+            user.Id, input.Email, callerUserId);
 
         return Result<Guid>.Success(user.Id);
     }
@@ -733,6 +732,16 @@ internal class AdminService(
     }
 
     /// <summary>
+    /// Builds an absolute password-reset URL for the frontend, encoding the token and email as query parameters.
+    /// </summary>
+    private string BuildPasswordResetUrl(string token, string email)
+    {
+        var encodedToken = Uri.EscapeDataString(token);
+        var encodedEmail = Uri.EscapeDataString(email);
+        return $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={encodedToken}&email={encodedEmail}";
+    }
+
+    /// <summary>
     /// Generates a cryptographically random temporary password that satisfies default ASP.NET Identity complexity rules.
     /// </summary>
     private static string GenerateTemporaryPassword()
@@ -759,9 +768,8 @@ internal class AdminService(
         }
 
         // Shuffle to avoid predictable prefix
-        var rng = RandomNumberGenerator.Create();
-        var shuffleBytes = new byte[32];
-        rng.GetBytes(shuffleBytes);
+        Span<byte> shuffleBytes = stackalloc byte[32];
+        RandomNumberGenerator.Fill(shuffleBytes);
         for (var i = password.Length - 1; i > 0; i--)
         {
             var j = shuffleBytes[i] % (i + 1);

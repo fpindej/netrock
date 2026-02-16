@@ -330,7 +330,8 @@ public class AdminController(IAdminService adminService, IRoleManagementService 
         [FromBody] CreateUserRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await adminService.CreateUserAsync(request.ToInput(), cancellationToken);
+        var callerUserId = userContext.AuthenticatedUserId;
+        var result = await adminService.CreateUserAsync(callerUserId, request.ToInput(), cancellationToken);
 
         if (!result.IsSuccess)
         {

@@ -109,10 +109,11 @@ public interface IAdminService
     /// <summary>
     /// Creates a new user account and sends an invitation email with a password reset link.
     /// </summary>
+    /// <param name="callerUserId">The ID of the admin performing the action.</param>
     /// <param name="input">The user creation input containing email and optional name fields.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The new user's ID on success, or a failure with an error message.</returns>
-    Task<Result<Guid>> CreateUserAsync(CreateUserInput input, CancellationToken cancellationToken = default);
+    Task<Result<Guid>> CreateUserAsync(Guid callerUserId, CreateUserInput input, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all roles with user counts.

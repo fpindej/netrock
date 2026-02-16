@@ -427,7 +427,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     [Fact]
     public async Task CreateUser_WithPermission_Returns201()
     {
-        _factory.AdminService.CreateUserAsync(Arg.Any<CreateUserInput>(), Arg.Any<CancellationToken>())
+        _factory.AdminService.CreateUserAsync(Arg.Any<Guid>(), Arg.Any<CreateUserInput>(), Arg.Any<CancellationToken>())
             .Returns(Result<Guid>.Success(Guid.NewGuid()));
 
         var response = await _client.SendAsync(
@@ -454,7 +454,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     [Fact]
     public async Task CreateUser_DuplicateEmail_Returns400()
     {
-        _factory.AdminService.CreateUserAsync(Arg.Any<CreateUserInput>(), Arg.Any<CancellationToken>())
+        _factory.AdminService.CreateUserAsync(Arg.Any<Guid>(), Arg.Any<CreateUserInput>(), Arg.Any<CancellationToken>())
             .Returns(Result<Guid>.Failure(ErrorMessages.Admin.EmailAlreadyRegistered));
 
         var response = await _client.SendAsync(
