@@ -442,6 +442,22 @@ Pre-commit checks (build, format, lint, type check) remain manual steps document
 
 The backend Dockerfile uses layer caching: `.csproj` files are restored first (cached), then source is copied and built. This avoids re-downloading NuGet packages on every source change.
 
+The frontend Dockerfile accepts `PUBLIC_*` SvelteKit env vars as Docker build args — they are baked into the JS at build time via `$env/static/public`. When adding a new `PUBLIC_*` var:
+
+1. Add `ARG` + `ENV` to `src/frontend/Dockerfile` (before `npm run build`)
+2. Add `--build-arg` to `deploy.sh`, `deploy.ps1`, and `.github/workflows/docker.yml`
+3. Add the var to `src/frontend/.env.test` (CI), `src/frontend/.env.example` (docs), and `docker-compose.local.yml` (`x-frontend-environment`)
+
+### Frontend Environment Files
+
+| File | Purpose | Committed |
+|---|---|---|
+| `src/frontend/.env.example` | Documentation — shows required vars with placeholders | yes |
+| `src/frontend/.env.test` | CI + local test runs — valid test defaults | yes |
+| `src/frontend/.env.local` | Personal dev overrides | no (gitignored) |
+
+CI loads `.env.test` via `cp .env.test .env`. Vite picks it up during `svelte-kit sync`. Docker builds pass vars as `--build-arg` instead.
+
 ## Deployment
 
 Build and push images via `./deploy.sh` (or `deploy.ps1`), configured by `deploy.config.json`.

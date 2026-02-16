@@ -700,9 +700,18 @@ cd src/frontend && npm run format && npm run lint && npm run check
 
 **Frontend-consumed variable:**
 
-1. Add to `src/frontend/.env.example`
-2. Add to `src/frontend/src/lib/config/server.ts` (server-only) or `i18n.ts` (client-safe)
-3. Never export server config from the barrel (`$lib/config/index.ts`)
+1. Add to `src/frontend/.env.example` (documentation with placeholder)
+2. Add to `src/frontend/.env.test` (valid test value for CI)
+3. Add to `src/frontend/src/lib/config/server.ts` (server-only) or `i18n.ts` (client-safe)
+4. Never export server config from the barrel (`$lib/config/index.ts`)
+
+**Frontend `PUBLIC_*` variable (SvelteKit `$env/static/public`):**
+
+1. Steps 1–2 above
+2. Add `ARG` + `ENV` to `src/frontend/Dockerfile` (before `npm run build`)
+3. Add `--build-arg` to `deploy.sh`, `deploy.ps1`, and `.github/workflows/docker.yml`
+4. Add to `docker-compose.local.yml` `x-frontend-environment` anchor with dev default
+5. Import in components: `import { PUBLIC_VAR } from '$env/static/public';`
 
 ### Add a Full-Stack Feature
 

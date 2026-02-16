@@ -529,6 +529,11 @@ build_frontend() {
         build_args="$build_args --load"
     fi
 
+    # SvelteKit $env/static/public vars must be passed at build time.
+    if [ -n "${PUBLIC_TURNSTILE_SITE_KEY:-}" ]; then
+        build_args="$build_args --build-arg PUBLIC_TURNSTILE_SITE_KEY=$PUBLIC_TURNSTILE_SITE_KEY"
+    fi
+
     pushd src/frontend > /dev/null
     local build_result=0
     docker buildx build $build_args . 2>&1 || build_result=$?

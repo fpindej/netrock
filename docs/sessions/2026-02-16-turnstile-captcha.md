@@ -94,6 +94,12 @@ After a strict review, the following improvements were made:
 
 5. **Bumped Registration rate limit from 5 to 10/min** — CAPTCHA now handles bot protection, so the rate limit's job shifts from "stop bots" to "stop absurd volumes." 5/min was too tight for legitimate users who might retry after validation errors + CAPTCHA expiry. Auth rate limit kept at 10/min since Login (no CAPTCHA) still needs brute-force protection.
 
+6. **Frontend Dockerfile: `ARG` for `PUBLIC_TURNSTILE_SITE_KEY`** — SvelteKit's `$env/static/public` is baked at build time. Without the build arg, Docker builds produce images with an empty site key. Added `ARG`+`ENV` to the Dockerfile, `--build-arg` to Docker CI workflow, and pass-through in deploy scripts (`deploy.sh`/`deploy.ps1`).
+
+7. **docker-compose.local.yml: added `PUBLIC_TURNSTILE_SITE_KEY` to frontend environment** — Consistent with how `API_URL` is handled. Falls back to the always-pass test key for local dev.
+
+8. **CI pipeline: `.env.test` instead of hardcoded env vars** — Created a dedicated `src/frontend/.env.test` (committed, gitignore-whitelisted) with valid test values. CI copies it to `.env` before `svelte-kit sync`. Keeps `.env.example` as documentation with placeholders.
+
 ## Follow-Up Items
 
 - [ ] Manual test: register form with Turnstile widget

@@ -571,6 +571,13 @@ function Build-Frontend {
         $buildArgs += "--load"
     }
 
+    # SvelteKit $env/static/public vars must be passed at build time.
+    $turnstileKey = $env:PUBLIC_TURNSTILE_SITE_KEY
+    if ($turnstileKey) {
+        $buildArgs += "--build-arg"
+        $buildArgs += "PUBLIC_TURNSTILE_SITE_KEY=$turnstileKey"
+    }
+
     $buildArgs += "."
 
     Push-Location "src\frontend"

@@ -81,5 +81,7 @@ jobs:
           context: src/frontend
           file: src/frontend/Dockerfile
           push: false
+          build-args: |
+            PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
           cache-from: type=gha,scope=frontend-docker
           cache-to: type=gha,scope=frontend-docker,mode=max
