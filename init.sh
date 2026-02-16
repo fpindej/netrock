@@ -146,6 +146,9 @@ check_prerequisites() {
     if [[ ${#missing[@]} -gt 0 ]]; then
         print_error "Missing required tools: ${missing[*]}"
         echo "Please install them before running this script."
+        if [[ " ${missing[*]} " == *" pnpm "* ]]; then
+            print_info "pnpm is managed via corepack. Run: corepack enable"
+        fi
         exit 1
     fi
 }
@@ -322,7 +325,7 @@ fi
 # Check prerequisites
 print_step "Checking prerequisites..."
 check_prerequisites
-print_success "All prerequisites found (git, dotnet, docker, node, pnpm)"
+print_success "All prerequisites found (git, dotnet, docker, node, pnpm via corepack)"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Step 1: Project Name

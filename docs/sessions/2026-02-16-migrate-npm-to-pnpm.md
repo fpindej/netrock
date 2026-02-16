@@ -14,7 +14,7 @@ Migrated the frontend from npm to pnpm using corepack (built into Node 22). This
 | `src/frontend/package.json` | Added `"packageManager": "pnpm@10.29.3"` and `pnpm.onlyBuiltDependencies` | Pin exact pnpm version via corepack; approve esbuild build script |
 | `src/frontend/package-lock.json` | Deleted | Replaced by pnpm-lock.yaml |
 | `src/frontend/pnpm-lock.yaml` | Generated | pnpm lockfile |
-| `src/frontend/Dockerfile` | Rewritten as 3-stage build (base, prod-deps, builder, runtime) | Separate prod-deps stage replaces `npm prune --production`; BuildKit cache mounts for pnpm store |
+| `src/frontend/Dockerfile` | Rewritten as multi-stage build (base, prod-deps, builder, runtime) | Separate prod-deps stage replaces `npm prune --production`; BuildKit cache mounts for pnpm store |
 | `src/frontend/Dockerfile.local` | Rewritten with corepack + pnpm | Match production approach |
 | `.github/workflows/ci.yml` | Added `pnpm/action-setup@v4`, switched cache to pnpm, replaced npm commands | pnpm/action-setup reads packageManager field automatically |
 | `.github/workflows/docker.yml` | Replaced `package*.json` glob with explicit `package.json` + `pnpm-lock.yaml` | Precise trigger paths for pnpm lockfile |
@@ -36,7 +36,7 @@ Migrated the frontend from npm to pnpm using corepack (built into Node 22). This
 - **Alternatives considered**: Global `npm install -g pnpm`, standalone installer script
 - **Reasoning**: Corepack is built into Node 22, ensures every developer and CI runner uses the exact same pnpm version without any extra install step. The `pnpm/action-setup@v4` GitHub Action reads the `packageManager` field automatically.
 
-### 3-stage Dockerfile with BuildKit cache mounts
+### multi-stage Dockerfile with BuildKit cache mounts
 
 - **Choice**: Separate `base`, `prod-deps`, and `builder` stages with `--mount=type=cache,id=pnpm,target=/pnpm/store`
 - **Alternatives considered**: Single-stage build with `pnpm install --prod` after build (like the old npm approach)
@@ -58,7 +58,7 @@ Migrated the frontend from npm to pnpm using corepack (built into Node 22). This
 
 ```mermaid
 flowchart TD
-    subgraph "Production Dockerfile (3-stage)"
+    subgraph "Production Dockerfile (multi-stage)"
         A[base: node:22-alpine + corepack enable] --> B[prod-deps: pnpm install --prod]
         A --> C[builder: pnpm install + pnpm run build]
         B --> D[runtime: node build/]
