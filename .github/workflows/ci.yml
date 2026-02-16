@@ -88,6 +88,8 @@ jobs:
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      PUBLIC_TURNSTILE_SITE_KEY: "1x00000000000000000000AA"
     defaults:
       run:
         working-directory: src/frontend
