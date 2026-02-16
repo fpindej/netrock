@@ -1,6 +1,7 @@
 using FluentValidation.TestHelper;
 using MyProject.WebApi.Features.Admin.Dtos.AssignRole;
 using MyProject.WebApi.Features.Admin.Dtos.CreateRole;
+using MyProject.WebApi.Features.Admin.Dtos.CreateUser;
 using MyProject.WebApi.Features.Admin.Dtos.ListUsers;
 using MyProject.WebApi.Features.Admin.Dtos.SetPermissions;
 using MyProject.WebApi.Features.Admin.Dtos.UpdateRole;
@@ -121,6 +122,45 @@ public class SetPermissionsRequestValidatorTests
     [InlineData("jobs_view")]
     public void ValidPermissionPattern_ShouldPass(string permission) =>
         _validator.TestValidate(new SetPermissionsRequest { Permissions = [permission] })
+            .ShouldNotHaveAnyValidationErrors();
+}
+
+public class CreateUserRequestValidatorTests
+{
+    private readonly CreateUserRequestValidator _validator = new();
+
+    [Fact]
+    public void ValidRequest_ShouldPass() =>
+        _validator.TestValidate(new CreateUserRequest { Email = "user@example.com", FirstName = "John", LastName = "Doe" })
+            .ShouldNotHaveAnyValidationErrors();
+
+    [Fact]
+    public void EmptyEmail_ShouldFail() =>
+        _validator.TestValidate(new CreateUserRequest { Email = "" }).ShouldHaveValidationErrorFor(x => x.Email);
+
+    [Fact]
+    public void InvalidEmailFormat_ShouldFail() =>
+        _validator.TestValidate(new CreateUserRequest { Email = "not-an-email" })
+            .ShouldHaveValidationErrorFor(x => x.Email);
+
+    [Fact]
+    public void EmailTooLong_ShouldFail() =>
+        _validator.TestValidate(new CreateUserRequest { Email = new string('a', 245) + "@example.com" })
+            .ShouldHaveValidationErrorFor(x => x.Email);
+
+    [Fact]
+    public void FirstNameTooLong_ShouldFail() =>
+        _validator.TestValidate(new CreateUserRequest { Email = "user@example.com", FirstName = new string('a', 101) })
+            .ShouldHaveValidationErrorFor(x => x.FirstName);
+
+    [Fact]
+    public void LastNameTooLong_ShouldFail() =>
+        _validator.TestValidate(new CreateUserRequest { Email = "user@example.com", LastName = new string('a', 101) })
+            .ShouldHaveValidationErrorFor(x => x.LastName);
+
+    [Fact]
+    public void NullNames_ShouldPass() =>
+        _validator.TestValidate(new CreateUserRequest { Email = "user@example.com" })
             .ShouldNotHaveAnyValidationErrors();
 }
 
