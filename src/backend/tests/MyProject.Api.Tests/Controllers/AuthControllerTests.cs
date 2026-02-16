@@ -5,7 +5,6 @@ using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication.Dtos;
-using MyProject.Application.Features.Captcha;
 using MyProject.Shared;
 
 namespace MyProject.Api.Tests.Controllers;

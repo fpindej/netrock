@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyProject.Application.Features.Captcha;
 using MyProject.Infrastructure.Features.Captcha.Options;
@@ -16,9 +15,8 @@ public static class ServiceCollectionExtensions
         /// <summary>
         /// Registers Cloudflare Turnstile CAPTCHA services and configuration.
         /// </summary>
-        /// <param name="configuration">The application configuration.</param>
         /// <returns>The service collection for chaining.</returns>
-        public IServiceCollection AddCaptchaServices(IConfiguration configuration)
+        public IServiceCollection AddCaptchaServices()
         {
             services.AddOptions<CaptchaOptions>()
                 .BindConfiguration(CaptchaOptions.SectionName)

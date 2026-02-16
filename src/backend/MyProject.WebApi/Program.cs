@@ -60,7 +60,7 @@ try
         builder.Services.AddEmailServices(builder.Configuration);
 
         Log.Debug("Adding captcha services");
-        builder.Services.AddCaptchaServices(builder.Configuration);
+        builder.Services.AddCaptchaServices();
 
         Log.Debug("Adding job scheduling");
         builder.Services.AddJobScheduling(builder.Configuration);
