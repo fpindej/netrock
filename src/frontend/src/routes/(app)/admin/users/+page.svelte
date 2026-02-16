@@ -4,8 +4,10 @@
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
-	import { UserTable, Pagination } from '$lib/components/admin';
-	import { Search } from '@lucide/svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { UserTable, Pagination, CreateUserDialog } from '$lib/components/admin';
+	import { Search, UserPlus } from '@lucide/svelte';
+	import { hasPermission, Permissions } from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
 	import type { PageData } from './$types';
 
@@ -13,6 +15,9 @@
 
 	let searchInput = $state(data.search ?? '');
 	let searchTimeout: ReturnType<typeof setTimeout>;
+	let inviteDialogOpen = $state(false);
+
+	let canManageUsers = $derived(hasPermission(data.user, Permissions.Users.Manage));
 
 	// page.url.pathname is already resolved — no need to pass through resolve()
 	function handleSearch(value: string) {
@@ -68,11 +73,19 @@
 				}}
 			/>
 		</div>
-		{#if data.users?.totalCount != null}
-			<p class="text-sm text-muted-foreground">
-				{m.admin_users_totalUsers({ count: data.users.totalCount })}
-			</p>
-		{/if}
+		<div class="flex items-center gap-3">
+			{#if data.users?.totalCount != null}
+				<p class="text-sm text-muted-foreground">
+					{m.admin_users_totalUsers({ count: data.users.totalCount })}
+				</p>
+			{/if}
+			{#if canManageUsers}
+				<Button size="default" onclick={() => (inviteDialogOpen = true)}>
+					<UserPlus class="me-2 h-4 w-4" />
+					{m.admin_users_inviteUser()}
+				</Button>
+			{/if}
+		</div>
 	</div>
 
 	<Card.Root>
@@ -89,3 +102,7 @@
 		onPageChange={handlePageChange}
 	/>
 </div>
+
+{#if canManageUsers}
+	<CreateUserDialog bind:open={inviteDialogOpen} />
+{/if}

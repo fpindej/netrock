@@ -9,7 +9,7 @@
 	import { toast } from '$lib/components/ui/sonner';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Plus, X, Loader2, Lock, Unlock, Trash2 } from '@lucide/svelte';
+	import { Plus, X, Loader2, Lock, Unlock, Trash2, KeyRound } from '@lucide/svelte';
 	import type { AdminUser, AdminRole, User } from '$lib/types';
 	import {
 		canManageUser,
@@ -19,30 +19,30 @@
 		hasPermission,
 		Permissions
 	} from '$lib/utils';
-	import { createCooldown } from '$lib/state';
+	import type { Cooldown } from '$lib/state';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
 		user: AdminUser;
 		roles: AdminRole[];
 		currentUser: User;
+		cooldown: Cooldown;
 	}
 
-	let { user, roles, currentUser }: Props = $props();
+	let { user, roles, currentUser, cooldown }: Props = $props();
 
 	// --- Role management state ---
 	let isAssigningRole = $state(false);
 	let isRemovingRole = $state<string | null>(null);
 	let selectedRole = $state('');
 
-	// --- Cooldown state ---
-	const cooldown = createCooldown();
-
 	// --- Account actions state ---
 	let deleteDialogOpen = $state(false);
+	let resetDialogOpen = $state(false);
 	let isLocking = $state(false);
 	let isUnlocking = $state(false);
 	let isDeleting = $state(false);
+	let isSendingReset = $state(false);
 
 	// --- Derived permissions ---
 	let callerRoles = $derived(currentUser.roles ?? []);
@@ -162,6 +162,27 @@
 			handleMutationError(response, error, {
 				cooldown,
 				fallback: m.admin_userDetail_deleteError()
+			});
+		}
+	}
+
+	async function sendPasswordReset() {
+		isSendingReset = true;
+		const { response, error } = await browserClient.POST(
+			'/api/v1/admin/users/{id}/send-password-reset',
+			{
+				params: { path: { id: user.id ?? '' } }
+			}
+		);
+		isSendingReset = false;
+		resetDialogOpen = false;
+
+		if (response.ok) {
+			toast.success(m.admin_userDetail_resetSuccess());
+		} else {
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_userDetail_resetError()
 			});
 		}
 	}
@@ -292,6 +313,43 @@
 							{/if}
 						</Button>
 					{/if}
+
+					<Dialog.Root bind:open={resetDialogOpen}>
+						<Dialog.Trigger>
+							{#snippet child({ props })}
+								<Button variant="outline" size="default" {...props}>
+									<KeyRound class="me-2 h-4 w-4" />
+									{m.admin_userDetail_sendPasswordReset()}
+								</Button>
+							{/snippet}
+						</Dialog.Trigger>
+						<Dialog.Content>
+							<Dialog.Header>
+								<Dialog.Title>{m.admin_userDetail_resetConfirmTitle()}</Dialog.Title>
+								<Dialog.Description>
+									{m.admin_userDetail_resetConfirmDescription()}
+								</Dialog.Description>
+							</Dialog.Header>
+							<Dialog.Footer class="flex-col-reverse sm:flex-row">
+								<Button variant="outline" onclick={() => (resetDialogOpen = false)}>
+									{m.common_cancel()}
+								</Button>
+								<Button
+									disabled={isSendingReset || cooldown.active}
+									onclick={sendPasswordReset}
+								>
+									{#if cooldown.active}
+										{m.common_waitSeconds({ seconds: cooldown.remaining })}
+									{:else}
+										{#if isSendingReset}
+											<Loader2 class="me-2 h-4 w-4 animate-spin" />
+										{/if}
+										{m.admin_userDetail_sendPasswordReset()}
+									{/if}
+								</Button>
+							</Dialog.Footer>
+						</Dialog.Content>
+					</Dialog.Root>
 
 					<Dialog.Root bind:open={deleteDialogOpen}>
 						<Dialog.Trigger>

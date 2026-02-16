@@ -5,6 +5,7 @@ export { default as Pagination } from './Pagination.svelte';
 export { default as AccountInfoCard } from './AccountInfoCard.svelte';
 export { default as UserManagementCard } from './UserManagementCard.svelte';
 export { default as CreateRoleDialog } from './CreateRoleDialog.svelte';
+export { default as CreateUserDialog } from './CreateUserDialog.svelte';
 export { default as RolePermissionEditor } from './RolePermissionEditor.svelte';
 export { default as RoleDetailsCard } from './RoleDetailsCard.svelte';
 export { default as RolePermissionsSection } from './RolePermissionsSection.svelte';

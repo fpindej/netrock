@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
 	import {
 		Hash,
 		User as UserIcon,
@@ -9,17 +10,47 @@
 		Shield,
 		CheckCircle,
 		XCircle,
-		AtSign
+		AtSign,
+		Loader2
 	} from '@lucide/svelte';
 	import { InfoItem } from '$lib/components/profile';
+	import { browserClient, handleMutationError } from '$lib/api';
+	import { toast } from '$lib/components/ui/sonner';
+	import { invalidateAll } from '$app/navigation';
 	import type { AdminUser } from '$lib/types';
+	import type { Cooldown } from '$lib/state';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
 		user: AdminUser;
+		canManage: boolean;
+		cooldown: Cooldown;
 	}
 
-	let { user }: Props = $props();
+	let { user, canManage, cooldown }: Props = $props();
+
+	let isVerifying = $state(false);
+
+	async function verifyEmail() {
+		isVerifying = true;
+		const { response, error } = await browserClient.POST(
+			'/api/v1/admin/users/{id}/verify-email',
+			{
+				params: { path: { id: user.id ?? '' } }
+			}
+		);
+		isVerifying = false;
+
+		if (response.ok) {
+			toast.success(m.admin_userDetail_verifyEmailSuccess());
+			await invalidateAll();
+		} else {
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_userDetail_verifyEmailError()
+			});
+		}
+	}
 </script>
 
 <Card.Root>
@@ -64,9 +95,25 @@
 					{m.admin_userDetail_yes()}
 				</Badge>
 			{:else}
-				<Badge variant="outline" class="text-muted-foreground">
-					{m.admin_userDetail_no()}
-				</Badge>
+				<div class="flex items-center gap-2">
+					<Badge variant="outline" class="text-muted-foreground">
+						{m.admin_userDetail_no()}
+					</Badge>
+					{#if canManage}
+						<Button
+							variant="outline"
+							size="sm"
+							class="h-6 px-2 text-xs"
+							disabled={isVerifying || cooldown.active}
+							onclick={verifyEmail}
+						>
+							{#if isVerifying}
+								<Loader2 class="me-1 h-3 w-3 animate-spin" />
+							{/if}
+							{m.admin_userDetail_verifyEmail()}
+						</Button>
+					{/if}
+				</div>
 			{/if}
 		</InfoItem>
 
