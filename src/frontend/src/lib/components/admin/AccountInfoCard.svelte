@@ -33,12 +33,9 @@
 
 	async function verifyEmail() {
 		isVerifying = true;
-		const { response, error } = await browserClient.POST(
-			'/api/v1/admin/users/{id}/verify-email',
-			{
-				params: { path: { id: user.id ?? '' } }
-			}
-		);
+		const { response, error } = await browserClient.POST('/api/v1/admin/users/{id}/verify-email', {
+			params: { path: { id: user.id ?? '' } }
+		});
 		isVerifying = false;
 
 		if (response.ok) {

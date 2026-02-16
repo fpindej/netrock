@@ -334,10 +334,7 @@
 								<Button variant="outline" onclick={() => (resetDialogOpen = false)}>
 									{m.common_cancel()}
 								</Button>
-								<Button
-									disabled={isSendingReset || cooldown.active}
-									onclick={sendPasswordReset}
-								>
+								<Button disabled={isSendingReset || cooldown.active} onclick={sendPasswordReset}>
 									{#if cooldown.active}
 										{m.common_waitSeconds({ seconds: cooldown.remaining })}
 									{:else}
