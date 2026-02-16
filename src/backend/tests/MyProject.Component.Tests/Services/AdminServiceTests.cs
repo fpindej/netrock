@@ -59,9 +59,9 @@ public class AdminServiceTests : IDisposable
         return caller;
     }
 
-    private ApplicationUser SetupTargetAsUser()
+    private ApplicationUser SetupTargetAsUser(bool emailConfirmed = true)
     {
-        var target = new ApplicationUser { Id = _targetId, UserName = "user@test.com" };
+        var target = new ApplicationUser { Id = _targetId, UserName = "user@test.com", EmailConfirmed = emailConfirmed };
         _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
         _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.User });
         return target;
