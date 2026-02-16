@@ -205,9 +205,20 @@ prompt_checklist() {
         return
     fi
 
+    local first_draw=true
+
     while true; do
+        # Clear previous draw
+        if [[ "$first_draw" != "true" ]]; then
+            local lines_up=$((count + 3))
+            for ((j = 0; j < lines_up; j++)); do
+                echo -en "\033[A\033[2K"
+            done
+        fi
+        first_draw=false
+
         echo ""
-        echo -e "${BOLD}  Toggle options (press number), Enter to confirm:${NC}"
+        echo -e "${BOLD}  Press 1-${count} to toggle, Enter to confirm:${NC}"
         echo ""
 
         for ((i = 0; i < count; i++)); do
@@ -219,31 +230,22 @@ prompt_checklist() {
             fi
         done
 
-        echo ""
-        read -p "$(echo -e "${BOLD}Toggle [1-${count}]${NC} or ${BOLD}Enter${NC} to continue: ")" choice
+        # Single keypress — no Enter needed to toggle
+        read -rsn1 choice
 
+        # Enter (empty) confirms selection
         if [[ -z "$choice" ]]; then
+            echo ""
             break
         fi
 
-        if [[ "$choice" =~ ^[0-9]+$ ]] && [[ $choice -ge 1 ]] && [[ $choice -le $count ]]; then
+        if [[ "$choice" =~ ^[0-9]$ ]] && [[ $choice -ge 1 ]] && [[ $choice -le $count ]]; then
             local idx=$((choice - 1))
             if [[ "${selected[$idx]}" == "1" ]]; then
                 selected[$idx]=0
             else
                 selected[$idx]=1
             fi
-            # Move cursor up to redraw (count + 4 lines: header, blank, items, blank, prompt)
-            local lines_up=$((count + 4))
-            for ((j = 0; j < lines_up; j++)); do
-                echo -en "\033[A\033[2K"
-            done
-        else
-            # Invalid input — redraw
-            local lines_up=$((count + 4))
-            for ((j = 0; j < lines_up; j++)); do
-                echo -en "\033[A\033[2K"
-            done
         fi
     done
 

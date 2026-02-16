@@ -230,7 +230,7 @@ function Read-Checklist {
     while ($true) {
         # Clear previous draw (except first time)
         if (-not $firstDraw) {
-            $linesToClear = $Options.Count + 4
+            $linesToClear = $Options.Count + 3
             for ($j = 0; $j -lt $linesToClear; $j++) {
                 [Console]::SetCursorPosition(0, [Console]::CursorTop - 1)
                 [Console]::Write((" " * [Console]::WindowWidth))
@@ -240,7 +240,7 @@ function Read-Checklist {
         $firstDraw = $false
 
         Write-Host ""
-        Write-Host "  Toggle options (press number), Enter to confirm:" -ForegroundColor White
+        Write-Host "  Press 1-$($Options.Count) to toggle, Enter to confirm:" -ForegroundColor White
         Write-Host ""
 
         for ($i = 0; $i -lt $Options.Count; $i++) {
@@ -259,15 +259,16 @@ function Read-Checklist {
             }
         }
 
-        Write-Host ""
-        $choice = Read-Host "Toggle [1-$($Options.Count)] or Enter to continue"
+        # Single keypress — no Enter needed to toggle
+        $key = [Console]::ReadKey($true)
 
-        if ([string]::IsNullOrWhiteSpace($choice)) {
+        if ($key.Key -eq [ConsoleKey]::Enter) {
+            Write-Host ""
             return $selected
         }
 
         $num = 0
-        if ([int]::TryParse($choice, [ref]$num) -and $num -ge 1 -and $num -le $Options.Count) {
+        if ([int]::TryParse($key.KeyChar, [ref]$num) -and $num -ge 1 -and $num -le $Options.Count) {
             $idx = $num - 1
             $selected[$idx] = -not $selected[$idx]
         }
