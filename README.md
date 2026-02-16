@@ -6,7 +6,7 @@
 
 Clean Architecture. Fully tested. Fully dockerized. API-first — use the included frontend or bring your own.
 
-[![CI](https://github.com/fpindej/web-app-template/actions/workflows/ci.yml/badge.svg)](https://github.com/fpindej/web-app-template/actions/workflows/ci.yml)
+[![CI](https://github.com/fpindej/netrock/actions/workflows/ci.yml/badge.svg)](https://github.com/fpindej/netrock/actions/workflows/ci.yml)
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-Svelte_5-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -57,7 +57,7 @@ NETrock ships full-stack: a .NET 10 API and a complete SvelteKit frontend with a
 | **Authentication** | JWT in HttpOnly cookies, refresh token rotation with reuse detection, security stamp validation, remember-me persistent sessions |
 | **Authorization** | Permission-based with custom roles — atomic permissions (`users.view`, `roles.manage`, …) assigned per role, enforced via `[RequirePermission]` attribute |
 | **Role Hierarchy** | SuperAdmin > Admin > User — privilege escalation prevention, self-protection rules, system role guards |
-| **Rate Limiting** | Global + per-endpoint policies (registration, login, password reset), configurable fixed-window with IP and user partitioning |
+| **Rate Limiting** | Global + per-endpoint policies (registration, auth, sensitive operations, admin mutations), configurable fixed-window with IP and user partitioning |
 | **Validation** | FluentValidation + Data Annotations, flowing constraints into OpenAPI spec and generated TypeScript types |
 | **Caching** | Redis (distributed) with auto-invalidation via EF Core interceptor, cache-aside pattern, key management |
 | **Database** | PostgreSQL + EF Core with soft delete, full audit trail (created/updated/deleted by + at), global query filters |
@@ -67,9 +67,9 @@ NETrock ships full-stack: a .NET 10 API and a complete SvelteKit frontend with a
 | **Account Management** | Registration with CAPTCHA, login/logout, remember me, email verification, password reset, profile updates, account deletion |
 | **Admin Panel API** | User CRUD with search and pagination, custom role management with permission editor, role assignment with hierarchy enforcement |
 | **Background Jobs** | Hangfire with PostgreSQL persistence — recurring jobs via `IRecurringJobDefinition`, fire-and-forget, admin UI with trigger/pause/resume/restore, persistent pause state |
-| **Email** | Pluggable email service (SMTP or NoOp for dev), templated emails for verification and password reset |
+| **Email** | Pluggable email service (NoOp for dev — swap in your SMTP/SendGrid/etc.), templated emails for verification and password reset |
 | **Health Checks** | `/health` (all), `/health/ready` (DB + Redis), `/health/live` (liveness) — Docker healthcheck integration |
-| **Fuzzy Search** | PostgreSQL trigram-based fuzzy search for user lookup in admin panel |
+| **Search** | User lookup with search and pagination in admin panel, PostgreSQL trigram similarity function pre-registered for custom use |
 | **Testing** | 4 test projects — unit, component (mocked services), API integration (WebApplicationFactory), architecture enforcement |
 
 ### Frontend — SvelteKit / Svelte 5
@@ -156,7 +156,7 @@ NETrock is built **security-first**. Every decision defaults to the most restric
 ### 1. Clone & Initialize
 
 ```bash
-git clone https://github.com/fpindej/web-app-template.git my-saas
+git clone https://github.com/fpindej/netrock.git my-saas
 cd my-saas
 ```
 
@@ -376,7 +376,7 @@ Production-ready i18n with [Paraglide JS](https://inlang.com/m/gerre34r/library-
 
 - **Type-safe keys** — generated from `en.json`, compile-time errors on missing keys
 - **SSR-compatible** — correct `lang` attribute on first render, no hydration mismatch
-- **Auto-detection** — browser language → `Accept-Language` header → cookie fallback
+- **Auto-detection** — cookie preference → `Accept-Language` header fallback
 - **Adding a language** — create `es.json`, register in `i18n.ts`, done
 
 Ships with English and Czech. Adding a new language is a single JSON file.
@@ -437,7 +437,7 @@ NETrock is free and open source under the [MIT License](LICENSE). If it saves yo
 
 <a href="https://buymeacoffee.com/fpindej" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="50"></a>
 
-- Star the repo on [GitHub](https://github.com/fpindej/web-app-template)
+- Star the repo on [GitHub](https://github.com/fpindej/netrock)
 - Join the [Discord community](https://discord.gg/5rHquRptSh)
 
 ### Need help building your product?

@@ -13,7 +13,7 @@ Thanks for your interest in contributing! NETrock is a production-grade template
 
 ### Reporting Bugs
 
-Open a [GitHub issue](https://github.com/fpindej/web-app-template/issues) with:
+Open a [GitHub issue](https://github.com/fpindej/netrock/issues) with:
 - What you expected to happen
 - What actually happened
 - Steps to reproduce
@@ -57,9 +57,12 @@ These are non-negotiable. PRs that don't follow them will be requested to change
 
 - `Result`/`Result<T>` for all fallible operations — never throw for business logic
 - `TimeProvider` (injected) — never `DateTime.UtcNow` or `DateTimeOffset.UtcNow`
-- Typed DTOs only — `ProblemDetails` (RFC 9457) for all error responses
+- C# 13 `extension(T)` syntax for new extension methods
+- Never `null!` — fix the design instead
+- Typed DTOs only — `ProblemDetails` (RFC 9457) for all error responses, never anonymous objects or raw strings
 - `internal` on all Infrastructure service implementations
 - XML docs (`/// <summary>`) on all public and internal API surface
+- `System.Text.Json` only — never `Newtonsoft.Json`
 - NuGet versions in `Directory.Packages.props` only — never in `.csproj` files
 - All tests must pass — no skipped tests, no `[Fact(Skip = ...)]`
 
@@ -69,6 +72,7 @@ These are non-negotiable. PRs that don't follow them will be requested to change
 - `interface Props` + `$props()` — never `$props<{...}>()`
 - Logical CSS only: `ms-*`/`me-*`/`ps-*`/`pe-*` — never `ml-*`/`mr-*`/`pl-*`/`pr-*`
 - No `any` type — define proper interfaces
+- Feature folders in `$lib/components/{feature}/` with barrel `index.ts`
 - Never hand-edit `v1.d.ts` — regenerate with `pnpm run api:generate`
 
 ### Cross-Cutting
@@ -109,7 +113,7 @@ These are non-negotiable. PRs that don't follow them will be requested to change
 
 ## Questions?
 
-- Open a [GitHub Discussion](https://github.com/fpindej/web-app-template/discussions)
+- Open a [GitHub Discussion](https://github.com/fpindej/netrock/discussions)
 - Join the [Discord](https://discord.gg/5rHquRptSh)
 
 ## License
