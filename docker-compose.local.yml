@@ -29,6 +29,8 @@ services:
     build:
       context: ./src/backend
       dockerfile: MyProject.WebApi/Dockerfile
+      args:
+        STRIP_DEV_CONFIG: "false"
     container_name: {INIT_PROJECT_SLUG}-local-api
     env_file: .env
     environment: *api-environment

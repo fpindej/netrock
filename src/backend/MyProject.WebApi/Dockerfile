@@ -33,10 +33,19 @@ RUN dotnet build "MyProject.WebApi.csproj" -c Release
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "MyProject.WebApi.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:DebugType=None /p:DebugSymbols=false
+
+# StripDevConfig controls whether appsettings.Development/Testing.json are excluded.
+# Default: true (production). docker-compose.local overrides to false for local dev.
+ARG STRIP_DEV_CONFIG=true
+
+RUN dotnet publish "MyProject.WebApi.csproj" -c Release -o /app/publish \
+    /p:UseAppHost=false /p:DebugType=None /p:DebugSymbols=false \
+    /p:StripDevConfig=${STRIP_DEV_CONFIG}
 
 # Defense-in-depth: strip non-production config even if .csproj exclusion is bypassed
-RUN rm -f /app/publish/appsettings.Development.json /app/publish/appsettings.Testing.json
+RUN if [ "$STRIP_DEV_CONFIG" = "true" ]; then \
+        rm -f /app/publish/appsettings.Development.json /app/publish/appsettings.Testing.json; \
+    fi
 
 # Final stage
 FROM base AS final
