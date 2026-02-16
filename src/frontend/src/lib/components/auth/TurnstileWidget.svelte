@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 
 	interface Props {
 		siteKey: string;
@@ -15,10 +16,16 @@
 	const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 	const LOAD_TIMEOUT_MS = 10_000;
 
+	function getWidgetTheme(): 'light' | 'dark' {
+		if (!browser) return 'light';
+		return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+	}
+
 	function renderWidget() {
 		if (!window.turnstile || !container) return;
 		widgetId = window.turnstile.render(container, {
 			sitekey: siteKey,
+			theme: getWidgetTheme(),
 			callback: (token: string) => onVerified?.(token),
 			'expired-callback': () => onVerified?.(''),
 			'error-callback': () => onError?.()
@@ -75,4 +82,4 @@
 	});
 </script>
 
-<div bind:this={container}></div>
+<div class="flex justify-center" bind:this={container}></div>

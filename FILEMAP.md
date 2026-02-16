@@ -71,7 +71,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`$lib/config/server.ts`** | Server load functions that import `SERVER_CONFIG` |
 | **`$lib/config/i18n.ts`** | `LanguageSelector`, root layout |
 | **`hooks.server.ts`** | All server responses (security headers, locale) |
-| **`svelte.config.js`** (CSP) | Test that scripts/styles/images still load |
+| **`svelte.config.js`** (CSP) | Test that scripts/styles/images still load; Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com` |
 | **`app.html`** | FOUC prevention, nonce attribute, theme init |
 | **Component barrel `index.ts`** | All imports from that feature folder |
 | **i18n keys** (rename/remove in `en.json`) | Same key in `cs.json`, all `m.{key}()` usages |

@@ -100,6 +100,10 @@ After a strict review, the following improvements were made:
 
 8. **CI pipeline: `.env.test` instead of hardcoded env vars** — Created a dedicated `src/frontend/.env.test` (committed, gitignore-whitelisted) with valid test values. CI copies it to `.env` before `svelte-kit sync`. Keeps `.env.example` as documentation with placeholders.
 
+9. **CSP: whitelist `challenges.cloudflare.com`** — The Turnstile script and iframe were blocked by the Content Security Policy. Added `https://challenges.cloudflare.com` to `script-src` (JS loading) and `frame-src` (invisible challenge iframe) in `svelte.config.js`.
+
+10. **TurnstileWidget: dark theme + centering** — Widget rendered with Cloudflare's default light theme, clashing with the dark app UI. Now reads the app's `dark` class from `<html>` and passes `theme: 'dark' | 'light'` to `turnstile.render()`. Container `div` uses `flex justify-center` to center the widget within the form.
+
 ## Follow-Up Items
 
 - [ ] Manual test: register form with Turnstile widget
