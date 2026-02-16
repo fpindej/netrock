@@ -29,6 +29,45 @@
 	const fieldShakes = createFieldShakes();
 	const cooldown = createCooldown();
 
+	// ── Draft persistence (non-sensitive fields only) ──────────────────
+	const DRAFT_KEY = 'register-form-draft';
+
+	function saveDraft() {
+		try {
+			localStorage.setItem(DRAFT_KEY, JSON.stringify({ firstName, lastName, email, phoneNumber }));
+		} catch {
+			/* localStorage may be unavailable */
+		}
+	}
+
+	function loadDraft() {
+		try {
+			const raw = localStorage.getItem(DRAFT_KEY);
+			if (!raw) return;
+			const draft = JSON.parse(raw);
+			firstName = draft.firstName ?? '';
+			lastName = draft.lastName ?? '';
+			email = draft.email ?? '';
+			phoneNumber = draft.phoneNumber ?? '';
+		} catch {
+			/* ignore parse errors */
+		}
+	}
+
+	function clearDraft() {
+		try {
+			localStorage.removeItem(DRAFT_KEY);
+		} catch {
+			/* localStorage may be unavailable */
+		}
+	}
+
+	// Auto-save draft while dialog is open (never persists passwords).
+	// saveDraft() reads the draft fields, so $effect subscribes to their changes automatically.
+	$effect(() => {
+		if (open) saveDraft();
+	});
+
 	function resetForm() {
 		email = '';
 		password = '';
@@ -41,8 +80,13 @@
 	}
 
 	function handleOpenChange(isOpen: boolean) {
-		if (!isOpen) {
-			resetForm();
+		if (isOpen) {
+			loadDraft();
+		} else {
+			password = '';
+			confirmPassword = '';
+			error = null;
+			fieldErrors = {};
 		}
 	}
 
@@ -73,7 +117,9 @@
 			if (response.ok) {
 				toast.success(m.auth_register_success());
 				const registeredEmail = email;
+				clearDraft();
 				open = false;
+				resetForm();
 				onSuccess?.(registeredEmail);
 			} else {
 				handleMutationError(response, apiError, {
@@ -97,7 +143,7 @@
 </script>
 
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>
-	<Dialog.Content class="sm:max-w-[425px]">
+	<Dialog.Content class="sm:max-w-[425px]" interactOutsideBehavior="ignore">
 		<Dialog.Header>
 			<Dialog.Title>{m.auth_register_title()}</Dialog.Title>
 			<Dialog.Description>
