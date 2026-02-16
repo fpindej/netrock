@@ -1637,7 +1637,7 @@ Component.Tests/
 │   └── BaseEntityRepositoryTests.cs     # CRUD, soft-delete, pagination (skipped — needs Testcontainers #174)
 └── Services/
     ├── AuthenticationServiceTests.cs     # Login (cookies, rememberMe, persistent tokens), register (phone normalization, role failure), refresh (rotation, reuse detection, expiry), change password (token revocation), logout
-    ├── AdminServiceTests.cs              # AssignRole (hierarchy, already-has), RemoveRole (self, rank, not-in-role), lock/unlock (hierarchy, token revocation, access count reset), delete (last-admin, self), getUser
+    ├── AdminServiceTests.cs              # AssignRole (hierarchy, already-has, email-guard), RemoveRole (self, rank, not-in-role), lock/unlock (hierarchy, token revocation, access count reset), delete (last-admin, self), getUser, verifyEmail, sendPasswordReset, createUser
     ├── RoleManagementServiceTests.cs     # CRUD, system role protection, permissions (SuperAdmin fixed, invalid), name-taken, description-only update
     └── UserServiceTests.cs              # GetCurrentUser, updateProfile (duplicate phone, not found), deleteAccount (happy path, wrong password)
 ```
@@ -1669,7 +1669,7 @@ Api.Tests/
     ├── RegisterRequestValidatorTests.cs        # Email, password rules
     ├── LoginRequestValidatorTests.cs           # Email, password presence
     ├── ChangePasswordRequestValidatorTests.cs  # Current + new password rules
-    ├── AdminValidatorTests.cs                  # AssignRole, CreateRole, UpdateRole, SetPermissions, ListUsers
+    ├── AdminValidatorTests.cs                  # AssignRole, CreateRole, UpdateRole, SetPermissions, ListUsers, CreateUser
     └── UserValidatorTests.cs                   # RefreshRequest, DeleteAccount, UpdateUser (phone, URL, lengths)
 ```
 
