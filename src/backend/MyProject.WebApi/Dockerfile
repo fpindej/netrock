@@ -35,6 +35,9 @@ RUN dotnet build "MyProject.WebApi.csproj" -c Release
 FROM build AS publish
 RUN dotnet publish "MyProject.WebApi.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:DebugType=None /p:DebugSymbols=false
 
+# Defense-in-depth: strip non-production config even if .csproj exclusion is bypassed
+RUN rm -f /app/publish/appsettings.Development.json /app/publish/appsettings.Testing.json
+
 # Final stage
 FROM base AS final
 WORKDIR /app
