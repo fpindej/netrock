@@ -70,7 +70,7 @@ function isOriginAllowed(request: Request, url: URL): boolean {
 }
 
 /** Build a filtered copy of request headers using the allowlist. */
-function filterRequestHeaders(source: Headers): Headers {
+function filterRequestHeaders(source: Headers, clientAddress: string): Headers {
 	const filtered = new Headers();
 	for (const name of FORWARDED_REQUEST_HEADERS) {
 		const value = source.get(name);
@@ -78,6 +78,19 @@ function filterRequestHeaders(source: Headers): Headers {
 			filtered.set(name, value);
 		}
 	}
+
+	// Pass the real client IP so the backend can partition rate limits per user.
+	// SvelteKit resolves this from the connecting socket by default. When behind
+	// a reverse proxy (nginx, Caddy), set the XFF_DEPTH env var to the number of
+	// trusted proxy hops so getClientAddress() reads the real IP from X-Forwarded-For.
+	// See: https://svelte.dev/docs/kit/adapter-node#environment-variables-xff-depth
+	filtered.set('x-forwarded-for', clientAddress);
+
+	const proto = source.get('x-forwarded-proto');
+	if (proto) {
+		filtered.set('x-forwarded-proto', proto);
+	}
+
 	return filtered;
 }
 
@@ -94,7 +107,13 @@ function stripResponseHeaders(response: Response): Response {
 	});
 }
 
-export const fallback: RequestHandler = async ({ request, params, url, fetch }) => {
+export const fallback: RequestHandler = async ({
+	request,
+	params,
+	url,
+	fetch,
+	getClientAddress
+}) => {
 	if (!isOriginAllowed(request, url)) {
 		return new Response(
 			JSON.stringify({
@@ -123,7 +142,7 @@ export const fallback: RequestHandler = async ({ request, params, url, fetch }) 
 
 	const newRequest = new Request(targetUrl, {
 		method: request.method,
-		headers: filterRequestHeaders(request.headers),
+		headers: filterRequestHeaders(request.headers, getClientAddress()),
 		body: request.body,
 		// @ts-expect-error - duplex is needed for streaming bodies in some node versions/fetch implementations
 		duplex: 'half'

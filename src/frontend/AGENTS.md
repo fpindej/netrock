@@ -220,7 +220,9 @@ const { data, response, error } = await browserClient.PATCH('/api/users/me', {
 
 ### API Proxy
 
-All `/api/*` requests are proxied to the backend via `routes/api/[...path]/+server.ts`. This catch-all route forwards cookies and headers automatically. It handles `ECONNREFUSED` by returning 503 "Backend unavailable".
+All `/api/*` requests are proxied to the backend via `routes/api/[...path]/+server.ts`. This catch-all route forwards cookies and a filtered set of request headers to the backend. It sets `X-Forwarded-For` from `getClientAddress()` so the backend can partition rate limits per client IP. It handles `ECONNREFUSED` by returning 503 "Backend unavailable".
+
+When deploying behind a reverse proxy (nginx, Caddy), set the `XFF_DEPTH` environment variable on the frontend container so `getClientAddress()` resolves the real client IP from `X-Forwarded-For`. Set it to the number of trusted proxy hops (e.g., `XFF_DEPTH=1` for a single nginx in front).
 
 ## Error Handling
 
@@ -310,10 +312,12 @@ if (response.ok) {
 ```
 
 `handleMutationError()` automatically:
+
 - Detects 429 → shows rate-limit toast with `Retry-After` → starts cooldown
 - Falls back to `getErrorMessage(error, fallback)` for all other errors
 
 Optional callbacks for additional behavior:
+
 - `onRateLimited()` — extra work after rate limit (e.g., trigger form shake)
 - `onValidationError(errors)` — field-level validation errors (see [Validation Errors](#validation-errors-field-level))
 - `onError()` — override default toast for generic errors (caller handles via outer closure)

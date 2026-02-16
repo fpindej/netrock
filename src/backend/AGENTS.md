@@ -765,7 +765,9 @@ The middleware pipeline configures `X-Forwarded-For` and `X-Forwarded-Proto` hea
 
 #### Trust model
 
-The app creates `ForwardedHeadersOptions` with only the `ForwardedHeaders` flags set — it does **not** clear `KnownProxies` or `KnownNetworks`. This means ASP.NET Core's defaults apply: only loopback addresses (`127.0.0.1` and `::1`) are trusted. Forwarded headers arriving from any other source IP are silently ignored, so containers on the same Docker network **cannot** spoof `X-Forwarded-For` to bypass rate limiting.
+Without explicit configuration, only loopback addresses (`127.0.0.1` and `::1`) are trusted (ASP.NET Core default). Forwarded headers arriving from any other source IP are silently ignored. The `ForwardedHeadersExtensions.UseConfiguredForwardedHeaders()` method reads `TrustedNetworks` and `TrustedProxies` from the `ForwardedHeaders` configuration section to extend the trust boundary.
+
+The Docker Compose local setup pre-configures `172.16.0.0/12` (all Docker bridge networks) so the SvelteKit frontend container's `X-Forwarded-For` header is accepted by the backend.
 
 #### Deploying behind a reverse proxy
 
@@ -775,14 +777,14 @@ Configure trusted proxies via environment variables (ASP.NET Core's `__` separat
 
 ```env
 # Trust a single proxy IP
-ForwardedHeaders__KnownProxies__0=10.0.0.5
+ForwardedHeaders__TrustedProxies__0=10.0.0.5
 
 # Trust a CIDR block (e.g., an entire subnet)
-ForwardedHeaders__KnownNetworks__0=10.0.0.0/16
+ForwardedHeaders__TrustedNetworks__0=10.0.0.0/16
 
 # Multiple entries
-ForwardedHeaders__KnownProxies__0=10.0.0.5
-ForwardedHeaders__KnownProxies__1=10.0.0.6
+ForwardedHeaders__TrustedProxies__0=10.0.0.5
+ForwardedHeaders__TrustedProxies__1=10.0.0.6
 ```
 
 Alternatively, bind the same keys in `appsettings.Production.json`:
@@ -790,8 +792,8 @@ Alternatively, bind the same keys in `appsettings.Production.json`:
 ```jsonc
 {
   "ForwardedHeaders": {
-    "KnownProxies": ["10.0.0.5"],
-    "KnownNetworks": ["10.0.0.0/16"]
+    "TrustedNetworks": ["10.0.0.0/16"],
+    "TrustedProxies": ["10.0.0.5"]
   }
 }
 ```

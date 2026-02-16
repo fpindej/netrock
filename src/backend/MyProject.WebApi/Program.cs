@@ -3,7 +3,6 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
-using Microsoft.AspNetCore.HttpOverrides;
 using MyProject.Infrastructure.Features.Admin.Extensions;
 using MyProject.Infrastructure.Features.Email.Extensions;
 using MyProject.Infrastructure.Features.Jobs.Extensions;
@@ -105,6 +104,9 @@ try
     builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+    Log.Debug("Adding forwarded headers");
+    builder.Services.AddForwardedHeaders(builder.Configuration);
+
     Log.Debug("Adding rate limiting");
     builder.Services.AddRateLimiting(builder.Configuration);
 
@@ -117,10 +119,7 @@ try
     var app = builder.Build();
 
     Log.Debug("Setting UseForwardedHeaders");
-    app.UseForwardedHeaders(new ForwardedHeadersOptions
-    {
-        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-    });
+    app.UseConfiguredForwardedHeaders();
 
     if (app.Environment.IsProduction())
     {
