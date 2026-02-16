@@ -6,6 +6,7 @@ x-api-environment: &api-environment
   Caching__Redis__ConnectionString: redis:6379
   Caching__Redis__Password: ${REDIS_PASSWORD}
   Authentication__Jwt__Key: ${JWT_SECRET_KEY}
+  Hosting__ReverseProxy__TrustedNetworks__0: 172.16.0.0/12
   Serilog__WriteTo__0__Name: Seq
   Serilog__WriteTo__0__Args__serverUrl: http://seq:80
 

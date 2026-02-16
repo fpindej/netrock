@@ -2,8 +2,6 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization.Policy;
-using Microsoft.AspNetCore.HttpOverrides;
 using MyProject.Infrastructure.Features.Admin.Extensions;
 using MyProject.Infrastructure.Features.Email.Extensions;
 using MyProject.Infrastructure.Features.Jobs.Extensions;
@@ -105,6 +103,9 @@ try
     builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+    Log.Debug("Adding hosting options");
+    builder.Services.AddHostingOptions(builder.Configuration);
+
     Log.Debug("Adding rate limiting");
     builder.Services.AddRateLimiting(builder.Configuration);
 
@@ -116,21 +117,10 @@ try
 
     var app = builder.Build();
 
-    Log.Debug("Setting UseForwardedHeaders");
-    app.UseForwardedHeaders(new ForwardedHeadersOptions
-    {
-        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-    });
+    Log.Debug("Setting hosting middleware (forwarded headers, HTTPS)");
+    app.UseHostingMiddleware();
 
-    if (app.Environment.IsProduction())
-    {
-        app.Use(async (context, next) =>
-        {
-            context.Request.Scheme = "https";
-            await next();
-        });
-    }
-    else
+    if (!app.Environment.IsProduction())
     {
         Log.Debug("Setting Scalar OpenApi Documentation");
         app.UseOpenApiDocumentation();
