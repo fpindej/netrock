@@ -19,7 +19,8 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
             .MaximumLength(255);
 
         RuleFor(x => x.CaptchaToken)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(8192);
 
         RuleFor(x => x.Password)
             .NotEmpty()

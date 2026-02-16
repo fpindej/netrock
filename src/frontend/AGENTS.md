@@ -376,9 +376,10 @@ CSP is configured via nonce mode in `svelte.config.js` using SvelteKit's built-i
 kit: {
 	csp: {
 		directives: {
-			'script-src': ['self', 'nonce'],
+			'script-src': ['self', 'nonce', 'https://challenges.cloudflare.com'],
 			'style-src': ['self', 'unsafe-inline'],   // Required for Svelte transitions
 			'img-src': ['self', 'https:', 'data:'],    // data: required for Vite-inlined assets
+			'frame-src': ['https://challenges.cloudflare.com'],  // Turnstile CAPTCHA iframe
 			'frame-ancestors': ['none']
 		}
 	}

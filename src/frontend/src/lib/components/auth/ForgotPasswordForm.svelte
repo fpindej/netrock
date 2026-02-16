@@ -98,6 +98,7 @@
 						<TurnstileWidget
 							siteKey={PUBLIC_TURNSTILE_SITE_KEY}
 							onVerified={(t) => (captchaToken = t)}
+							onError={() => toast.error(m.auth_captcha_error())}
 						/>
 
 						<Button

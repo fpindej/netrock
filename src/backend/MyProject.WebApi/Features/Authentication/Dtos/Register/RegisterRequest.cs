@@ -29,6 +29,7 @@ public class RegisterRequest
     /// The CAPTCHA verification token from Cloudflare Turnstile.
     /// </summary>
     [Required]
+    [MaxLength(8192)]
     public string CaptchaToken { get; [UsedImplicitly] init; } = string.Empty;
 
     /// <summary>

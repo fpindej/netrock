@@ -36,7 +36,19 @@
 		return new Promise((resolve, reject) => {
 			const existing = document.getElementById(SCRIPT_ID);
 			if (existing) {
-				resolve();
+				// Script tag exists — it may still be loading
+				if (window.turnstile) {
+					resolve();
+				} else {
+					existing.addEventListener('load', () => resolve(), { once: true });
+					existing.addEventListener(
+						'error',
+						() => reject(new Error('Failed to load Turnstile script')),
+						{
+							once: true
+						}
+					);
+				}
 				return;
 			}
 
@@ -61,9 +73,6 @@
 		async function init() {
 			try {
 				await loadScript();
-				// Script loaded but turnstile may not be ready yet on first load
-				// Wait for next tick to ensure window.turnstile is available
-				await new Promise((r) => setTimeout(r, 0));
 				if (!aborted) renderWidget();
 			} catch {
 				if (!aborted) onError?.();
