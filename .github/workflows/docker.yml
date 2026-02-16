@@ -8,7 +8,8 @@ on:
       - 'src/backend/**/*.csproj'
       - 'src/backend/Directory.Packages.props'
       - 'src/frontend/Dockerfile'
-      - 'src/frontend/package*.json'
+      - 'src/frontend/package.json'
+      - 'src/frontend/pnpm-lock.yaml'
   pull_request:
     branches: [master]
     paths:
@@ -16,7 +17,8 @@ on:
       - 'src/backend/**/*.csproj'
       - 'src/backend/Directory.Packages.props'
       - 'src/frontend/Dockerfile'
-      - 'src/frontend/package*.json'
+      - 'src/frontend/package.json'
+      - 'src/frontend/pnpm-lock.yaml'
 
 concurrency:
   group: docker-${{ github.ref }}
@@ -44,7 +46,8 @@ jobs:
               - 'src/backend/Directory.Packages.props'
             frontend:
               - 'src/frontend/Dockerfile'
-              - 'src/frontend/package*.json'
+              - 'src/frontend/package.json'
+              - 'src/frontend/pnpm-lock.yaml'
 
   backend-docker:
     name: Backend Docker build

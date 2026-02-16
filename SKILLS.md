@@ -204,7 +204,7 @@ dotnet ef database update \
    if (!hasPermission(user, Permissions.Orders.View)) throw redirect(303, '/');
    ```
 8. If adding a sidebar nav item: add `permission: Permissions.Orders.View` to the nav item in `SidebarNav.svelte` — items are filtered per-permission, not as a group
-9. Verify: `cd src/frontend && npm run format && npm run lint && npm run check`
+9. Verify: `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check`
 
 ### Add a Rate Limit Policy
 
@@ -554,14 +554,14 @@ For testing FluentValidation rules without starting the test server. Uses Fluent
 **Prerequisite:** Backend must be running (Docker or IDE).
 
 ```bash
-cd src/frontend && npm run api:generate
+cd src/frontend && pnpm run api:generate
 ```
 
 This updates `src/frontend/src/lib/api/v1.d.ts`. After regenerating:
 
 1. Review changes in `v1.d.ts` for breaking changes
 2. Update any affected API calls or type aliases in `src/frontend/src/lib/types/index.ts`
-3. Run `cd src/frontend && npm run check` to catch type errors
+3. Run `cd src/frontend && pnpm run check` to catch type errors
 4. Commit `v1.d.ts` with the changes that caused the regeneration
 
 ### Add a Page
@@ -590,7 +590,7 @@ This updates `src/frontend/src/lib/api/v1.d.ts`. After regenerating:
    ```
 4. Add i18n keys to `src/frontend/src/messages/en.json` and `cs.json`
 5. Add navigation entry in `src/frontend/src/lib/components/layout/SidebarNav.svelte`
-6. Verify: `cd src/frontend && npm run format && npm run lint && npm run check`
+6. Verify: `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check`
 
 ### Add a Component
 
@@ -617,7 +617,7 @@ This updates `src/frontend/src/lib/api/v1.d.ts`. After regenerating:
 ### Add a shadcn Component
 
 ```bash
-cd src/frontend && npx shadcn-svelte@latest add {component-name}
+cd src/frontend && pnpm dlx shadcn-svelte@latest add {component-name}
 ```
 
 Generates in `src/frontend/src/lib/components/ui/{component}/`. After adding:
@@ -626,11 +626,11 @@ Generates in `src/frontend/src/lib/components/ui/{component}/`. After adding:
 2. Available: alert, avatar, badge, button, card, checkbox, dialog, dropdown-menu, input, label, phone-input, select, separator, sheet, sonner, textarea, tooltip
 3. Browse full catalog: [ui.shadcn.com](https://ui.shadcn.com)
 
-### Add an npm Package
+### Add a Package
 
-1. `cd src/frontend && npm install {package}`
-2. For dev dependencies: `npm install -D {package}`
-3. Verify: `npm run check`
+1. `cd src/frontend && pnpm add {package}`
+2. For dev dependencies: `pnpm add -D {package}`
+3. Verify: `pnpm run check`
 
 ### Style & Responsive Design Pass
 
@@ -682,7 +682,7 @@ Open the page and check at these widths: **320px**, **375px**, **768px**, **1024
 **6. Verify:**
 
 ```bash
-cd src/frontend && npm run format && npm run lint && npm run check
+cd src/frontend && pnpm run format && pnpm run lint && pnpm run check
 ```
 
 ---
@@ -708,7 +708,7 @@ cd src/frontend && npm run format && npm run lint && npm run check
 **Frontend `PUBLIC_*` variable (SvelteKit `$env/static/public`):**
 
 1. Steps 1–2 above
-2. Add `ARG` + `ENV` to `src/frontend/Dockerfile` (before `npm run build`)
+2. Add `ARG` + `ENV` to `src/frontend/Dockerfile` (before `pnpm run build`)
 3. Add `--build-arg` to `deploy.sh`, `deploy.ps1`, and `.github/workflows/docker.yml`
 4. Add to `docker-compose.local.yml` `x-frontend-environment` anchor with dev default
 5. Import in components: `import { PUBLIC_VAR } from '$env/static/public';`
@@ -728,13 +728,13 @@ Combines backend entity creation with frontend page. Follow in order:
 
 **Frontend (with backend running):**
 
-7. Regenerate types: `cd src/frontend && npm run api:generate`
+7. Regenerate types: `cd src/frontend && pnpm run api:generate`
 8. Add type alias to `src/frontend/src/lib/types/index.ts`
 9. Create components in `src/frontend/src/lib/components/{feature}/` with barrel
 10. Create page in `src/frontend/src/routes/(app)/{feature}/`
 11. Add i18n keys to both `en.json` and `cs.json`
 12. Update sidebar navigation
-13. Verify: `cd src/frontend && npm run format && npm run lint && npm run check`
+13. Verify: `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check`
 
 **Commit strategy:** backend entity → backend service → backend controller → migration → frontend types+components → frontend page+i18n+nav
 

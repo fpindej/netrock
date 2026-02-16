@@ -18,7 +18,7 @@ Read `src/backend/AGENTS.md` for conventions on controllers, DTOs, mappers, vali
 
 After building successfully, regenerate frontend types if the backend is running:
 ```bash
-cd src/frontend && npm run api:generate
+cd src/frontend && pnpm run api:generate
 ```
 
 Commit: `feat({feature}): add {operation} endpoint`

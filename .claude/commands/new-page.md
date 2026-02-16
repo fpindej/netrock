@@ -15,7 +15,7 @@ Follow **SKILLS.md** — combine these recipes in order:
 
 Read `src/frontend/AGENTS.md` for conventions on Svelte 5 patterns, component organization, and styling rules.
 
-Verify: `cd src/frontend && npm run format && npm run lint && npm run check`
+Verify: `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check`
 
 Commit strategy (atomic):
 1. `feat({feature}): add {feature} components` — components + barrel

@@ -26,7 +26,7 @@ Backend: `WebApi → Application ← Infrastructure → Domain` + `Shared` (Clea
 
 ### Frontend
 
-- Never hand-edit `src/frontend/src/lib/api/v1.d.ts` — run `npm run api:generate`
+- Never hand-edit `src/frontend/src/lib/api/v1.d.ts` — run `pnpm run api:generate`
 - Svelte 5 Runes only: `$props`, `$state`, `$derived`, `$effect` — never `export let`
 - `interface Props` + `$props()` — never `$props<{...}>()`
 - Logical CSS only: `ms-*`/`me-*`/`ps-*`/`pe-*` — never `ml-*`/`mr-*`/`pl-*`/`pr-*`
@@ -43,7 +43,7 @@ Backend: `WebApi → Application ← Infrastructure → Domain` + `Shared` (Clea
 ```bash
 dotnet build src/backend/MyProject.slnx
 dotnet test src/backend/MyProject.slnx -c Release
-cd src/frontend && npm run format && npm run lint && npm run check
+cd src/frontend && pnpm run format && pnpm run lint && pnpm run check
 ```
 
 ## Conventions Reference

@@ -1389,7 +1389,7 @@ Status:
 
 ### Generated TypeScript Types
 
-The frontend runs `npm run api:generate` which produces TypeScript types from the OAS. With the above setup:
+The frontend runs `pnpm run api:generate` which produces TypeScript types from the OAS. With the above setup:
 
 ```typescript
 // Non-nullable enum → union of literal strings
@@ -1537,7 +1537,7 @@ Before adding or modifying any endpoint, verify:
 - [ ] Route uses lowercase (`[Route("api/[controller]")]` + `LowercaseUrls = true`)
 - [ ] Enums serialize as strings with all members listed (handled by `JsonStringEnumConverter` + `EnumSchemaTransformer` — verify in Scalar)
 - [ ] No `#pragma warning disable` — CS1573 (partial param docs) is suppressed project-wide because omitting `CancellationToken` param tags is intentional
-- [ ] After any response DTO change (new DTO, renamed/added/removed properties, changed nullability), regenerate frontend types: `npm run api:generate` from `src/frontend/` with the backend running — then commit `v1.d.ts`
+- [ ] After any response DTO change (new DTO, renamed/added/removed properties, changed nullability), regenerate frontend types: `pnpm run api:generate` from `src/frontend/` with the backend running — then commit `v1.d.ts`
 
 ## Testing
 

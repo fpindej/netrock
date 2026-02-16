@@ -12,7 +12,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 
 | When you change... | Also update... |
 |---|---|
-| **Domain entity** (add/rename property) | EF configuration, migration, Application DTOs, WebApi DTOs, mapper, frontend types (`npm run api:generate`) |
+| **Domain entity** (add/rename property) | EF configuration, migration, Application DTOs, WebApi DTOs, mapper, frontend types (`pnpm run api:generate`) |
 | **Domain entity** (add enum property) | EF config (`.HasComment()`), `EnumSchemaTransformer` handles the rest automatically |
 | **`ErrorMessages.cs`** (Shared — add/rename constant) | Service that uses it; frontend may display message directly |
 | **`Result.cs`** (Shared — change pattern) | Every service + every controller that matches on `Result` |
@@ -47,7 +47,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`HostingOptions.cs`** (change hosting config shape) | `HostingExtensions.cs`, `appsettings.json`, `appsettings.Development.json`, `.env.example`, `docker-compose.local.yml` |
 | **`HostingExtensions.cs`** (change middleware behavior) | `Program.cs`, `AGENTS.md` Hosting Configuration section |
 | **`Dockerfile`** (backend — change build/publish steps) | `.dockerignore`, verify published files don't include dev/test config |
-| **`Dockerfile`** (frontend — change build steps) | `.dockerignore`, `docker.yml` build args, `deploy.sh`/`deploy.ps1` build args. New `PUBLIC_*` SvelteKit env vars need `ARG`+`ENV` in Dockerfile, `--build-arg` in deploy scripts and `docker.yml` |
+| **`Dockerfile`** (frontend — change build steps) | `.dockerignore`, `docker.yml` build args, `deploy.sh`/`deploy.ps1` build args. New `PUBLIC_*` SvelteKit env vars need `ARG`+`ENV` in Dockerfile (before `pnpm run build`), `--build-arg` in deploy scripts and `docker.yml` |
 | **`MyProject.WebApi.csproj`** (add appsettings file) | If non-production: add `CopyToPublishDirectory="Never"` and matching `rm -f` in `Dockerfile` |
 | **Route constraint** (add/modify in `Routing/`) | `Program.cs` constraint registration, route templates using that constraint |
 | **`HealthCheckExtensions.cs`** (change endpoints/checks) | `docker-compose.local.yml` healthcheck URLs, frontend health proxy `+server.ts` |
@@ -83,7 +83,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Route `+page.server.ts`** | The corresponding `+page.svelte` |
 | **Styles (`themes.css`)** | `tailwind.css` mappings, components using the variables |
 | **Styles (`tailwind.css`)** | Components using custom Tailwind tokens |
-| **`components.json`** (shadcn config) | Future `npx shadcn-svelte@latest add` commands |
+| **`components.json`** (shadcn config) | Future `pnpm dlx shadcn-svelte@latest add` commands |
 | **`package.json`** (scripts) | CI/CD references, CLAUDE.md pre-commit checks |
 
 ### Cross-Stack Changes
