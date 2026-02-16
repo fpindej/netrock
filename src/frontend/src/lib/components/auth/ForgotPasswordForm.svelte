@@ -107,7 +107,7 @@
 					</form>
 					<div class="mt-4 text-center text-sm">
 						<a href={resolve('/login')} class="font-medium text-primary hover:underline">
-							{m.auth_forgotPassword_backToLogin()}
+							{m.common_backToLogin()}
 						</a>
 					</div>
 				</Card.Content>
@@ -135,7 +135,7 @@
 				<Card.Content>
 					<div class="text-center text-sm">
 						<a href={resolve('/login')} class="font-medium text-primary hover:underline">
-							{m.auth_forgotPassword_backToLogin()}
+							{m.common_backToLogin()}
 						</a>
 					</div>
 				</Card.Content>

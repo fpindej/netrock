@@ -22,7 +22,7 @@
 		<ChangePasswordForm />
 
 		<div class="space-y-4">
-			<h4 class="text-sm font-medium text-destructive">{m.settings_deleteAccount_dangerZone()}</h4>
+			<h4 class="text-sm font-medium text-destructive">{m.common_dangerZone()}</h4>
 			<Card.Root class="border-destructive/50">
 				<Card.Header>
 					<Card.Title class="text-destructive">{m.settings_deleteAccount_title()}</Card.Title>
