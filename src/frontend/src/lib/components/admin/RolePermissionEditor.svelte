@@ -2,7 +2,6 @@
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { Label } from '$lib/components/ui/label';
 	import type { PermissionGroup } from '$lib/types';
-	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
 		permissionGroups: PermissionGroup[];
@@ -43,7 +42,4 @@
 			</div>
 		</div>
 	{/each}
-	{#if disabled}
-		<p class="text-sm text-muted-foreground">{m.admin_roles_permissionsReadonly()}</p>
-	{/if}
 </div>
