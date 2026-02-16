@@ -571,7 +571,7 @@ fi
 if [[ "$CREATE_MIGRATION" == "y" ]]; then
     print_step "Creating initial migration..."
 
-    MIGRATION_DIR="src/backend/$NEW_NAME.Infrastructure/Features/Postgres/Migrations"
+    MIGRATION_DIR="src/backend/$NEW_NAME.Infrastructure/Persistence/Migrations"
 
     if [ -d "$MIGRATION_DIR" ]; then
         print_substep "Clearing existing migrations..."
@@ -599,13 +599,13 @@ if [[ "$CREATE_MIGRATION" == "y" ]]; then
         print_info "  dotnet ef migrations add Initial \\"
         print_info "    --project src/backend/$NEW_NAME.Infrastructure \\"
         print_info "    --startup-project src/backend/$NEW_NAME.WebApi \\"
-        print_info "    --output-dir Features/Postgres/Migrations"
+        print_info "    --output-dir Persistence/Migrations"
     else
         print_substep "Running ef migrations add..."
         if dotnet ef migrations add Initial \
             --project "src/backend/$NEW_NAME.Infrastructure" \
             --startup-project "src/backend/$NEW_NAME.WebApi" \
-            --output-dir Features/Postgres/Migrations \
+            --output-dir Persistence/Migrations \
             --no-build >/dev/null 2>&1; then
 
             print_success "Migration 'Initial' created"
@@ -623,7 +623,7 @@ if [[ "$CREATE_MIGRATION" == "y" ]]; then
             print_info "  dotnet ef migrations add Initial \\"
             print_info "    --project src/backend/$NEW_NAME.Infrastructure \\"
             print_info "    --startup-project src/backend/$NEW_NAME.WebApi \\"
-            print_info "    --output-dir Features/Postgres/Migrations"
+            print_info "    --output-dir Persistence/Migrations"
         fi
     fi
 fi
