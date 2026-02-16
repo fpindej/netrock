@@ -18,6 +18,9 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
             .EmailAddress()
             .MaximumLength(255);
 
+        RuleFor(x => x.CaptchaToken)
+            .NotEmpty();
+
         RuleFor(x => x.Password)
             .NotEmpty()
             .MinimumLength(6)
