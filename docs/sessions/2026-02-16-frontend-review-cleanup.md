@@ -1,11 +1,11 @@
 # Frontend Review and Cleanup
 
 **Date**: 2026-02-16
-**Scope**: Comprehensive frontend review covering API client, folder structure, pages/styling, responsive design, Tailwind config, and i18n, followed by cleanup work.
+**Scope**: Comprehensive frontend review covering API client, folder structure, pages/styling, responsive design, Tailwind config, i18n, state management, forms, and TS/SvelteKit best practices — followed by cleanup and form improvements.
 
 ## Summary
 
-Conducted a thorough frontend review across 6 dimensions. The codebase scored excellent on API client usage (zero hacks, zero type duplication), folder structure (all barrel files present), responsive design (mobile-first throughout), and Tailwind configuration (modern v4 setup). Cleanup work addressed the findings: removed unused i18n keys, consolidated duplicates, extracted the oversized role detail page into sub-components, and deleted the GettingStarted boilerplate.
+Conducted a thorough frontend review across 9 dimensions. The codebase scored excellent on API client usage, folder structure, responsive design, Tailwind configuration, state management, and TS/SvelteKit best practices. Cleanup work addressed the findings across two stacked PRs: (#186) removed unused i18n keys, consolidated duplicates, extracted the oversized role detail page into sub-components, and deleted the GettingStarted boilerplate; (#187) extracted a shared `handleMutationError()` helper to eliminate copy-pasted rate-limit handling across 16 components, and added field-level validation to role forms.
 
 ## Changes Made
 
@@ -25,6 +25,18 @@ Conducted a thorough frontend review across 6 dimensions. The codebase scored ex
 | `src/routes/(app)/+page.svelte` | Replaced GettingStarted with clean dashboard skeleton | Remove template boilerplate |
 | `src/frontend/AGENTS.md` | Updated directory trees | Reflect file additions and removals |
 
+### PR #187 — Form Improvements (stacked on #186)
+
+| File | Change | Reason |
+|------|--------|--------|
+| `src/lib/api/mutation.ts` | Created `handleMutationError()` helper | Centralizes rate-limit toast+cooldown pattern from 16 components into one function |
+| `src/lib/api/index.ts` | Added mutation.ts re-export | Barrel export for new module |
+| 16 form components | Replaced inline rate-limit handling with `handleMutationError()` | Eliminates copy-paste, guarantees consistent behavior |
+| `src/lib/components/admin/JobActionsCard.svelte` | Removed local `handleRateLimited()` function | Replaced by shared helper |
+| `src/lib/components/admin/UserManagementCard.svelte` | Removed local `handleRateLimited()` function | Replaced by shared helper |
+| `src/lib/components/admin/CreateRoleDialog.svelte` | Added fieldErrors, fieldShakes, inline error display | Backend validation errors now appear below the relevant field |
+| `src/lib/components/admin/RoleDetailsCard.svelte` | Added fieldErrors, fieldShakes, inline error display | Backend validation errors now appear below the relevant field |
+
 ## Decisions & Reasoning
 
 ### Shared cooldown across role sub-components
@@ -38,6 +50,24 @@ Conducted a thorough frontend review across 6 dimensions. The codebase scored ex
 - **Choice**: Export `type Cooldown = ReturnType<typeof createCooldown>` from the state module
 - **Alternatives considered**: Inline structural type in each component's Props interface; import `createCooldown` function for typeof
 - **Reasoning**: Single type definition, avoids repeating the structural type across 3 components, and avoids runtime import issues with `verbatimModuleSyntax`
+
+### handleMutationError API design
+
+- **Choice**: Single function with `onRateLimited`, `onValidationError`, and `onError` optional callbacks
+- **Alternatives considered**: Return discriminated union for caller to switch on; separate `handleRateLimitError()` for just rate limiting; put logic in `error-handling.ts`
+- **Reasoning**: Rate-limit handling is 100% identical across all 16 forms (8 lines each) — fully automatic. Validation and generic errors vary enough to need callbacks. Separate file (`mutation.ts`) keeps `error-handling.ts` pure (no UI imports like toast/messages).
+
+### LoginForm field-level errors (skipped)
+
+- **Choice**: Keep card-level shake instead of adding per-field validation
+- **Alternatives considered**: Add fieldErrors/fieldShakes like other forms
+- **Reasoning**: Login endpoints intentionally don't reveal which field was wrong (account enumeration risk). Card-level shake + toast is the correct security-aware UX pattern.
+
+### Debounce utility (skipped)
+
+- **Choice**: Keep inline setTimeout debounce in users search page
+- **Alternatives considered**: Extract to `$lib/utils/debounce.ts`
+- **Reasoning**: Only one debounce usage in the entire codebase. Extracting a utility for a single call site is premature abstraction.
 
 ### GettingStarted deletion scope
 
@@ -54,6 +84,8 @@ These areas scored excellent and required no changes:
 - **Responsive design**: Mobile-first dual-layout tables, proper breakpoint usage (sm/md/lg/xl), `motion-safe:` animations, 40px touch targets
 - **Tailwind v4 config**: Modular CSS architecture, HSL theme tokens, `prefers-reduced-motion` support, logical CSS properties throughout
 - **Accessibility**: Keyboard navigation, ARIA attributes, semantic HTML, focus-visible states
+- **State management**: Minimal and correct — `$state`/`$derived` for local, `+page.server.ts` + `invalidateAll()` for server, factory functions for reusable state
+- **TS/JS/Vite/SvelteKit**: Strict mode, no `any` types, proper `verbatimModuleSyntax` compliance, correct Vite config, proper SvelteKit data loading
 
 ## Follow-Up Items
 
