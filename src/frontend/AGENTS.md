@@ -517,8 +517,8 @@ components/
 │   └── index.ts     # UserManagementCard, AccountInfoCard, CreateRoleDialog,
 │                    # CreateUserDialog, RolePermissionEditor, RoleDetailsCard,
 │                    # RolePermissionsSection, RoleDeleteSection
-├── auth/            # LoginForm, LoginBackground, RegisterDialog
-│   └── index.ts     # Barrel export
+├── auth/            # LoginForm, LoginBackground, RegisterDialog,
+│   └── index.ts     # ForgotPasswordForm, TurnstileWidget
 ├── layout/          # Header, Sidebar, SidebarNav, UserNav,
 │   └── index.ts     # ThemeToggle, LanguageSelector, ShortcutsHelp
 ├── profile/         # ProfileForm, ProfileHeader, AvatarDialog,

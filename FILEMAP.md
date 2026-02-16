@@ -52,6 +52,9 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`HealthCheckExtensions.cs`** (change endpoints/checks) | `docker-compose.local.yml` healthcheck URLs, frontend health proxy `+server.ts` |
 | **`ProblemDetailsAuthorizationHandler`** | `ProblemDetails` shape, `ErrorMessages.Auth` constants, `Program.cs` registration |
 | **OpenAPI transformers** | Regenerate frontend types to verify; check Scalar UI |
+| **`CaptchaOptions`** (Infrastructure — Captcha config) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `TurnstileCaptchaService`, `ServiceCollectionExtensions` |
+| **`TurnstileCaptchaService`** (Infrastructure — Captcha service) | `ICaptchaService` interface, `CaptchaOptions`, `AuthController` captcha gate |
+| **`TurnstileWidget.svelte`** (Frontend — Captcha widget) | `RegisterDialog.svelte`, `ForgotPasswordForm.svelte`, `app.d.ts` (`Window.turnstile`), `PUBLIC_TURNSTILE_SITE_KEY` env var |
 
 ### Frontend Changes
 

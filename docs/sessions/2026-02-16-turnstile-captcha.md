@@ -80,9 +80,22 @@ sequenceDiagram
     BE-->>FE: 201 Created
 ```
 
+## Post-Review Fixes
+
+After a strict review, the following improvements were made:
+
+1. **TurnstileWidget: `expired-callback`** — Turnstile tokens expire after ~300s. Added `expired-callback` that clears the token (calling `onVerified('')`), which re-disables the submit button and signals the user needs to re-solve.
+
+2. **TurnstileWidget: widget cleanup on unmount** — `turnstile.render()` returns a widget ID. Now stored and used to call `turnstile.remove(widgetId)` on component unmount, preventing DOM leaks when the dialog is opened/closed repeatedly.
+
+3. **TurnstileWidget: `script.onload` replaces `setInterval` polling** — The Turnstile script is now loaded via a Promise with `script.onload`/`script.onerror` callbacks instead of polling every 100ms. A 10-second timeout calls `onError` if the script fails to load (CDN down, ad blocker, CSP).
+
+4. **Removed dead `SiteKey` from backend `CaptchaOptions`** — The backend never uses the site key (only the frontend needs it via `PUBLIC_TURNSTILE_SITE_KEY`). Removed from `CaptchaOptions`, `appsettings.json`, `appsettings.Development.json`, and `appsettings.Testing.json` to avoid confusion and unnecessary deployment config.
+
+5. **Bumped Registration rate limit from 5 to 10/min** — CAPTCHA now handles bot protection, so the rate limit's job shifts from "stop bots" to "stop absurd volumes." 5/min was too tight for legitimate users who might retry after validation errors + CAPTCHA expiry. Auth rate limit kept at 10/min since Login (no CAPTCHA) still needs brute-force protection.
+
 ## Follow-Up Items
 
-- [ ] Regenerate frontend API types (`npm run api:generate`) after running backend
 - [ ] Manual test: register form with Turnstile widget
 - [ ] Manual test: forgot-password form with Turnstile widget
 - [ ] Configure production Turnstile site key + secret key in deployment secrets

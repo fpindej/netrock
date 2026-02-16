@@ -9,29 +9,69 @@
 
 	let { siteKey, onVerified, onError }: Props = $props();
 	let container: HTMLDivElement | undefined = $state();
+	let widgetId: string | undefined = $state();
+
+	const SCRIPT_ID = 'cf-turnstile-script';
+	const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+	const LOAD_TIMEOUT_MS = 10_000;
+
+	function renderWidget() {
+		if (!window.turnstile || !container) return;
+		widgetId = window.turnstile.render(container, {
+			sitekey: siteKey,
+			callback: (token: string) => onVerified?.(token),
+			'expired-callback': () => onVerified?.(''),
+			'error-callback': () => onError?.()
+		});
+	}
+
+	function loadScript(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			const existing = document.getElementById(SCRIPT_ID);
+			if (existing) {
+				resolve();
+				return;
+			}
+
+			const script = document.createElement('script');
+			script.id = SCRIPT_ID;
+			script.src = SCRIPT_SRC;
+			script.async = true;
+			script.onload = () => resolve();
+			script.onerror = () => reject(new Error('Failed to load Turnstile script'));
+			document.head.appendChild(script);
+		});
+	}
 
 	onMount(() => {
-		const scriptId = 'cf-turnstile-script';
-		if (!document.getElementById(scriptId)) {
-			const script = document.createElement('script');
-			script.id = scriptId;
-			script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-			script.async = true;
-			document.head.appendChild(script);
+		let aborted = false;
+		const timeout = setTimeout(() => {
+			if (!widgetId && !aborted) {
+				onError?.();
+			}
+		}, LOAD_TIMEOUT_MS);
+
+		async function init() {
+			try {
+				await loadScript();
+				// Script loaded but turnstile may not be ready yet on first load
+				// Wait for next tick to ensure window.turnstile is available
+				await new Promise((r) => setTimeout(r, 0));
+				if (!aborted) renderWidget();
+			} catch {
+				if (!aborted) onError?.();
+			}
 		}
 
-		const interval = setInterval(() => {
-			if (window.turnstile && container) {
-				clearInterval(interval);
-				window.turnstile.render(container, {
-					sitekey: siteKey,
-					callback: (token: string) => onVerified?.(token),
-					'error-callback': () => onError?.()
-				});
-			}
-		}, 100);
+		init();
 
-		return () => clearInterval(interval);
+		return () => {
+			aborted = true;
+			clearTimeout(timeout);
+			if (widgetId && window.turnstile) {
+				window.turnstile.remove(widgetId);
+			}
+		};
 	});
 </script>
 
