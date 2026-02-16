@@ -23,13 +23,13 @@ A production-ready SvelteKit template with Svelte 5, TypeScript, Tailwind CSS 4,
 ### Installation
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Development
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ### Generate API Types
@@ -37,7 +37,7 @@ npm run dev
 When the backend API changes, regenerate the TypeScript types:
 
 ```bash
-npm run api:generate
+pnpm run api:generate
 ```
 
 This requires the backend to be running (serves OpenAPI spec).
@@ -45,7 +45,7 @@ This requires the backend to be running (serves OpenAPI spec).
 ### Build
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 ## Project Structure
@@ -136,7 +136,7 @@ const { data, error } = await browserClient.GET('/api/users/me');
 Check [shadcn-svelte](https://shadcn-svelte.com/) before creating custom components:
 
 ```bash
-npx shadcn-svelte@next add <component-name>
+pnpm dlx shadcn-svelte@next add <component-name>
 ```
 
 ### Import Conventions
@@ -158,10 +158,10 @@ import Header from '$lib/components/layout/Header.svelte';
 Before committing, run all checks:
 
 ```bash
-npm run format   # Fix formatting
-npm run lint     # Check lint errors
-npm run check    # TypeScript/Svelte check
-npm run build    # Verify build
+pnpm run format   # Fix formatting
+pnpm run lint     # Check lint errors
+pnpm run check    # TypeScript/Svelte check
+pnpm run build    # Verify build
 ```
 
 ## AI Assistant Instructions

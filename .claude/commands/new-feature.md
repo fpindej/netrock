@@ -30,7 +30,7 @@ Commit strategy (atomic, one per logical unit):
 
 Verification checklist:
 - `dotnet build src/backend/MyProject.slnx` passes
-- `cd src/frontend && npm run format && npm run lint && npm run check` passes
+- `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check` passes
 - Migration creates expected tables/columns
 - Navigation entry appears in sidebar
 - i18n keys present in both language files

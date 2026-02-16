@@ -141,6 +141,7 @@ check_prerequisites() {
     command -v dotnet >/dev/null 2>&1 || missing+=("dotnet")
     command -v docker >/dev/null 2>&1 || missing+=("docker")
     command -v node >/dev/null 2>&1 || missing+=("node")
+    command -v pnpm >/dev/null 2>&1 || missing+=("pnpm")
 
     if [[ ${#missing[@]} -gt 0 ]]; then
         print_error "Missing required tools: ${missing[*]}"
@@ -321,7 +322,7 @@ fi
 # Check prerequisites
 print_step "Checking prerequisites..."
 check_prerequisites
-print_success "All prerequisites found (git, dotnet, docker, node)"
+print_success "All prerequisites found (git, dotnet, docker, node, pnpm)"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Step 1: Project Name

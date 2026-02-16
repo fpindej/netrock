@@ -155,7 +155,7 @@ Before **every** commit, verify the code compiles and passes checks:
 
 - **Backend**: `dotnet build src/backend/MyProject.slnx`
 - **Backend tests**: `dotnet test src/backend/MyProject.slnx -c Release`
-- **Frontend**: `cd src/frontend && npm run format && npm run lint && npm run check`
+- **Frontend**: `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check`
 
 Never commit code that doesn't compile, has lint errors, fails type checks, or breaks tests.
 
@@ -436,15 +436,15 @@ Pre-commit checks (build, format, lint, type check) remain manual steps document
 | File | Purpose |
 |---|---|
 | `src/backend/MyProject.WebApi/Dockerfile` | Multi-stage production build (restore → build → publish → runtime) |
-| `src/frontend/Dockerfile` | Production build (build → runtime with Node adapter) |
-| `src/frontend/Dockerfile.local` | Development — mounts source, runs `npm run dev` for hot-reload |
+| `src/frontend/Dockerfile` | Multi-stage production build (deps → build → runtime with Node adapter) |
+| `src/frontend/Dockerfile.local` | Development — mounts source, runs `pnpm run dev` for hot-reload |
 | `docker-compose.local.yml` | 5-service local stack (api, frontend, db, redis, seq) |
 
 The backend Dockerfile uses layer caching: `.csproj` files are restored first (cached), then source is copied and built. This avoids re-downloading NuGet packages on every source change.
 
 The frontend Dockerfile accepts `PUBLIC_*` SvelteKit env vars as Docker build args — they are baked into the JS at build time via `$env/static/public`. When adding a new `PUBLIC_*` var:
 
-1. Add `ARG` + `ENV` to `src/frontend/Dockerfile` (before `npm run build`)
+1. Add `ARG` + `ENV` to `src/frontend/Dockerfile` (before `pnpm run build`)
 2. Add `--build-arg` to `deploy.sh`, `deploy.ps1`, and `.github/workflows/docker.yml`
 3. Add the var to `src/frontend/.env.test` (CI), `src/frontend/.env.example` (docs), and `docker-compose.local.yml` (`x-frontend-environment`)
 
