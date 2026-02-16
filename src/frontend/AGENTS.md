@@ -18,11 +18,11 @@
 
 ## pnpm Configuration (`.npmrc`)
 
-| Setting                    | Value  | Effect                                                                           |
-| -------------------------- | ------ | -------------------------------------------------------------------------------- |
-| `engine-strict`            | `true` | Fail install if Node version doesn't match `engines` in `package.json`           |
-| `strict-peer-dependencies` | `true` | Fail on unmet peer deps instead of warning                                       |
-| `frozen-lockfile`          | `true` | Fail if lockfile is out of date; enforced in dev, CI, and Docker builds          |
+| Setting                    | Value  | Effect                                                                  |
+| -------------------------- | ------ | ----------------------------------------------------------------------- |
+| `engine-strict`            | `true` | Fail install if Node version doesn't match `engines` in `package.json`  |
+| `strict-peer-dependencies` | `true` | Fail on unmet peer deps instead of warning                              |
+| `frozen-lockfile`          | `true` | Fail if lockfile is out of date; enforced in dev, CI, and Docker builds |
 
 Both `Dockerfile` and `Dockerfile.local` COPY `.npmrc` into the image so Docker builds respect these settings.
 
