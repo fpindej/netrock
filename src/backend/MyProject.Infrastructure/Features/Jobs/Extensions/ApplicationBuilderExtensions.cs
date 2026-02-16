@@ -60,13 +60,16 @@ public static class ApplicationBuilderExtensions
             logger.LogInformation("Hangfire dashboard enabled at /hangfire (development only)");
         }
 
-        RegisterRecurringJobs(app.ApplicationServices, logger);
-        RestorePauseStateAsync(app.ApplicationServices, logger).GetAwaiter().GetResult();
+        var jobManager = app.ApplicationServices.GetRequiredService<IRecurringJobManager>();
+
+        RegisterRecurringJobs(jobManager, app.ApplicationServices, logger);
+        RestorePauseStateAsync(jobManager, app.ApplicationServices, logger).GetAwaiter().GetResult();
 
         return app;
     }
 
-    private static void RegisterRecurringJobs(IServiceProvider serviceProvider, ILogger logger)
+    private static void RegisterRecurringJobs(
+        IRecurringJobManager jobManager, IServiceProvider serviceProvider, ILogger logger)
     {
         using var scope = serviceProvider.CreateScope();
         var jobDefinitions = scope.ServiceProvider.GetServices<IRecurringJobDefinition>().ToList();
@@ -79,7 +82,7 @@ public static class ApplicationBuilderExtensions
 
         foreach (var job in jobDefinitions)
         {
-            RecurringJob.AddOrUpdate(
+            jobManager.AddOrUpdate(
                 job.JobId,
                 () => ExecuteJobAsync(job.JobId),
                 job.CronExpression);
@@ -95,7 +98,8 @@ public static class ApplicationBuilderExtensions
     /// Loads persisted pause state from the database and overrides paused jobs with a never-firing cron.
     /// Called once at startup after <see cref="RegisterRecurringJobs"/> to restore pause state.
     /// </summary>
-    private static async Task RestorePauseStateAsync(IServiceProvider serviceProvider, ILogger logger)
+    private static async Task RestorePauseStateAsync(
+        IRecurringJobManager jobManager, IServiceProvider serviceProvider, ILogger logger)
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MyProjectDbContext>();
@@ -111,7 +115,7 @@ public static class ApplicationBuilderExtensions
         {
             JobManagementService.PausedJobCrons[pausedJob.JobId] = pausedJob.OriginalCron;
 
-            RecurringJob.AddOrUpdate(
+            jobManager.AddOrUpdate(
                 pausedJob.JobId,
                 () => ExecuteJobAsync(pausedJob.JobId),
                 JobManagementService.NeverCron);

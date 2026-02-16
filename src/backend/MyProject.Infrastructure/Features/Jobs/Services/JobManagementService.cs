@@ -14,7 +14,7 @@ namespace MyProject.Infrastructure.Features.Jobs.Services;
 
 /// <summary>
 /// Provides Hangfire recurring job management operations for the admin API.
-/// Uses the Hangfire monitoring API and <see cref="RecurringJob"/> static API
+/// Uses the DI-based <see cref="IRecurringJobManager"/> and <see cref="JobStorage"/>
 /// to query, trigger, pause, and remove recurring jobs.
 /// <para>
 /// Pause state is persisted to the database and cached in a static dictionary
@@ -24,6 +24,8 @@ namespace MyProject.Infrastructure.Features.Jobs.Services;
 internal sealed class JobManagementService(
     ILogger<JobManagementService> logger,
     MyProjectDbContext dbContext,
+    IRecurringJobManager jobManager,
+    JobStorage jobStorage,
     IEnumerable<IRecurringJobDefinition> jobDefinitions,
     TimeProvider timeProvider) : IJobManagementService
 {
@@ -42,7 +44,7 @@ internal sealed class JobManagementService(
     /// <inheritdoc />
     public Task<IReadOnlyList<RecurringJobOutput>> GetRecurringJobsAsync()
     {
-        using var connection = JobStorage.Current.GetConnection();
+        using var connection = jobStorage.GetConnection();
         var recurringJobs = connection.GetRecurringJobs();
 
         var result = recurringJobs.Select(job => new RecurringJobOutput(
@@ -67,7 +69,7 @@ internal sealed class JobManagementService(
     /// <inheritdoc />
     public Task<Result<RecurringJobDetailOutput>> GetRecurringJobDetailAsync(string jobId)
     {
-        using var connection = JobStorage.Current.GetConnection();
+        using var connection = jobStorage.GetConnection();
         var recurringJobs = connection.GetRecurringJobs();
         var job = recurringJobs.FirstOrDefault(j => j.Id == jobId);
 
@@ -112,7 +114,7 @@ internal sealed class JobManagementService(
 
         try
         {
-            RecurringJob.TriggerJob(jobId);
+            jobManager.Trigger(jobId);
             logger.LogInformation("Manually triggered job '{JobId}'", jobId);
             return Task.FromResult(Result.Success());
         }
@@ -132,7 +134,7 @@ internal sealed class JobManagementService(
             return Result.Failure(ErrorMessages.Jobs.NotFound, ErrorType.NotFound);
         }
 
-        RecurringJob.RemoveIfExists(jobId);
+        jobManager.RemoveIfExists(jobId);
 
         var pausedJob = await dbContext.PausedJobs.FirstOrDefaultAsync(p => p.JobId == jobId);
         if (pausedJob is not null)
@@ -149,7 +151,7 @@ internal sealed class JobManagementService(
     /// <inheritdoc />
     public async Task<Result> PauseJobAsync(string jobId)
     {
-        using var connection = JobStorage.Current.GetConnection();
+        using var connection = jobStorage.GetConnection();
         var recurringJobs = connection.GetRecurringJobs();
         var job = recurringJobs.FirstOrDefault(j => j.Id == jobId);
 
@@ -175,7 +177,7 @@ internal sealed class JobManagementService(
         await dbContext.SaveChangesAsync();
 
         PausedJobCrons[jobId] = job.Cron;
-        RecurringJob.AddOrUpdate(jobId, () => ApplicationBuilderExtensions.ExecuteJobAsync(jobId), NeverCron);
+        jobManager.AddOrUpdate(jobId, () => ApplicationBuilderExtensions.ExecuteJobAsync(jobId), NeverCron);
         logger.LogInformation("Paused job '{JobId}' (original cron: '{OriginalCron}')", jobId, job.Cron);
         return Result.Success();
     }
@@ -203,7 +205,7 @@ internal sealed class JobManagementService(
         }
 
         PausedJobCrons.TryRemove(jobId, out _);
-        RecurringJob.AddOrUpdate(jobId, () => ApplicationBuilderExtensions.ExecuteJobAsync(jobId), originalCron);
+        jobManager.AddOrUpdate(jobId, () => ApplicationBuilderExtensions.ExecuteJobAsync(jobId), originalCron);
         logger.LogInformation("Resumed job '{JobId}' (restored cron: '{RestoredCron}')", jobId, originalCron);
         return Result.Success();
     }
@@ -220,7 +222,7 @@ internal sealed class JobManagementService(
                 var isPaused = PausedJobCrons.ContainsKey(definition.JobId);
                 var cron = isPaused ? NeverCron : definition.CronExpression;
 
-                RecurringJob.AddOrUpdate(
+                jobManager.AddOrUpdate(
                     definition.JobId,
                     () => ApplicationBuilderExtensions.ExecuteJobAsync(definition.JobId),
                     cron);
@@ -242,21 +244,21 @@ internal sealed class JobManagementService(
         }
     }
 
-    private static bool JobExists(string jobId)
+    private bool JobExists(string jobId)
     {
-        using var connection = JobStorage.Current.GetConnection();
+        using var connection = jobStorage.GetConnection();
         var recurringJobs = connection.GetRecurringJobs();
         return recurringJobs.Any(j => j.Id == jobId);
     }
 
-    private static IReadOnlyList<JobExecutionOutput> GetRecentExecutions(RecurringJobDto job)
+    private IReadOnlyList<JobExecutionOutput> GetRecentExecutions(RecurringJobDto job)
     {
         if (string.IsNullOrEmpty(job.LastJobId))
         {
             return [];
         }
 
-        var monitoringApi = JobStorage.Current.GetMonitoringApi();
+        var monitoringApi = jobStorage.GetMonitoringApi();
         var history = new List<JobExecutionOutput>();
 
         var succeededJobs = monitoringApi.SucceededJobs(0, 20);
