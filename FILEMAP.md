@@ -44,7 +44,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`RateLimitPolicies.cs`** (add/rename constant) | `RateLimiterExtensions.cs` policy registration, `RateLimitingOptions.cs` config class, `appsettings.json` section, `[EnableRateLimiting]` attribute on controllers |
 | **`RateLimitingOptions.cs`** (add/rename option class) | `RateLimiterExtensions.cs`, `appsettings.json`, `appsettings.Development.json` |
 | **`RateLimiterExtensions.cs`** (add policy) | Requires matching constant in `RateLimitPolicies.cs` and config in `RateLimitingOptions.cs` |
-| **`ForwardedHeadersExtensions.cs`** (change trust config) | `docker-compose.local.yml` env vars, `.env.example`, `AGENTS.md` ForwardedHeaders section |
+| **`HostingOptions.cs`** (change hosting config shape) | `HostingExtensions.cs`, `appsettings.json`, `appsettings.Development.json`, `.env.example`, `docker-compose.local.yml` |
+| **`HostingExtensions.cs`** (change middleware behavior) | `Program.cs`, `AGENTS.md` Hosting Configuration section |
 | **Route constraint** (add/modify in `Routing/`) | `Program.cs` constraint registration, route templates using that constraint |
 | **`HealthCheckExtensions.cs`** (change endpoints/checks) | `docker-compose.local.yml` healthcheck URLs, frontend health proxy `+server.ts` |
 | **`ProblemDetailsAuthorizationHandler`** | `ProblemDetails` shape, `ErrorMessages.Auth` constants, `Program.cs` registration |

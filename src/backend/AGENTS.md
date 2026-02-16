@@ -759,46 +759,53 @@ HSTS (`Strict-Transport-Security`) is enabled via `app.UseHsts()` in non-develop
 
 The frontend applies the same headers to page responses via the `handle` hook in `hooks.server.ts`. API proxy routes (`/api/*`) are skipped — they receive headers from the backend directly.
 
-### ForwardedHeaders
+### Hosting Configuration
 
-The middleware pipeline configures `X-Forwarded-For` and `X-Forwarded-Proto` header processing for reverse proxy scenarios (Docker, nginx, load balancers). In production, `Request.Scheme` is manually overridden to `https`. Without this, rate limiting, logging, and CORS checks use the proxy's IP/scheme instead of the client's.
-
-#### Trust model
-
-Without explicit configuration, only loopback addresses (`127.0.0.1` and `::1`) are trusted (ASP.NET Core default). Forwarded headers arriving from any other source IP are silently ignored. The `ForwardedHeadersExtensions.UseConfiguredForwardedHeaders()` method reads `TrustedNetworks` and `TrustedProxies` from the `ForwardedHeaders` configuration section to extend the trust boundary.
-
-The Docker Compose local setup pre-configures `172.16.0.0/12` (all Docker bridge networks) so the SvelteKit frontend container's `X-Forwarded-For` header is accepted by the backend.
-
-#### Deploying behind a reverse proxy
-
-When the app sits behind a non-loopback reverse proxy (nginx, Caddy, Traefik, cloud load balancer), you must tell the middleware which proxy IPs to trust — otherwise `X-Forwarded-For` is ignored and `RemoteIpAddress` stays as the proxy's IP. The rate limiter will then log the one-time warning about all requests sharing a single anonymous bucket.
-
-Configure trusted proxies via environment variables (ASP.NET Core's `__` separator maps to `:` in hierarchical config):
-
-```env
-# Trust a single proxy IP
-ForwardedHeaders__TrustedProxies__0=10.0.0.5
-
-# Trust a CIDR block (e.g., an entire subnet)
-ForwardedHeaders__TrustedNetworks__0=10.0.0.0/16
-
-# Multiple entries
-ForwardedHeaders__TrustedProxies__0=10.0.0.5
-ForwardedHeaders__TrustedProxies__1=10.0.0.6
-```
-
-Alternatively, bind the same keys in `appsettings.Production.json`:
+The `Hosting` config section (`HostingOptions`) controls deployment-specific behavior: reverse proxy trust and HTTPS enforcement. `HostingExtensions` registers the options and applies the middleware.
 
 ```jsonc
+// appsettings.json (production defaults)
 {
-  "ForwardedHeaders": {
-    "TrustedNetworks": ["10.0.0.0/16"],
-    "TrustedProxies": ["10.0.0.5"]
+  "Hosting": {
+    "ForceHttps": true,
+    "ReverseProxy": {
+      "TrustedNetworks": [],
+      "TrustedProxies": []
+    }
   }
 }
 ```
 
-> **Principle**: keep the trust surface as narrow as possible — list only the specific proxy IPs or the smallest CIDR block that covers them. Never use `ClearAllPrefixValues()` or trust `0.0.0.0/0`.
+#### ForceHttps
+
+When `true` (default), every request's scheme is overridden to `https`. This is required when a TLS-terminating proxy (nginx, ALB, Cloudflare) connects to the app over plain HTTP internally — without it, CORS, redirect URLs, and cookie `Secure` flags break. Disabled in Development and Testing via their respective appsettings overrides.
+
+#### Reverse proxy trust
+
+Without trusted entries, only loopback addresses (`127.0.0.1` and `::1`) are accepted for `X-Forwarded-For` (ASP.NET Core default). Headers from untrusted sources are silently ignored.
+
+The Docker Compose local setup pre-configures `172.16.0.0/12` (all Docker bridge networks) so the SvelteKit frontend container's `X-Forwarded-For` header is accepted by the backend.
+
+#### Platform deployment reference
+
+| Platform | `TrustedNetworks` | `TrustedProxies` | Notes |
+|---|---|---|---|
+| **Docker on VPS** (nginx → SvelteKit → API) | `172.16.0.0/12` | — | Pre-configured in `docker-compose.local.yml`. Set `XFF_DEPTH=1` on the frontend container. |
+| **Kubernetes** (ingress → pod) | Pod CIDR (e.g., `10.244.0.0/16`) | — | Varies by CNI plugin. Check `kubectl cluster-info dump \| grep -i cidr`. |
+| **AWS ALB** | VPC CIDR (e.g., `10.0.0.0/8`) | — | ALB connects from within the VPC. |
+| **Azure App Service** | — | Azure front-end IPs | See [Azure docs](https://learn.microsoft.com/en-us/azure/app-service/configure-language-dotnetcore#configure-forwarded-headers). |
+| **Cloudflare** | Cloudflare IP ranges | — | See [Cloudflare IP ranges](https://www.cloudflare.com/ips/). |
+| **Coolify / CapRover** | Docker bridge `172.16.0.0/12` | — | Same as Docker on VPS — Traefik/nginx sits in front. |
+
+Configure via environment variables (`__` maps to `:` in hierarchical config):
+
+```env
+Hosting__ReverseProxy__TrustedNetworks__0=10.0.0.0/16
+Hosting__ReverseProxy__TrustedProxies__0=10.0.0.5
+Hosting__ForceHttps=false
+```
+
+> **Principle**: keep the trust surface as narrow as possible — list only the specific proxy IPs or the smallest CIDR block that covers them. Never trust `0.0.0.0/0`.
 
 ## Authorization — Roles & Permissions
 
