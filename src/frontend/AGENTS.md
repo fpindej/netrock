@@ -24,6 +24,7 @@ src/
 │   ├── api/                       # API client & error handling
 │   │   ├── client.ts              # createApiClient(), browserClient
 │   │   ├── error-handling.ts      # ProblemDetails parsing, field error mapping
+│   │   ├── mutation.ts            # handleMutationError() — rate-limit + validation helper
 │   │   ├── index.ts               # Barrel export
 │   │   └── v1.d.ts                # ⚠️ GENERATED — never edit manually
 │   │
@@ -249,35 +250,35 @@ The backend always returns specific, user-friendly English messages in `detail` 
 
 ### Validation Errors (Field-Level)
 
-ASP.NET Core returns `ValidationProblemDetails` with field-level errors. Handle them with the provided utilities:
+ASP.NET Core returns `ValidationProblemDetails` with field-level errors. Use `handleMutationError()` with the `onValidationError` callback to handle them alongside rate limiting:
 
 ```typescript
-import {
-	isValidationProblemDetails,
-	mapFieldErrors,
-	getErrorMessage,
-	browserClient
-} from '$lib/api';
-import { createFieldShakes } from '$lib/state';
+import { browserClient, handleMutationError } from '$lib/api';
+import { createCooldown, createFieldShakes } from '$lib/state';
 import { toast } from '$lib/components/ui/sonner';
 import * as m from '$lib/paraglide/messages';
 
+const cooldown = createCooldown();
 const fieldShakes = createFieldShakes();
 let fieldErrors = $state<Record<string, string>>({});
 
 async function handleSubmit() {
 	fieldErrors = {};
-	const { response, error: apiError } = await browserClient.PATCH('/api/users/me', {
+	const { response, error } = await browserClient.PATCH('/api/users/me', {
 		body: { firstName, lastName }
 	});
 
 	if (response.ok) {
 		toast.success(m.profile_updateSuccess());
-	} else if (isValidationProblemDetails(apiError)) {
-		fieldErrors = mapFieldErrors(apiError.errors); // PascalCase → camelCase
-		fieldShakes.triggerFields(Object.keys(fieldErrors));
 	} else {
-		toast.error(getErrorMessage(apiError, m.profile_updateError()));
+		handleMutationError(response, error, {
+			cooldown,
+			fallback: m.profile_updateError(),
+			onValidationError(errors) {
+				fieldErrors = errors;
+				fieldShakes.triggerFields(Object.keys(errors));
+			}
+		});
 	}
 }
 ```
@@ -286,39 +287,53 @@ async function handleSubmit() {
 
 ### Rate Limit Errors (429)
 
-All components that make API calls must handle 429 responses. Use `isRateLimited` + `getRetryAfterSeconds` + `createCooldown`:
+All components that make API calls must handle 429 responses. Use `handleMutationError()` from `$lib/api` — it handles rate limiting, validation errors, and generic errors in one call:
 
 ```typescript
-import { isRateLimited, getRetryAfterSeconds } from '$lib/api';
+import { browserClient, handleMutationError } from '$lib/api';
 import { createCooldown } from '$lib/state';
+import { toast } from '$lib/components/ui/sonner';
+import * as m from '$lib/paraglide/messages';
 
 const cooldown = createCooldown();
 
-// In your handler, after the API call:
-if (isRateLimited(response)) {
-	const retryAfter = getRetryAfterSeconds(response);
-	if (retryAfter) cooldown.start(retryAfter);
-	toast.error(m.error_rateLimited(), {
-		description: retryAfter
-			? m.error_rateLimitedDescriptionWithRetry({ seconds: retryAfter })
-			: m.error_rateLimitedDescription()
-	});
-	return;
-}
+const { response, error } = await browserClient.POST('/api/v1/...', { body });
 
-// In the template — show countdown on the button during cooldown:
-// <Button disabled={isLoading || cooldown.active}>
-//   {#if cooldown.active}
-//     {m.common_waitSeconds({ seconds: cooldown.remaining })}
-//   {:else}
-//     Submit
-//   {/if}
-// </Button>
+if (response.ok) {
+	toast.success(m.feature_successMessage());
+} else {
+	handleMutationError(response, error, {
+		cooldown,
+		fallback: m.feature_errorMessage()
+	});
+}
 ```
+
+`handleMutationError()` automatically:
+- Detects 429 → shows rate-limit toast with `Retry-After` → starts cooldown
+- Falls back to `getErrorMessage(error, fallback)` for all other errors
+
+Optional callbacks for additional behavior:
+- `onRateLimited()` — extra work after rate limit (e.g., trigger form shake)
+- `onValidationError(errors)` — field-level validation errors (see [Validation Errors](#validation-errors-field-level))
+- `onError()` — override default toast for generic errors (caller handles via outer closure)
 
 **Button countdown is mandatory.** Every rate-limited button must replace its label with `common_waitSeconds` during cooldown so users see exactly how long to wait. For buttons with icon + spinner, use a three-way `{#if cooldown.active}...{:else if isLoading}...{:else}` branch.
 
-Components with multiple action handlers (e.g., `UserManagementCard`, `JobActionsCard`) should extract a local `handleRateLimited(response)` helper and share a single `cooldown` instance across all handlers. All buttons in the component show the same countdown.
+```svelte
+<Button disabled={isLoading || cooldown.active} onclick={submit}>
+	{#if cooldown.active}
+		{m.common_waitSeconds({ seconds: cooldown.remaining })}
+	{:else if isLoading}
+		<Loader2 class="me-2 h-4 w-4 animate-spin" />
+		{m.feature_submit()}
+	{:else}
+		{m.feature_submit()}
+	{/if}
+</Button>
+```
+
+Components with multiple action handlers (e.g., `UserManagementCard`, `JobActionsCard`) should share a single `cooldown` instance across all handlers. All buttons in the component show the same countdown.
 
 ### Network Errors
 
