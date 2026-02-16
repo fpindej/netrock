@@ -25,6 +25,7 @@
 		if (!window.turnstile || !container) return;
 		widgetId = window.turnstile.render(container, {
 			sitekey: siteKey,
+			size: 'flexible',
 			theme: getWidgetTheme(),
 			callback: (token: string) => onVerified?.(token),
 			'expired-callback': () => onVerified?.(''),
@@ -91,4 +92,4 @@
 	});
 </script>
 
-<div class="flex justify-center" bind:this={container}></div>
+<div class="w-full" bind:this={container}></div>
