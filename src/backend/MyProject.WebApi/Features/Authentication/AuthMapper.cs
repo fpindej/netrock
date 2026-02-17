@@ -48,7 +48,6 @@ internal static class AuthMapper
     /// </summary>
     public static ResetPasswordInput ToResetPasswordInput(this ResetPasswordRequest request) =>
         new(
-            Email: request.Email,
             Token: request.Token,
             NewPassword: request.NewPassword
         );
@@ -58,7 +57,6 @@ internal static class AuthMapper
     /// </summary>
     public static VerifyEmailInput ToVerifyEmailInput(this VerifyEmailRequest request) =>
         new(
-            Email: request.Email,
             Token: request.Token
         );
 }

@@ -68,6 +68,8 @@ public class AuthenticationServiceTests : IDisposable
             FrontendBaseUrl = "https://test.example.com"
         });
 
+        var emailTokenService = new EmailTokenService(_dbContext, _timeProvider, authOptions);
+
         _sut = new AuthenticationService(
             _userManager,
             _signInManager,
@@ -77,6 +79,7 @@ public class AuthenticationServiceTests : IDisposable
             _userContext,
             _cacheService,
             _emailService,
+            emailTokenService,
             authOptions,
             emailOptions,
             Substitute.For<ILogger<AuthenticationService>>(),
@@ -882,7 +885,7 @@ public class AuthenticationServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ForgotPassword_EmailContainsResetUrl()
+    public async Task ForgotPassword_EmailContainsResetUrlWithoutEmail()
     {
         var user = CreateTestUser();
         _userManager.FindByEmailAsync("test@example.com").Returns(user);
@@ -892,9 +895,25 @@ public class AuthenticationServiceTests : IDisposable
 
         await _emailService.Received(1).SendEmailAsync(
             Arg.Is<EmailMessage>(m =>
-                m.HtmlBody.Contains("https://test.example.com/reset-password") &&
-                m.HtmlBody.Contains("reset-token")),
+                m.HtmlBody.Contains("https://test.example.com/reset-password?token=") &&
+                !m.HtmlBody.Contains("email=")),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ForgotPassword_StoresEmailTokenInDatabase()
+    {
+        var user = CreateTestUser();
+        _userManager.FindByEmailAsync("test@example.com").Returns(user);
+        _userManager.GeneratePasswordResetTokenAsync(user).Returns("reset-token");
+
+        await _sut.ForgotPasswordAsync("test@example.com");
+
+        var storedToken = Assert.Single(_dbContext.EmailTokens);
+        Assert.Equal(user.Id, storedToken.UserId);
+        Assert.Equal("reset-token", storedToken.IdentityToken);
+        Assert.Equal(EmailTokenPurpose.PasswordReset, storedToken.Purpose);
+        Assert.False(storedToken.IsUsed);
     }
 
     [Fact]
@@ -915,18 +934,52 @@ public class AuthenticationServiceTests : IDisposable
 
     #region ResetPassword
 
+    private async Task<string> SeedEmailTokenAsync(Guid userId, string identityToken, EmailTokenPurpose purpose, bool isUsed = false, int expiresInHours = 24)
+    {
+        var rawToken = "opaque-test-token-" + Guid.NewGuid().ToString("N");
+        _dbContext.EmailTokens.Add(new EmailToken
+        {
+            Id = Guid.NewGuid(),
+            Token = HashHelper.Sha256(rawToken),
+            IdentityToken = identityToken,
+            Purpose = purpose,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
+            ExpiresAt = _timeProvider.GetUtcNow().UtcDateTime.AddHours(expiresInHours),
+            IsUsed = isUsed,
+            UserId = userId
+        });
+        await _dbContext.SaveChangesAsync();
+        return rawToken;
+    }
+
     [Fact]
     public async Task ResetPassword_ValidInput_ReturnsSuccess()
     {
         var user = CreateTestUser();
-        _userManager.FindByEmailAsync("test@example.com").Returns(user);
-        _userManager.ResetPasswordAsync(user, "valid-token", "NewPass1!")
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-reset-token", EmailTokenPurpose.PasswordReset);
+        _userManager.ResetPasswordAsync(user, "identity-reset-token", "NewPass1!")
             .Returns(IdentityResult.Success);
 
         var result = await _sut.ResetPasswordAsync(
-            new ResetPasswordInput("test@example.com", "valid-token", "NewPass1!"));
+            new ResetPasswordInput(rawToken, "NewPass1!"));
 
         Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task ResetPassword_ValidInput_MarksEmailTokenAsUsed()
+    {
+        var user = CreateTestUser();
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-reset-token", EmailTokenPurpose.PasswordReset);
+        _userManager.ResetPasswordAsync(user, "identity-reset-token", "NewPass1!")
+            .Returns(IdentityResult.Success);
+
+        await _sut.ResetPasswordAsync(new ResetPasswordInput(rawToken, "NewPass1!"));
+
+        var emailToken = Assert.Single(_dbContext.EmailTokens);
+        Assert.True(emailToken.IsUsed);
     }
 
     [Fact]
@@ -934,10 +987,10 @@ public class AuthenticationServiceTests : IDisposable
     {
         var userId = Guid.NewGuid();
         var user = CreateTestUser(userId);
-        _userManager.FindByEmailAsync("test@example.com").Returns(user);
-        _userManager.ResetPasswordAsync(user, "valid-token", "NewPass1!")
-            .Returns(IdentityResult.Success);
         _userManager.FindByIdAsync(userId.ToString()).Returns(user);
+        var rawToken = await SeedEmailTokenAsync(userId, "identity-reset-token", EmailTokenPurpose.PasswordReset);
+        _userManager.ResetPasswordAsync(user, "identity-reset-token", "NewPass1!")
+            .Returns(IdentityResult.Success);
 
         _dbContext.RefreshTokens.Add(new RefreshToken
         {
@@ -951,35 +1004,72 @@ public class AuthenticationServiceTests : IDisposable
         });
         await _dbContext.SaveChangesAsync();
 
-        await _sut.ResetPasswordAsync(
-            new ResetPasswordInput("test@example.com", "valid-token", "NewPass1!"));
+        await _sut.ResetPasswordAsync(new ResetPasswordInput(rawToken, "NewPass1!"));
 
         var token = Assert.Single(_dbContext.RefreshTokens);
         Assert.True(token.IsInvalidated);
     }
 
     [Fact]
-    public async Task ResetPassword_UserNotFound_ReturnsFailure()
+    public async Task ResetPassword_InvalidOpaqueToken_ReturnsFailure()
     {
-        _userManager.FindByEmailAsync("unknown@example.com").Returns((ApplicationUser?)null);
-
         var result = await _sut.ResetPasswordAsync(
-            new ResetPasswordInput("unknown@example.com", "token", "NewPass1!"));
+            new ResetPasswordInput("nonexistent-opaque-token", "NewPass1!"));
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Auth.ResetPasswordFailed, result.Error);
     }
 
     [Fact]
-    public async Task ResetPassword_InvalidToken_ReturnsTokenInvalidError()
+    public async Task ResetPassword_UsedToken_ReturnsFailure()
     {
         var user = CreateTestUser();
-        _userManager.FindByEmailAsync("test@example.com").Returns(user);
-        _userManager.ResetPasswordAsync(user, "bad-token", "NewPass1!")
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-token", EmailTokenPurpose.PasswordReset, isUsed: true);
+
+        var result = await _sut.ResetPasswordAsync(
+            new ResetPasswordInput(rawToken, "NewPass1!"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Auth.ResetPasswordFailed, result.Error);
+    }
+
+    [Fact]
+    public async Task ResetPassword_ExpiredToken_ReturnsFailure()
+    {
+        var user = CreateTestUser();
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-token", EmailTokenPurpose.PasswordReset, expiresInHours: -1);
+
+        var result = await _sut.ResetPasswordAsync(
+            new ResetPasswordInput(rawToken, "NewPass1!"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Auth.ResetPasswordFailed, result.Error);
+    }
+
+    [Fact]
+    public async Task ResetPassword_WrongPurpose_ReturnsFailure()
+    {
+        var user = CreateTestUser();
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-token", EmailTokenPurpose.EmailVerification);
+
+        var result = await _sut.ResetPasswordAsync(
+            new ResetPasswordInput(rawToken, "NewPass1!"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Auth.ResetPasswordFailed, result.Error);
+    }
+
+    [Fact]
+    public async Task ResetPassword_InvalidIdentityToken_ReturnsTokenInvalidError()
+    {
+        var user = CreateTestUser();
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        var rawToken = await SeedEmailTokenAsync(user.Id, "bad-identity-token", EmailTokenPurpose.PasswordReset);
+        _userManager.ResetPasswordAsync(user, "bad-identity-token", "NewPass1!")
             .Returns(IdentityResult.Failed(new IdentityError { Description = "Invalid token." }));
 
         var result = await _sut.ResetPasswordAsync(
-            new ResetPasswordInput("test@example.com", "bad-token", "NewPass1!"));
+            new ResetPasswordInput(rawToken, "NewPass1!"));
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Auth.ResetPasswordTokenInvalid, result.Error);
@@ -989,12 +1079,13 @@ public class AuthenticationServiceTests : IDisposable
     public async Task ResetPassword_PasswordPolicyFailure_ReturnsDescriptiveError()
     {
         var user = CreateTestUser();
-        _userManager.FindByEmailAsync("test@example.com").Returns(user);
-        _userManager.ResetPasswordAsync(user, "valid-token", "weak")
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-token", EmailTokenPurpose.PasswordReset);
+        _userManager.ResetPasswordAsync(user, "identity-token", "weak")
             .Returns(IdentityResult.Failed(new IdentityError { Description = "Password too short." }));
 
         var result = await _sut.ResetPasswordAsync(
-            new ResetPasswordInput("test@example.com", "valid-token", "weak"));
+            new ResetPasswordInput(rawToken, "weak"));
 
         Assert.True(result.IsFailure);
         Assert.Contains("Password too short", result.Error);
@@ -1009,22 +1100,35 @@ public class AuthenticationServiceTests : IDisposable
     {
         var user = CreateTestUser();
         user.EmailConfirmed = false;
-        _userManager.FindByEmailAsync("test@example.com").Returns(user);
-        _userManager.ConfirmEmailAsync(user, "valid-token").Returns(IdentityResult.Success);
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-confirm-token", EmailTokenPurpose.EmailVerification);
+        _userManager.ConfirmEmailAsync(user, "identity-confirm-token").Returns(IdentityResult.Success);
 
-        var result = await _sut.VerifyEmailAsync(
-            new VerifyEmailInput("test@example.com", "valid-token"));
+        var result = await _sut.VerifyEmailAsync(new VerifyEmailInput(rawToken));
 
         Assert.True(result.IsSuccess);
     }
 
     [Fact]
-    public async Task VerifyEmail_UserNotFound_ReturnsFailure()
+    public async Task VerifyEmail_ValidInput_MarksEmailTokenAsUsed()
     {
-        _userManager.FindByEmailAsync("unknown@example.com").Returns((ApplicationUser?)null);
+        var user = CreateTestUser();
+        user.EmailConfirmed = false;
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-confirm-token", EmailTokenPurpose.EmailVerification);
+        _userManager.ConfirmEmailAsync(user, "identity-confirm-token").Returns(IdentityResult.Success);
 
+        await _sut.VerifyEmailAsync(new VerifyEmailInput(rawToken));
+
+        var emailToken = Assert.Single(_dbContext.EmailTokens);
+        Assert.True(emailToken.IsUsed);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_InvalidOpaqueToken_ReturnsFailure()
+    {
         var result = await _sut.VerifyEmailAsync(
-            new VerifyEmailInput("unknown@example.com", "valid-token"));
+            new VerifyEmailInput("nonexistent-opaque-token"));
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Auth.EmailVerificationFailed, result.Error);
@@ -1035,26 +1139,62 @@ public class AuthenticationServiceTests : IDisposable
     {
         var user = CreateTestUser();
         user.EmailConfirmed = true;
-        _userManager.FindByEmailAsync("test@example.com").Returns(user);
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-confirm-token", EmailTokenPurpose.EmailVerification);
 
-        var result = await _sut.VerifyEmailAsync(
-            new VerifyEmailInput("test@example.com", "valid-token"));
+        var result = await _sut.VerifyEmailAsync(new VerifyEmailInput(rawToken));
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Auth.EmailAlreadyVerified, result.Error);
     }
 
     [Fact]
-    public async Task VerifyEmail_InvalidToken_ReturnsFailure()
+    public async Task VerifyEmail_UsedToken_ReturnsFailure()
+    {
+        var user = CreateTestUser();
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-token", EmailTokenPurpose.EmailVerification, isUsed: true);
+
+        var result = await _sut.VerifyEmailAsync(new VerifyEmailInput(rawToken));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Auth.EmailVerificationFailed, result.Error);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_ExpiredToken_ReturnsFailure()
+    {
+        var user = CreateTestUser();
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-token", EmailTokenPurpose.EmailVerification, expiresInHours: -1);
+
+        var result = await _sut.VerifyEmailAsync(new VerifyEmailInput(rawToken));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Auth.EmailVerificationFailed, result.Error);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_WrongPurpose_ReturnsFailure()
+    {
+        var user = CreateTestUser();
+        var rawToken = await SeedEmailTokenAsync(user.Id, "identity-token", EmailTokenPurpose.PasswordReset);
+
+        var result = await _sut.VerifyEmailAsync(new VerifyEmailInput(rawToken));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Auth.EmailVerificationFailed, result.Error);
+    }
+
+    [Fact]
+    public async Task VerifyEmail_InvalidIdentityToken_ReturnsFailure()
     {
         var user = CreateTestUser();
         user.EmailConfirmed = false;
-        _userManager.FindByEmailAsync("test@example.com").Returns(user);
-        _userManager.ConfirmEmailAsync(user, "bad-token")
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        var rawToken = await SeedEmailTokenAsync(user.Id, "bad-identity-token", EmailTokenPurpose.EmailVerification);
+        _userManager.ConfirmEmailAsync(user, "bad-identity-token")
             .Returns(IdentityResult.Failed(new IdentityError { Description = "Invalid token." }));
 
-        var result = await _sut.VerifyEmailAsync(
-            new VerifyEmailInput("test@example.com", "bad-token"));
+        var result = await _sut.VerifyEmailAsync(new VerifyEmailInput(rawToken));
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Auth.EmailVerificationFailed, result.Error);

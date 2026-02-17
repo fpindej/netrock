@@ -10,4 +10,4 @@
 	<meta name="description" content={m.meta_resetPassword_description()} />
 </svelte:head>
 
-<ResetPasswordForm email={data.email} token={data.token} />
+<ResetPasswordForm token={data.token} />

@@ -37,6 +37,7 @@ public static class ServiceCollectionExtensions
             services.ConfigureJwtAuthentication(configuration);
 
             services.AddScoped<ITokenProvider, JwtTokenProvider>();
+            services.AddScoped<EmailTokenService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
 
             return services;

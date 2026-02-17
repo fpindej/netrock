@@ -12,7 +12,6 @@ public class VerifyEmailRequestValidatorTests
     {
         var request = new VerifyEmailRequest
         {
-            Email = "test@example.com",
             Token = "valid-token"
         };
 
@@ -22,29 +21,9 @@ public class VerifyEmailRequestValidatorTests
     }
 
     [Fact]
-    public void EmptyEmail_ShouldFail()
-    {
-        var request = new VerifyEmailRequest { Email = "", Token = "token" };
-
-        var result = _validator.TestValidate(request);
-
-        result.ShouldHaveValidationErrorFor(x => x.Email);
-    }
-
-    [Fact]
-    public void InvalidEmailFormat_ShouldFail()
-    {
-        var request = new VerifyEmailRequest { Email = "not-an-email", Token = "token" };
-
-        var result = _validator.TestValidate(request);
-
-        result.ShouldHaveValidationErrorFor(x => x.Email);
-    }
-
-    [Fact]
     public void EmptyToken_ShouldFail()
     {
-        var request = new VerifyEmailRequest { Email = "test@example.com", Token = "" };
+        var request = new VerifyEmailRequest { Token = "" };
 
         var result = _validator.TestValidate(request);
 

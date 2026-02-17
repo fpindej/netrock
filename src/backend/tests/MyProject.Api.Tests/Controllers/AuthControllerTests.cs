@@ -397,7 +397,6 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         var response = await _client.SendAsync(
             Post("/api/auth/reset-password", JsonContent.Create(new
             {
-                Email = "test@example.com",
                 Token = "valid-token",
                 NewPassword = "NewPassword1!"
             })));
@@ -415,7 +414,6 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         var response = await _client.SendAsync(
             Post("/api/auth/reset-password", JsonContent.Create(new
             {
-                Email = "test@example.com",
                 Token = "invalid-token",
                 NewPassword = "NewPassword1!"
             })));
@@ -430,7 +428,6 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         var response = await _client.SendAsync(
             Post("/api/auth/reset-password", JsonContent.Create(new
             {
-                Email = "test@example.com",
                 Token = "valid-token",
                 NewPassword = "weak"
             })));
@@ -439,12 +436,11 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     }
 
     [Fact]
-    public async Task ResetPassword_MissingEmail_Returns400()
+    public async Task ResetPassword_MissingToken_Returns400()
     {
         var response = await _client.SendAsync(
             Post("/api/auth/reset-password", JsonContent.Create(new
             {
-                Token = "valid-token",
                 NewPassword = "NewPassword1!"
             })));
 
@@ -465,7 +461,6 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         var response = await _client.SendAsync(
             Post("/api/auth/verify-email", JsonContent.Create(new
             {
-                Email = "test@example.com",
                 Token = "valid-token"
             })));
 
@@ -482,7 +477,6 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         var response = await _client.SendAsync(
             Post("/api/auth/verify-email", JsonContent.Create(new
             {
-                Email = "test@example.com",
                 Token = "invalid-token"
             })));
 
@@ -491,14 +485,10 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     }
 
     [Fact]
-    public async Task VerifyEmail_InvalidEmail_Returns400()
+    public async Task VerifyEmail_MissingToken_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/verify-email", JsonContent.Create(new
-            {
-                Email = "not-an-email",
-                Token = "valid-token"
-            })));
+            Post("/api/auth/verify-email", JsonContent.Create(new { })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

@@ -21,6 +21,12 @@ public sealed class AuthenticationOptions
     public JwtOptions Jwt { get; init; } = new();
 
     /// <summary>
+    /// Gets or sets the email token configuration for opaque password-reset and email-verification links.
+    /// </summary>
+    [ValidateObjectMembers]
+    public EmailTokenOptions EmailToken { get; init; } = new();
+
+    /// <summary>
     /// Configuration options for JWT token generation and validation.
     /// </summary>
     public sealed class JwtOptions
@@ -78,5 +84,25 @@ public sealed class AuthenticationOptions
             [Range(1, 365)]
             public int ExpiresInDays { get; [UsedImplicitly] init; } = 7;
         }
+    }
+
+    /// <summary>
+    /// Configuration options for opaque email tokens used in password-reset and email-verification links.
+    /// </summary>
+    public sealed class EmailTokenOptions
+    {
+        /// <summary>
+        /// Gets or sets the length of the random token in bytes.
+        /// Defaults to 32 (256-bit). The resulting URL token is a hex string of twice this length.
+        /// </summary>
+        [Range(16, 128)]
+        public int TokenLengthInBytes { get; [UsedImplicitly] init; } = 32;
+
+        /// <summary>
+        /// Gets or sets the token lifetime in hours.
+        /// Defaults to 24 hours. Must be between 1 and 168 (7 days).
+        /// </summary>
+        [Range(1, 168)]
+        public int ExpiresInHours { get; [UsedImplicitly] init; } = 24;
     }
 }

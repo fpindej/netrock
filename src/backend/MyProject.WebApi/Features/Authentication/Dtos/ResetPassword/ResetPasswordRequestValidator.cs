@@ -12,11 +12,6 @@ public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequ
     /// </summary>
     public ResetPasswordRequestValidator()
     {
-        RuleFor(x => x.Email)
-            .NotEmpty()
-            .EmailAddress()
-            .MaximumLength(255);
-
         RuleFor(x => x.Token)
             .NotEmpty();
 

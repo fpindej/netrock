@@ -9,6 +9,8 @@ using MyProject.Application.Identity.Constants;
 using MyProject.Component.Tests.Fixtures;
 using MyProject.Infrastructure.Features.Admin.Services;
 using MyProject.Infrastructure.Features.Authentication.Models;
+using MyProject.Infrastructure.Features.Authentication.Options;
+using MyProject.Infrastructure.Features.Authentication.Services;
 using MyProject.Infrastructure.Features.Email.Options;
 using MyProject.Infrastructure.Persistence;
 using MyProject.Shared;
@@ -37,11 +39,21 @@ public class AdminServiceTests : IDisposable
         _timeProvider = new FakeTimeProvider(new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero));
         _dbContext = TestDbContextFactory.Create();
         var logger = Substitute.For<ILogger<AdminService>>();
+        var authOptions = Options.Create(new AuthenticationOptions
+        {
+            Jwt = new AuthenticationOptions.JwtOptions
+            {
+                Key = "ThisIsATestSigningKeyWithAtLeast32Chars!",
+                Issuer = "test-issuer",
+                Audience = "test-audience"
+            }
+        });
         var emailOptions = Options.Create(new EmailOptions { FrontendBaseUrl = "https://example.com" });
+        var emailTokenService = new EmailTokenService(_dbContext, _timeProvider, authOptions);
 
         _sut = new AdminService(
             _userManager, _roleManager, _dbContext, _cacheService, _timeProvider,
-            _emailService, emailOptions, logger);
+            _emailService, emailTokenService, emailOptions, logger);
     }
 
     public void Dispose()
@@ -646,8 +658,27 @@ public class AdminServiceTests : IDisposable
 
         Assert.True(result.IsSuccess);
         await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m => m.To == "user@test.com"),
+            Arg.Is<EmailMessage>(m =>
+                m.To == "user@test.com" &&
+                !m.PlainTextBody!.Contains("email=", StringComparison.OrdinalIgnoreCase)),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SendPasswordReset_CreatesOpaqueEmailToken()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+        target.Email = "user@test.com";
+        _userManager.GeneratePasswordResetTokenAsync(target).Returns("reset-token");
+
+        await _sut.SendPasswordResetAsync(_callerId, _targetId);
+
+        var emailToken = Assert.Single(_dbContext.EmailTokens);
+        Assert.Equal(_targetId, emailToken.UserId);
+        Assert.Equal(EmailTokenPurpose.PasswordReset, emailToken.Purpose);
+        Assert.Equal("reset-token", emailToken.IdentityToken);
+        Assert.False(emailToken.IsUsed);
     }
 
     [Fact]
@@ -721,7 +752,7 @@ public class AdminServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateUser_SendsInvitationEmail()
+    public async Task CreateUser_SendsInvitationEmail_WithOpaqueToken()
     {
         _userManager.FindByEmailAsync("invite@test.com").Returns((ApplicationUser?)null);
         _userManager.CreateAsync(Arg.Any<ApplicationUser>(), Arg.Any<string>())
@@ -734,8 +765,15 @@ public class AdminServiceTests : IDisposable
         await _sut.CreateUserAsync(_callerId, new CreateUserInput("invite@test.com", null, null));
 
         await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m => m.To == "invite@test.com" && m.Subject == "You've Been Invited"),
+            Arg.Is<EmailMessage>(m =>
+                m.To == "invite@test.com" &&
+                m.Subject == "You've Been Invited" &&
+                !m.PlainTextBody!.Contains("email=", StringComparison.OrdinalIgnoreCase)),
             Arg.Any<CancellationToken>());
+
+        var emailToken = Assert.Single(_dbContext.EmailTokens);
+        Assert.Equal(EmailTokenPurpose.PasswordReset, emailToken.Purpose);
+        Assert.Equal("reset-token", emailToken.IdentityToken);
     }
 
     #endregion

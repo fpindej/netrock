@@ -9,7 +9,6 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	}
 
 	return {
-		email: url.searchParams.get('email') ?? '',
 		token: url.searchParams.get('token') ?? ''
 	};
 };
