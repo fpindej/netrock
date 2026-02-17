@@ -15,11 +15,10 @@
 	import { toast } from '$lib/components/ui/sonner';
 
 	interface Props {
-		email: string;
 		token: string;
 	}
 
-	let { email, token }: Props = $props();
+	let { token }: Props = $props();
 
 	let newPassword = $state('');
 	let confirmPassword = $state('');
@@ -29,7 +28,7 @@
 	const fieldShakes = createFieldShakes();
 	const cooldown = createCooldown();
 
-	let isMissingParams = $derived(!email || !token);
+	let isMissingParams = $derived(!token);
 
 	async function submit(e: Event) {
 		e.preventDefault();
@@ -47,7 +46,7 @@
 
 		try {
 			const { response, error: apiError } = await browserClient.POST('/api/auth/reset-password', {
-				body: { email, token, newPassword }
+				body: { token, newPassword }
 			});
 
 			if (response.ok) {

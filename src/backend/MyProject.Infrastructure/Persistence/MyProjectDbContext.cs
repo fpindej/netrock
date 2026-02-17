@@ -19,6 +19,11 @@ internal class MyProjectDbContext(DbContextOptions<MyProjectDbContext> options)
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     /// <summary>
+    /// Gets or sets the email tokens table for opaque password-reset and email-verification links.
+    /// </summary>
+    public DbSet<EmailToken> EmailTokens { get; set; }
+
+    /// <summary>
     /// Gets or sets the paused jobs table for persisting pause state across restarts.
     /// </summary>
     public DbSet<PausedJob> PausedJobs { get; set; }

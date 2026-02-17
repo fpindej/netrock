@@ -62,18 +62,18 @@ public interface IAuthenticationService
     Task<Result> ForgotPasswordAsync(string email, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Resets a user's password using a previously issued reset token.
+    /// Resets a user's password using an opaque email token that maps to the Identity reset token and user.
     /// Revokes all existing refresh tokens to force re-authentication on other devices.
     /// </summary>
-    /// <param name="input">The reset password input containing email, token, and new password.</param>
+    /// <param name="input">The reset password input containing the opaque token and new password.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A result indicating success or failure.</returns>
     Task<Result> ResetPasswordAsync(ResetPasswordInput input, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Verifies a user's email address using a confirmation token received via email.
+    /// Verifies a user's email address using an opaque email token that maps to the Identity confirmation token and user.
     /// </summary>
-    /// <param name="input">The verify email input containing email and token.</param>
+    /// <param name="input">The verify email input containing the opaque token.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A result indicating success or failure.</returns>
     Task<Result> VerifyEmailAsync(VerifyEmailInput input, CancellationToken cancellationToken = default);

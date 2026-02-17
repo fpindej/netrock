@@ -1,11 +1,9 @@
 namespace MyProject.Application.Features.Authentication.Dtos;
 
 /// <summary>
-/// Input for verifying a user's email address using a confirmation token.
+/// Input for verifying a user's email address using an opaque email token.
 /// </summary>
-/// <param name="Email">The email address to verify.</param>
-/// <param name="Token">The email confirmation token received via email.</param>
+/// <param name="Token">The opaque token received via email that maps to the Identity confirmation token and user.</param>
 public record VerifyEmailInput(
-    string Email,
     string Token
 );

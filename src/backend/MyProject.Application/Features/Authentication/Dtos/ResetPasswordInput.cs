@@ -1,13 +1,11 @@
 namespace MyProject.Application.Features.Authentication.Dtos;
 
 /// <summary>
-/// Input for resetting a user's password using a password reset token.
+/// Input for resetting a user's password using an opaque email token.
 /// </summary>
-/// <param name="Email">The email address of the account to reset.</param>
-/// <param name="Token">The password reset token received via email.</param>
+/// <param name="Token">The opaque token received via email that maps to the Identity reset token and user.</param>
 /// <param name="NewPassword">The new password to set.</param>
 public record ResetPasswordInput(
-    string Email,
     string Token,
     string NewPassword
 );

@@ -2701,11 +2701,9 @@ export interface components {
 			 */
 			id?: string;
 		};
-		/** @description Represents a request to reset a password using a token. */
+		/** @description Represents a request to reset a password using an opaque email token. */
 		ResetPasswordRequest: {
-			/** @description The email address associated with the account. */
-			email: string;
-			/** @description The password reset token received via email. */
+			/** @description The opaque token received via the password reset email. */
 			token: string;
 			/** @description The new password to set. */
 			newPassword: string;
@@ -2787,11 +2785,9 @@ export interface components {
 			/** @description Whether the user's email address has been confirmed. */
 			emailConfirmed?: boolean;
 		};
-		/** @description Represents a request to verify an email address using a confirmation token. */
+		/** @description Represents a request to verify an email address using an opaque email token. */
 		VerifyEmailRequest: {
-			/** @description The email address to verify. */
-			email: string;
-			/** @description The email confirmation token received via email. */
+			/** @description The opaque token received via the email verification email. */
 			token: string;
 		};
 	};

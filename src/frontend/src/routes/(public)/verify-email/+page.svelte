@@ -17,7 +17,7 @@
 	let errorMessage = $state('');
 
 	onMount(() => {
-		if (data.email && data.token) {
+		if (data.token) {
 			verify();
 		} else {
 			status = 'error';
@@ -28,7 +28,7 @@
 	async function verify() {
 		try {
 			const { response, error: apiError } = await browserClient.POST('/api/auth/verify-email', {
-				body: { email: data.email, token: data.token }
+				body: { token: data.token }
 			});
 
 			if (response.ok) {

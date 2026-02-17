@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -39,6 +40,7 @@ internal class AuthenticationService(
     MyProjectDbContext dbContext) : IAuthenticationService
 {
     private readonly AuthenticationOptions.JwtOptions _jwtOptions = authenticationOptions.Value.Jwt;
+    private readonly AuthenticationOptions.EmailTokenOptions _emailTokenOptions = authenticationOptions.Value.EmailToken;
     private readonly EmailOptions _emailOptions = emailOptions.Value;
 
     /// <inheritdoc />
@@ -288,10 +290,9 @@ internal class AuthenticationService(
             return Result.Success();
         }
 
-        var token = await userManager.GeneratePasswordResetTokenAsync(user);
-        var encodedToken = Uri.EscapeDataString(token);
-        var encodedEmail = Uri.EscapeDataString(email);
-        var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={encodedToken}&email={encodedEmail}";
+        var identityToken = await userManager.GeneratePasswordResetTokenAsync(user);
+        var opaqueToken = await CreateEmailTokenAsync(user.Id, identityToken, EmailTokenPurpose.PasswordReset, cancellationToken);
+        var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}";
 
         var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
         var htmlBody = $"""
@@ -299,7 +300,7 @@ internal class AuthenticationService(
             <p>You requested a password reset. Click the link below to set a new password:</p>
             <p><a href="{safeResetUrl}">Reset Password</a></p>
             <p>If you didn't request this, you can safely ignore this email.</p>
-            <p>This link will expire in 24 hours.</p>
+            <p>This link will expire in {_emailTokenOptions.ExpiresInHours} hours.</p>
             """;
 
         var plainTextBody = $"""
@@ -326,14 +327,21 @@ internal class AuthenticationService(
     /// <inheritdoc />
     public async Task<Result> ResetPasswordAsync(ResetPasswordInput input, CancellationToken cancellationToken = default)
     {
-        var user = await userManager.FindByEmailAsync(input.Email);
+        var emailToken = await ResolveEmailTokenAsync(input.Token, EmailTokenPurpose.PasswordReset, cancellationToken);
+
+        if (emailToken is null)
+        {
+            return Result.Failure(ErrorMessages.Auth.ResetPasswordFailed);
+        }
+
+        var user = await userManager.FindByIdAsync(emailToken.UserId.ToString());
 
         if (user is null)
         {
             return Result.Failure(ErrorMessages.Auth.ResetPasswordFailed);
         }
 
-        var resetResult = await userManager.ResetPasswordAsync(user, input.Token, input.NewPassword);
+        var resetResult = await userManager.ResetPasswordAsync(user, emailToken.IdentityToken, input.NewPassword);
 
         if (!resetResult.Succeeded)
         {
@@ -348,6 +356,9 @@ internal class AuthenticationService(
             return Result.Failure(string.Join(" ", errors));
         }
 
+        emailToken.IsUsed = true;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         await RevokeUserTokens(user.Id, cancellationToken);
 
         return Result.Success();
@@ -356,7 +367,14 @@ internal class AuthenticationService(
     /// <inheritdoc />
     public async Task<Result> VerifyEmailAsync(VerifyEmailInput input, CancellationToken cancellationToken = default)
     {
-        var user = await userManager.FindByEmailAsync(input.Email);
+        var emailToken = await ResolveEmailTokenAsync(input.Token, EmailTokenPurpose.EmailVerification, cancellationToken);
+
+        if (emailToken is null)
+        {
+            return Result.Failure(ErrorMessages.Auth.EmailVerificationFailed);
+        }
+
+        var user = await userManager.FindByIdAsync(emailToken.UserId.ToString());
 
         if (user is null)
         {
@@ -368,12 +386,15 @@ internal class AuthenticationService(
             return Result.Failure(ErrorMessages.Auth.EmailAlreadyVerified);
         }
 
-        var confirmResult = await userManager.ConfirmEmailAsync(user, input.Token);
+        var confirmResult = await userManager.ConfirmEmailAsync(user, emailToken.IdentityToken);
 
         if (!confirmResult.Succeeded)
         {
             return Result.Failure(ErrorMessages.Auth.EmailVerificationFailed);
         }
+
+        emailToken.IsUsed = true;
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }
@@ -472,10 +493,9 @@ internal class AuthenticationService(
             return;
         }
 
-        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        var encodedToken = Uri.EscapeDataString(token);
-        var encodedEmail = Uri.EscapeDataString(user.Email);
-        var verifyUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/verify-email?token={encodedToken}&email={encodedEmail}";
+        var identityToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
+        var opaqueToken = await CreateEmailTokenAsync(user.Id, identityToken, EmailTokenPurpose.EmailVerification, cancellationToken);
+        var verifyUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/verify-email?token={opaqueToken}";
 
         var safeVerifyUrl = WebUtility.HtmlEncode(verifyUrl);
         var htmlBody = $"""
@@ -502,6 +522,58 @@ internal class AuthenticationService(
         );
 
         await SendEmailSafeAsync(message, cancellationToken);
+    }
+
+    /// <summary>
+    /// Generates a cryptographically random opaque token, stores its SHA-256 hash alongside
+    /// the ASP.NET Identity token in the database, and returns the raw token for inclusion in URLs.
+    /// </summary>
+    private async Task<string> CreateEmailTokenAsync(
+        Guid userId, string identityToken, EmailTokenPurpose purpose, CancellationToken cancellationToken)
+    {
+        var rawToken = RandomNumberGenerator.GetHexString(_emailTokenOptions.TokenLengthInBytes * 2, lowercase: true);
+        var utcNow = timeProvider.GetUtcNow().UtcDateTime;
+
+        var entity = new EmailToken
+        {
+            Id = Guid.NewGuid(),
+            Token = HashHelper.Sha256(rawToken),
+            IdentityToken = identityToken,
+            Purpose = purpose,
+            CreatedAt = utcNow,
+            ExpiresAt = utcNow.AddHours(_emailTokenOptions.ExpiresInHours),
+            IsUsed = false,
+            UserId = userId
+        };
+
+        dbContext.EmailTokens.Add(entity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return rawToken;
+    }
+
+    /// <summary>
+    /// Looks up an email token by its raw value. Returns <c>null</c> when the token
+    /// is not found, already used, expired, or has a mismatched purpose.
+    /// </summary>
+    private async Task<EmailToken?> ResolveEmailTokenAsync(
+        string rawToken, EmailTokenPurpose expectedPurpose, CancellationToken cancellationToken)
+    {
+        var hash = HashHelper.Sha256(rawToken);
+        var token = await dbContext.EmailTokens
+            .FirstOrDefaultAsync(t => t.Token == hash, cancellationToken);
+
+        if (token is null || token.IsUsed || token.Purpose != expectedPurpose)
+        {
+            return null;
+        }
+
+        if (token.ExpiresAt < timeProvider.GetUtcNow().UtcDateTime)
+        {
+            return null;
+        }
+
+        return token;
     }
 
     /// <summary>
