@@ -1,4 +1,3 @@
-using System.Net;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +10,9 @@ using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Features.Email;
 using MyProject.Application.Identity.Constants;
 using MyProject.Infrastructure.Features.Authentication.Models;
+using MyProject.Infrastructure.Features.Authentication.Options;
 using MyProject.Infrastructure.Features.Authentication.Services;
+using MyProject.Infrastructure.Features.Email;
 using MyProject.Infrastructure.Features.Email.Options;
 using MyProject.Infrastructure.Persistence;
 using MyProject.Infrastructure.Persistence.Extensions;
@@ -39,9 +40,11 @@ internal class AdminService(
     TimeProvider timeProvider,
     IEmailService emailService,
     EmailTokenService emailTokenService,
+    IOptions<AuthenticationOptions> authenticationOptions,
     IOptions<EmailOptions> emailOptions,
     ILogger<AdminService> logger) : IAdminService
 {
+    private readonly int _emailTokenExpiresInHours = authenticationOptions.Value.EmailToken.ExpiresInHours;
     private readonly EmailOptions _emailOptions = emailOptions.Value;
 
     /// <inheritdoc />
@@ -419,23 +422,25 @@ internal class AdminService(
         var email = user.Email ?? user.UserName ?? string.Empty;
         var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}";
 
-        var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
-        var htmlBody = $"""
-            <h2>Reset Your Password</h2>
-            <p>An administrator has requested a password reset for your account. Click the link below to set a new password:</p>
-            <p><a href="{safeResetUrl}">Reset Password</a></p>
-            <p>If you did not expect this, please contact your administrator.</p>
-            <p>This link will expire in 24 hours.</p>
+        var innerHtml = $"""
+            <h2 style="margin:0 0 16px; font-size:22px; color:#18181b;">Reset Your Password</h2>
+            <p style="margin:0 0 8px;">An administrator has requested a password reset for your account. Click the button below to set a new password:</p>
+            {EmailLayout.Button(resetUrl, "Reset Password")}
+            <p style="margin:0 0 4px; font-size:13px; color:#71717a;">If you did not expect this, please contact your administrator.</p>
+            <p style="margin:0; font-size:13px; color:#71717a;">This link will expire in {_emailTokenExpiresInHours} hours.</p>
             """;
+        var htmlBody = EmailLayout.RenderHtml(innerHtml, _emailOptions.FromName, _emailOptions.CompanyAddress);
 
-        var plainTextBody = $"""
+        var innerText = $"""
             Reset Your Password
 
             An administrator has requested a password reset for your account. Visit the following link to set a new password:
             {resetUrl}
 
             If you did not expect this, please contact your administrator.
+            This link will expire in {_emailTokenExpiresInHours} hours.
             """;
+        var plainTextBody = EmailLayout.RenderPlainText(innerText, _emailOptions.FromName, _emailOptions.CompanyAddress);
 
         var message = new EmailMessage(
             To: email,
@@ -492,22 +497,23 @@ internal class AdminService(
         var opaqueToken = await emailTokenService.CreateAsync(user.Id, identityToken, EmailTokenPurpose.PasswordReset, cancellationToken);
         var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}";
 
-        var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
-        var htmlBody = $"""
-            <h2>You've Been Invited</h2>
-            <p>An account has been created for you. Click the link below to set your password and get started:</p>
-            <p><a href="{safeResetUrl}">Set Your Password</a></p>
-            <p>This link will expire in 24 hours.</p>
+        var innerHtml = $"""
+            <h2 style="margin:0 0 16px; font-size:22px; color:#18181b;">You've Been Invited</h2>
+            <p style="margin:0 0 8px;">An account has been created for you. Click the button below to set your password and get started:</p>
+            {EmailLayout.Button(resetUrl, "Set Your Password")}
+            <p style="margin:0; font-size:13px; color:#71717a;">This link will expire in {_emailTokenExpiresInHours} hours.</p>
             """;
+        var htmlBody = EmailLayout.RenderHtml(innerHtml, _emailOptions.FromName, _emailOptions.CompanyAddress);
 
-        var plainTextBody = $"""
+        var innerText = $"""
             You've Been Invited
 
             An account has been created for you. Visit the following link to set your password and get started:
             {resetUrl}
 
-            This link will expire in 24 hours.
+            This link will expire in {_emailTokenExpiresInHours} hours.
             """;
+        var plainTextBody = EmailLayout.RenderPlainText(innerText, _emailOptions.FromName, _emailOptions.CompanyAddress);
 
         var message = new EmailMessage(
             To: input.Email,

@@ -32,6 +32,12 @@ public sealed class EmailOptions
     public string FrontendBaseUrl { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the physical mailing address shown in email footers (CAN-SPAM compliance).
+    /// </summary>
+    [Required]
+    public string CompanyAddress { get; init; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the SMTP connection configuration. Only required when a real SMTP email service is registered.
     /// </summary>
     public SmtpOptions Smtp { get; init; } = new();
