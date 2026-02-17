@@ -1,5 +1,4 @@
 using System.Net;
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -34,6 +33,7 @@ internal class AuthenticationService(
     IUserContext userContext,
     ICacheService cacheService,
     IEmailService emailService,
+    EmailTokenService emailTokenService,
     IOptions<AuthenticationOptions> authenticationOptions,
     IOptions<EmailOptions> emailOptions,
     ILogger<AuthenticationService> logger,
@@ -291,7 +291,7 @@ internal class AuthenticationService(
         }
 
         var identityToken = await userManager.GeneratePasswordResetTokenAsync(user);
-        var opaqueToken = await CreateEmailTokenAsync(user.Id, identityToken, EmailTokenPurpose.PasswordReset, cancellationToken);
+        var opaqueToken = await emailTokenService.CreateAsync(user.Id, identityToken, EmailTokenPurpose.PasswordReset, cancellationToken);
         var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}";
 
         var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
@@ -327,7 +327,7 @@ internal class AuthenticationService(
     /// <inheritdoc />
     public async Task<Result> ResetPasswordAsync(ResetPasswordInput input, CancellationToken cancellationToken = default)
     {
-        var emailToken = await ResolveEmailTokenAsync(input.Token, EmailTokenPurpose.PasswordReset, cancellationToken);
+        var emailToken = await emailTokenService.ResolveAsync(input.Token, EmailTokenPurpose.PasswordReset, cancellationToken);
 
         if (emailToken is null)
         {
@@ -367,7 +367,7 @@ internal class AuthenticationService(
     /// <inheritdoc />
     public async Task<Result> VerifyEmailAsync(VerifyEmailInput input, CancellationToken cancellationToken = default)
     {
-        var emailToken = await ResolveEmailTokenAsync(input.Token, EmailTokenPurpose.EmailVerification, cancellationToken);
+        var emailToken = await emailTokenService.ResolveAsync(input.Token, EmailTokenPurpose.EmailVerification, cancellationToken);
 
         if (emailToken is null)
         {
@@ -494,7 +494,7 @@ internal class AuthenticationService(
         }
 
         var identityToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        var opaqueToken = await CreateEmailTokenAsync(user.Id, identityToken, EmailTokenPurpose.EmailVerification, cancellationToken);
+        var opaqueToken = await emailTokenService.CreateAsync(user.Id, identityToken, EmailTokenPurpose.EmailVerification, cancellationToken);
         var verifyUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/verify-email?token={opaqueToken}";
 
         var safeVerifyUrl = WebUtility.HtmlEncode(verifyUrl);
@@ -522,58 +522,6 @@ internal class AuthenticationService(
         );
 
         await SendEmailSafeAsync(message, cancellationToken);
-    }
-
-    /// <summary>
-    /// Generates a cryptographically random opaque token, stores its SHA-256 hash alongside
-    /// the ASP.NET Identity token in the database, and returns the raw token for inclusion in URLs.
-    /// </summary>
-    private async Task<string> CreateEmailTokenAsync(
-        Guid userId, string identityToken, EmailTokenPurpose purpose, CancellationToken cancellationToken)
-    {
-        var rawToken = RandomNumberGenerator.GetHexString(_emailTokenOptions.TokenLengthInBytes * 2, lowercase: true);
-        var utcNow = timeProvider.GetUtcNow().UtcDateTime;
-
-        var entity = new EmailToken
-        {
-            Id = Guid.NewGuid(),
-            Token = HashHelper.Sha256(rawToken),
-            IdentityToken = identityToken,
-            Purpose = purpose,
-            CreatedAt = utcNow,
-            ExpiresAt = utcNow.AddHours(_emailTokenOptions.ExpiresInHours),
-            IsUsed = false,
-            UserId = userId
-        };
-
-        dbContext.EmailTokens.Add(entity);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return rawToken;
-    }
-
-    /// <summary>
-    /// Looks up an email token by its raw value. Returns <c>null</c> when the token
-    /// is not found, already used, expired, or has a mismatched purpose.
-    /// </summary>
-    private async Task<EmailToken?> ResolveEmailTokenAsync(
-        string rawToken, EmailTokenPurpose expectedPurpose, CancellationToken cancellationToken)
-    {
-        var hash = HashHelper.Sha256(rawToken);
-        var token = await dbContext.EmailTokens
-            .FirstOrDefaultAsync(t => t.Token == hash, cancellationToken);
-
-        if (token is null || token.IsUsed || token.Purpose != expectedPurpose)
-        {
-            return null;
-        }
-
-        if (token.ExpiresAt < timeProvider.GetUtcNow().UtcDateTime)
-        {
-            return null;
-        }
-
-        return token;
     }
 
     /// <summary>

@@ -68,6 +68,8 @@ public class AuthenticationServiceTests : IDisposable
             FrontendBaseUrl = "https://test.example.com"
         });
 
+        var emailTokenService = new EmailTokenService(_dbContext, _timeProvider, authOptions);
+
         _sut = new AuthenticationService(
             _userManager,
             _signInManager,
@@ -77,6 +79,7 @@ public class AuthenticationServiceTests : IDisposable
             _userContext,
             _cacheService,
             _emailService,
+            emailTokenService,
             authOptions,
             emailOptions,
             Substitute.For<ILogger<AuthenticationService>>(),
