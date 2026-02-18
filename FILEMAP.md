@@ -34,6 +34,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`BaseEntityConfiguration.cs`** | All entity configurations that extend it |
 | **`CustomWebApplicationFactory.cs`** (change mock setup) | All API integration tests that depend on factory mocks |
 | **`appsettings.Testing.json`** (change test config) | `CustomWebApplicationFactory` behavior; all API integration tests |
+| **`AuditActions.cs`** (add action constant) | Service that logs it, frontend `$lib/utils/audit.ts` (label, color, icon), i18n keys in `en.json`/`cs.json` |
+| **`AuditEvent` entity** (change fields) | `AuditEventConfiguration`, `AuditService`, Application DTOs (`AuditEventOutput`), WebApi DTOs, `AuditMapper`, frontend types |
 | **Test fixture** (change shared helper) | All tests using that fixture |
 | **`AppRoles.cs`** (add role) | Role seeding picks up automatically; consider what permissions to seed for the new role; `RoleManagementService` checks `AppRoles.All` for system role collisions |
 | **`AppPermissions.cs`** (add permission) | Seed in `ApplicationBuilderExtensions.SeedRolePermissionsAsync()`, add `[RequirePermission]` to endpoints, update frontend `$lib/utils/permissions.ts` |
