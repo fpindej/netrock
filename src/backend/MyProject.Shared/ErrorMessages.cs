@@ -17,7 +17,7 @@ public static class ErrorMessages
     public static class Auth
     {
         public const string LoginInvalidCredentials = "Invalid username or password.";
-        public const string LoginAccountLocked = "Account is temporarily locked due to multiple failed login attempts. Please try again later.";
+        public const string LoginAccountLocked = "Account is temporarily locked. Please try again later or contact an administrator.";
         public const string RegisterRoleAssignFailed = "Account was created but role assignment failed. Please contact an administrator.";
         public const string TokenMissing = "Refresh token is missing.";
         public const string TokenNotFound = "Refresh token not found.";

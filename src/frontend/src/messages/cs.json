@@ -74,6 +74,7 @@
 	"auth_login_failed": "Přihlášení se nezdařilo",
 	"auth_login_error": "Došlo k chybě",
 	"auth_login_invalidCredentials": "Nesprávný e-mail nebo heslo",
+	"auth_login_accountLocked": "Účet je dočasně uzamčen. Zkuste to prosím později nebo kontaktujte administrátora.",
 	"auth_login_apiOffline": "API je offline",
 	"auth_login_success": "Přihlášení úspěšné!",
 	"auth_login_rememberMe": "Zapamatovat si mě",
