@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using MyProject.Application.Caching;
 using MyProject.Application.Features.Admin.Dtos;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Email;
 using MyProject.Application.Identity.Constants;
 using MyProject.Component.Tests.Fixtures;
@@ -53,7 +54,7 @@ public class AdminServiceTests : IDisposable
 
         _sut = new AdminService(
             _userManager, _roleManager, _dbContext, _cacheService, _timeProvider,
-            _emailService, emailTokenService, emailOptions, logger);
+            _emailService, emailTokenService, Substitute.For<IAuditService>(), emailOptions, logger);
     }
 
     public void Dispose()

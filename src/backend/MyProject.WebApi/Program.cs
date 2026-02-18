@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using MyProject.Infrastructure.Caching.Extensions;
 using MyProject.Infrastructure.Cookies.Extensions;
 using MyProject.Infrastructure.Features.Admin.Extensions;
+using MyProject.Infrastructure.Features.Audit.Extensions;
 using MyProject.Infrastructure.Features.Captcha.Extensions;
 using MyProject.Infrastructure.Features.Email.Extensions;
 using MyProject.Infrastructure.Features.Jobs.Extensions;
@@ -55,6 +56,9 @@ try
 
         Log.Debug("Adding admin services");
         builder.Services.AddAdminServices();
+
+        Log.Debug("Adding audit services");
+        builder.Services.AddAuditServices();
 
         Log.Debug("Adding email services");
         builder.Services.AddEmailServices(builder.Configuration);

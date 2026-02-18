@@ -400,5 +400,41 @@
 	"admin_jobDetail_deleteError": "Nepodařilo se smazat úlohu.",
 
 	"meta_adminJobDetail_title": "Detail úlohy",
-	"meta_adminJobDetail_description": "Zobrazení a správa detailů úlohy a historie spuštění."
+	"meta_adminJobDetail_description": "Zobrazení a správa detailů úlohy a historie spuštění.",
+
+	"audit_trail_title": "Audit",
+	"audit_trail_description": "Historie akcí provedených tímto uživatelem nebo na něm.",
+	"audit_trail_empty": "Zatím žádné záznamy.",
+	"audit_trail_col_timestamp": "Čas",
+	"audit_trail_col_action": "Akce",
+	"audit_trail_col_target": "Cíl",
+	"audit_trail_col_details": "Podrobnosti",
+
+	"settings_activityLog_title": "Historie aktivit",
+	"settings_activityLog_description": "Nedávná aktivita na vašem účtu.",
+	"settings_activityLog_empty": "Zatím žádná aktivita.",
+
+	"audit_action_loginSuccess": "Přihlášení",
+	"audit_action_loginFailure": "Neúspěšné přihlášení",
+	"audit_action_logout": "Odhlášení",
+	"audit_action_register": "Registrace",
+	"audit_action_passwordChange": "Heslo změněno",
+	"audit_action_passwordResetRequest": "Žádost o reset hesla",
+	"audit_action_passwordReset": "Reset hesla",
+	"audit_action_emailVerification": "E-mail ověřen",
+	"audit_action_resendVerificationEmail": "Ověřovací e-mail znovu odeslán",
+	"audit_action_profileUpdate": "Profil aktualizován",
+	"audit_action_accountDeletion": "Účet smazán",
+	"audit_action_adminCreateUser": "Uživatel vytvořen",
+	"audit_action_adminLockUser": "Uživatel zamčen",
+	"audit_action_adminUnlockUser": "Uživatel odemčen",
+	"audit_action_adminDeleteUser": "Uživatel smazán",
+	"audit_action_adminVerifyEmail": "E-mail ověřen (admin)",
+	"audit_action_adminSendPasswordReset": "Reset hesla odeslán (admin)",
+	"audit_action_adminAssignRole": "Role přiřazena",
+	"audit_action_adminRemoveRole": "Role odebrána",
+	"audit_action_adminCreateRole": "Role vytvořena",
+	"audit_action_adminUpdateRole": "Role aktualizována",
+	"audit_action_adminDeleteRole": "Role smazána",
+	"audit_action_adminSetRolePermissions": "Oprávnění aktualizována"
 }

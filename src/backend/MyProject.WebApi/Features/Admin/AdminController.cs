@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MyProject.Application.Features.Admin;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Identity;
 using MyProject.Application.Identity.Constants;
 using MyProject.WebApi.Authorization;
@@ -11,6 +12,8 @@ using MyProject.WebApi.Features.Admin.Dtos.CreateUser;
 using MyProject.WebApi.Features.Admin.Dtos.ListUsers;
 using MyProject.WebApi.Features.Admin.Dtos.SetPermissions;
 using MyProject.WebApi.Features.Admin.Dtos.UpdateRole;
+using MyProject.WebApi.Features.Audit;
+using MyProject.WebApi.Features.Audit.Dtos.ListAuditEvents;
 using MyProject.WebApi.Shared;
 
 namespace MyProject.WebApi.Features.Admin;
@@ -21,7 +24,7 @@ namespace MyProject.WebApi.Features.Admin;
 /// Role hierarchy and self-action protection are enforced at the service layer.
 /// </summary>
 [Tags("Admin")]
-public class AdminController(IAdminService adminService, IRoleManagementService roleManagementService, IUserContext userContext) : ApiController
+public class AdminController(IAdminService adminService, IRoleManagementService roleManagementService, IAuditService auditService, IUserContext userContext) : ApiController
 {
     /// <summary>
     /// Gets a paginated list of all users, optionally filtered by a search term.
@@ -537,5 +540,29 @@ public class AdminController(IAdminService adminService, IRoleManagementService 
     {
         var permissions = roleManagementService.GetAllPermissions();
         return Ok(permissions.Select(p => p.ToResponse()).ToList());
+    }
+
+    /// <summary>
+    /// Gets a paginated audit trail for a specific user.
+    /// </summary>
+    /// <param name="id">The user ID</param>
+    /// <param name="request">Pagination parameters</param>
+    /// <param name="cancellationToken">A cancellation token</param>
+    /// <returns>A paginated list of audit events for the user</returns>
+    /// <response code="200">Returns the audit events</response>
+    /// <response code="401">If the user is not authenticated</response>
+    /// <response code="403">If the user does not have the required permission</response>
+    [HttpGet("users/{id:guid}/audit")]
+    [RequirePermission(AppPermissions.Users.View)]
+    [ProducesResponseType(typeof(ListAuditEventsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ListAuditEventsResponse>> GetUserAuditTrail(
+        Guid id,
+        [FromQuery] ListAuditEventsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await auditService.GetUserAuditEventsAsync(id, request.PageNumber, request.PageSize, cancellationToken);
+        return Ok(result.ToResponse());
     }
 }

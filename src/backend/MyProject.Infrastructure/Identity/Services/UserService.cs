@@ -4,6 +4,7 @@ using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity;
 using MyProject.Application.Identity.Constants;
@@ -23,7 +24,8 @@ internal class UserService(
     IUserContext userContext,
     ICacheService cacheService,
     MyProjectDbContext dbContext,
-    ICookieService cookieService) : IUserService
+    ICookieService cookieService,
+    IAuditService auditService) : IUserService
 {
     private static readonly CacheEntryOptions UserCacheOptions =
         CacheEntryOptions.AbsoluteExpireIn(TimeSpan.FromMinutes(1));
@@ -143,6 +145,8 @@ internal class UserService(
             Permissions: permissions,
             IsEmailConfirmed: user.EmailConfirmed);
 
+        await auditService.LogAsync(AuditActions.ProfileUpdate, userId: userId.Value);
+
         return Result<UserOutput>.Success(output);
     }
 
@@ -175,6 +179,8 @@ internal class UserService(
         {
             return lastAdminResult;
         }
+
+        await auditService.LogAsync(AuditActions.AccountDeletion, userId: userId.Value, ct: cancellationToken);
 
         await RevokeUserTokens(user, userId.Value, cancellationToken);
         await DeleteUser(user);

@@ -10,3 +10,5 @@ export type AdminRole = components['schemas']['AdminRoleResponse'];
 export type ListUsersResponse = components['schemas']['ListUsersResponse'];
 export type RoleDetail = components['schemas']['RoleDetailResponse'];
 export type PermissionGroup = components['schemas']['PermissionGroupResponse'];
+export type AuditEvent = components['schemas']['AuditEventResponse'];
+export type ListAuditEventsResponse = components['schemas']['ListAuditEventsResponse'];

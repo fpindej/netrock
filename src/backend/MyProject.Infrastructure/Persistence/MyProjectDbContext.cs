@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using MyProject.Infrastructure.Features.Audit.Models;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Features.Jobs.Models;
 using MyProject.Infrastructure.Persistence.Extensions;
@@ -27,6 +28,11 @@ internal class MyProjectDbContext(DbContextOptions<MyProjectDbContext> options)
     /// Gets or sets the paused jobs table for persisting pause state across restarts.
     /// </summary>
     public DbSet<PausedJob> PausedJobs { get; set; }
+
+    /// <summary>
+    /// Gets or sets the audit events table for the append-only audit log.
+    /// </summary>
+    public DbSet<AuditEvent> AuditEvents { get; set; }
 
     /// <summary>
     /// Configures the model by applying all <see cref="IEntityTypeConfiguration{TEntity}"/> from this assembly,

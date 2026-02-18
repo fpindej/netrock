@@ -5,6 +5,7 @@ using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Admin.Dtos;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Identity.Constants;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Persistence;
@@ -20,6 +21,7 @@ internal class RoleManagementService(
     UserManager<ApplicationUser> userManager,
     MyProjectDbContext dbContext,
     ICacheService cacheService,
+    IAuditService auditService,
     ILogger<RoleManagementService> logger) : IRoleManagementService
 {
     /// <inheritdoc />
@@ -82,6 +84,10 @@ internal class RoleManagementService(
 
         logger.LogInformation("Custom role '{RoleName}' created with ID '{RoleId}'", input.Name, role.Id);
 
+        await auditService.LogAsync(AuditActions.AdminCreateRole,
+            targetEntityType: "Role", targetEntityId: role.Id,
+            metadata: $"{{\"roleName\":\"{input.Name}\"}}", ct: cancellationToken);
+
         return Result<Guid>.Success(role.Id);
     }
 
@@ -132,6 +138,9 @@ internal class RoleManagementService(
 
         logger.LogInformation("Role '{RoleId}' updated", roleId);
 
+        await auditService.LogAsync(AuditActions.AdminUpdateRole,
+            targetEntityType: "Role", targetEntityId: roleId, ct: cancellationToken);
+
         return Result.Success();
     }
 
@@ -166,6 +175,9 @@ internal class RoleManagementService(
         }
 
         logger.LogWarning("Custom role '{RoleName}' (ID '{RoleId}') deleted", role.Name, roleId);
+
+        await auditService.LogAsync(AuditActions.AdminDeleteRole,
+            targetEntityType: "Role", targetEntityId: roleId, ct: cancellationToken);
 
         return Result.Success();
     }
@@ -219,6 +231,9 @@ internal class RoleManagementService(
 
         logger.LogInformation("Permissions updated for role '{RoleName}' (ID '{RoleId}'): [{Permissions}]",
             role.Name, roleId, string.Join(", ", input.Permissions));
+
+        await auditService.LogAsync(AuditActions.AdminSetRolePermissions,
+            targetEntityType: "Role", targetEntityId: roleId, ct: cancellationToken);
 
         return Result.Success();
     }

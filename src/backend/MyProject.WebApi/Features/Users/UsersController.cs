@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Identity;
+using MyProject.WebApi.Features.Audit;
+using MyProject.WebApi.Features.Audit.Dtos.ListAuditEvents;
 using MyProject.WebApi.Features.Users.Dtos;
 using MyProject.WebApi.Features.Users.Dtos.DeleteAccount;
 using MyProject.WebApi.Shared;
@@ -15,7 +18,7 @@ namespace MyProject.WebApi.Features.Users;
 [Route("api/[controller]")]
 [Authorize]
 [Tags("Users")]
-public class UsersController(IUserService userService) : ControllerBase
+public class UsersController(IUserService userService, IAuditService auditService, IUserContext userContext) : ControllerBase
 {
     /// <summary>
     /// Gets the current authenticated user's information
@@ -90,5 +93,25 @@ public class UsersController(IUserService userService) : ControllerBase
         }
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Gets the current authenticated user's audit activity log.
+    /// </summary>
+    /// <param name="request">Pagination parameters</param>
+    /// <param name="cancellationToken">A cancellation token</param>
+    /// <returns>A paginated list of the current user's audit events</returns>
+    /// <response code="200">Returns the audit events</response>
+    /// <response code="401">If the user is not authenticated</response>
+    [HttpGet("me/audit")]
+    [ProducesResponseType(typeof(ListAuditEventsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ListAuditEventsResponse>> GetMyAuditLog(
+        [FromQuery] ListAuditEventsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = userContext.AuthenticatedUserId;
+        var result = await auditService.GetUserAuditEventsAsync(userId, request.PageNumber, request.PageSize, cancellationToken);
+        return Ok(result.ToResponse());
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using MyProject.Application.Caching;
 using MyProject.Application.Features.Admin.Dtos;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Identity.Constants;
 using MyProject.Component.Tests.Fixtures;
 using MyProject.Infrastructure.Features.Admin.Services;
@@ -28,7 +29,7 @@ public class RoleManagementServiceTests : IDisposable
         var logger = Substitute.For<ILogger<RoleManagementService>>();
 
         _sut = new RoleManagementService(
-            _roleManager, _userManager, _dbContext, _cacheService, logger);
+            _roleManager, _userManager, _dbContext, _cacheService, Substitute.For<IAuditService>(), logger);
     }
 
     public void Dispose()

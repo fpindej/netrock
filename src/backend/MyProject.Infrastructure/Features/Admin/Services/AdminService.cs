@@ -8,6 +8,7 @@ using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Admin.Dtos;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Email;
 using MyProject.Application.Identity.Constants;
 using MyProject.Infrastructure.Features.Authentication.Models;
@@ -39,6 +40,7 @@ internal class AdminService(
     TimeProvider timeProvider,
     IEmailService emailService,
     EmailTokenService emailTokenService,
+    IAuditService auditService,
     IOptions<EmailOptions> emailOptions,
     ILogger<AdminService> logger) : IAdminService
 {
@@ -140,6 +142,10 @@ internal class AdminService(
         logger.LogInformation("Role '{Role}' assigned to user '{UserId}' by admin '{CallerUserId}'",
             input.Role, userId, callerUserId);
 
+        await auditService.LogAsync(AuditActions.AdminAssignRole, userId: callerUserId,
+            targetEntityType: "User", targetEntityId: userId,
+            metadata: $"{{\"role\":\"{input.Role}\"}}", ct: cancellationToken);
+
         return Result.Success();
     }
 
@@ -203,6 +209,10 @@ internal class AdminService(
         logger.LogInformation("Role '{Role}' removed from user '{UserId}' by admin '{CallerUserId}'",
             role, userId, callerUserId);
 
+        await auditService.LogAsync(AuditActions.AdminRemoveRole, userId: callerUserId,
+            targetEntityType: "User", targetEntityId: userId,
+            metadata: $"{{\"role\":\"{role}\"}}", ct: cancellationToken);
+
         return Result.Success();
     }
 
@@ -243,6 +253,9 @@ internal class AdminService(
         logger.LogWarning("User '{UserId}' has been locked out by admin '{CallerUserId}'",
             userId, callerUserId);
 
+        await auditService.LogAsync(AuditActions.AdminLockUser, userId: callerUserId,
+            targetEntityType: "User", targetEntityId: userId, ct: cancellationToken);
+
         return Result.Success();
     }
 
@@ -277,6 +290,9 @@ internal class AdminService(
         await InvalidateUserCacheAsync(userId);
         logger.LogInformation("User '{UserId}' has been unlocked by admin '{CallerUserId}'",
             userId, callerUserId);
+
+        await auditService.LogAsync(AuditActions.AdminUnlockUser, userId: callerUserId,
+            targetEntityType: "User", targetEntityId: userId, ct: cancellationToken);
 
         return Result.Success();
     }
@@ -324,6 +340,9 @@ internal class AdminService(
         await InvalidateUserCacheAsync(userId);
         logger.LogWarning("User '{UserId}' has been deleted by admin '{CallerUserId}'",
             userId, callerUserId);
+
+        await auditService.LogAsync(AuditActions.AdminDeleteUser, userId: callerUserId,
+            targetEntityType: "User", targetEntityId: userId, ct: cancellationToken);
 
         return Result.Success();
     }
@@ -394,6 +413,9 @@ internal class AdminService(
         logger.LogInformation("Email for user '{UserId}' manually verified by admin '{CallerUserId}'",
             userId, callerUserId);
 
+        await auditService.LogAsync(AuditActions.AdminVerifyEmail, userId: callerUserId,
+            targetEntityType: "User", targetEntityId: userId, ct: cancellationToken);
+
         return Result.Success();
     }
 
@@ -448,6 +470,9 @@ internal class AdminService(
 
         logger.LogInformation("Password reset email sent for user '{UserId}' by admin '{CallerUserId}'",
             userId, callerUserId);
+
+        await auditService.LogAsync(AuditActions.AdminSendPasswordReset, userId: callerUserId,
+            targetEntityType: "User", targetEntityId: userId, ct: cancellationToken);
 
         return Result.Success();
     }
@@ -520,6 +545,9 @@ internal class AdminService(
 
         logger.LogInformation("User '{UserId}' created via admin invitation for email '{Email}' by admin '{CallerUserId}'",
             user.Id, input.Email, callerUserId);
+
+        await auditService.LogAsync(AuditActions.AdminCreateUser, userId: callerUserId,
+            targetEntityType: "User", targetEntityId: user.Id, ct: cancellationToken);
 
         return Result<Guid>.Success(user.Id);
     }

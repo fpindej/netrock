@@ -7,6 +7,7 @@ using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Features.Email;
@@ -34,6 +35,7 @@ internal class AuthenticationService(
     ICacheService cacheService,
     IEmailService emailService,
     EmailTokenService emailTokenService,
+    IAuditService auditService,
     IOptions<AuthenticationOptions> authenticationOptions,
     IOptions<EmailOptions> emailOptions,
     ILogger<AuthenticationService> logger,
@@ -50,17 +52,22 @@ internal class AuthenticationService(
 
         if (user is null)
         {
+            await auditService.LogAsync(AuditActions.LoginFailure,
+                metadata: $"{{\"attemptedEmail\":\"{username}\"}}",
+                ct: cancellationToken);
             return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized);
         }
 
         var signInResult = await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
         if (signInResult.IsLockedOut)
         {
+            await auditService.LogAsync(AuditActions.LoginFailure, userId: user.Id, ct: cancellationToken);
             return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginAccountLocked, ErrorType.Unauthorized);
         }
 
         if (!signInResult.Succeeded)
         {
+            await auditService.LogAsync(AuditActions.LoginFailure, userId: user.Id, ct: cancellationToken);
             return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized);
         }
 
@@ -93,6 +100,8 @@ internal class AuthenticationService(
             AccessToken: accessToken,
             RefreshToken: refreshTokenString
         );
+
+        await auditService.LogAsync(AuditActions.LoginSuccess, userId: user.Id, ct: cancellationToken);
 
         return Result<AuthenticationOutput>.Success(output);
     }
@@ -133,6 +142,8 @@ internal class AuthenticationService(
 
         await SendVerificationEmailAsync(user, cancellationToken);
 
+        await auditService.LogAsync(AuditActions.Register, userId: user.Id, ct: cancellationToken);
+
         return Result<Guid>.Success(user.Id);
     }
 
@@ -147,6 +158,7 @@ internal class AuthenticationService(
 
         if (userId.HasValue)
         {
+            await auditService.LogAsync(AuditActions.Logout, userId: userId.Value, ct: cancellationToken);
             await RevokeUserTokens(userId.Value);
         }
     }
@@ -275,6 +287,8 @@ internal class AuthenticationService(
 
         await RevokeUserTokens(userId.Value, cancellationToken);
 
+        await auditService.LogAsync(AuditActions.PasswordChange, userId: userId.Value, ct: cancellationToken);
+
         return Result.Success();
     }
 
@@ -321,6 +335,8 @@ internal class AuthenticationService(
 
         await SendEmailSafeAsync(message, cancellationToken);
 
+        await auditService.LogAsync(AuditActions.PasswordResetRequest, userId: user.Id, ct: cancellationToken);
+
         return Result.Success();
     }
 
@@ -366,6 +382,8 @@ internal class AuthenticationService(
 
         await RevokeUserTokens(user.Id, cancellationToken);
 
+        await auditService.LogAsync(AuditActions.PasswordReset, userId: user.Id, ct: cancellationToken);
+
         return Result.Success();
     }
 
@@ -401,6 +419,8 @@ internal class AuthenticationService(
         emailToken.IsUsed = true;
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        await auditService.LogAsync(AuditActions.EmailVerification, userId: user.Id, ct: cancellationToken);
+
         return Result.Success();
     }
 
@@ -427,6 +447,8 @@ internal class AuthenticationService(
         }
 
         await SendVerificationEmailAsync(user, cancellationToken);
+
+        await auditService.LogAsync(AuditActions.ResendVerificationEmail, userId: userId.Value, ct: cancellationToken);
 
         return Result.Success();
     }

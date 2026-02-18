@@ -3,6 +3,7 @@ using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity;
 using MyProject.Application.Identity.Constants;
@@ -37,7 +38,8 @@ public class UserServiceTests : IDisposable
         _dbContext = TestDbContextFactory.Create();
 
         _sut = new UserService(
-            _userManager, _roleManager, _userContext, _cacheService, _dbContext, _cookieService);
+            _userManager, _roleManager, _userContext, _cacheService, _dbContext, _cookieService,
+            Substitute.For<IAuditService>());
     }
 
     public void Dispose()

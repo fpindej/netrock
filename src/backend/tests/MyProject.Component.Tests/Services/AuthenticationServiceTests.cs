@@ -7,6 +7,7 @@ using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Features.Email;
 using MyProject.Application.Identity;
@@ -80,6 +81,7 @@ public class AuthenticationServiceTests : IDisposable
             _cacheService,
             _emailService,
             emailTokenService,
+            Substitute.For<IAuditService>(),
             authOptions,
             emailOptions,
             Substitute.For<ILogger<AuthenticationService>>(),
