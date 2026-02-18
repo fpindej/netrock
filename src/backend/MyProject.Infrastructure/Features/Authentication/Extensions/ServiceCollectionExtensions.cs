@@ -57,9 +57,6 @@ public static class ServiceCollectionExtensions
                     opt.Lockout.MaxFailedAccessAttempts = 5;
                     opt.Lockout.AllowedForNewUsers = true;
 
-                    opt.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultEmailProvider;
-                    opt.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
-
                     opt.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
 
                 opt.User.RequireUniqueEmail = true;
