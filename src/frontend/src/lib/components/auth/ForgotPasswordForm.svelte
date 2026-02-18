@@ -17,6 +17,7 @@
 
 	let email = $state('');
 	let captchaToken = $state('');
+	let resetCaptcha: (() => void) | null = $state(null);
 	let isLoading = $state(false);
 	let isSubmitted = $state(false);
 	const shake = createShake();
@@ -47,10 +48,14 @@
 						shake.trigger();
 					}
 				});
+				resetCaptcha?.();
+				captchaToken = '';
 			}
 		} catch {
 			toast.error(m.auth_forgotPassword_error());
 			shake.trigger();
+			resetCaptcha?.();
+			captchaToken = '';
 		} finally {
 			isLoading = false;
 		}
@@ -99,6 +104,7 @@
 							siteKey={PUBLIC_TURNSTILE_SITE_KEY}
 							onVerified={(t) => (captchaToken = t)}
 							onError={() => toast.error(m.auth_captcha_error())}
+							resetRef={(fn) => (resetCaptcha = fn)}
 						/>
 
 						<Button
