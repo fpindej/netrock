@@ -66,8 +66,8 @@
 	"country_ro": "Romania",
 	"country_ua": "Ukraine",
 
-	"auth_login_title": "Welcome back",
-	"auth_login_subtitle": "Sign in to your account",
+	"auth_login_title": "Welcome to {name}",
+	"auth_login_subtitle": "Sign in to continue",
 	"auth_login_email": "Email address",
 	"auth_login_password": "Password",
 	"auth_login_submit": "Sign in",
