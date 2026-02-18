@@ -2,6 +2,7 @@
 	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { cn } from '$lib/utils';
 	import { createFieldShakes, createCooldown } from '$lib/state';
+	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -10,15 +11,17 @@
 	import { ThemeToggle, LanguageSelector } from '$lib/components/layout';
 	import * as m from '$lib/paraglide/messages';
 	import { fly, scale } from 'svelte/transition';
-	import { Check, CircleAlert } from '@lucide/svelte';
+	import { Check, CircleAlert, TriangleAlert } from '@lucide/svelte';
 	import { LoginBackground } from '$lib/components/auth';
+	import type { User } from '$lib/types';
 
 	interface Props {
 		token: string;
 		invited?: boolean;
+		user?: User | null;
 	}
 
-	let { token, invited = false }: Props = $props();
+	let { token, invited = false, user = null }: Props = $props();
 
 	let newPassword = $state('');
 	let confirmPassword = $state('');
@@ -30,7 +33,19 @@
 	const fieldShakes = createFieldShakes();
 	const cooldown = createCooldown();
 
+	let isSigningOut = $state(false);
 	let isMissingParams = $derived(!token);
+
+	async function signOutAndContinue() {
+		isSigningOut = true;
+		try {
+			await browserClient.POST('/api/auth/logout');
+		} catch {
+			// Tokens may already be expired — that's fine
+		}
+		await invalidateAll();
+		isSigningOut = false;
+	}
 
 	async function submit(e: Event) {
 		e.preventDefault();
@@ -85,7 +100,41 @@
 		<ThemeToggle />
 	</div>
 
-	{#if isMissingParams}
+	{#if user}
+		<div class="sm:mx-auto sm:w-full sm:max-w-md" in:fly={{ y: 20, duration: 600, delay: 100 }}>
+			<Card.Root class="border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm">
+				<Card.Header class="items-center">
+					<div
+						class="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-warning/10 text-warning"
+					>
+						<TriangleAlert class="h-8 w-8" />
+					</div>
+					<Card.Title class="text-center text-2xl">
+						{invited
+							? m.auth_resetPassword_alreadySignedInInvitedTitle()
+							: m.auth_resetPassword_alreadySignedInTitle()}
+					</Card.Title>
+					<Card.Description class="text-center">
+						{invited
+							? m.auth_resetPassword_alreadySignedInInvitedDescription({ email: user.email ?? '' })
+							: m.auth_resetPassword_alreadySignedInDescription({ email: user.email ?? '' })}
+					</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-3">
+					<Button class="w-full" disabled={isSigningOut} onclick={signOutAndContinue}>
+						{isSigningOut
+							? m.auth_resetPassword_signingOut()
+							: m.auth_resetPassword_signOutAndContinue()}
+					</Button>
+					<a href={resolve('/')} class="block">
+						<Button variant="outline" class="w-full">
+							{m.auth_resetPassword_goToDashboard()}
+						</Button>
+					</a>
+				</Card.Content>
+			</Card.Root>
+		</div>
+	{:else if isMissingParams}
 		<div class="sm:mx-auto sm:w-full sm:max-w-md" in:fly={{ y: 20, duration: 600, delay: 100 }}>
 			<Card.Root class="border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm">
 				<Card.Header class="items-center">
