@@ -63,13 +63,14 @@ src/
 │   │   └── theme.svelte.ts        # Theme (light/dark/system)
 │   │
 │   ├── types/
-│   │   └── index.ts               # Type aliases from API schemas
+│   │   └── index.ts               # Type aliases from API schemas (User, AuditEvent, etc.)
 │   │
 │   └── utils/
 │       ├── ui.ts                  # cn() for class merging
 │       ├── platform.ts            # IS_MAC, IS_WINDOWS detection
 │       ├── permissions.ts         # Permission constants + hasPermission(), hasAnyPermission()
-│       └── index.ts               # Barrel export (cn, WithoutChildrenOrChild, permissions)
+│       ├── audit.ts               # Audit trail helpers: action labels, colors, icons, metadata formatting
+│       └── index.ts               # Barrel export (cn, WithoutChildrenOrChild, permissions, audit)
 │
 ├── routes/
 │   ├── (app)/                     # Authenticated (redirect to /login if no user)
@@ -527,14 +528,14 @@ components/
 ├── admin/           # UserTable, Pagination, RoleCardGrid, UserDetailCards,
 │   └── index.ts     # UserManagementCard, AccountInfoCard, CreateRoleDialog,
 │                    # CreateUserDialog, RolePermissionEditor, RoleDetailsCard,
-│                    # RolePermissionsSection, RoleDeleteSection
+│                    # RolePermissionsSection, RoleDeleteSection, AuditTrailCard
 ├── auth/            # LoginForm, LoginBackground, RegisterDialog,
 │   └── index.ts     # ForgotPasswordForm, TurnstileWidget
 ├── layout/          # Header, Sidebar, SidebarNav, UserNav,
 │   └── index.ts     # ThemeToggle, LanguageSelector, ShortcutsHelp
 ├── profile/         # ProfileForm, ProfileHeader, AvatarDialog,
 │   └── index.ts     # AccountDetails, InfoItem
-├── settings/        # ChangePasswordForm, DeleteAccountDialog
+├── settings/        # ChangePasswordForm, DeleteAccountDialog, ActivityLog
 │   └── index.ts
 ├── common/          # StatusIndicator, WorkInProgress
 │   └── index.ts
@@ -597,7 +598,7 @@ This generates components in `$lib/components/ui/<component>/`. The configuratio
 - Generated components are **customizable** (this is a template, not a library). Modifying them is acceptable and expected.
 - When touching any shadcn component, convert physical CSS properties to logical (see Styling section).
 - When adding i18n to shadcn components (e.g., localizing "Close" sr-only text), import `$lib/paraglide/messages` and use message functions.
-- Available components: alert, avatar, badge, button, card, checkbox, dialog, dropdown-menu, input, label, phone-input (custom), select, separator, sheet, sonner, textarea, tooltip.
+- Available components: alert, avatar, badge, button, card, checkbox, dialog, dropdown-menu, input, label, phone-input (custom), select, separator, sheet, sonner, textarea, timeline (custom), tooltip.
 - Browse the full catalog at [ui.shadcn.com](https://ui.shadcn.com) to find components before building custom ones.
 
 ## Reactive State

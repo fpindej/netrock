@@ -31,3 +31,9 @@ internal record RecurringJobDetailResponse(string Id, string Cron, DateTimeOffse
     List<JobExecutionResponse> ExecutionHistory);
 internal record JobExecutionResponse(string JobId, string Status, DateTimeOffset? StartedAt,
     TimeSpan? Duration, string? Error);
+
+// Audit
+internal record AuditEventContract(Guid Id, Guid? UserId, string Action, string? TargetEntityType,
+    Guid? TargetEntityId, string? Metadata, DateTime CreatedAt);
+internal record ListAuditEventsContract(List<AuditEventContract> Items, int TotalCount, int PageNumber,
+    int PageSize, int TotalPages, bool HasPreviousPage, bool HasNextPage);

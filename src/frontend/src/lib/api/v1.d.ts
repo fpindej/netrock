@@ -145,6 +145,56 @@ export interface paths {
 		};
 		trace?: never;
 	};
+	'/api/users/me/audit': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Gets the current authenticated user's audit activity log. */
+		get: {
+			parameters: {
+				query?: {
+					/** @description The page number to retrieve (1-based). */
+					pageNumber?: number;
+					/** @description The number of items per page (maximum 100). */
+					pageSize?: number;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Returns the audit events */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ListAuditEventsResponse'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	'/api/auth/login': {
 		parameters: {
 			query?: never;
@@ -1941,6 +1991,68 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/api/v1/admin/users/{id}/audit': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Gets a paginated audit trail for a specific user. */
+		get: {
+			parameters: {
+				query?: {
+					/** @description The page number to retrieve (1-based). */
+					pageNumber?: number;
+					/** @description The number of items per page (maximum 100). */
+					pageSize?: number;
+				};
+				header?: never;
+				path: {
+					/** @description The user ID */
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Returns the audit events */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ListAuditEventsResponse'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user does not have the required permission */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	'/api/v1/admin/jobs': {
 		parameters: {
 			query?: never;
@@ -2489,6 +2601,35 @@ export interface components {
 			/** @description The name of the role to assign. */
 			role: string;
 		};
+		/** @description Represents a single audit event in API responses. */
+		AuditEventResponse: {
+			/**
+			 * Format: uuid
+			 * @description The unique identifier of the audit event.
+			 */
+			id?: string;
+			/**
+			 * Format: uuid
+			 * @description The user who performed the action, or null for anonymous events.
+			 */
+			userId?: null | string;
+			/** @description The action that was performed. */
+			action?: string;
+			/** @description The type of entity targeted by the action. */
+			targetEntityType?: null | string;
+			/**
+			 * Format: uuid
+			 * @description The ID of the entity targeted by the action.
+			 */
+			targetEntityId?: null | string;
+			/** @description Optional JSON metadata providing additional context. */
+			metadata?: null | string;
+			/**
+			 * Format: date-time
+			 * @description The UTC timestamp when the event occurred.
+			 */
+			createdAt?: string;
+		};
 		/**
 		 * @description Response containing authentication tokens for API clients.
 		 *     Web clients can ignore this response body as tokens are also set in HttpOnly cookies.
@@ -2555,6 +2696,35 @@ export interface components {
 			duration?: null | string;
 			/** @description The error message if the execution failed, or null on success. */
 			error?: null | string;
+		};
+		/** @description Paginated response containing a list of audit events. */
+		ListAuditEventsResponse: {
+			/** @description The audit events for the current page. */
+			items?: components['schemas']['AuditEventResponse'][];
+			/**
+			 * Format: int32
+			 * @description The total number of items (across all pages).
+			 */
+			totalCount?: number;
+			/**
+			 * Format: int32
+			 * @description The current page number.
+			 */
+			pageNumber?: number;
+			/**
+			 * Format: int32
+			 * @description The number of items per page.
+			 */
+			pageSize?: number;
+			/**
+			 * Format: int32
+			 * @description The total number of pages.
+			 */
+			totalPages?: number;
+			/** @description Indicates if there is a previous page. */
+			hasPreviousPage?: boolean;
+			/** @description Indicates if there is a next page. */
+			hasNextPage?: boolean;
 		};
 		/** @description Paginated response containing a list of admin user records. */
 		ListUsersResponse: {

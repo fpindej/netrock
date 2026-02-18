@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { buttonVariants } from '$lib/components/ui/button';
-	import { UserDetailCards } from '$lib/components/admin';
+	import { UserDetailCards, AuditTrailCard } from '$lib/components/admin';
 	import { ArrowLeft } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { cn } from '$lib/utils';
@@ -40,5 +40,9 @@
 
 	{#if data.adminUser && data.user}
 		<UserDetailCards user={data.adminUser} roles={data.roles ?? []} currentUser={data.user} />
+	{/if}
+
+	{#if data.adminUser}
+		<AuditTrailCard userId={data.adminUser.id ?? ''} />
 	{/if}
 </div>

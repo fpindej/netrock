@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChangePasswordForm, DeleteAccountDialog } from '$lib/components/settings';
+	import { ChangePasswordForm, DeleteAccountDialog, ActivityLog } from '$lib/components/settings';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as m from '$lib/paraglide/messages';
@@ -20,6 +20,8 @@
 	<div class="h-px w-full bg-border"></div>
 	<div class="space-y-8">
 		<ChangePasswordForm />
+
+		<ActivityLog />
 
 		<div class="space-y-4">
 			<h4 class="text-sm font-medium text-destructive">{m.common_dangerZone()}</h4>

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using MyProject.Application.Caching;
 using MyProject.Application.Features.Admin.Dtos;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Email;
 using MyProject.Application.Identity.Constants;
 using MyProject.Component.Tests.Fixtures;
@@ -23,6 +24,7 @@ public class AdminServiceTests : IDisposable
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly ICacheService _cacheService;
     private readonly IEmailService _emailService;
+    private readonly IAuditService _auditService;
     private readonly FakeTimeProvider _timeProvider;
     private readonly MyProjectDbContext _dbContext;
     private readonly AdminService _sut;
@@ -50,10 +52,11 @@ public class AdminServiceTests : IDisposable
         });
         var emailOptions = Options.Create(new EmailOptions { FrontendBaseUrl = "https://example.com" });
         var emailTokenService = new EmailTokenService(_dbContext, _timeProvider, authOptions);
+        _auditService = Substitute.For<IAuditService>();
 
         _sut = new AdminService(
             _userManager, _roleManager, _dbContext, _cacheService, _timeProvider,
-            _emailService, emailTokenService, emailOptions, logger);
+            _emailService, emailTokenService, _auditService, emailOptions, logger);
     }
 
     public void Dispose()
@@ -92,6 +95,13 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("User"));
 
         Assert.True(result.IsSuccess);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AdminAssignRole,
+            userId: _callerId,
+            targetEntityType: "User",
+            targetEntityId: _targetId,
+            metadata: Arg.Is<string>(m => m.Contains("User")),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -192,6 +202,13 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.RemoveRoleAsync(_callerId, _targetId, "User");
 
         Assert.True(result.IsSuccess);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AdminRemoveRole,
+            userId: _callerId,
+            targetEntityType: "User",
+            targetEntityId: _targetId,
+            metadata: Arg.Is<string>(m => m.Contains("User")),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -250,6 +267,13 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.LockUserAsync(_callerId, _targetId);
 
         Assert.True(result.IsSuccess);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AdminLockUser,
+            userId: _callerId,
+            targetEntityType: "User",
+            targetEntityId: _targetId,
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -335,6 +359,13 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.UnlockUserAsync(_callerId, _targetId);
 
         Assert.True(result.IsSuccess);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AdminUnlockUser,
+            userId: _callerId,
+            targetEntityType: "User",
+            targetEntityId: _targetId,
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -375,6 +406,13 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.DeleteUserAsync(_callerId, _targetId);
 
         Assert.True(result.IsSuccess);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AdminDeleteUser,
+            userId: _callerId,
+            targetEntityType: "User",
+            targetEntityId: _targetId,
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -597,6 +635,13 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.VerifyEmailAsync(_callerId, _targetId);
 
         Assert.True(result.IsSuccess);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AdminVerifyEmail,
+            userId: _callerId,
+            targetEntityType: "User",
+            targetEntityId: _targetId,
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -657,6 +702,13 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.SendPasswordResetAsync(_callerId, _targetId);
 
         Assert.True(result.IsSuccess);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AdminSendPasswordReset,
+            userId: _callerId,
+            targetEntityType: "User",
+            targetEntityId: _targetId,
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
         await _emailService.Received(1).SendEmailAsync(
             Arg.Is<EmailMessage>(m =>
                 m.To == "user@test.com" &&
@@ -734,6 +786,13 @@ public class AdminServiceTests : IDisposable
 
         Assert.True(result.IsSuccess);
         Assert.Equal(newUserId, result.Value);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AdminCreateUser,
+            userId: _callerId,
+            targetEntityType: "User",
+            targetEntityId: newUserId,
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
         await _emailService.Received(1).SendEmailAsync(
             Arg.Is<EmailMessage>(m => m.To == "new@test.com"),
             Arg.Any<CancellationToken>());

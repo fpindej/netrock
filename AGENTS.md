@@ -115,6 +115,7 @@ Write code that is naturally testable through good structure, not by over-abstra
 3. **Sanitize all output.** Prevent XSS by escaping user-generated content. Never render raw HTML from user input. Validate URLs to block `javascript:` schemes.
 4. **Protect state-changing operations.** All mutations (POST/PUT/DELETE) must verify authentication, authorization, and CSRF protection. The SvelteKit API proxy validates Origin headers; the backend validates JWT tokens.
 5. **Log security events.** Failed login attempts, token refresh failures, authorization denials — these should be logged at Warning/Error level for monitoring.
+6. **Audit significant actions.** All user and admin operations (login, register, profile update, role assignment, account deletion, etc.) are recorded via `IAuditService.LogAsync`. When adding a new feature with state-changing operations, instrument it with audit logging — see the Audit Trail section in the backend `AGENTS.md`.
 
 ---
 

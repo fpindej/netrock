@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using MyProject.Application.Caching;
 using MyProject.Application.Features.Admin.Dtos;
+using MyProject.Application.Features.Audit;
 using MyProject.Application.Identity.Constants;
 using MyProject.Component.Tests.Fixtures;
 using MyProject.Infrastructure.Features.Admin.Services;
@@ -16,6 +17,7 @@ public class RoleManagementServiceTests : IDisposable
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ICacheService _cacheService;
+    private readonly IAuditService _auditService;
     private readonly MyProjectDbContext _dbContext;
     private readonly RoleManagementService _sut;
 
@@ -25,10 +27,11 @@ public class RoleManagementServiceTests : IDisposable
         _userManager = IdentityMockHelpers.CreateMockUserManager();
         _cacheService = Substitute.For<ICacheService>();
         _dbContext = TestDbContextFactory.Create();
+        _auditService = Substitute.For<IAuditService>();
         var logger = Substitute.For<ILogger<RoleManagementService>>();
 
         _sut = new RoleManagementService(
-            _roleManager, _userManager, _dbContext, _cacheService, logger);
+            _roleManager, _userManager, _dbContext, _cacheService, _auditService, logger);
     }
 
     public void Dispose()
@@ -50,6 +53,13 @@ public class RoleManagementServiceTests : IDisposable
         var result = await _sut.CreateRoleAsync(input);
 
         Assert.True(result.IsSuccess);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AdminCreateRole,
+            userId: Arg.Any<Guid?>(),
+            targetEntityType: "Role",
+            targetEntityId: Arg.Any<Guid?>(),
+            metadata: Arg.Is<string>(m => m.Contains("CustomRole")),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -106,6 +116,13 @@ public class RoleManagementServiceTests : IDisposable
         var result = await _sut.UpdateRoleAsync(roleId, new UpdateRoleInput("NewName", null));
 
         Assert.True(result.IsSuccess);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AdminUpdateRole,
+            userId: Arg.Any<Guid?>(),
+            targetEntityType: "Role",
+            targetEntityId: roleId,
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -217,6 +234,13 @@ public class RoleManagementServiceTests : IDisposable
         var result = await _sut.DeleteRoleAsync(roleId);
 
         Assert.True(result.IsSuccess);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AdminDeleteRole,
+            userId: Arg.Any<Guid?>(),
+            targetEntityType: "Role",
+            targetEntityId: roleId,
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     #endregion

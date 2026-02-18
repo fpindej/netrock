@@ -257,6 +257,74 @@ entity.Restore();     // Sets IsDeleted = false, clears DeletedAt/DeletedBy (ide
 
 The `AuditingInterceptor` detects these state changes and automatically populates `DeletedAt`/`DeletedBy` on soft-delete and clears them on restore.
 
+## Audit Trail
+
+### AuditEvent Entity (Non-BaseEntity)
+
+`AuditEvent` is an **append-only** entity that does **not** extend `BaseEntity`. It has its own `Id` and `CreatedAt` — no soft-delete, no `UpdatedAt`, no audit-of-audit fields. It lives in the `audit` schema.
+
+```csharp
+public class AuditEvent
+{
+    public Guid Id { get; set; }
+    public Guid? UserId { get; set; }       // Historical — no FK constraint
+    public string Action { get; set; }
+    public string? TargetEntityType { get; set; }
+    public Guid? TargetEntityId { get; set; }
+    public string? Metadata { get; set; }   // JSONB in PostgreSQL
+    public DateTime CreatedAt { get; set; }
+}
+```
+
+Key design decisions:
+- **No FK on `UserId`** — users are hard-deleted, so a FK would either null out the audit trail (`SetNull`) or block deletion (`Restrict`). `UserId` is a plain historical identifier with an index.
+- **No navigation property** — `AuditEvent` does not reference `ApplicationUser`. Queries use `UserId` directly.
+- **Fire-and-forget logging** — `AuditService.LogAsync` catches all exceptions and logs them via `ILogger`. Audit failures never break the primary operation.
+- **`CreatedAt` set by `TimeProvider`** — never `DateTime.UtcNow`.
+
+### Audit Actions
+
+Action constants are defined in `Application/Features/Audit/AuditActions.cs` as `public const string` fields. Use these in `LogAsync` calls — never raw strings:
+
+```csharp
+await auditService.LogAsync(AuditActions.LoginSuccess, userId: user.Id, ct: cancellationToken);
+```
+
+### Audit Metadata
+
+When audit events need context (role name, target user, etc.), pass structured JSON via `System.Text.Json.JsonSerializer.Serialize`:
+
+```csharp
+// ✅ Correct — safe serialization
+metadata: JsonSerializer.Serialize(new { role = input.Role })
+
+// ❌ Wrong — JSON injection via string interpolation
+metadata: $"{{\"role\":\"{input.Role}\"}}"
+```
+
+### Instrumenting Services
+
+Every service that performs a significant user or admin action should log an audit event. Pattern:
+
+1. Inject `IAuditService` via primary constructor
+2. Call `LogAsync` after the operation succeeds (not before — avoid logging failed attempts as successes)
+3. Always pass `ct: cancellationToken` to propagate cancellation
+4. For admin operations, pass `targetEntityType` and `targetEntityId` to identify what was acted upon
+
+```csharp
+await auditService.LogAsync(
+    AuditActions.AdminAssignRole,
+    userId: callerUserId,
+    targetEntityType: "User",
+    targetEntityId: targetUserId,
+    metadata: JsonSerializer.Serialize(new { role = input.Role }),
+    ct: cancellationToken);
+```
+
+### Querying Audit Events
+
+`GetUserAuditEventsAsync` returns events where the user is **either the actor or the target** (`UserId == id || (TargetEntityType == "User" && TargetEntityId == id)`). This gives admins a complete picture of everything that happened to/by a user.
+
 ## EF Core Configuration
 
 Configurations inherit from `BaseEntityConfiguration<T>`, which handles all `BaseEntity` fields (primary key, audit columns, soft delete index, and a global query filter that excludes soft-deleted entities). Override `ConfigureEntity` to add entity-specific mapping:
@@ -1638,6 +1706,7 @@ Component.Tests/
 └── Services/
     ├── AuthenticationServiceTests.cs     # Login (cookies, rememberMe, persistent tokens), register (phone normalization, role failure), refresh (rotation, reuse detection, expiry), change password (token revocation), logout
     ├── AdminServiceTests.cs              # AssignRole (hierarchy, already-has, email-guard), RemoveRole (self, rank, not-in-role), lock/unlock (hierarchy, token revocation, access count reset), delete (last-admin, self), getUser, verifyEmail, sendPasswordReset, createUser
+    ├── AuditServiceTests.cs             # LogAsync (persist, all fields, anonymous, DB failure), GetUserAuditEventsAsync (pagination, ordering, actor+target filter, exclusion, second page)
     ├── RoleManagementServiceTests.cs     # CRUD, system role protection, permissions (SuperAdmin fixed, invalid), name-taken, description-only update
     └── UserServiceTests.cs              # GetCurrentUser, updateProfile (duplicate phone, not found), deleteAccount (happy path, wrong password)
 ```
@@ -1662,8 +1731,8 @@ Api.Tests/
 │   └── TestAuthHandler.cs              # Configurable auth handler (roles, permissions via header)
 ├── Controllers/
 │   ├── AuthControllerTests.cs          # Login, register, logout, refresh, change password
-│   ├── UsersControllerTests.cs         # GetMe, updateMe, deleteMe
-│   ├── AdminControllerTests.cs         # Users CRUD, roles CRUD, permissions — all with permission gates
+│   ├── UsersControllerTests.cs         # GetMe, updateMe, deleteMe, getMyAuditLog
+│   ├── AdminControllerTests.cs         # Users CRUD, roles CRUD, permissions, getUserAuditTrail — all with permission gates
 │   └── JobsControllerTests.cs          # List, get, trigger, pause, resume, remove, restore — permission gates
 └── Validators/
     ├── RegisterRequestValidatorTests.cs        # Email, password rules
