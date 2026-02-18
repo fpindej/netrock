@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
+using MyProject.Application.Features.Audit.Dtos;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity.Dtos;
 using MyProject.Shared;
@@ -166,6 +167,56 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory>, 
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         await AssertProblemDetailsAsync(response, 400, ErrorMessages.User.DeleteInvalidPassword);
+    }
+
+    #endregion
+
+    #region GetMyAuditLog
+
+    [Fact]
+    public async Task GetMyAuditLog_Authenticated_Returns200()
+    {
+        _factory.AuditService.GetUserAuditEventsAsync(
+                Arg.Any<Guid>(), 1, 10, Arg.Any<CancellationToken>())
+            .Returns(new AuditEventListOutput([], 0, 1, 10));
+
+        var response = await _client.SendAsync(
+            Get("/api/users/me/audit?pageNumber=1&pageSize=10", TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<ListAuditEventsContract>();
+        Assert.NotNull(body);
+        Assert.Equal(0, body.TotalCount);
+        Assert.Equal(1, body.PageNumber);
+    }
+
+    [Fact]
+    public async Task GetMyAuditLog_Unauthenticated_Returns401()
+    {
+        var response = await _client.SendAsync(Get("/api/users/me/audit"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetMyAuditLog_WithEvents_ReturnsItems()
+    {
+        var events = new List<AuditEventOutput>
+        {
+            new(Guid.NewGuid(), Guid.NewGuid(), "LoginSuccess", null, null, null, DateTime.UtcNow)
+        };
+        _factory.AuditService.GetUserAuditEventsAsync(
+                Arg.Any<Guid>(), 1, 10, Arg.Any<CancellationToken>())
+            .Returns(new AuditEventListOutput(events, 1, 1, 10));
+
+        var response = await _client.SendAsync(
+            Get("/api/users/me/audit?pageNumber=1&pageSize=10", TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<ListAuditEventsContract>();
+        Assert.NotNull(body);
+        Assert.Single(body.Items);
+        Assert.Equal(1, body.TotalCount);
     }
 
     #endregion

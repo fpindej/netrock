@@ -145,7 +145,7 @@ internal class UserService(
             Permissions: permissions,
             IsEmailConfirmed: user.EmailConfirmed);
 
-        await auditService.LogAsync(AuditActions.ProfileUpdate, userId: userId.Value);
+        await auditService.LogAsync(AuditActions.ProfileUpdate, userId: userId.Value, ct: cancellationToken);
 
         return Result<UserOutput>.Success(output);
     }

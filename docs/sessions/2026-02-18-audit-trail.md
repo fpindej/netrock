@@ -109,20 +109,31 @@ flowchart TD
 erDiagram
     AuditEvents {
         uuid Id PK
-        uuid UserId FK "nullable"
+        uuid UserId "nullable, no FK"
         string Action "indexed"
         string TargetEntityType "nullable"
         uuid TargetEntityId "nullable, indexed"
         jsonb Metadata "nullable"
         datetime CreatedAt "indexed"
     }
-
-    AspNetUsers ||--o{ AuditEvents : "has"
 ```
+
+## Post-Review Fixes
+
+Code-review identified and resolved the following issues:
+
+| Issue | Severity | Fix |
+|-------|----------|-----|
+| JSON injection in audit metadata — string interpolation allowed unescaped user input in JSON fields | HIGH | Replaced `$"{{\"role\":\"{input.Role}\"}}"` with `JsonSerializer.Serialize(new { role = input.Role })` in `AdminService`, `RoleManagementService`, `AuthenticationService` |
+| `DeleteBehavior.SetNull` on `AuditEvent.UserId` FK — hard-deleting a user would null out all their audit records, destroying the trail | HIGH | Removed FK + nav property entirely; `UserId` is now a plain historical identifier with an index |
+| Missing `CancellationToken` on `ProfileUpdate` audit call in `UserService` | LOW | Passed `ct: cancellationToken` |
+| `$effect` in `AuditTrailCard.svelte` didn't read `userId` prop, so wouldn't re-fetch on prop change | LOW | Added explicit `const _uid = userId;` read |
+| Audit `.Received()` assertions missing in all existing service tests | TEST | Extracted `_auditService` mock to field in 4 test classes; added `.Received(1)` assertions to all success paths |
+| No component tests for `AuditService` itself | TEST | New `AuditServiceTests.cs` with 11 tests (LogAsync + GetUserAuditEventsAsync) |
+| No API integration tests for audit endpoints | TEST | 8 new tests across `AdminControllerTests` and `UsersControllerTests` |
 
 ## Follow-Up Items
 
 - [ ] Regenerate `v1.d.ts` from live backend (manual types added as placeholder)
 - [ ] Add audit event cleanup job (Hangfire) to prune old records
 - [ ] Consider adding IP address / user agent to metadata for security-sensitive actions
-- [ ] Add API integration tests for both audit endpoints

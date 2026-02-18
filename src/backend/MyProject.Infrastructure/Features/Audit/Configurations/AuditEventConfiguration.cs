@@ -29,11 +29,7 @@ internal class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
         builder.Property(x => x.CreatedAt)
             .IsRequired();
 
-        builder.HasOne(x => x.User)
-            .WithMany()
-            .HasForeignKey(x => x.UserId)
-            .OnDelete(DeleteBehavior.SetNull);
-
+        // No FK on UserId — users are hard-deleted and audit records must survive deletion.
         builder.HasIndex(x => x.UserId);
         builder.HasIndex(x => x.Action);
         builder.HasIndex(x => x.CreatedAt);

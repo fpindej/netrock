@@ -1,9 +1,13 @@
-using MyProject.Infrastructure.Features.Authentication.Models;
-
 namespace MyProject.Infrastructure.Features.Audit.Models;
 
 /// <summary>
 /// Represents an append-only audit log entry recording a user or system action.
+/// <para>
+/// <see cref="UserId"/> is a historical identifier with no foreign-key constraint.
+/// Users are hard-deleted, so a FK would either orphan the value (SetNull) or block
+/// deletion (Restrict). Keeping it unconstrained preserves the audit trail intact
+/// after the referenced user is removed.
+/// </para>
 /// </summary>
 public class AuditEvent
 {
@@ -42,9 +46,4 @@ public class AuditEvent
     /// Gets or sets the UTC timestamp when the event occurred.
     /// </summary>
     public DateTime CreatedAt { get; set; }
-
-    /// <summary>
-    /// Gets or sets the navigation property to the user who performed the action.
-    /// </summary>
-    public ApplicationUser? User { get; set; }
 }

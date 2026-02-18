@@ -23,6 +23,7 @@ public class UserServiceTests : IDisposable
     private readonly IUserContext _userContext;
     private readonly ICacheService _cacheService;
     private readonly ICookieService _cookieService;
+    private readonly IAuditService _auditService;
     private readonly MyProjectDbContext _dbContext;
     private readonly UserService _sut;
 
@@ -35,11 +36,12 @@ public class UserServiceTests : IDisposable
         _userContext = Substitute.For<IUserContext>();
         _cacheService = Substitute.For<ICacheService>();
         _cookieService = Substitute.For<ICookieService>();
+        _auditService = Substitute.For<IAuditService>();
         _dbContext = TestDbContextFactory.Create();
 
         _sut = new UserService(
             _userManager, _roleManager, _userContext, _cacheService, _dbContext, _cookieService,
-            Substitute.For<IAuditService>());
+            _auditService);
     }
 
     public void Dispose()
@@ -118,6 +120,13 @@ public class UserServiceTests : IDisposable
         Assert.True(result.IsSuccess);
         Assert.Equal("Jane", result.Value.FirstName);
         Assert.Equal("Doe", result.Value.LastName);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.ProfileUpdate,
+            userId: _userId,
+            targetEntityType: Arg.Any<string?>(),
+            targetEntityId: Arg.Any<Guid?>(),
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -186,6 +195,13 @@ public class UserServiceTests : IDisposable
         var result = await _sut.DeleteAccountAsync(new DeleteAccountInput("correct"));
 
         Assert.True(result.IsSuccess);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.AccountDeletion,
+            userId: _userId,
+            targetEntityType: Arg.Any<string?>(),
+            targetEntityId: Arg.Any<Guid?>(),
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]

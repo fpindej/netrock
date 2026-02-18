@@ -1,5 +1,6 @@
 using System.Net;
 using System.Security.Cryptography;
+using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -144,7 +145,7 @@ internal class AdminService(
 
         await auditService.LogAsync(AuditActions.AdminAssignRole, userId: callerUserId,
             targetEntityType: "User", targetEntityId: userId,
-            metadata: $"{{\"role\":\"{input.Role}\"}}", ct: cancellationToken);
+            metadata: JsonSerializer.Serialize(new { role = input.Role }), ct: cancellationToken);
 
         return Result.Success();
     }
@@ -211,7 +212,7 @@ internal class AdminService(
 
         await auditService.LogAsync(AuditActions.AdminRemoveRole, userId: callerUserId,
             targetEntityType: "User", targetEntityId: userId,
-            metadata: $"{{\"role\":\"{role}\"}}", ct: cancellationToken);
+            metadata: JsonSerializer.Serialize(new { role }), ct: cancellationToken);
 
         return Result.Success();
     }

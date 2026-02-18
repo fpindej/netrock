@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -53,7 +54,7 @@ internal class AuthenticationService(
         if (user is null)
         {
             await auditService.LogAsync(AuditActions.LoginFailure,
-                metadata: $"{{\"attemptedEmail\":\"{username}\"}}",
+                metadata: JsonSerializer.Serialize(new { attemptedEmail = username }),
                 ct: cancellationToken);
             return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized);
         }

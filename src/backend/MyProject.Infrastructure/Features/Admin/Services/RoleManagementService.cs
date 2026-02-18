@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -86,7 +87,7 @@ internal class RoleManagementService(
 
         await auditService.LogAsync(AuditActions.AdminCreateRole,
             targetEntityType: "Role", targetEntityId: role.Id,
-            metadata: $"{{\"roleName\":\"{input.Name}\"}}", ct: cancellationToken);
+            metadata: JsonSerializer.Serialize(new { roleName = input.Name }), ct: cancellationToken);
 
         return Result<Guid>.Success(role.Id);
     }

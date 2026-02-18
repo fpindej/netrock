@@ -87,6 +87,8 @@
 	}
 
 	$effect(() => {
+		// Read userId to establish reactive dependency — re-fetches when the prop changes.
+		const _uid = userId;
 		loadEvents(1);
 	});
 </script>

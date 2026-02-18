@@ -4,6 +4,7 @@ using System.Text.Json;
 using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Features.Admin.Dtos;
+using MyProject.Application.Features.Audit.Dtos;
 using MyProject.Application.Identity.Constants;
 using MyProject.Shared;
 
@@ -636,6 +637,90 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get("/api/v1/admin/permissions", TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    #endregion
+
+    #region GetUserAuditTrail
+
+    [Fact]
+    public async Task GetUserAuditTrail_WithPermission_Returns200()
+    {
+        var userId = Guid.NewGuid();
+        _factory.AuditService.GetUserAuditEventsAsync(
+                userId, 1, 10, Arg.Any<CancellationToken>())
+            .Returns(new AuditEventListOutput([], 0, 1, 10));
+
+        var response = await _client.SendAsync(
+            Get($"/api/v1/admin/users/{userId}/audit?pageNumber=1&pageSize=10",
+                TestAuth.WithPermissions(AppPermissions.Users.View)));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<ListAuditEventsContract>();
+        Assert.NotNull(body);
+        Assert.Equal(0, body.TotalCount);
+        Assert.Equal(1, body.PageNumber);
+        Assert.Equal(10, body.PageSize);
+    }
+
+    [Fact]
+    public async Task GetUserAuditTrail_WithoutPermission_Returns403()
+    {
+        var userId = Guid.NewGuid();
+
+        var response = await _client.SendAsync(
+            Get($"/api/v1/admin/users/{userId}/audit?pageNumber=1&pageSize=10", TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUserAuditTrail_Unauthenticated_Returns401()
+    {
+        var userId = Guid.NewGuid();
+        using var anonClient = _factory.CreateClient();
+
+        var response = await anonClient.GetAsync($"/api/v1/admin/users/{userId}/audit");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUserAuditTrail_SuperAdmin_Returns200()
+    {
+        var userId = Guid.NewGuid();
+        _factory.AuditService.GetUserAuditEventsAsync(
+                userId, 1, 10, Arg.Any<CancellationToken>())
+            .Returns(new AuditEventListOutput([], 0, 1, 10));
+
+        var response = await _client.SendAsync(
+            Get($"/api/v1/admin/users/{userId}/audit?pageNumber=1&pageSize=10", TestAuth.SuperAdmin()));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUserAuditTrail_WithEvents_ReturnsItems()
+    {
+        var userId = Guid.NewGuid();
+        var events = new List<AuditEventOutput>
+        {
+            new(Guid.NewGuid(), userId, "LoginSuccess", null, null, null, DateTime.UtcNow),
+            new(Guid.NewGuid(), Guid.NewGuid(), "AdminLockUser", "User", userId, null, DateTime.UtcNow)
+        };
+        _factory.AuditService.GetUserAuditEventsAsync(
+                userId, 1, 10, Arg.Any<CancellationToken>())
+            .Returns(new AuditEventListOutput(events, 2, 1, 10));
+
+        var response = await _client.SendAsync(
+            Get($"/api/v1/admin/users/{userId}/audit?pageNumber=1&pageSize=10",
+                TestAuth.WithPermissions(AppPermissions.Users.View)));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<ListAuditEventsContract>();
+        Assert.NotNull(body);
+        Assert.Equal(2, body.Items.Count);
+        Assert.Equal(2, body.TotalCount);
     }
 
     #endregion

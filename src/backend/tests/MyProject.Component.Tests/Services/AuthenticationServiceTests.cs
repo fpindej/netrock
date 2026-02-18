@@ -32,6 +32,7 @@ public class AuthenticationServiceTests : IDisposable
     private readonly IUserContext _userContext;
     private readonly ICacheService _cacheService;
     private readonly IEmailService _emailService;
+    private readonly IAuditService _auditService;
     private readonly MyProjectDbContext _dbContext;
     private readonly AuthenticationService _sut;
 
@@ -70,6 +71,7 @@ public class AuthenticationServiceTests : IDisposable
         });
 
         var emailTokenService = new EmailTokenService(_dbContext, _timeProvider, authOptions);
+        _auditService = Substitute.For<IAuditService>();
 
         _sut = new AuthenticationService(
             _userManager,
@@ -81,7 +83,7 @@ public class AuthenticationServiceTests : IDisposable
             _cacheService,
             _emailService,
             emailTokenService,
-            Substitute.For<IAuditService>(),
+            _auditService,
             authOptions,
             emailOptions,
             Substitute.For<ILogger<AuthenticationService>>(),
@@ -122,6 +124,13 @@ public class AuthenticationServiceTests : IDisposable
         Assert.True(result.IsSuccess);
         Assert.Equal("access-token", result.Value.AccessToken);
         Assert.Equal("refresh-token", result.Value.RefreshToken);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.LoginSuccess,
+            userId: user.Id,
+            targetEntityType: Arg.Any<string?>(),
+            targetEntityId: Arg.Any<Guid?>(),
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -178,6 +187,13 @@ public class AuthenticationServiceTests : IDisposable
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Auth.LoginInvalidCredentials, result.Error);
         Assert.Equal(ErrorType.Unauthorized, result.ErrorType);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.LoginFailure,
+            userId: user.Id,
+            targetEntityType: Arg.Any<string?>(),
+            targetEntityId: Arg.Any<Guid?>(),
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -290,6 +306,13 @@ public class AuthenticationServiceTests : IDisposable
 
         Assert.True(result.IsSuccess);
         Assert.NotEqual(Guid.Empty, result.Value);
+        await _auditService.Received(1).LogAsync(
+            AuditActions.Register,
+            userId: result.Value,
+            targetEntityType: Arg.Any<string?>(),
+            targetEntityId: Arg.Any<Guid?>(),
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
