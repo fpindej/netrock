@@ -118,6 +118,18 @@
 	"auth_resetPassword_invalidLink": "Neplatný odkaz pro obnovení",
 	"auth_resetPassword_invalidLinkDescription": "Tento odkaz pro obnovení hesla je neplatný nebo vypršel.",
 	"auth_resetPassword_requestNew": "Požádat o nový odkaz",
+	"auth_resetPassword_errorTitle": "Odkaz vypršel nebo je neplatný",
+	"auth_resetPassword_errorContactAdmin": "Pro novou pozvánku kontaktujte svého administrátora.",
+
+	"meta_setPassword_title": "Nastavení hesla",
+	"meta_setPassword_description": "Nastavte heslo ke svému účtu.",
+	"auth_setPassword_title": "Nastavte si heslo",
+	"auth_setPassword_subtitle": "Vytvořte si heslo pro začátek.",
+	"auth_setPassword_submit": "Nastavit heslo",
+	"auth_setPassword_submitting": "Nastavuji...",
+	"auth_setPassword_error": "Nepodařilo se nastavit heslo",
+	"auth_setPassword_successTitle": "Heslo nastaveno",
+	"auth_setPassword_successDescription": "Vaše heslo bylo nastaveno. Nyní se můžete přihlásit s novým heslem.",
 
 	"auth_verifyEmail_verifying": "Ověřování vašeho e-mailu...",
 	"auth_verifyEmail_successTitle": "E-mail ověřen",

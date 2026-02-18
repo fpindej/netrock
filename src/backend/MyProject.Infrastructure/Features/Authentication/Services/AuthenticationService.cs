@@ -341,6 +341,11 @@ internal class AuthenticationService(
             return Result.Failure(ErrorMessages.Auth.ResetPasswordFailed);
         }
 
+        if (await userManager.CheckPasswordAsync(user, input.NewPassword))
+        {
+            return Result.Failure(ErrorMessages.Auth.PasswordSameAsCurrent);
+        }
+
         var resetResult = await userManager.ResetPasswordAsync(user, emailToken.IdentityToken, input.NewPassword);
 
         if (!resetResult.Succeeded)
