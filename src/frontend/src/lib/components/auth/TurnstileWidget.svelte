@@ -6,9 +6,10 @@
 		siteKey: string;
 		onVerified?: (token: string) => void;
 		onError?: () => void;
+		resetRef?: (fn: () => void) => void;
 	}
 
-	let { siteKey, onVerified, onError }: Props = $props();
+	let { siteKey, onVerified, onError, resetRef }: Props = $props();
 	let container: HTMLDivElement | undefined = $state();
 	let widgetId: string | undefined = $state();
 
@@ -21,6 +22,13 @@
 		return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
 	}
 
+	function reset() {
+		if (widgetId !== undefined && window.turnstile) {
+			window.turnstile.reset(widgetId);
+			onVerified?.('');
+		}
+	}
+
 	function renderWidget() {
 		if (!window.turnstile || !container) return;
 		widgetId = window.turnstile.render(container, {
@@ -31,6 +39,7 @@
 			'expired-callback': () => onVerified?.(''),
 			'error-callback': () => onError?.()
 		});
+		resetRef?.(reset);
 	}
 
 	function loadScript(): Promise<void> {

@@ -26,6 +26,7 @@
 	let lastName = $state('');
 	let phoneNumber = $state('');
 	let captchaToken = $state('');
+	let resetCaptcha: (() => void) | null = $state(null);
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 	let fieldErrors = $state<Record<string, string>>({});
@@ -139,9 +140,13 @@
 						error = getErrorMessage(apiError, m.auth_register_failed());
 					}
 				});
+				resetCaptcha?.();
+				captchaToken = '';
 			}
 		} catch {
 			error = m.auth_register_failed();
+			resetCaptcha?.();
+			captchaToken = '';
 		} finally {
 			isLoading = false;
 		}
@@ -263,6 +268,7 @@
 				siteKey={PUBLIC_TURNSTILE_SITE_KEY}
 				onVerified={(t) => (captchaToken = t)}
 				onError={() => (error = m.auth_captcha_error())}
+				resetRef={(fn) => (resetCaptcha = fn)}
 			/>
 			<Dialog.Footer>
 				<Button
