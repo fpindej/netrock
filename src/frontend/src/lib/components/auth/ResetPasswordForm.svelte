@@ -12,18 +12,20 @@
 	import { fly, scale } from 'svelte/transition';
 	import { Check, CircleAlert } from '@lucide/svelte';
 	import { LoginBackground } from '$lib/components/auth';
-	import { toast } from '$lib/components/ui/sonner';
 
 	interface Props {
 		token: string;
+		invited?: boolean;
 	}
 
-	let { token }: Props = $props();
+	let { token, invited = false }: Props = $props();
 
 	let newPassword = $state('');
 	let confirmPassword = $state('');
 	let isLoading = $state(false);
 	let isSuccess = $state(false);
+	let isError = $state(false);
+	let errorMessage = $state('');
 	let fieldErrors = $state<Record<string, string>>({});
 	const fieldShakes = createFieldShakes();
 	const cooldown = createCooldown();
@@ -54,21 +56,23 @@
 			} else {
 				handleMutationError(response, apiError, {
 					cooldown,
-					fallback: m.auth_resetPassword_error(),
+					fallback: invited ? m.auth_setPassword_error() : m.auth_resetPassword_error(),
 					onValidationError(errors) {
 						fieldErrors = errors;
 						fieldShakes.triggerFields(Object.keys(errors));
-						toast.error(getErrorMessage(apiError, m.auth_resetPassword_error()));
 					},
 					onError() {
-						toast.error(m.auth_resetPassword_error(), {
-							description: getErrorMessage(apiError, m.auth_resetPassword_error())
-						});
+						errorMessage = getErrorMessage(
+							apiError,
+							invited ? m.auth_setPassword_error() : m.auth_resetPassword_error()
+						);
+						isError = true;
 					}
 				});
 			}
 		} catch {
-			toast.error(m.auth_resetPassword_error());
+			errorMessage = invited ? m.auth_setPassword_error() : m.auth_resetPassword_error();
+			isError = true;
 		} finally {
 			isLoading = false;
 		}
@@ -106,6 +110,40 @@
 				</Card.Content>
 			</Card.Root>
 		</div>
+	{:else if isError}
+		<div class="sm:mx-auto sm:w-full sm:max-w-md" in:fly={{ y: 20, duration: 600, delay: 100 }}>
+			<Card.Root class="border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm">
+				<Card.Header class="items-center">
+					<div
+						class="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive"
+					>
+						<CircleAlert class="h-8 w-8" />
+					</div>
+					<Card.Title class="text-center text-2xl">
+						{m.auth_resetPassword_errorTitle()}
+					</Card.Title>
+					<Card.Description class="text-center">
+						{errorMessage}
+					</Card.Description>
+				</Card.Header>
+				<Card.Content>
+					<div class="text-center text-sm">
+						{#if invited}
+							<p class="text-muted-foreground">
+								{m.auth_resetPassword_errorContactAdmin()}
+							</p>
+						{:else}
+							<a
+								href={resolve('/forgot-password')}
+								class="font-medium text-primary hover:underline"
+							>
+								{m.auth_resetPassword_requestNew()}
+							</a>
+						{/if}
+					</div>
+				</Card.Content>
+			</Card.Root>
+		</div>
 	{:else if !isSuccess}
 		<div
 			class="sm:mx-auto sm:w-full sm:max-w-md"
@@ -117,10 +155,10 @@
 			>
 				<Card.Header>
 					<Card.Title class="text-center text-2xl">
-						{m.auth_resetPassword_title()}
+						{invited ? m.auth_setPassword_title() : m.auth_resetPassword_title()}
 					</Card.Title>
 					<Card.Description class="text-center">
-						{m.auth_resetPassword_subtitle()}
+						{invited ? m.auth_setPassword_subtitle() : m.auth_resetPassword_subtitle()}
 					</Card.Description>
 				</Card.Header>
 				<Card.Content>
@@ -168,9 +206,9 @@
 							{#if cooldown.active}
 								{m.common_waitSeconds({ seconds: cooldown.remaining })}
 							{:else if isLoading}
-								{m.auth_resetPassword_submitting()}
+								{invited ? m.auth_setPassword_submitting() : m.auth_resetPassword_submitting()}
 							{:else}
-								{m.auth_resetPassword_submit()}
+								{invited ? m.auth_setPassword_submit() : m.auth_resetPassword_submit()}
 							{/if}
 						</Button>
 					</form>
@@ -190,10 +228,12 @@
 						<Check class="h-8 w-8" />
 					</div>
 					<Card.Title class="text-center text-2xl">
-						{m.auth_resetPassword_successTitle()}
+						{invited ? m.auth_setPassword_successTitle() : m.auth_resetPassword_successTitle()}
 					</Card.Title>
 					<Card.Description class="text-center">
-						{m.auth_resetPassword_successDescription()}
+						{invited
+							? m.auth_setPassword_successDescription()
+							: m.auth_resetPassword_successDescription()}
 					</Card.Description>
 				</Card.Header>
 				<Card.Content>

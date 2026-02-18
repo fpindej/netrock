@@ -490,7 +490,7 @@ internal class AdminService(
         // Send invitation email with password reset link
         var identityToken = await userManager.GeneratePasswordResetTokenAsync(user);
         var opaqueToken = await emailTokenService.CreateAsync(user.Id, identityToken, EmailTokenPurpose.PasswordReset, cancellationToken);
-        var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}";
+        var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}&invited=1";
 
         var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
         var htmlBody = $"""

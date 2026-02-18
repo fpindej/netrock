@@ -118,6 +118,18 @@
 	"auth_resetPassword_invalidLink": "Invalid reset link",
 	"auth_resetPassword_invalidLinkDescription": "This password reset link is invalid or has expired.",
 	"auth_resetPassword_requestNew": "Request a new link",
+	"auth_resetPassword_errorTitle": "Link expired or invalid",
+	"auth_resetPassword_errorContactAdmin": "Please contact your administrator for a new invitation.",
+
+	"meta_setPassword_title": "Set Password",
+	"meta_setPassword_description": "Set your account password.",
+	"auth_setPassword_title": "Set your password",
+	"auth_setPassword_subtitle": "Create a password to get started.",
+	"auth_setPassword_submit": "Set password",
+	"auth_setPassword_submitting": "Setting...",
+	"auth_setPassword_error": "Failed to set password",
+	"auth_setPassword_successTitle": "Password set",
+	"auth_setPassword_successDescription": "Your password has been set. You can now sign in with your new password.",
 
 	"auth_verifyEmail_verifying": "Verifying your email...",
 	"auth_verifyEmail_successTitle": "Email verified",

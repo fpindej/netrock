@@ -9,6 +9,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	}
 
 	return {
-		token: url.searchParams.get('token') ?? ''
+		token: url.searchParams.get('token') ?? '',
+		invited: url.searchParams.has('invited')
 	};
 };

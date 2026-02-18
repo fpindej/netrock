@@ -33,6 +33,7 @@ public static class ErrorMessages
         public const string ResetPasswordTokenInvalid = "Invalid or expired password reset token.";
         public const string EmailVerificationFailed = "Email verification failed. The link may have expired or already been used.";
         public const string EmailAlreadyVerified = "Email address is already verified.";
+        public const string PasswordSameAsCurrent = "New password must be different from your current password.";
         public const string CaptchaInvalid = "CAPTCHA verification failed. Please try again.";
     }
 
