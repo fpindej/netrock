@@ -1,11 +1,20 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Pagination } from '$lib/components/admin';
+	import { Button } from '$lib/components/ui/button';
+	import { Timeline, TimelineItem, TimelineContent } from '$lib/components/ui/timeline';
 	import { browserClient } from '$lib/api/client';
 	import { History } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import type { AuditEvent } from '$lib/types';
+	import {
+		getAuditActionLabel,
+		getAuditActionVariant,
+		formatAuditDate,
+		formatAuditDateFull,
+		getAuditDescription
+	} from '$lib/utils/audit';
 
 	interface Props {
 		userId: string;
@@ -15,102 +24,66 @@
 
 	let events = $state<AuditEvent[]>([]);
 	let loading = $state(true);
+	let loadingMore = $state(false);
+	let hasMore = $state(false);
 	let pageNumber = $state(1);
-	let totalPages = $state(0);
-	let hasPreviousPage = $state(false);
-	let hasNextPage = $state(false);
+	let selectedEvent = $state<AuditEvent | null>(null);
+	let dialogOpen = $state(false);
 
-	const pageSize = 10;
+	const pageSize = 15;
 
-	async function loadEvents(page: number): Promise<void> {
-		loading = true;
+	function getBadgeVariant(
+		action: string | undefined
+	): 'default' | 'success' | 'destructive' | 'warning' | 'outline' {
+		return getAuditActionVariant(action);
+	}
+
+	async function loadEvents(page: number, append: boolean = false): Promise<void> {
+		if (append) {
+			loadingMore = true;
+		} else {
+			loading = true;
+		}
+
 		const { data } = await browserClient.GET('/api/v1/admin/users/{id}/audit', {
 			params: {
 				path: { id: userId },
-				query: { PageNumber: page, PageSize: pageSize }
+				query: { pageNumber: page, pageSize: pageSize }
 			}
 		});
 
 		if (data) {
-			events = (data.items as AuditEvent[]) ?? [];
+			const newEvents = (data.items as AuditEvent[]) ?? [];
+			if (append) {
+				events = [...events, ...newEvents];
+			} else {
+				events = newEvents;
+			}
 			pageNumber = data.pageNumber ?? 1;
-			totalPages = data.totalPages ?? 0;
-			hasPreviousPage = data.hasPreviousPage ?? false;
-			hasNextPage = data.hasNextPage ?? false;
+			hasMore = data.hasNextPage ?? false;
 		}
+
 		loading = false;
+		loadingMore = false;
 	}
 
-	function handlePageChange(page: number): void {
-		loadEvents(page);
+	function loadMore(): void {
+		loadEvents(pageNumber + 1, true);
 	}
 
-	function formatDate(date: string | null | undefined): string {
-		if (!date) return '-';
-		return new Date(date).toLocaleString();
+	function openDetail(event: AuditEvent): void {
+		selectedEvent = event;
+		dialogOpen = true;
 	}
 
-	function getActionLabel(action: string | undefined): string {
-		switch (action) {
-			case 'LoginSuccess':
-				return m.audit_action_loginSuccess();
-			case 'LoginFailure':
-				return m.audit_action_loginFailure();
-			case 'Logout':
-				return m.audit_action_logout();
-			case 'Register':
-				return m.audit_action_register();
-			case 'PasswordChange':
-				return m.audit_action_passwordChange();
-			case 'PasswordResetRequest':
-				return m.audit_action_passwordResetRequest();
-			case 'PasswordReset':
-				return m.audit_action_passwordReset();
-			case 'EmailVerification':
-				return m.audit_action_emailVerification();
-			case 'ResendVerificationEmail':
-				return m.audit_action_resendVerificationEmail();
-			case 'ProfileUpdate':
-				return m.audit_action_profileUpdate();
-			case 'AccountDeletion':
-				return m.audit_action_accountDeletion();
-			case 'AdminCreateUser':
-				return m.audit_action_adminCreateUser();
-			case 'AdminLockUser':
-				return m.audit_action_adminLockUser();
-			case 'AdminUnlockUser':
-				return m.audit_action_adminUnlockUser();
-			case 'AdminDeleteUser':
-				return m.audit_action_adminDeleteUser();
-			case 'AdminVerifyEmail':
-				return m.audit_action_adminVerifyEmail();
-			case 'AdminSendPasswordReset':
-				return m.audit_action_adminSendPasswordReset();
-			case 'AdminAssignRole':
-				return m.audit_action_adminAssignRole();
-			case 'AdminRemoveRole':
-				return m.audit_action_adminRemoveRole();
-			case 'AdminCreateRole':
-				return m.audit_action_adminCreateRole();
-			case 'AdminUpdateRole':
-				return m.audit_action_adminUpdateRole();
-			case 'AdminDeleteRole':
-				return m.audit_action_adminDeleteRole();
-			case 'AdminSetRolePermissions':
-				return m.audit_action_adminSetRolePermissions();
-			default:
-				return action ?? '-';
+	function formatMetadata(metadata: string | null | undefined): string | null {
+		if (!metadata) return null;
+		try {
+			const parsed = JSON.parse(metadata);
+			return JSON.stringify(parsed, null, 2);
+		} catch {
+			return metadata;
 		}
-	}
-
-	function getActionVariant(
-		action: string | undefined
-	): 'default' | 'secondary' | 'destructive' | 'outline' {
-		if (!action) return 'outline';
-		if (action.includes('Delete') || action === 'AccountDeletion' || action === 'LoginFailure')
-			return 'destructive';
-		if (action.startsWith('Admin')) return 'secondary';
-		return 'default';
 	}
 
 	$effect(() => {
@@ -123,7 +96,7 @@
 		<Card.Title>{m.audit_trail_title()}</Card.Title>
 		<Card.Description>{m.audit_trail_description()}</Card.Description>
 	</Card.Header>
-	<Card.Content class="p-0">
+	<Card.Content>
 		{#if loading}
 			<div class="flex items-center justify-center py-12">
 				<div
@@ -138,89 +111,86 @@
 				<p class="text-sm text-muted-foreground">{m.audit_trail_empty()}</p>
 			</div>
 		{:else}
-			<!-- Mobile: card list -->
-			<div class="divide-y md:hidden">
-				{#each events as event (event.id)}
-					<div class="space-y-1 p-4">
-						<div class="flex items-center justify-between">
-							<span class="text-xs text-muted-foreground">
-								{formatDate(event.createdAt)}
-							</span>
-							<Badge variant={getActionVariant(event.action)}>
-								{getActionLabel(event.action)}
-							</Badge>
-						</div>
-						{#if event.targetEntityType}
-							<p class="text-xs text-muted-foreground">
-								{m.audit_trail_col_target()}: {event.targetEntityType}
-							</p>
-						{/if}
-						{#if event.metadata}
-							<p class="truncate text-xs text-muted-foreground">{event.metadata}</p>
-						{/if}
-					</div>
+			<Timeline>
+				{#each events as event, i (event.id)}
+					<TimelineItem
+						variant={getAuditActionVariant(event.action)}
+						isLast={i === events.length - 1 && !hasMore}
+					>
+						<button
+							type="button"
+							class="w-full rounded-md px-2 py-1 text-start transition-colors hover:bg-muted/50"
+							onclick={() => openDetail(event)}
+						>
+							<TimelineContent
+								title={getAuditActionLabel(event.action)}
+								timestamp={formatAuditDate(event.createdAt)}
+								description={getAuditDescription(event.action, event.metadata)}
+							/>
+						</button>
+					</TimelineItem>
 				{/each}
-			</div>
+			</Timeline>
 
-			<!-- Desktop: table -->
-			<div class="hidden overflow-x-auto md:block">
-				<table class="w-full text-sm">
-					<thead>
-						<tr class="border-b bg-muted/50 text-start">
-							<th
-								class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground"
-							>
-								{m.audit_trail_col_timestamp()}
-							</th>
-							<th
-								class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground"
-							>
-								{m.audit_trail_col_action()}
-							</th>
-							<th
-								class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground"
-							>
-								{m.audit_trail_col_target()}
-							</th>
-							<th
-								class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground"
-							>
-								{m.audit_trail_col_details()}
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each events as event (event.id)}
-							<tr class="border-b">
-								<td class="px-4 py-3 text-muted-foreground">
-									{formatDate(event.createdAt)}
-								</td>
-								<td class="px-4 py-3">
-									<Badge variant={getActionVariant(event.action)}>
-										{getActionLabel(event.action)}
-									</Badge>
-								</td>
-								<td class="px-4 py-3 text-muted-foreground">
-									{event.targetEntityType ?? '-'}
-								</td>
-								<td class="max-w-xs truncate px-4 py-3 text-muted-foreground">
-									{event.metadata ?? '-'}
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-
-			<div class="p-4">
-				<Pagination
-					{pageNumber}
-					{totalPages}
-					{hasPreviousPage}
-					{hasNextPage}
-					onPageChange={handlePageChange}
-				/>
-			</div>
+			{#if hasMore}
+				<div class="mt-4 flex justify-center">
+					<Button variant="outline" size="sm" onclick={loadMore} disabled={loadingMore}>
+						{loadingMore ? m.audit_timeline_loading() : m.audit_timeline_loadMore()}
+					</Button>
+				</div>
+			{/if}
 		{/if}
 	</Card.Content>
 </Card.Root>
+
+<Dialog.Root bind:open={dialogOpen}>
+	<Dialog.Content class="max-w-md">
+		<Dialog.Header>
+			<Dialog.Title>{m.audit_detail_title()}</Dialog.Title>
+		</Dialog.Header>
+
+		{#if selectedEvent}
+			<div class="space-y-4">
+				<div class="flex items-center justify-between">
+					<span class="text-sm text-muted-foreground">{m.audit_detail_action()}</span>
+					<Badge variant={getBadgeVariant(selectedEvent.action)}>
+						{getAuditActionLabel(selectedEvent.action)}
+					</Badge>
+				</div>
+
+				<div class="flex items-center justify-between">
+					<span class="text-sm text-muted-foreground">{m.audit_detail_timestamp()}</span>
+					<span class="text-sm">{formatAuditDateFull(selectedEvent.createdAt)}</span>
+				</div>
+
+				{#if selectedEvent.targetEntityType}
+					<div class="flex items-center justify-between">
+						<span class="text-sm text-muted-foreground">{m.audit_detail_targetType()}</span>
+						<span class="text-sm">{selectedEvent.targetEntityType}</span>
+					</div>
+				{/if}
+
+				{#if selectedEvent.targetEntityId}
+					<div class="flex items-center justify-between">
+						<span class="text-sm text-muted-foreground">{m.audit_detail_targetId()}</span>
+						<span class="font-mono text-xs">{selectedEvent.targetEntityId}</span>
+					</div>
+				{/if}
+
+				{#if selectedEvent.metadata}
+					<div>
+						<span class="text-sm text-muted-foreground">{m.audit_detail_metadata()}</span>
+						<pre class="mt-1 overflow-x-auto rounded-md bg-muted p-2 text-xs">{formatMetadata(
+								selectedEvent.metadata
+							)}</pre>
+					</div>
+				{/if}
+
+				<div class="flex items-center justify-between border-t pt-4">
+					<span class="text-sm text-muted-foreground">{m.audit_detail_eventId()}</span>
+					<span class="font-mono text-xs">{selectedEvent.id}</span>
+				</div>
+			</div>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>
