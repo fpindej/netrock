@@ -157,9 +157,9 @@ export interface paths {
 			parameters: {
 				query?: {
 					/** @description The page number to retrieve (1-based). */
-					PageNumber?: number;
+					pageNumber?: number;
 					/** @description The number of items per page (maximum 100). */
-					PageSize?: number;
+					pageSize?: number;
 				};
 				header?: never;
 				path?: never;
@@ -1531,68 +1531,6 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	'/api/v1/admin/users/{id}/audit': {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** Gets a paginated audit trail for a specific user. */
-		get: {
-			parameters: {
-				query?: {
-					/** @description The page number to retrieve (1-based). */
-					PageNumber?: number;
-					/** @description The number of items per page (maximum 100). */
-					PageSize?: number;
-				};
-				header?: never;
-				path: {
-					/** @description The user ID */
-					id: string;
-				};
-				cookie?: never;
-			};
-			requestBody?: never;
-			responses: {
-				/** @description Returns the audit events */
-				200: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['ListAuditEventsResponse'];
-					};
-				};
-				/** @description If the user is not authenticated */
-				401: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['ProblemDetails'];
-					};
-				};
-				/** @description If the user does not have the required permission */
-				403: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['ProblemDetails'];
-					};
-				};
-			};
-		};
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
 	'/api/v1/admin/roles': {
 		parameters: {
 			query?: never;
@@ -2023,6 +1961,68 @@ export interface paths {
 					};
 					content: {
 						'application/json': components['schemas']['PermissionGroupResponse'][];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user does not have the required permission */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/admin/users/{id}/audit': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Gets a paginated audit trail for a specific user. */
+		get: {
+			parameters: {
+				query?: {
+					/** @description The page number to retrieve (1-based). */
+					pageNumber?: number;
+					/** @description The number of items per page (maximum 100). */
+					pageSize?: number;
+				};
+				header?: never;
+				path: {
+					/** @description The user ID */
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Returns the audit events */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ListAuditEventsResponse'];
 					};
 				};
 				/** @description If the user is not authenticated */
@@ -2596,6 +2596,11 @@ export interface components {
 			/** @description Whether the user is currently locked out. */
 			isLockedOut?: boolean;
 		};
+		/** @description Request to assign a role to a user. */
+		AssignRoleRequest: {
+			/** @description The name of the role to assign. */
+			role: string;
+		};
 		/** @description Represents a single audit event in API responses. */
 		AuditEventResponse: {
 			/**
@@ -2624,11 +2629,6 @@ export interface components {
 			 * @description The UTC timestamp when the event occurred.
 			 */
 			createdAt?: string;
-		};
-		/** @description Request to assign a role to a user. */
-		AssignRoleRequest: {
-			/** @description The name of the role to assign. */
-			role: string;
 		};
 		/**
 		 * @description Response containing authentication tokens for API clients.
