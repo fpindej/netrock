@@ -57,7 +57,7 @@ internal class AuditService(
     {
         var query = dbContext.AuditEvents
             .AsNoTracking()
-            .Where(e => e.UserId == userId);
+            .Where(e => e.UserId == userId || e.TargetEntityId == userId);
 
         var totalCount = await query.CountAsync(ct);
 
