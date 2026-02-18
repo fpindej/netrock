@@ -74,6 +74,7 @@
 	"auth_login_failed": "Login failed",
 	"auth_login_error": "An error occurred",
 	"auth_login_invalidCredentials": "Invalid email or password",
+	"auth_login_accountLocked": "Account is temporarily locked. Please try again later or contact an administrator.",
 	"auth_login_apiOffline": "API is offline",
 	"auth_login_success": "Login successful!",
 	"auth_login_rememberMe": "Remember me",
