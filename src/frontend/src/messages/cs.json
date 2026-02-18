@@ -120,6 +120,12 @@
 	"auth_resetPassword_requestNew": "Požádat o nový odkaz",
 	"auth_resetPassword_errorTitle": "Odkaz vypršel nebo je neplatný",
 	"auth_resetPassword_errorContactAdmin": "Pro novou pozvánku kontaktujte svého administrátora.",
+	"auth_resetPassword_alreadySignedInTitle": "Již jste přihlášeni",
+	"auth_resetPassword_alreadySignedInDescription": "Jste přihlášeni jako {email}. Pro pokračování v obnově hesla se odhlaste.",
+	"auth_resetPassword_alreadySignedInInvitedDescription": "Jste přihlášeni jako {email}. Pro přijetí pozvánky a nastavení nového účtu se musíte nejprve odhlásit.",
+	"auth_resetPassword_signOutAndContinue": "Odhlásit se a pokračovat",
+	"auth_resetPassword_signingOut": "Odhlašování...",
+	"auth_resetPassword_goToDashboard": "Přejít na nástěnku",
 
 	"meta_setPassword_title": "Nastavení hesla",
 	"meta_setPassword_description": "Nastavte heslo ke svému účtu.",
