@@ -122,7 +122,6 @@
 	"auth_resetPassword_errorContactAdmin": "Please contact your administrator for a new invitation.",
 	"auth_resetPassword_alreadySignedInTitle": "Already signed in",
 	"auth_resetPassword_alreadySignedInDescription": "You're currently signed in as {email}. Sign out to continue with your password reset.",
-	"auth_resetPassword_alreadySignedInInvitedTitle": "Already signed in",
 	"auth_resetPassword_alreadySignedInInvitedDescription": "You're currently signed in as {email}. To accept this invitation and set up your new account, you need to sign out first.",
 	"auth_resetPassword_signOutAndContinue": "Sign out and continue",
 	"auth_resetPassword_signingOut": "Signing out...",

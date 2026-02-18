@@ -110,9 +110,7 @@
 						<TriangleAlert class="h-8 w-8" />
 					</div>
 					<Card.Title class="text-center text-2xl">
-						{invited
-							? m.auth_resetPassword_alreadySignedInInvitedTitle()
-							: m.auth_resetPassword_alreadySignedInTitle()}
+						{m.auth_resetPassword_alreadySignedInTitle()}
 					</Card.Title>
 					<Card.Description class="text-center">
 						{invited
