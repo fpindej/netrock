@@ -113,7 +113,9 @@
 				)}
 			>
 				<Card.Header>
-					<Card.Title class="text-center text-2xl">{m.auth_login_title()}</Card.Title>
+					<Card.Title class="text-center text-2xl"
+						>{m.auth_login_title({ name: m.app_name() })}</Card.Title
+					>
 					<Card.Description class="text-center">{m.auth_login_subtitle()}</Card.Description>
 				</Card.Header>
 				<Card.Content>

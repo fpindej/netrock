@@ -66,8 +66,8 @@
 	"country_ro": "Rumunsko",
 	"country_ua": "Ukrajina",
 
-	"auth_login_title": "Vítejte zpět",
-	"auth_login_subtitle": "Přihlaste se ke svému účtu",
+	"auth_login_title": "Vítejte v {name}",
+	"auth_login_subtitle": "Pro pokračování se přihlaste",
 	"auth_login_email": "E-mail",
 	"auth_login_password": "Heslo",
 	"auth_login_submit": "Přihlásit se",
