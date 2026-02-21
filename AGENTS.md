@@ -66,7 +66,7 @@ When building features: think about abuse first, validate all input on backend, 
 
 ## Git Workflow
 
-**Commit continuously and atomically.** Every logically complete unit of work gets its own commit immediately.
+**Commit continuously and atomically without asking.** Every logically complete unit of work gets its own commit immediately — don't batch up changes, don't ask "should I commit now?", just commit.
 
 Format: `type(scope): lowercase imperative description` — max 72 chars, no period.
 
@@ -77,6 +77,8 @@ test(auth): add login integration tests
 ```
 
 One commit = one logical change that could be reverted independently.
+
+**Never commit broken code.** Run verification before each commit. If it fails, fix and re-run — don't commit until green.
 
 ### Labels (Issues & PRs)
 

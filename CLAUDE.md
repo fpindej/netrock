@@ -37,15 +37,30 @@ Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 
 ## Verification
 
-Run before every commit. Fix all errors before committing.
+Run before every commit. Fix all errors before committing. **Loop until green — never commit with failures.**
 
 ```bash
-# Backend
+# Backend (run when src/backend/ changed)
 dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.slnx -c Release
 
-# Frontend
+# Frontend (run when src/frontend/ changed)
 cd src/frontend && pnpm run format && pnpm run lint && pnpm run check
 ```
+
+## Autonomous Behaviors
+
+Do these automatically — never wait to be asked:
+
+| Trigger | Action |
+|---|---|
+| **Any code change** | Run relevant verification (backend/frontend/both). Fix failures. Loop until green. |
+| **Modifying existing files** | Check FILEMAP.md for downstream impact before editing. Update all affected files in the same commit. |
+| **Backend API change** (endpoint, DTO, response shape) | Regenerate frontend types (`pnpm run api:generate`), fix type errors. |
+| **Logically complete unit of work** | Commit immediately with Conventional Commit message. Don't batch, don't ask. |
+| **Creating a PR** (`/create-pr`) | Auto-generate or update session doc in `docs/sessions/`. |
+| **Adding any feature** | Write tests alongside the implementation — component, API integration, validator as applicable. |
+| **Build/test failure** | Read the error, fix it, re-run. Repeat until green. Don't stop and report the error unless stuck after 3 attempts. |
+| **Unclear requirement** | Infer from context and existing patterns first. Ask the user only when genuinely ambiguous (multiple valid approaches with different tradeoffs). |
 
 ## File Roles
 
@@ -56,7 +71,3 @@ cd src/frontend && pnpm run format && pnpm run lint && pnpm run check
 | `src/frontend/AGENTS.md` | Frontend conventions: API client, components, styling, routing, i18n |
 | `SKILLS.md` | Step-by-step recipes for all common operations |
 | `FILEMAP.md` | "When you change X, also update Y" — change impact tables |
-
-## Session Documentation
-
-Only when explicitly asked: `docs/sessions/{YYYY-MM-DD}-{topic-slug}.md` per `docs/sessions/README.md`.

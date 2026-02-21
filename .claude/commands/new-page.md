@@ -1,6 +1,6 @@
 Create a new frontend page with routing, i18n, and navigation.
 
-Ask the user: **What page?** (e.g., "order history page at /orders"). Default to `(app)` route group (authenticated) unless told otherwise.
+Infer route, route group, components needed, and data requirements from context. Default to `(app)` (authenticated). Ask only if genuinely ambiguous.
 
 ## Steps
 
@@ -26,9 +26,9 @@ Ask the user: **What page?** (e.g., "order history page at /orders"). Default to
 8. Add i18n keys to both `en.json` and `cs.json`
 9. Add navigation entry in `SidebarNav.svelte` (with `permission` field if guarded)
 
-**Verify:**
+**Verify and commit:**
 
-10. `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check` — fix any errors
+10. `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check` — fix errors, loop until green
 11. Commit: `feat({feature}): add {feature} page`
 
-**Error recovery:** If `pnpm run check` fails, fix type errors before committing. Paraglide module errors (~32) are expected — ignore those.
+Paraglide module errors (~32) are expected at check time — ignore those. Fix everything else.

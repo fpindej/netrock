@@ -1,4 +1,6 @@
-Create a GitHub issue. Ask the user what needs to be done if not already clear from context.
+Create a GitHub issue.
+
+Infer type, scope, labels, and whether to split into sub-issues from context. Ask only if the user hasn't described what needs to be done.
 
 ## Steps
 

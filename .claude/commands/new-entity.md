@@ -1,6 +1,6 @@
 Create a new backend entity with EF Core configuration and migration.
 
-Ask the user: **What entity?** (e.g., "Order with name, amount, status"). Infer feature name from entity name. Ask about enum values only if enum properties are mentioned.
+Infer entity name, properties, feature name, and enum values from context. Ask only if the entity's purpose or key properties are genuinely ambiguous.
 
 ## Steps
 
@@ -24,9 +24,9 @@ Ask the user: **What entity?** (e.g., "Order with name, amount, status"). Infer 
      --output-dir Persistence/Migrations
    ```
 
-**Verify:**
+**Verify and commit:**
 
-7. `dotnet build src/backend/MyProject.slnx` — fix any errors before committing
+7. `dotnet build src/backend/MyProject.slnx` — fix errors, loop until green
 8. Commit: `feat({feature}): add {Entity} entity and EF configuration`
 
 > This command stops at Infrastructure. Use `/new-endpoint` to add service, controller, and API surface.
