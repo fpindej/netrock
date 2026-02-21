@@ -1,23 +1,18 @@
-Create a GitHub issue with proper labels and optional sub-issues.
+Create a GitHub issue. Ask the user what needs to be done if not already clear from context.
 
-Ask the user for:
-1. **What needs to be done** (or a title if they have one)
-2. **Type** — `feat`, `fix`, `refactor`, `chore`, `docs`
-3. **Scope** — which area (e.g., `auth`, `orders`, `frontend`)
+## Steps
 
-## Execution
-
-Follow the conventions in **AGENTS.md → "Issues"** section.
-
-**Title format:** `type(scope): lowercase imperative description`
-
-**Labels** — apply all that fit: `backend`, `frontend`, `security`, `feature`, `bug`, `documentation`
-
-**Split into sub-issues when:**
-- Crosses stack boundary (backend + frontend)
-- Multiple independent deliverables
-- Parallelizable work
-
-**Link sub-issues** using the GitHub Sub-Issues API (see AGENTS.md for exact commands).
-
-Report the created issue URL(s) to the user.
+1. Determine title in Conventional Commit format: `type(scope): description`
+   - Infer type (`feat`, `fix`, `refactor`, `chore`, `docs`) and scope from the description
+2. Write a body: problem, proposed approach, affected files/areas
+3. Apply labels — all that fit: `backend`, `frontend`, `security`, `feature`, `bug`, `documentation`
+4. If the work crosses stack boundary (backend + frontend) or has multiple independent deliverables, split into sub-issues:
+   ```bash
+   gh issue create --title "..." --body "..." --label "..."
+   # Get sub-issue numeric ID
+   gh api --method GET /repos/{owner}/{repo}/issues/{sub_number} --jq '.id'
+   # Link to parent
+   gh api --method POST /repos/{owner}/{repo}/issues/{parent_number}/sub_issues --field sub_issue_id={id}
+   ```
+5. For small, tightly coupled changes — create a single issue (don't over-split)
+6. Report created URL(s)

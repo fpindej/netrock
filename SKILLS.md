@@ -87,7 +87,7 @@ Step-by-step recipes for common operations. Each recipe lists exact paths, patte
     dotnet ef migrations add Add{Entity} \
       --project src/backend/MyProject.Infrastructure \
       --startup-project src/backend/MyProject.WebApi \
-      --output-dir Features/Postgres/Migrations
+      --output-dir Persistence/Migrations
     ```
 
 **Tests:**
@@ -155,7 +155,7 @@ Step-by-step recipes for common operations. Each recipe lists exact paths, patte
 dotnet ef migrations add {MigrationName} \
   --project src/backend/MyProject.Infrastructure \
   --startup-project src/backend/MyProject.WebApi \
-  --output-dir Features/Postgres/Migrations
+  --output-dir Persistence/Migrations
 ```
 
 To apply (development — runs automatically on startup, but can be run manually):

@@ -1,22 +1,28 @@
 Regenerate frontend API types from the backend OpenAPI spec.
 
-**Prerequisite:** Backend must be running. Verify with:
-```bash
-curl -s http://localhost:8080/openapi/v1.json | head -1
-```
+## Steps
 
-If not running, start with `docker compose -f docker-compose.local.yml up -d api` and wait for it.
+1. Verify backend is running:
+   ```bash
+   curl -sf http://localhost:8080/openapi/v1.json > /dev/null || echo "Backend not running"
+   ```
+   If not running: `docker compose -f docker-compose.local.yml up -d api` and wait ~10s
 
-## Execution
+2. Generate types:
+   ```bash
+   cd src/frontend && pnpm run api:generate
+   ```
 
-Follow **SKILLS.md → "Regenerate API Types"**.
+3. Check what changed — look for renamed/removed schemas (breaking) vs added schemas (safe)
 
-1. Run: `cd src/frontend && pnpm run api:generate`
-2. Review what changed in `v1.d.ts` — new schemas (safe) vs modified/removed schemas (breaking)
-3. Update type aliases in `src/frontend/src/lib/types/index.ts` if needed
-4. Fix any type errors: `cd src/frontend && pnpm run check`
-5. Format: `cd src/frontend && pnpm run format`
+4. Update type aliases in `src/frontend/src/lib/types/index.ts` if schemas changed
 
-If `pnpm run check` reveals type errors, the backend made a breaking API change. Fix all consumers before committing.
+5. Fix type errors:
+   ```bash
+   cd src/frontend && pnpm run check
+   ```
+   If errors: the backend made a breaking API change — fix all frontend consumers
 
-Commit `v1.d.ts` with the backend changes that caused the regeneration (same commit or same PR).
+6. Format: `cd src/frontend && pnpm run format`
+
+7. Commit `v1.d.ts` with the backend changes that caused the regeneration
