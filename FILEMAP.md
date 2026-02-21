@@ -100,6 +100,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`components.json`** (shadcn config) | Future `pnpm dlx shadcn-svelte@latest add` commands |
 | **`.npmrc`** (pnpm settings) | `Dockerfile`, `Dockerfile.local` (both COPY it), CI `--frozen-lockfile` behavior |
 | **`package.json`** (scripts) | CI/CD references, CLAUDE.md pre-commit checks |
+| **`vite.config.ts`** (`test` block) | vitest test runner config (include patterns, environment) |
 
 ### Cross-Stack Changes
 

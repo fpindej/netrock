@@ -204,7 +204,7 @@ dotnet ef database update \
    if (!hasPermission(user, Permissions.Orders.View)) throw redirect(303, '/');
    ```
 8. If adding a sidebar nav item: add `permission: Permissions.Orders.View` to the nav item in `SidebarNav.svelte` — items are filtered per-permission, not as a group
-9. Verify: `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check`
+9. Verify: `cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check`
 
 ### Add a Rate Limit Policy
 
@@ -549,6 +549,24 @@ For testing FluentValidation rules without starting the test server. Uses Fluent
 
 ## Frontend Skills
 
+### Run Frontend Tests
+
+```bash
+# All tests (matches CI)
+cd src/frontend && pnpm run test
+
+# Filter by file name
+cd src/frontend && pnpm run test -- src/lib/auth/middleware.test.ts
+
+# Filter by test name
+cd src/frontend && pnpm run test -- -t "refreshes token"
+
+# Watch mode (re-runs on file changes)
+cd src/frontend && pnpm run test:watch
+```
+
+No external dependencies needed — tests run in-process with vitest.
+
 ### Regenerate API Types
 
 **Prerequisite:** Backend must be running (Docker or IDE).
@@ -590,7 +608,7 @@ This updates `src/frontend/src/lib/api/v1.d.ts`. After regenerating:
    ```
 4. Add i18n keys to `src/frontend/src/messages/en.json` and `cs.json`
 5. Add navigation entry in `src/frontend/src/lib/components/layout/SidebarNav.svelte`
-6. Verify: `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check`
+6. Verify: `cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check`
 
 ### Add a Component
 
@@ -682,7 +700,7 @@ Open the page and check at these widths: **320px**, **375px**, **768px**, **1024
 **6. Verify:**
 
 ```bash
-cd src/frontend && pnpm run format && pnpm run lint && pnpm run check
+cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check
 ```
 
 ---
@@ -734,7 +752,7 @@ Combines backend entity creation with frontend page. Follow in order:
 10. Create page in `src/frontend/src/routes/(app)/{feature}/`
 11. Add i18n keys to both `en.json` and `cs.json`
 12. Update sidebar navigation
-13. Verify: `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check`
+13. Verify: `cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check`
 
 **Commit strategy:** backend entity → backend service → backend controller → migration → frontend types+components → frontend page+i18n+nav
 

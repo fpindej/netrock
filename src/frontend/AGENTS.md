@@ -208,6 +208,31 @@ Nonce-based `script-src`. `style-src: unsafe-inline` required for Svelte transit
 
 API proxy validates `Origin` header on mutations. Same-origin + `ALLOWED_ORIGINS` env var allowed.
 
+## Testing
+
+Uses [vitest](https://vitest.dev/) with the SvelteKit vite config (aliases like `$lib/*` and `$app/*` resolve automatically — no separate vitest config needed).
+
+### Conventions
+
+- **Co-locate tests with source:** `foo.ts` → `foo.test.ts` in the same directory
+- **Structure:** `describe('moduleName')` → `it('does X')` with explicit imports from `vitest`
+- **Import from vitest:** `import { describe, it, expect, vi } from 'vitest'` (no implicit globals)
+
+### Mocking
+
+- **`vi.mock('$app/...')`** — mock SvelteKit modules (`$app/navigation`, `$app/stores`, etc.)
+- **`vi.mock('$lib/...')`** — mock internal modules by path
+- **`vi.fn()`** — mock individual functions; `vi.spyOn()` for partial mocks
+- Reset mocks in `beforeEach` or use `vi.restoreAllMocks()` to prevent test bleed
+
+### Running
+
+```bash
+pnpm run test              # all tests (CI mode)
+pnpm run test:watch        # watch mode
+pnpm run test -- -t "name" # filter by test name
+```
+
 ## Don'ts
 
 - `export let` — use `$props()`
