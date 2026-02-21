@@ -4,10 +4,10 @@ import { SERVER_CONFIG } from '$lib/config/server';
 import { getUser } from '$lib/auth';
 
 export const load: LayoutServerLoad = async ({ locals, fetch, url }) => {
-	const { user, error } = await getUser(fetch, url.origin);
+	const { user, error: backendError } = await getUser(fetch, url.origin);
 	return {
 		user,
-		backendError: error,
+		backendError,
 		locale: locals.locale,
 		apiUrl: dev ? SERVER_CONFIG.API_URL : undefined
 	};

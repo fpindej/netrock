@@ -21,6 +21,7 @@ export function createAuthMiddleware(
 	onAuthFailure?: () => void | Promise<void>
 ): Middleware {
 	let refreshPromise: Promise<Response> | null = null;
+	let failureHandled = false;
 
 	return {
 		async onResponse({ request, response }) {
@@ -35,6 +36,7 @@ export function createAuthMiddleware(
 
 			// Deduplicate concurrent refresh calls into a single request
 			if (!refreshPromise) {
+				failureHandled = false;
 				const refreshUrl = baseUrl ? `${baseUrl}/api/auth/refresh` : '/api/auth/refresh';
 				refreshPromise = fetchFn(refreshUrl, { method: 'POST' }).finally(() => {
 					refreshPromise = null;
@@ -45,12 +47,18 @@ export function createAuthMiddleware(
 			try {
 				refreshResponse = await refreshPromise;
 			} catch {
-				onAuthFailure?.();
+				if (!failureHandled) {
+					failureHandled = true;
+					onAuthFailure?.();
+				}
 				return undefined;
 			}
 
 			if (!refreshResponse.ok) {
-				onAuthFailure?.();
+				if (!failureHandled) {
+					failureHandled = true;
+					onAuthFailure?.();
+				}
 				return undefined;
 			}
 
