@@ -11,13 +11,14 @@ Replaced the hand-rolled `fetchWithAuth` wrapper in the API client with openapi-
 
 | File | Change | Reason |
 |------|--------|--------|
-| `src/frontend/src/lib/api/client.ts` | Replaced `fetchWithAuth` wrapper with `createAuthMiddleware` using openapi-fetch `Middleware` type. Added `setAuthFailureHandler` for navigation-aware auth failure callback. | Clean separation of auth logic via the library's middleware API instead of wrapping fetch |
-| `src/frontend/src/lib/api/index.ts` | Added `setAuthFailureHandler` to barrel export | Allow root layout to wire up auth failure handling |
+| `src/frontend/src/lib/api/client.ts` | Auth-agnostic client factory — `createApiClient()` accepts `middleware[]`, `browserClient` created bare | Clean separation: API plumbing knows nothing about auth |
+| `src/frontend/src/lib/api/index.ts` | Exports `createApiClient`, `browserClient` (no auth exports) | API barrel stays auth-agnostic |
+| `src/frontend/src/lib/auth/middleware.ts` | `createAuthMiddleware()` — 401 refresh, retry, failure callback | All auth logic consolidated under `lib/auth/` |
 | `src/frontend/src/lib/auth/auth.ts` | `getUser()` now returns `GetUserResult` with `{ user, error }` instead of `User \| null`. Added `GetUserResult` interface. | Distinguish "not authenticated" from "backend unavailable" |
 | `src/frontend/src/lib/auth/index.ts` | Added `GetUserResult` type re-export | Barrel export consistency |
 | `src/frontend/src/routes/+layout.server.ts` | Destructures `{ user, error }` from `getUser()`, passes `backendError` to children | Propagate backend error state to child layouts |
 | `src/frontend/src/routes/(app)/+layout.server.ts` | Added `backendError` check → throws 503 before redirect check | Prevent misleading redirect to login when backend is down |
-| `src/frontend/src/routes/+layout.svelte` | Added `setAuthFailureHandler` call in `onMount` with toast + `invalidateAll` + `goto('/login')` | Wire up session expiry UX — toast notification and redirect |
+| `src/frontend/src/routes/+layout.svelte` | Wires `createAuthMiddleware` into `browserClient.use()` in `onMount` with toast + redirect | Auth middleware injected at runtime — no module-level mutable state |
 | `src/frontend/src/routes/api/[...path]/+server.ts` | Renamed `COOKIE_AUTH_ENDPOINTS` → `COOKIE_AUTH_PATHS` with expanded docs | Clarity — the list controls `?useCookies=true` injection, not generic auth |
 | `src/frontend/src/messages/en.json` | Added `auth_sessionExpired_title` and `auth_sessionExpired_description` | i18n for session expiry toast |
 | `src/frontend/src/messages/cs.json` | Added Czech translations for session expiry keys | i18n parity |
@@ -37,11 +38,11 @@ Replaced the hand-rolled `fetchWithAuth` wrapper in the API client with openapi-
 - **Alternatives considered**: Retry all methods, or buffer request bodies for safe replay
 - **Reasoning**: Automatically retrying a POST after refresh could cause double-submission (e.g., creating two orders). The caller already has the context to retry manually. This matches industry best practices for auth interceptors.
 
-### Module-level `setAuthFailureHandler` instead of constructor parameter
+### Auth middleware wired via `browserClient.use()` in layout
 
-- **Choice**: `browserClient` is created at module scope and auth failure handling is wired later via `setAuthFailureHandler()`
-- **Alternatives considered**: Lazy-initialize `browserClient` via `initBrowserClient()` called from the root layout
-- **Reasoning**: 24 files import `browserClient` at the top level. Making it lazy (`let browserClient`) would require either null checks everywhere or `!` assertions. The settable callback pattern keeps `browserClient` always defined while allowing the root layout to wire up navigation-dependent behavior in `onMount`.
+- **Choice**: `browserClient` is created bare at module scope; the root layout calls `browserClient.use(createAuthMiddleware(...))` in `onMount`
+- **Alternatives considered**: (a) Module-level `setAuthFailureHandler()` callback pattern, (b) Lazy-initialize `browserClient` via `initBrowserClient()` called from the root layout
+- **Reasoning**: 24 files import `browserClient` at the top level. Making it lazy would require null checks or `!` assertions everywhere. Using openapi-fetch's `.use()` lets us keep `browserClient` always defined while injecting auth behaviour at runtime. The failure callback is passed directly as a closure — no module-level mutable state needed.
 
 ### Structured `GetUserResult` over nullable `User`
 
