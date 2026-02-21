@@ -269,8 +269,37 @@ The current system is **instruction-heavy but autonomy-light**. The model has de
 
 ## Follow-Up Items
 
-- [ ] Implement P0 trimming (backend AGENTS.md, frontend AGENTS.md, root AGENTS.md)
-- [ ] Implement P1 deduplication pass
-- [ ] Rewrite commands with inline steps and fewer upfront questions
-- [ ] Add session-start hook and .claudeignore
-- [ ] Add missing SKILLS.md recipes
+- [x] Implement P0 trimming (backend AGENTS.md, frontend AGENTS.md, root AGENTS.md)
+- [x] Implement P1 deduplication pass
+- [x] Rewrite commands with inline steps and fewer upfront questions
+- [x] Add session-start hook and .claudeignore
+- [ ] Add missing SKILLS.md recipes (audit actions, captcha endpoints)
+
+---
+
+## Post-Review Fixes (Second Pass)
+
+A follow-up review identified several issues in the initial implementation. All were fixed:
+
+### Bugs Fixed
+
+1. **`.claudeignore` migration path mismatch**: The ignore file referenced `Features/Postgres/Migrations/` but the corrected migration commands output to `Persistence/Migrations/`. Added the new path to `.claudeignore`.
+
+2. **`/create-pr` session doc wording**: Changed "Create or update" to "Create" — `.claudeignore` excludes `docs/sessions/`, so the agent can write but not read existing session docs. "Update" was misleading.
+
+3. **CLAUDE.md autonomous behaviors — session doc trigger too broad**: Every PR (including typo fixes) would auto-generate a session doc. Added threshold: "for non-trivial PRs (3+ commits or 5+ files)."
+
+### Missing Content Restored
+
+4. **Pagination pattern**: `PaginatedRequest`/`PaginatedResponse<T>` and `Paginate()` extension method were completely absent from backend AGENTS.md. Added one-liner under Repository Pattern.
+
+5. **Caching pattern**: `ICacheService`, `CacheKeys` constants, and `UserCacheInvalidationInterceptor` were missing. Added new Caching section to backend AGENTS.md.
+
+### Infrastructure Improvements
+
+6. **Docker check in session start hook**: Added `docker info` check to `.claude/settings.json` hook — catches Docker not running before confusing build failures occur.
+
+### Remaining Follow-Ups
+
+- [ ] Add missing SKILLS.md recipes (audit actions, captcha endpoints, role hierarchy changes)
+- [ ] Consider adding `allowedTools` or other project-level settings to `.claude/settings.json` in the future

@@ -6,9 +6,9 @@ Create a pull request for the current branch.
 2. Review all branch commits: `git log master..HEAD --oneline`
 3. Push if needed: `git push -u origin $(git branch --show-current)`
 
-**Session documentation (auto-generate):**
+**Session documentation (auto-generate for non-trivial PRs — 3+ commits or 5+ files changed):**
 
-4. Create or update `docs/sessions/{YYYY-MM-DD}-{topic-slug}.md` per `docs/sessions/README.md`:
+4. Create `docs/sessions/{YYYY-MM-DD}-{topic-slug}.md` per `docs/sessions/README.md`:
    - Summarize all commits on the branch
    - List files changed with reasons
    - Document key decisions and reasoning

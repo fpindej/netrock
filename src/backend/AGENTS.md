@@ -172,6 +172,12 @@ Permission changes on a role → invalidate refresh tokens + rotate security sta
 
 Custom repositories: extend `IBaseEntityRepository<T>` in Application, implement in Infrastructure with `BaseEntityRepository<T>`. Return materialized objects only — never `IQueryable`.
 
+Pagination: `Paginate(PaginatedRequest)` extension on `IQueryable<T>` returns `PaginatedResponse<T>`. Use in custom repository methods for list endpoints.
+
+## Caching
+
+`ICacheService` wraps `IDistributedCache` (Redis). Keys defined in `CacheKeys` constants. `UserCacheInvalidationInterceptor` auto-clears user cache on entity changes.
+
 ## OpenAPI
 
 - `/// <summary>` on every controller action and DTO property → generates OAS descriptions

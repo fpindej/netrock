@@ -57,7 +57,7 @@ Do these automatically — never wait to be asked:
 | **Modifying existing files** | Check FILEMAP.md for downstream impact before editing. Update all affected files in the same commit. |
 | **Backend API change** (endpoint, DTO, response shape) | Regenerate frontend types (`pnpm run api:generate`), fix type errors. |
 | **Logically complete unit of work** | Commit immediately with Conventional Commit message. Don't batch, don't ask. |
-| **Creating a PR** (`/create-pr`) | Auto-generate or update session doc in `docs/sessions/`. |
+| **Creating a PR** (`/create-pr`) | Auto-generate session doc in `docs/sessions/` for non-trivial PRs (3+ commits or 5+ files). |
 | **Adding any feature** | Write tests alongside the implementation — component, API integration, validator as applicable. |
 | **Build/test failure** | Read the error, fix it, re-run. Repeat until green. Don't stop and report the error unless stuck after 3 attempts. |
 | **Unclear requirement** | Infer from context and existing patterns first. Ask the user only when genuinely ambiguous (multiple valid approaches with different tradeoffs). |
