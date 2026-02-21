@@ -30,12 +30,19 @@ src/
 
 ## API Client
 
-`createApiClient()` creates a typed openapi-fetch client that accepts a `middleware[]` parameter. The client itself is auth-agnostic — auth refresh is handled by `createAuthMiddleware()` from `$lib/auth`.
+Two layers: `lib/api/` (auth-agnostic client factory) and `lib/auth/` (all auth concerns).
 
-- **`browserClient`**: created bare in `$lib/api/client.ts`. Auth middleware is wired in the root layout via `browserClient.use()` in `onMount`.
-- **Server client**: `createApiClient(fetch, url.origin)` in load functions. No auth middleware needed — SvelteKit's `fetch` handles cookie forwarding.
+| Export                                                 | Module      | Purpose                                                                                 |
+| ------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------- |
+| `createApiClient(fetch?, baseUrl?, middleware?)`       | `$lib/api`  | Creates typed openapi-fetch client. Server load functions pass `fetch` + `url.origin`.  |
+| `browserClient`                                        | `$lib/api`  | Singleton for client-side code. Created bare — auth wired at runtime.                   |
+| `initBrowserAuth(middleware)`                          | `$lib/api`  | Registers auth middleware on `browserClient` exactly once (idempotent guard).           |
+| `createAuthMiddleware(fetch, baseUrl, onAuthFailure?)` | `$lib/auth` | 401 → deduplicated refresh → retry idempotent methods only.                             |
+| `getUser(fetch, origin)`                               | `$lib/auth` | Returns `GetUserResult` — distinguishes "not authenticated" from "backend unavailable". |
 
-Auth middleware flow: 401 → deduplicated refresh → retry idempotent methods only (GET/HEAD/OPTIONS). Non-idempotent methods return 401 to caller (prevents double-submission). On refresh failure → `onAuthFailure` callback (browser: toast + redirect to `/login`).
+**Auth middleware wiring** — the root layout calls `initBrowserAuth()` in `onMount`. The guard prevents middleware stacking on HMR/remounts. Server clients never get auth middleware (SvelteKit's `fetch` forwards cookies automatically).
+
+**Auth middleware flow**: 401 → deduplicated refresh → retry GET/HEAD/OPTIONS only. Non-idempotent methods return 401 to caller (prevents double-submission). On refresh failure → `onAuthFailure` callback (toast + redirect to `/login`).
 
 ### Type Generation
 

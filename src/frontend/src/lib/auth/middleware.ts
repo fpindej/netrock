@@ -18,7 +18,7 @@ const IDEMPOTENT_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 export function createAuthMiddleware(
 	fetchFn: typeof fetch,
 	baseUrl: string,
-	onAuthFailure?: () => void
+	onAuthFailure?: () => void | Promise<void>
 ): Middleware {
 	let refreshPromise: Promise<Response> | null = null;
 

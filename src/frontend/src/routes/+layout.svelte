@@ -4,21 +4,20 @@
 	import { onMount } from 'svelte';
 	import { initTheme } from '$lib/state/theme.svelte';
 	import * as m from '$lib/paraglide/messages';
-	import { Toaster } from '$lib/components/ui/sonner';
+	import { Toaster, toast } from '$lib/components/ui/sonner';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { globalShortcuts } from '$lib/state/shortcuts.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { logout, createAuthMiddleware } from '$lib/auth';
-	import { browserClient } from '$lib/api';
-	import { toast } from '$lib/components/ui/sonner';
+	import { initBrowserAuth } from '$lib/api';
 	import { ShortcutsHelp } from '$lib/components/layout';
 	import { toggleSidebar } from '$lib/state';
 
 	let { children } = $props();
 
 	onMount(() => {
-		browserClient.use(
+		initBrowserAuth(
 			createAuthMiddleware(fetch, '', async () => {
 				toast.error(m.auth_sessionExpired_title(), {
 					description: m.auth_sessionExpired_description()
