@@ -39,6 +39,7 @@ Both auto-handle 401 → refresh → retry. Server-side for initial data, client
 **Never hand-edit `v1.d.ts`.** Regenerate: `pnpm run api:generate` (backend must be running).
 
 Type aliases in `$lib/types/index.ts`:
+
 ```typescript
 import type { components } from '$lib/api/v1';
 export type User = components['schemas']['UserResponse'];
@@ -70,22 +71,26 @@ let fieldErrors = $state<Record<string, string>>({});
 
 const { response, error } = await browserClient.PATCH('/api/...', { body });
 if (response.ok) {
-    toast.success(m.success());
+	toast.success(m.success());
 } else {
-    handleMutationError(response, error, {
-        cooldown,
-        fallback: m.error(),
-        onValidationError(errors) { fieldErrors = errors; fieldShakes.triggerFields(Object.keys(errors)); }
-    });
+	handleMutationError(response, error, {
+		cooldown,
+		fallback: m.error(),
+		onValidationError(errors) {
+			fieldErrors = errors;
+			fieldShakes.triggerFields(Object.keys(errors));
+		}
+	});
 }
 ```
 
 **Every rate-limited button must show countdown** during cooldown:
+
 ```svelte
 <Button disabled={isLoading || cooldown.active}>
-    {#if cooldown.active}{m.common_waitSeconds({ seconds: cooldown.remaining })}
-    {:else if isLoading}<Loader2 class="me-2 h-4 w-4 animate-spin" />{m.submit()}
-    {:else}{m.submit()}{/if}
+	{#if cooldown.active}{m.common_waitSeconds({ seconds: cooldown.remaining })}
+	{:else if isLoading}<Loader2 class="me-2 h-4 w-4 animate-spin" />{m.submit()}
+	{:else}{m.submit()}{/if}
 </Button>
 ```
 
@@ -94,16 +99,22 @@ if (response.ok) {
 ### Props
 
 Always `interface Props` + destructure from `$props()`:
+
 ```svelte
 <script lang="ts">
-    interface Props { user: User; onSave?: (data: FormData) => void; class?: string; }
-    let { user, onSave, class: className }: Props = $props();
+	interface Props {
+		user: User;
+		onSave?: (data: FormData) => void;
+		class?: string;
+	}
+	let { user, onSave, class: className }: Props = $props();
 </script>
 ```
 
 ### Organization
 
 Feature folders in `$lib/components/{feature}/` with barrel `index.ts`. Import via barrel only:
+
 ```typescript
 import { ProfileForm, AvatarDialog } from '$lib/components/profile';
 ```
@@ -116,14 +127,14 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 
 ### Logical Properties Only
 
-| Physical (never use) | Logical (always use) |
-|---|---|
-| `ml-*` / `mr-*` | `ms-*` / `me-*` |
-| `pl-*` / `pr-*` | `ps-*` / `pe-*` |
-| `left-*` / `right-*` | `start-*` / `end-*` |
+| Physical (never use)       | Logical (always use)      |
+| -------------------------- | ------------------------- |
+| `ml-*` / `mr-*`            | `ms-*` / `me-*`           |
+| `pl-*` / `pr-*`            | `ps-*` / `pe-*`           |
+| `left-*` / `right-*`       | `start-*` / `end-*`       |
 | `text-left` / `text-right` | `text-start` / `text-end` |
-| `border-l` / `border-r` | `border-s` / `border-e` |
-| `space-x-*` on flex/grid | `gap-*` (preferred) |
+| `border-l` / `border-r`    | `border-s` / `border-e`   |
+| `space-x-*` on flex/grid   | `gap-*` (preferred)       |
 
 ### Responsive Design (Mobile-First)
 
@@ -175,13 +186,13 @@ Add to both `en.json` and `cs.json`. Use: `import * as m from '$lib/paraglide/me
 
 `.svelte.ts` files in `$lib/state/` only. Never mix reactive state with pure utilities.
 
-| File | Exports |
-|---|---|
-| `cooldown.svelte.ts` | `createCooldown()` — rate-limit countdown |
-| `shake.svelte.ts` | `createShake()`, `createFieldShakes()` |
-| `theme.svelte.ts` | `getTheme()`, `setTheme()`, `toggleTheme()` |
-| `sidebar.svelte.ts` | `sidebarState`, `toggleSidebar()` |
-| `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()` |
+| File                  | Exports                                     |
+| --------------------- | ------------------------------------------- |
+| `cooldown.svelte.ts`  | `createCooldown()` — rate-limit countdown   |
+| `shake.svelte.ts`     | `createShake()`, `createFieldShakes()`      |
+| `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()` |
+| `sidebar.svelte.ts`   | `sidebarState`, `toggleSidebar()`           |
+| `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()`  |
 
 ## Security
 
