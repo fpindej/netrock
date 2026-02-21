@@ -2,8 +2,13 @@ import type { RequestHandler } from './$types';
 import { SERVER_CONFIG } from '$lib/config/server';
 import { isFetchErrorWithCode } from '$lib/api';
 
-/** Auth endpoints that need cookie-based auth for web clients */
-const COOKIE_AUTH_ENDPOINTS = ['auth/login', 'auth/refresh'];
+/**
+ * Auth endpoint paths that receive the `?useCookies=true` query parameter.
+ * These are the only endpoints where the backend needs to set/read HttpOnly
+ * cookies — all other endpoints rely on the cookie being forwarded
+ * automatically by the browser.
+ */
+const COOKIE_AUTH_PATHS = ['auth/login', 'auth/refresh'];
 
 /** HTTP methods that can mutate state and are vulnerable to CSRF */
 const UNSAFE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
@@ -133,7 +138,7 @@ export const fallback: RequestHandler = async ({
 	const targetParams = new URLSearchParams(url.search);
 
 	// Web clients need cookies for auth endpoints
-	if (COOKIE_AUTH_ENDPOINTS.includes(params.path)) {
+	if (COOKIE_AUTH_PATHS.includes(params.path)) {
 		targetParams.set('useCookies', 'true');
 	}
 

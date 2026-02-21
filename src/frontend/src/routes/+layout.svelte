@@ -7,15 +7,24 @@
 	import { Toaster } from '$lib/components/ui/sonner';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { globalShortcuts } from '$lib/state/shortcuts.svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { logout } from '$lib/auth';
+	import { setAuthFailureHandler } from '$lib/api';
+	import { toast } from '$lib/components/ui/sonner';
 	import { ShortcutsHelp } from '$lib/components/layout';
 	import { toggleSidebar } from '$lib/state';
 
 	let { children } = $props();
 
 	onMount(() => {
+		setAuthFailureHandler(async () => {
+			toast.error(m.auth_sessionExpired_title(), {
+				description: m.auth_sessionExpired_description()
+			});
+			await invalidateAll();
+			await goto(resolve('/login'));
+		});
 		return initTheme();
 	});
 

@@ -6,7 +6,7 @@
 src/
 ├── lib/
 │   ├── api/                       # client.ts, error-handling.ts, mutation.ts, v1.d.ts (GENERATED)
-│   ├── auth/auth.ts               # getUser(), logout()
+│   ├── auth/                      # auth.ts (getUser, logout), middleware.ts (token refresh)
 │   ├── components/
 │   │   ├── ui/                    # shadcn (generated, customizable)
 │   │   ├── auth/                  # LoginForm, RegisterDialog, ForgotPasswordForm, TurnstileWidget
@@ -30,9 +30,12 @@ src/
 
 ## API Client
 
-Two clients: `browserClient` (component code) and `createApiClient(fetch, url.origin)` (server load functions).
+`createApiClient()` creates a typed openapi-fetch client that accepts a `middleware[]` parameter. The client itself is auth-agnostic — auth refresh is handled by `createAuthMiddleware()` from `$lib/auth`.
 
-Both auto-handle 401 → refresh → retry. Server-side for initial data, client-side for mutations.
+- **`browserClient`**: created bare in `$lib/api/client.ts`. Auth middleware is wired in the root layout via `browserClient.use()` in `onMount`.
+- **Server client**: `createApiClient(fetch, url.origin)` in load functions. No auth middleware needed — SvelteKit's `fetch` handles cookie forwarding.
+
+Auth middleware flow: 401 → deduplicated refresh → retry idempotent methods only (GET/HEAD/OPTIONS). Non-idempotent methods return 401 to caller (prevents double-submission). On refresh failure → `onAuthFailure` callback (browser: toast + redirect to `/login`).
 
 ### Type Generation
 
@@ -71,16 +74,13 @@ let fieldErrors = $state<Record<string, string>>({});
 
 const { response, error } = await browserClient.PATCH('/api/...', { body });
 if (response.ok) {
-	toast.success(m.success());
+    toast.success(m.success());
 } else {
-	handleMutationError(response, error, {
-		cooldown,
-		fallback: m.error(),
-		onValidationError(errors) {
-			fieldErrors = errors;
-			fieldShakes.triggerFields(Object.keys(errors));
-		}
-	});
+    handleMutationError(response, error, {
+        cooldown,
+        fallback: m.error(),
+        onValidationError(errors) { fieldErrors = errors; fieldShakes.triggerFields(Object.keys(errors)); }
+    });
 }
 ```
 
@@ -88,9 +88,9 @@ if (response.ok) {
 
 ```svelte
 <Button disabled={isLoading || cooldown.active}>
-	{#if cooldown.active}{m.common_waitSeconds({ seconds: cooldown.remaining })}
-	{:else if isLoading}<Loader2 class="me-2 h-4 w-4 animate-spin" />{m.submit()}
-	{:else}{m.submit()}{/if}
+    {#if cooldown.active}{m.common_waitSeconds({ seconds: cooldown.remaining })}
+    {:else if isLoading}<Loader2 class="me-2 h-4 w-4 animate-spin" />{m.submit()}
+    {:else}{m.submit()}{/if}
 </Button>
 ```
 
@@ -102,12 +102,8 @@ Always `interface Props` + destructure from `$props()`:
 
 ```svelte
 <script lang="ts">
-	interface Props {
-		user: User;
-		onSave?: (data: FormData) => void;
-		class?: string;
-	}
-	let { user, onSave, class: className }: Props = $props();
+    interface Props { user: User; onSave?: (data: FormData) => void; class?: string; }
+    let { user, onSave, class: className }: Props = $props();
 </script>
 ```
 
@@ -127,14 +123,14 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 
 ### Logical Properties Only
 
-| Physical (never use)       | Logical (always use)      |
-| -------------------------- | ------------------------- |
-| `ml-*` / `mr-*`            | `ms-*` / `me-*`           |
-| `pl-*` / `pr-*`            | `ps-*` / `pe-*`           |
-| `left-*` / `right-*`       | `start-*` / `end-*`       |
+| Physical (never use) | Logical (always use) |
+| --- | --- |
+| `ml-*` / `mr-*` | `ms-*` / `me-*` |
+| `pl-*` / `pr-*` | `ps-*` / `pe-*` |
+| `left-*` / `right-*` | `start-*` / `end-*` |
 | `text-left` / `text-right` | `text-start` / `text-end` |
-| `border-l` / `border-r`    | `border-s` / `border-e`   |
-| `space-x-*` on flex/grid   | `gap-*` (preferred)       |
+| `border-l` / `border-r` | `border-s` / `border-e` |
+| `space-x-*` on flex/grid | `gap-*` (preferred) |
 
 ### Responsive Design (Mobile-First)
 
@@ -156,11 +152,11 @@ CSS variables in `themes.css` (`:root` + `.dark`), mapped in `tailwind.css` (`@t
 ## Routing & Auth
 
 ```
-hooks.server.ts → +layout.server.ts (root: getUser) → (app)/+layout.server.ts (redirect if no user)
+hooks.server.ts → +layout.server.ts (root: getUser) → (app)/+layout.server.ts (503 if backend down, redirect if no user)
                                                       → (public)/login (redirect if user exists)
 ```
 
-Root layout fetches user **once**. Child layouts use `parent()` — never re-fetch.
+Root layout fetches user **once** via `getUser()` which returns `GetUserResult` — distinguishes "not authenticated" (null user, no error) from "backend unavailable" (null user, error set). The `(app)` layout throws 503 when backend is down instead of incorrectly redirecting to login. Child layouts use `parent()` — never re-fetch.
 
 ### Permission Guards
 
@@ -186,13 +182,13 @@ Add to both `en.json` and `cs.json`. Use: `import * as m from '$lib/paraglide/me
 
 `.svelte.ts` files in `$lib/state/` only. Never mix reactive state with pure utilities.
 
-| File                  | Exports                                     |
-| --------------------- | ------------------------------------------- |
-| `cooldown.svelte.ts`  | `createCooldown()` — rate-limit countdown   |
-| `shake.svelte.ts`     | `createShake()`, `createFieldShakes()`      |
-| `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()` |
-| `sidebar.svelte.ts`   | `sidebarState`, `toggleSidebar()`           |
-| `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()`  |
+| File | Exports |
+| --- | --- |
+| `cooldown.svelte.ts` | `createCooldown()` — rate-limit countdown |
+| `shake.svelte.ts` | `createShake()`, `createFieldShakes()` |
+| `theme.svelte.ts` | `getTheme()`, `setTheme()`, `toggleTheme()` |
+| `sidebar.svelte.ts` | `sidebarState`, `toggleSidebar()` |
+| `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()` |
 
 ## Security
 
