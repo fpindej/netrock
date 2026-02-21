@@ -1,22 +1,34 @@
 Create a new frontend page with routing, i18n, and navigation.
 
-Ask the user for:
-1. **Page name/route** (e.g., `orders`, `admin/reports`)
-2. **Route group** — `(app)` for authenticated (default), `(public)` for unauthenticated
-3. **Does it need server-side data?** (API calls on load)
-4. **Components needed** (list of UI elements on the page)
+Infer route, route group, components needed, and data requirements from context. Default to `(app)` (authenticated). Ask only if genuinely ambiguous.
 
-## Execution
+## Steps
 
-Follow **SKILLS.md** — combine these recipes in order:
-1. "Add a Component" — for each component needed
-2. "Add a Page" — route, server load, i18n, navigation
-3. "Style & Responsive Design Pass" — verify responsive behavior
+**Components (if needed):**
 
-Read `src/frontend/AGENTS.md` for conventions on Svelte 5 patterns, component organization, and styling rules.
+1. Create feature folder: `src/frontend/src/lib/components/{feature}/`
+2. Create components with `interface Props` + `$props()`
+3. Create barrel `index.ts` exporting all components
 
-Verify: `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check`
+**Page:**
 
-Commit strategy (atomic):
-1. `feat({feature}): add {feature} components` — components + barrel
-2. `feat({feature}): add {feature} page` — route + server load + i18n + nav
+4. Create route directory: `src/frontend/src/routes/(app)/{feature}/`
+   - Or `(public)/{feature}/` for unauthenticated pages
+5. Create `+page.svelte` with `<svelte:head>` using i18n title
+6. If server data needed: create `+page.server.ts` using `createApiClient(fetch, url.origin)`
+7. If permission-guarded: add check in `+page.server.ts`:
+   ```typescript
+   if (!hasPermission(user, Permissions.Feature.View)) throw redirect(303, '/');
+   ```
+
+**Integration:**
+
+8. Add i18n keys to both `en.json` and `cs.json`
+9. Add navigation entry in `SidebarNav.svelte` (with `permission` field if guarded)
+
+**Verify and commit:**
+
+10. `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check` — fix errors, loop until green
+11. Commit: `feat({feature}): add {feature} page`
+
+Paraglide module errors (~32) are expected at check time — ignore those. Fix everything else.

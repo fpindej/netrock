@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '=== NETrock Environment Check ===' && (dotnet --version 2>/dev/null && echo '✓ .NET SDK' || echo '✗ .NET SDK not found') && (cd src/frontend && pnpm --version 2>/dev/null && echo '✓ pnpm' || echo '✗ pnpm not found') && (dotnet tool list -g 2>/dev/null | grep -q 'dotnet-ef' && echo '✓ dotnet-ef tool' || echo '✗ dotnet-ef not installed (run: dotnet tool restore)') && (docker info >/dev/null 2>&1 && echo '✓ Docker' || echo '✗ Docker not running') && echo '=== Ready ==='",
+            "timeout": 15000
+          }
+        ]
+      }
+    ]
+  }
+}

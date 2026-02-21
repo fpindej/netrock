@@ -1,21 +1,32 @@
 Create a new backend entity with EF Core configuration and migration.
 
-Ask the user for:
-1. **Entity name** (PascalCase, e.g., `Order`)
-2. **Properties** (name, type, nullability)
-3. **Feature name** (usually same as entity, but may differ)
-4. **Any enum properties** (if yes, ask for enum members with explicit integer values)
+Infer entity name, properties, feature name, and enum values from context. Ask only if the entity's purpose or key properties are genuinely ambiguous.
 
-## Execution
+## Steps
 
-Follow **SKILLS.md → "Add an Entity (End-to-End)"**, but stop after Infrastructure (skip Application/WebApi — those are for `/new-endpoint`).
+**Domain:**
 
-Scope: Domain entity → error messages → EF config → DbSet → migration.
+1. Create `src/backend/MyProject.Domain/Entities/{Entity}.cs`:
+   - Extend `BaseEntity`, private setters, protected parameterless ctor, public ctor with `Id = Guid.NewGuid()`
+2. If enums: create alongside entity with explicit integer values
+3. Add error messages to `src/backend/MyProject.Shared/ErrorMessages.cs`
 
-Read `src/backend/AGENTS.md` for conventions on entity design, EF configuration, and the Options pattern if needed.
+**Infrastructure:**
 
-After the migration, verify with `dotnet build src/backend/MyProject.slnx`.
+4. Create EF config `Infrastructure/Features/{Feature}/Configurations/{Entity}Configuration.cs`:
+   - Extend `BaseEntityConfiguration<T>`, mark `internal`, `.HasComment()` on enum columns
+5. Add `DbSet<{Entity}>` to `Infrastructure/Persistence/MyProjectDbContext.cs`
+6. Run migration:
+   ```bash
+   dotnet ef migrations add Add{Entity} \
+     --project src/backend/MyProject.Infrastructure \
+     --startup-project src/backend/MyProject.WebApi \
+     --output-dir Persistence/Migrations
+   ```
 
-Commit: `feat({feature}): add {Entity} entity and EF configuration`
+**Verify and commit:**
 
-Check **FILEMAP.md** impact tables if modifying an existing entity instead of creating a new one.
+7. `dotnet build src/backend/MyProject.slnx` — fix errors, loop until green
+8. Commit: `feat({feature}): add {Entity} entity and EF configuration`
+
+> This command stops at Infrastructure. Use `/new-endpoint` to add service, controller, and API surface.

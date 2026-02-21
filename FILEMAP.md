@@ -6,6 +6,18 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 
 ---
 
+## Top 5 Most Common Changes
+
+| Change | Must also update |
+|---|---|
+| **Add/change domain entity property** | EF config → migration → Application DTOs → WebApi DTOs → mapper → `pnpm run api:generate` → frontend |
+| **Add backend endpoint** | Controller + DTOs + validator + mapper → `pnpm run api:generate` → frontend types → frontend calls |
+| **Change WebApi response DTO** | Mapper, `Api.Tests/Contracts/ResponseContracts.cs`, `pnpm run api:generate`, frontend components |
+| **Add permission** | `AppPermissions.cs` → `[RequirePermission]` → seed in `ApplicationBuilderExtensions` → frontend `permissions.ts` → sidebar + page guards |
+| **Add i18n key** | Both `en.json` AND `cs.json` — always both files |
+
+---
+
 ## Change Impact Tables
 
 ### Backend Changes

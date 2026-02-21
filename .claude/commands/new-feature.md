@@ -1,36 +1,36 @@
 Create a full-stack feature: backend entity through to frontend page.
 
-Ask the user for:
-1. **Feature name** (e.g., `Orders`)
-2. **Entity properties** (name, type, nullability, enums)
-3. **Endpoints needed** (CRUD or custom — methods, routes, request/response shapes)
-4. **Frontend page details** (route, components, data display)
-5. **Authorization** (public, authenticated, role-based?)
+Infer everything possible from the feature description. Ask only when genuinely ambiguous (multiple valid designs with different tradeoffs). Prefer conventions from existing features.
 
-## Execution
+## Steps
 
-Follow **SKILLS.md → "Add a Full-Stack Feature"**, which chains these recipes:
+This chains entity → service/API → frontend. Commit atomically after each logical unit.
 
-1. Backend: "Add an Entity" (all layers) → verify build
-2. Migration → verify build
-3. Frontend: "Regenerate API Types" → "Add a Component" → "Add a Page"
-4. "Style & Responsive Design Pass" on the new page
+**Backend — Entity (see SKILLS.md "Add an Entity"):**
 
-Read `src/backend/AGENTS.md` and `src/frontend/AGENTS.md` for layer-specific conventions.
+1. Domain: entity + enums + error messages
+2. Infrastructure: EF config + DbSet + migration
+3. Verify: `dotnet build src/backend/MyProject.slnx` — loop until green
+4. Commit: `feat({feature}): add {Entity} entity and EF configuration`
 
-Check **FILEMAP.md** impact tables if the feature touches any existing entities or endpoints.
+**Backend — Service & API (see SKILLS.md "Add an Endpoint"):**
 
-Commit strategy (atomic, one per logical unit):
-1. `feat({feature}): add {Entity} entity and EF configuration`
-2. `feat({feature}): add I{Feature}Service and DTOs`
-3. `feat({feature}): implement {Feature}Service`
-4. `feat({feature}): add {Feature}Controller with endpoints`
-5. `feat({feature}): add {Entity} migration`
-6. `feat({feature}): add {feature} page in frontend`
+5. Application: `I{Feature}Service` + Input/Output DTOs
+6. Infrastructure: `{Feature}Service` (internal) + DI extension
+7. WebApi: controller + request/response DTOs + mapper + validators + Program.cs wiring
+8. Write tests: component, API integration, validator
+9. Verify: `dotnet test src/backend/MyProject.slnx -c Release` — loop until green
+10. Commit: `feat({feature}): add {Feature} service and API endpoints`
 
-Verification checklist:
-- `dotnet build src/backend/MyProject.slnx` passes
-- `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check` passes
-- Migration creates expected tables/columns
-- Navigation entry appears in sidebar
-- i18n keys present in both language files
+**Frontend (see SKILLS.md "Add a Page"):**
+
+11. Regenerate types: `cd src/frontend && pnpm run api:generate`
+12. Add type alias to `src/frontend/src/lib/types/index.ts`
+13. Create components in `$lib/components/{feature}/` with barrel `index.ts`
+14. Create page in `routes/(app)/{feature}/`
+15. Add i18n keys to both `en.json` and `cs.json`
+16. Add sidebar navigation entry
+17. Verify: `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check` — loop until green
+18. Commit: `feat({feature}): add {feature} frontend page`
+
+**Always:** If build/check fails, read the error, fix it, re-run. Never stop to report a fixable error.

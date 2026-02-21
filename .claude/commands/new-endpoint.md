@@ -1,24 +1,27 @@
 Add an API endpoint to an existing feature.
 
-Ask the user for:
-1. **Feature name** (existing feature, e.g., `Authentication`, `Admin`, `Users`)
-2. **Operation** (e.g., `GetOrders`, `UpdateStatus`)
-3. **HTTP method and route** (e.g., `GET /api/v1/orders/{id}`)
-4. **Request shape** (if POST/PUT/PATCH — fields with types)
-5. **Response shape** (fields with types)
-6. **Authorization** (public, authenticated, role-based?)
+Infer the feature, operation, HTTP method, route, shapes, and auth from context. Ask only if multiple valid approaches exist and the tradeoffs matter.
 
-## Execution
+## Steps
 
-Follow **SKILLS.md → "Add an Endpoint to an Existing Feature"**.
+1. Determine: feature, operation name, HTTP method, route, request/response shape, auth requirements
+2. Check FILEMAP.md for downstream impact if modifying existing endpoints
 
-Read `src/backend/AGENTS.md` for conventions on controllers, DTOs, mappers, validators, and OpenAPI annotations.
+**Create files (match existing feature patterns — read them first):**
 
-**Breaking change check:** If modifying an existing endpoint's request/response shape, check FILEMAP.md impact tables. Either version the endpoint (v2) or update the frontend in the same PR.
+3. Application DTOs (if new): `Application/Features/{Feature}/Dtos/{Operation}Input.cs` / `{Entity}Output.cs`
+4. Add method to `Application/Features/{Feature}/I{Feature}Service.cs`
+5. Implement in `Infrastructure/Features/{Feature}/Services/{Feature}Service.cs`
+6. WebApi request/response DTOs (if new): `WebApi/Features/{Feature}/Dtos/{Operation}/`
+7. Add mapper methods to `WebApi/Features/{Feature}/{Feature}Mapper.cs`
+8. Add controller action — include `/// <summary>`, `[ProducesResponseType]`, `CancellationToken`
+9. Add FluentValidation validator co-located with request DTO
+10. Write tests: component test for service, API integration test for endpoint, validator test
 
-After building successfully, regenerate frontend types if the backend is running:
-```bash
-cd src/frontend && pnpm run api:generate
-```
+**Verify and commit:**
 
-Commit: `feat({feature}): add {operation} endpoint`
+11. `dotnet build src/backend/MyProject.slnx` — fix errors, loop until green
+12. `dotnet test src/backend/MyProject.slnx -c Release` — fix failures, loop until green
+13. Commit: `feat({feature}): add {operation} endpoint`
+14. Regenerate frontend types: `cd src/frontend && pnpm run api:generate` — fix any type errors
+15. Commit type changes if applicable
