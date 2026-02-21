@@ -9,8 +9,8 @@
 	import { globalShortcuts } from '$lib/state/shortcuts.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { logout } from '$lib/auth';
-	import { setAuthFailureHandler } from '$lib/api';
+	import { logout, createAuthMiddleware } from '$lib/auth';
+	import { browserClient } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { ShortcutsHelp } from '$lib/components/layout';
 	import { toggleSidebar } from '$lib/state';
@@ -18,13 +18,15 @@
 	let { children } = $props();
 
 	onMount(() => {
-		setAuthFailureHandler(async () => {
-			toast.error(m.auth_sessionExpired_title(), {
-				description: m.auth_sessionExpired_description()
-			});
-			await invalidateAll();
-			await goto(resolve('/login'));
-		});
+		browserClient.use(
+			createAuthMiddleware(fetch, '', async () => {
+				toast.error(m.auth_sessionExpired_title(), {
+					description: m.auth_sessionExpired_description()
+				});
+				await invalidateAll();
+				await goto(resolve('/login'));
+			})
+		);
 		return initTheme();
 	});
 
