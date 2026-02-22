@@ -36,6 +36,7 @@ export function createAuthMiddleware(
 	baseUrl: string,
 	onAuthFailure?: () => void | Promise<void>
 ): Middleware {
+	const refreshUrl = `${baseUrl.replace(/\/$/, '')}${REFRESH_PATHNAME}`;
 	let refreshPromise: Promise<Response> | null = null;
 
 	// Guards `onAuthFailure` against concurrent invocations within a single
@@ -61,8 +62,6 @@ export function createAuthMiddleware(
 			// Deduplicate concurrent refresh calls into a single request.
 			if (!refreshPromise) {
 				failureHandled = false;
-				const normalizedBase = baseUrl.replace(/\/$/, '');
-				const refreshUrl = `${normalizedBase}${REFRESH_PATHNAME}`;
 				refreshPromise = fetchFn(refreshUrl, {
 					method: 'POST',
 					credentials: 'same-origin'
