@@ -122,6 +122,77 @@ public class CacheServiceTests
 
     #endregion
 
+    #region GetOrSetAsync — Happy Path
+
+    [Fact]
+    public async Task GetOrSetAsync_WhenCacheHit_ReturnsValueWithoutCallingFactory()
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize("cached-value");
+        _distributedCache
+            .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(System.Text.Encoding.UTF8.GetBytes(json));
+
+        var factoryCalled = false;
+
+        var result = await _sut.GetOrSetAsync(
+            "key",
+            _ =>
+            {
+                factoryCalled = true;
+                return Task.FromResult("factory-value");
+            });
+
+        Assert.Equal("cached-value", result);
+        Assert.False(factoryCalled);
+    }
+
+    [Fact]
+    public async Task GetOrSetAsync_WhenCacheMiss_CallsFactoryAndReturnsResult()
+    {
+        _distributedCache
+            .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns((byte[]?)null);
+
+        var result = await _sut.GetOrSetAsync(
+            "key",
+            _ => Task.FromResult("factory-value"));
+
+        Assert.Equal("factory-value", result);
+    }
+
+    [Fact]
+    public async Task GetOrSetAsync_WhenCacheMiss_CachesFactoryResult()
+    {
+        _distributedCache
+            .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns((byte[]?)null);
+
+        await _sut.GetOrSetAsync(
+            "key",
+            _ => Task.FromResult("factory-value"));
+
+        await _distributedCache.Received(1).SetAsync(
+            "key",
+            Arg.Any<byte[]>(),
+            Arg.Any<DistributedCacheEntryOptions>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetOrSetAsync_WhenFactoryThrows_PropagatesException()
+    {
+        _distributedCache
+            .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns((byte[]?)null);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _sut.GetOrSetAsync<string>(
+                "key",
+                _ => throw new InvalidOperationException("DB failure")));
+    }
+
+    #endregion
+
     #region GetOrSetAsync — Resilience
 
     [Fact]

@@ -7,7 +7,7 @@ namespace MyProject.Infrastructure.Caching.Services;
 /// All reads return <c>default</c>, all writes are ignored, and <see cref="GetOrSetAsync{T}"/>
 /// delegates directly to the factory.
 /// </summary>
-internal class NullCacheService : ICacheService
+internal class NoOpCacheService : ICacheService
 {
     /// <inheritdoc />
     public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)

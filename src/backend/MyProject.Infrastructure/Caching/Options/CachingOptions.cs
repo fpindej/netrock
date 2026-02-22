@@ -38,16 +38,16 @@ public sealed class CachingOptions : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (!Enabled)
-        {
-            yield break;
-        }
-
         if (DefaultExpiration <= TimeSpan.Zero)
         {
             yield return new ValidationResult(
                 "DefaultExpiration must be greater than zero.",
                 [nameof(DefaultExpiration)]);
+        }
+
+        if (!Enabled)
+        {
+            yield break;
         }
 
         if (Redis.Enabled)

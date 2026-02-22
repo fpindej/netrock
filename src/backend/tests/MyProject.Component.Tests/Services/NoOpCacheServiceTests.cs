@@ -3,9 +3,9 @@ using MyProject.Infrastructure.Caching.Services;
 
 namespace MyProject.Component.Tests.Services;
 
-public class NullCacheServiceTests
+public class NoOpCacheServiceTests
 {
-    private readonly NullCacheService _sut = new();
+    private readonly NoOpCacheService _sut = new();
 
     [Fact]
     public async Task GetAsync_ReturnsDefault()
@@ -59,5 +59,16 @@ public class NullCacheServiceTests
         var result = await _sut.GetAsync<string>("key");
 
         Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetOrSetAsync_WhenFactoryThrows_PropagatesException()
+    {
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _sut.GetOrSetAsync<string>(
+                "key",
+                _ => throw new InvalidOperationException("DB failure")));
+
+        Assert.Equal("DB failure", exception.Message);
     }
 }
