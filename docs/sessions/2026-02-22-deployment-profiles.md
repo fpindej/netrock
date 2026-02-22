@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-22
 **Scope:** Deployment infrastructure, frontend runtime config
-**Files changed:** 36 (~700 insertions, ~280 deletions)
+**Files changed:** 40+ (~800 insertions, ~350 deletions)
 
 ## Summary
 
@@ -23,6 +23,9 @@ Overhauled the deployment setup from a flat root-level layout into a structured 
 | `refactor(deploy): replace redis CLI password with config file generation` | Pass Redis password as env var, generate `/tmp/redis.conf` at startup via `printf`+`exec`. Process listing no longer shows the literal password. |
 | `feat(deploy): segment networks into frontend and backend tiers` | Replace flat `app` network with `frontend` (frontend ↔ api) and `backend` (api ↔ db/redis/seq). Explicit `name:` with project slug for multi-tenant host safety. |
 | `refactor(deploy): replace curl with .NET health probe binary` | Remove `curl` from production API image. Add minimal `HealthProbe` console app (zero NuGet deps) for Docker healthcheck. |
+| `refactor(deploy): commit local.env as tracked config file` | Replace `local.env.example` with directly-committed `local.env`. Uncomment JWT lifetimes, issuer/audience, email tokens, logging. JWT secret uses `{INIT_JWT_SECRET}` placeholder. |
+| `fix(deploy): review fixes — env var name, resources, hardening, nits` | Fix `Captcha__SecretKey` env var name, bump resources (API 2CPU/1G, frontend 1CPU/512M, DB 1CPU/1G), add tmpfs `/home/app` for .NET data-protection, increase healthcheck start_period to 60s, pin Seq to 2025, smart error in up.sh/up.ps1. |
+| `fix(deploy): update stale docs and uncomment captcha secret` | Update before-you-ship.md resource limits, uncomment `Captcha__SecretKey` in production.env.example. |
 
 ## Architecture
 
@@ -55,3 +58,6 @@ deploy/
 - **Turnstile scoped to `(public)` layout**: key only serialized into login/register/forgot-password pages, not every page
 - **Two-tier network segmentation** over flat network: frontend cannot reach DB/Redis directly. Slug-prefixed network names for multi-tenant Docker host safety
 - **HealthProbe .NET console app** over `curl` in production image: removes attack surface (curl is a powerful exfiltration tool), uses `dotnet` already present in the image. Zero NuGet dependencies
+- **`local.env` committed** over `.example` + copy: eliminates the `cp` step, makes one file the single source of truth for Docker dev config. Env vars override appsettings (ASP.NET precedence: env vars > JSON files), so developers tune everything from `local.env` without touching appsettings
+- **`{INIT_JWT_SECRET}` placeholder** in committed `local.env`: init script generates random 64-char secret and replaces it via the same sed pipeline as ports/slug. After init commits, the secret is tracked — acceptable for a local dev file
+- **tmpfs `/home/app`** on production API: .NET needs writable home for data-protection keys with `read_only: true`. tmpfs keeps it ephemeral (keys rotate on restart, fine for JWT-based auth)
