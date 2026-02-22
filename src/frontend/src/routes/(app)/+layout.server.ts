@@ -9,7 +9,7 @@ export const load: LayoutServerLoad = async ({ parent }) => {
 	}
 
 	if (!user) {
-		throw redirect(303, '/login');
+		throw redirect(303, '/login?reason=session_expired');
 	}
 
 	return {
