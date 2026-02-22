@@ -38,11 +38,15 @@
 	const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 	onMount(async () => {
-		try {
-			const res = await fetch('/api/health');
-			isApiOnline = res.ok;
-		} catch {
-			isApiOnline = false;
+		for (let attempt = 0; attempt < 3; attempt++) {
+			try {
+				const res = await fetch('/api/health');
+				isApiOnline = res.ok;
+				if (isApiOnline) return;
+			} catch {
+				isApiOnline = false;
+			}
+			await delay(1000);
 		}
 	});
 
