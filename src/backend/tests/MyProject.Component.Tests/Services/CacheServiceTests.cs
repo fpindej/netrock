@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MyProject.Application.Caching;
 using MyProject.Infrastructure.Caching.Options;
 using MyProject.Infrastructure.Caching.Services;
 

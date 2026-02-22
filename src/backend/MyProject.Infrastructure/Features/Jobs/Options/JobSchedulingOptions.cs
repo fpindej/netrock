@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace MyProject.Infrastructure.Features.Jobs.Options;
 
 /// <summary>
@@ -19,5 +21,6 @@ public sealed class JobSchedulingOptions
     /// Gets or sets the number of Hangfire worker threads.
     /// Defaults to the number of logical processors on the machine.
     /// </summary>
+    [Range(1, 1000)]
     public int WorkerCount { get; init; } = Environment.ProcessorCount;
 }
