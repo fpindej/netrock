@@ -4,6 +4,7 @@
 #
 #  Uses pre-built images from a container registry. No dev tools, no source
 #  mounts, no host port exposure for DB/Redis (internal only).
+#  Containers are hardened: read-only root, no new privileges, all caps dropped.
 #
 #  1. Copy and fill in the env template:
 #     cp deploy/envs/production.env.example deploy/envs/production.env
@@ -15,17 +16,59 @@
 
 name: {INIT_PROJECT_SLUG}
 
+x-hardened: &hardened
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  read_only: true
+  tmpfs:
+    - /tmp
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
   api:
     image: ${API_IMAGE}
+    # Paths are relative to --project-directory (repo root), set by up.sh
     env_file: deploy/envs/production.env
     environment:
       ASPNETCORE_ENVIRONMENT: Production
     ports:
       - "${API_PORT:-8080}:8080"
+    <<: *hardened
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   frontend:
     image: ${FRONTEND_IMAGE}
+    # Paths are relative to --project-directory (repo root), set by up.sh
     env_file: deploy/envs/production.env
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
+    <<: *hardened
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  redis:
+    <<: *hardened
+    read_only: false
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  db:
+    <<: *hardened
+    read_only: false
+    deploy:
+      resources:
+        limits:
+          memory: 512M
