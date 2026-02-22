@@ -11,6 +11,13 @@ public sealed class CachingOptions : IValidatableObject
     public const string SectionName = "Caching";
 
     /// <summary>
+    /// Gets or sets a value indicating whether caching is enabled.
+    /// When <c>false</c>, a no-op cache implementation is registered and no
+    /// Redis or in-memory provider is required.
+    /// </summary>
+    public bool Enabled { get; init; } = true;
+
+    /// <summary>
     /// Gets or sets the default cache entry expiration.
     /// Used when no explicit expiration is provided.
     /// Applies to both Redis and InMemory caching.
@@ -31,6 +38,11 @@ public sealed class CachingOptions : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        if (!Enabled)
+        {
+            yield break;
+        }
+
         if (DefaultExpiration <= TimeSpan.Zero)
         {
             yield return new ValidationResult(

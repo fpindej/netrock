@@ -636,16 +636,7 @@ internal class AdminService(
         CancellationToken cancellationToken)
     {
         await userManager.UpdateSecurityStampAsync(user);
-
-        try
-        {
-            await cacheService.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex,
-                "Failed to evict security stamp cache for user '{UserId}' during stamp rotation", userId);
-        }
+        await cacheService.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
     }
 
     /// <summary>
@@ -670,16 +661,7 @@ internal class AdminService(
         }
 
         await userManager.UpdateSecurityStampAsync(user);
-
-        try
-        {
-            await cacheService.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex,
-                "Failed to evict security stamp cache for user '{UserId}' during session revocation", userId);
-        }
+        await cacheService.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
     }
 
     private async Task<IList<string>> GetUserRolesAsync(Guid userId)
@@ -762,15 +744,7 @@ internal class AdminService(
 
     private async Task InvalidateUserCacheAsync(Guid userId)
     {
-        try
-        {
-            await cacheService.RemoveAsync(CacheKeys.User(userId));
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex,
-                "Failed to evict user cache for user '{UserId}'", userId);
-        }
+        await cacheService.RemoveAsync(CacheKeys.User(userId));
     }
 
     /// <summary>
