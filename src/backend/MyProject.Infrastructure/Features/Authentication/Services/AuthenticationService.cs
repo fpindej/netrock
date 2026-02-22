@@ -319,7 +319,7 @@ internal class AuthenticationService(
             <p>You requested a password reset. Click the link below to set a new password:</p>
             <p><a href="{safeResetUrl}">Reset Password</a></p>
             <p>If you didn't request this, you can safely ignore this email.</p>
-            <p>This link will expire in {FormatLifetime(_emailTokenOptions.Lifetime)}.</p>
+            <p>This link will expire in {_emailTokenOptions.Lifetime.ToHumanReadable()}.</p>
             """;
 
         var plainTextBody = $"""
@@ -566,23 +566,5 @@ internal class AuthenticationService(
                 u.PhoneNumber != null
                 && u.PhoneNumber == normalizedPhone
                 && (!excludeUserId.HasValue || u.Id != excludeUserId.Value));
-    }
-
-    /// <summary>
-    /// Formats a <see cref="TimeSpan"/> as a human-readable lifetime string.
-    /// Uses hours if evenly divisible (e.g. "24 hours", "48 hours"), otherwise minutes (e.g. "90 minutes").
-    /// </summary>
-    internal static string FormatLifetime(TimeSpan lifetime)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(lifetime, TimeSpan.FromMinutes(1));
-
-        if (lifetime.TotalHours >= 1 && lifetime.TotalHours % 1 == 0)
-        {
-            var hours = (int)lifetime.TotalHours;
-            return hours == 1 ? "1 hour" : $"{hours} hours";
-        }
-
-        var minutes = (int)lifetime.TotalMinutes;
-        return minutes == 1 ? "1 minute" : $"{minutes} minutes";
     }
 }
