@@ -32,7 +32,7 @@ deploy/
 ├── docker-compose.local.yml        # Local: build from source, Seq, host ports
 ├── docker-compose.production.yml   # Production: pre-built images, hardened
 ├── envs/
-│   ├── local.env.example           # Dev defaults (works out of the box)
+│   ├── local.env                   # Dev defaults (committed, works out of the box)
 │   └── production.env.example      # Production template (documented placeholders)
 ├── build.sh / build.ps1            # Build + tag + push images
 ├── up.sh / up.ps1                  # Environment launcher
@@ -47,7 +47,7 @@ deploy/
 - **Turnstile key as runtime SSR prop** over build-time static: enables single image across environments
 - **YAML anchor `x-hardened`** in production overlay: DRY container hardening (cap_drop, read_only, no-new-privileges, memory limits)
 - **Thin `up.sh` wrapper** over fat orchestration script: resolves paths, validates, then `exec docker compose`
-- **Testing key only in local.env.example**, not base compose: prevents silent CAPTCHA bypass in production
+- **Testing key only in local.env**, not base compose: prevents silent CAPTCHA bypass in production
 - **Redis password via config file** over `--requirepass` CLI flag: password invisible in `ps aux` / `/proc/pid/cmdline`. `exec redis-server` for proper signal handling
 - **Frontend env isolation**: frontend container receives only the vars it needs via compose `environment:` block, never the full env file with backend secrets
 - **Non-root containers**: `USER node` (frontend) and `USER $APP_UID` (backend) for defense-in-depth

@@ -443,21 +443,14 @@ if (Test-Path $frontendEnvExample) {
     Write-SubStep "Created frontend .env.local from .env.example"
 }
 
-$localEnvExample = Join-Path $ScriptDir "deploy\envs\local.env.example"
-$localEnv = Join-Path $ScriptDir "deploy\envs\local.env"
-if (Test-Path $localEnvExample) {
-    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-    $jwtBytes = New-Object byte[] 48
-    $rng.GetBytes($jwtBytes)
-    $rng.Dispose()
-    $jwtSecret = [Convert]::ToBase64String($jwtBytes) -replace '[/+=]', '' | ForEach-Object { $_.Substring(0, [Math]::Min(64, $_.Length)) }
-    $envContent = [System.IO.File]::ReadAllText($localEnvExample)
-    $envContent = $envContent -replace '(?m)^JWT_SECRET_KEY=.*$', "JWT_SECRET_KEY=$jwtSecret"
-    Set-FileContent $localEnv $envContent
-    Write-SubStep "Generated deploy/envs/local.env with random JWT secret"
-}
+# Generate random JWT secret for local development
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$jwtBytes = New-Object byte[] 48
+$rng.GetBytes($jwtBytes)
+$rng.Dispose()
+$JwtSecret = [Convert]::ToBase64String($jwtBytes) -replace '[/+=]', '' | ForEach-Object { $_.Substring(0, [Math]::Min(64, $_.Length)) }
 
-Write-SubStep "Replacing port placeholders..."
+Write-SubStep "Replacing placeholders..."
 $files = Get-ChildItem -Path $ScriptDir -Recurse -File | Where-Object {
     $_.FullName -notmatch "[\\/]\.git[\\/]" -and
     $_.FullName -notmatch "[\\/]bin[\\/]" -and
@@ -473,13 +466,14 @@ foreach ($file in $files) {
         $content = [System.IO.File]::ReadAllText($file.FullName)
         $originalContent = $content
 
-        if ($content -match "\{INIT_FRONTEND_PORT\}|\{INIT_API_PORT\}|\{INIT_DB_PORT\}|\{INIT_REDIS_PORT\}|\{INIT_SEQ_PORT\}|\{INIT_PROJECT_SLUG\}") {
+        if ($content -match "\{INIT_FRONTEND_PORT\}|\{INIT_API_PORT\}|\{INIT_DB_PORT\}|\{INIT_REDIS_PORT\}|\{INIT_SEQ_PORT\}|\{INIT_PROJECT_SLUG\}|\{INIT_JWT_SECRET\}") {
             $content = $content -replace "\{INIT_FRONTEND_PORT\}", $FrontendPort
             $content = $content -replace "\{INIT_API_PORT\}", $ApiPort
             $content = $content -replace "\{INIT_DB_PORT\}", $DbPort
             $content = $content -replace "\{INIT_REDIS_PORT\}", $RedisPort
             $content = $content -replace "\{INIT_SEQ_PORT\}", $SeqPort
             $content = $content -replace "\{INIT_PROJECT_SLUG\}", $ProjectSlug
+            $content = $content -replace "\{INIT_JWT_SECRET\}", $JwtSecret
 
             if ($content -ne $originalContent) {
                 Set-FileContent $file.FullName $content
