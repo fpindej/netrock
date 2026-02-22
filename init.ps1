@@ -443,18 +443,18 @@ if (Test-Path $frontendEnvExample) {
     Write-SubStep "Created frontend .env.local from .env.example"
 }
 
-$rootEnvExample = Join-Path $ScriptDir ".env.example"
-$rootEnv = Join-Path $ScriptDir ".env"
-if (Test-Path $rootEnvExample) {
+$localEnvExample = Join-Path $ScriptDir "deploy\envs\local.env.example"
+$localEnv = Join-Path $ScriptDir "deploy\envs\local.env"
+if (Test-Path $localEnvExample) {
     $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
     $jwtBytes = New-Object byte[] 48
     $rng.GetBytes($jwtBytes)
     $rng.Dispose()
     $jwtSecret = [Convert]::ToBase64String($jwtBytes) -replace '[/+=]', '' | ForEach-Object { $_.Substring(0, [Math]::Min(64, $_.Length)) }
-    $envContent = [System.IO.File]::ReadAllText($rootEnvExample)
+    $envContent = [System.IO.File]::ReadAllText($localEnvExample)
     $envContent = $envContent -replace '(?m)^JWT_SECRET_KEY=.*$', "JWT_SECRET_KEY=$jwtSecret"
-    Set-FileContent $rootEnv $envContent
-    Write-SubStep "Generated .env with random JWT secret"
+    Set-FileContent $localEnv $envContent
+    Write-SubStep "Generated deploy/envs/local.env with random JWT secret"
 }
 
 Write-SubStep "Replacing port placeholders..."
@@ -704,11 +704,11 @@ Start-Process @startArgs
 if ($StartDocker) {
     Write-Step "Starting Docker containers..."
     $ErrorActionPreference = "Continue"
-    docker compose -f docker-compose.local.yml up -d --build
+    & "$ScriptDir\deploy\up.ps1" local up -d --build
     if ($LASTEXITCODE -ne 0) {
         Write-WarnMsg "Docker failed to start. Is Docker running?"
         Write-Info "You can start containers manually later with:"
-        Write-Host "  docker compose -f docker-compose.local.yml up -d --build" -ForegroundColor DarkGray
+        Write-Host "  .\deploy\up.ps1 local up -d --build" -ForegroundColor DarkGray
     }
     else {
         Write-Success "Docker containers started"
@@ -727,7 +727,7 @@ Write-Host ""
 Write-Host "  Quick Start" -ForegroundColor White
 Write-Host "  -------------------------------------"
 Write-Host "  # Start the development environment" -ForegroundColor DarkGray
-Write-Host "  docker compose -f docker-compose.local.yml up -d --build"
+Write-Host "  .\deploy\up.ps1 local up -d --build"
 Write-Host ""
 Write-Host "  # Or run the API directly" -ForegroundColor DarkGray
 Write-Host "  cd src\backend\$NewName.WebApi"

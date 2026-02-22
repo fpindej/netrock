@@ -457,5 +457,5 @@ $RECYCLE.BIN/
 /data/attachments/*
 
 # Environment files (contain secrets)
-.env
-!.env.example
+deploy/envs/*.env
+!deploy/envs/*.env.example

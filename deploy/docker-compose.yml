@@ -1,0 +1,87 @@
+# ══════════════════════════════════════════════════════════════════════════════
+#  Base Service Topology
+# ══════════════════════════════════════════════════════════════════════════════
+#
+#  Shared service definitions, dependencies, health checks, and networks.
+#  Never used standalone — always combined with an environment overlay:
+#
+#    ./deploy/up.sh local up -d --build     (uses docker-compose.local.yml)
+#    ./deploy/up.sh production up -d        (uses docker-compose.production.yml)
+#
+# ══════════════════════════════════════════════════════════════════════════════
+
+services:
+  api:
+    restart: unless-stopped
+    networks:
+      - app
+    environment:
+      ConnectionStrings__Database: Host=db;Port=5432;Database=${POSTGRES_DB:-{INIT_PROJECT_SLUG}};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Caching__Redis__ConnectionString: redis:6379
+      Caching__Redis__Password: ${REDIS_PASSWORD}
+      Authentication__Jwt__Key: ${JWT_SECRET_KEY}
+      Hosting__ReverseProxy__TrustedNetworks__0: 172.16.0.0/12
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - app
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    networks:
+      - app
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-{INIT_PROJECT_SLUG}}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+  frontend:
+    restart: unless-stopped
+    networks:
+      - app
+    environment:
+      API_URL: ${API_URL:-http://api:8080}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      PUBLIC_TURNSTILE_SITE_KEY: ${PUBLIC_TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  db_data:
+  redis_data:
+
+networks:
+  app:
+    driver: bridge

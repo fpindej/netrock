@@ -1,0 +1,31 @@
+# ══════════════════════════════════════════════════════════════════════════════
+#  Production Overlay
+# ══════════════════════════════════════════════════════════════════════════════
+#
+#  Uses pre-built images from a container registry. No dev tools, no source
+#  mounts, no host port exposure for DB/Redis (internal only).
+#
+#  1. Copy and fill in the env template:
+#     cp deploy/envs/production.env.example deploy/envs/production.env
+#
+#  2. Start the stack:
+#     ./deploy/up.sh production up -d
+#
+# ══════════════════════════════════════════════════════════════════════════════
+
+name: {INIT_PROJECT_SLUG}
+
+services:
+  api:
+    image: ${API_IMAGE}
+    env_file: deploy/envs/production.env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "${API_PORT:-8080}:8080"
+
+  frontend:
+    image: ${FRONTEND_IMAGE}
+    env_file: deploy/envs/production.env
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"

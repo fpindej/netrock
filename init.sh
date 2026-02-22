@@ -489,11 +489,11 @@ if [ -f "src/frontend/.env.example" ]; then
     print_substep "Created frontend .env.local from .env.example"
 fi
 
-if [ -f ".env.example" ]; then
+if [ -f "deploy/envs/local.env.example" ]; then
     JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n/+=' | cut -c1-64)
-    cp .env.example .env
-    sed_inplace "s|^JWT_SECRET_KEY=.*|JWT_SECRET_KEY=$JWT_SECRET|" .env
-    print_substep "Generated .env with random JWT secret"
+    cp deploy/envs/local.env.example deploy/envs/local.env
+    sed_inplace "s|^JWT_SECRET_KEY=.*|JWT_SECRET_KEY=$JWT_SECRET|" deploy/envs/local.env
+    print_substep "Generated deploy/envs/local.env with random JWT secret"
 fi
 
 print_substep "Replacing port placeholders..."
@@ -665,12 +665,12 @@ print_success "Init scripts removed"
 # Step 6: Start Docker
 if [[ "$START_DOCKER" == "y" ]]; then
     print_step "Starting Docker containers..."
-    if docker compose -f docker-compose.local.yml up -d --build; then
+    if ./deploy/up.sh local up -d --build; then
         print_success "Docker containers started"
     else
         print_warning "Docker failed to start. Is Docker running?"
         print_info "You can start containers manually later with:"
-        echo "  docker compose -f docker-compose.local.yml up -d --build"
+        echo "  ./deploy/up.sh local up -d --build"
     fi
 fi
 
@@ -685,7 +685,7 @@ echo -e "
   ${BOLD}Quick Start${NC}
   ─────────────────────────────────────
   ${DIM}# Start the development environment${NC}
-  docker compose -f docker-compose.local.yml up -d --build
+  ./deploy/up.sh local up -d --build
 
   ${DIM}# Or run the API directly${NC}
   cd src/backend/$NEW_NAME.WebApi
