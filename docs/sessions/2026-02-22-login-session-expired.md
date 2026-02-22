@@ -74,12 +74,21 @@ Replaced the per-component health check with a global reactive state (`$lib/stat
 | `src/routes/(public)/login/+page.svelte` | Handle both `session_expired` and `password_changed` toasts |
 | `src/lib/components/settings/ChangePasswordForm.svelte` | Hard navigation to `/login?reason=password_changed` |
 | `src/messages/en.json`, `cs.json` | Added `auth_passwordChanged_*` i18n messages, rewrote 503 messaging |
-| `src/lib/api/backend-monitor.ts` | New browser-side middleware: 503 → mark health offline |
+| `src/lib/api/backend-monitor.ts` | Browser-side middleware: 502/503 → mark health offline, `invalidateAll()` |
+| `src/lib/api/mutation.ts` | Suppress toast on 502/503 (page is transitioning to error page) |
 | `src/routes/+error.svelte` | Guard recovery reload, use i18n description for 503 |
+| `src/routes/(public)/+layout.server.ts` | Check `backendError` and throw 503 (same guard as app layout) |
 
-### Reactive 503 from API calls
+### Reactive backend failure detection
 
-Added `$lib/api/backend-monitor.ts` — a browser-side middleware on the API client that intercepts 503 responses and sets `healthState.online = false`. This triggers the existing reactive flow (`invalidateAll` → 503 error page) immediately when a user clicks a button that makes an API call while the backend is down, instead of showing a confusing generic error toast.
+`$lib/api/backend-monitor.ts` — browser-side middleware on the API client that intercepts **502 and 503** responses. The proxy returns 503 for `ECONNREFUSED` and 502 for other connection failures (`ETIMEDOUT`, `EHOSTUNREACH`, etc.), so both must be caught. On detection, the middleware:
+
+1. Sets `healthState.online = false` (switches polling to 5s recovery interval)
+2. Calls `invalidateAll()` directly (immediate page transition, no reactive delay)
+
+`handleMutationError` in `mutation.ts` silently returns on 502/503 — no toast, since the error page is already loading.
+
+Both `(app)` and `(public)` layouts check `backendError` and throw 503, so the error page shows regardless of where the user is.
 
 ### 503 error page polish
 
@@ -95,8 +104,9 @@ Added `$lib/api/backend-monitor.ts` — a browser-side middleware on the API cli
 | `initHealthCheck` not idempotent | Added `initialized` guard with early return |
 | Inconsistent optional chaining on cleanup | Changed `cleanupHealth()` to `cleanupHealth?.()` |
 | 503 recovery double-reload | Guard reload behind `page.status === 503` check |
-| API calls show generic toast on 503 | Added `backend-monitor.ts` middleware to trigger 503 page |
+| API calls show generic toast on 502/503 | `backend-monitor.ts` catches both, `handleMutationError` suppresses toast |
 | 503 page messaging repetitive | Rewrote to "Gone Fishing" / coffee break theme |
+| Public pages silent failure on 502/503 | `(public)` layout now checks `backendError` and throws 503 |
 
 ## Tests added
 
