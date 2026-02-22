@@ -272,8 +272,29 @@ internal class RoleManagementService(
         foreach (var user in users)
         {
             await userManager.UpdateSecurityStampAsync(user);
-            await cacheService.RemoveAsync(CacheKeys.SecurityStamp(user.Id), cancellationToken);
-            await cacheService.RemoveAsync(CacheKeys.User(user.Id), cancellationToken);
+
+            try
+            {
+                await cacheService.RemoveAsync(CacheKeys.SecurityStamp(user.Id), cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex,
+                    "Failed to evict security stamp cache for user '{UserId}' during role security stamp rotation", user.Id);
+            }
+
+            try
+            {
+                await cacheService.RemoveAsync(CacheKeys.User(user.Id), cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex,
+                    "Failed to evict user cache for user '{UserId}' during role security stamp rotation", user.Id);
+            }
         }
+
+        logger.LogInformation(
+            "Rotated security stamps for {UserCount} user(s) in role '{RoleId}'", users.Count, roleId);
     }
 }

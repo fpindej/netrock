@@ -1,6 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Options;
+using MyProject.Application.Identity.Constants;
 
 namespace MyProject.Infrastructure.Features.Authentication.Options;
 
@@ -68,8 +71,30 @@ public sealed class AuthenticationOptions
         /// <summary>
         /// Gets or sets the claim type used to store the ASP.NET Identity security stamp in JWT tokens.
         /// Used to invalidate tokens when security-sensitive user data changes (password, email, etc.).
+        /// Must not collide with registered JWT claim names or other claim types used in the token.
         /// </summary>
+        [Required]
         public string SecurityStampClaimType { get; init; } = "security_stamp";
+
+        /// <summary>
+        /// Registered JWT claim names and other claim types used in the access token.
+        /// <see cref="SecurityStampClaimType"/> must not collide with any of these.
+        /// </summary>
+        private static readonly HashSet<string> ReservedClaimTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            JwtRegisteredClaimNames.Sub,
+            JwtRegisteredClaimNames.Email,
+            JwtRegisteredClaimNames.Jti,
+            JwtRegisteredClaimNames.UniqueName,
+            JwtRegisteredClaimNames.Iss,
+            JwtRegisteredClaimNames.Aud,
+            JwtRegisteredClaimNames.Exp,
+            JwtRegisteredClaimNames.Nbf,
+            JwtRegisteredClaimNames.Iat,
+            "role",
+            ClaimTypes.Role,
+            AppPermissions.ClaimType
+        };
 
         /// <inheritdoc />
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -79,6 +104,13 @@ public sealed class AuthenticationOptions
                 yield return new ValidationResult(
                     $"AccessTokenLifetime must be between 1 minute and 2 hours, but was {AccessTokenLifetime}.",
                     [nameof(AccessTokenLifetime)]);
+            }
+
+            if (ReservedClaimTypes.Contains(SecurityStampClaimType))
+            {
+                yield return new ValidationResult(
+                    $"SecurityStampClaimType '{SecurityStampClaimType}' collides with a registered JWT claim name or built-in claim type.",
+                    [nameof(SecurityStampClaimType)]);
             }
         }
 

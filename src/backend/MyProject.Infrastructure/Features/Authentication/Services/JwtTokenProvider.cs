@@ -30,7 +30,8 @@ internal class JwtTokenProvider(
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = timeProvider.GetUtcNow().UtcDateTime.Add(_jwtOptions.AccessTokenLifetime);
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var expires = now.Add(_jwtOptions.AccessTokenLifetime);
 
         var claims = new List<Claim>
         {
@@ -55,6 +56,7 @@ internal class JwtTokenProvider(
             _jwtOptions.Issuer,
             _jwtOptions.Audience,
             claims,
+            notBefore: now,
             expires: expires,
             signingCredentials: credentials
         );
