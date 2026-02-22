@@ -107,16 +107,19 @@ Error messages flow: Backend `ErrorMessages.*` → `Result.Failure()` → `Probl
 ## Local Development
 
 ```bash
-cp .env.example .env                              # First time only
-docker compose -f docker-compose.local.yml up -d   # Start everything
+cp deploy/envs/local.env.example deploy/envs/local.env   # First time only
+./deploy/up.sh local up -d                                # Start everything
 ```
 
-`.env.example` has working defaults. No edits required.
+`deploy/envs/local.env.example` has working defaults. No edits required.
 
 | File | Purpose |
 |---|---|
-| `.env.example` | Working dev defaults — copy to `.env` |
-| `.env` | Local overrides (gitignored) |
+| `deploy/envs/local.env.example` | Working dev defaults — copy to `deploy/envs/local.env` |
+| `deploy/envs/local.env` | Local overrides (gitignored) |
+| `deploy/envs/production.env.example` | Production template — copy to `deploy/envs/production.env` |
+| `deploy/docker-compose.yml` | Base service definitions |
+| `deploy/docker-compose.local.yml` | Local dev overlay |
+| `deploy/docker-compose.production.yml` | Production overlay |
 | `appsettings.json` | Base/production defaults |
 | `appsettings.Development.json` | Dev defaults (generous JWT, debug logging) |
-| `docker-compose.local.yml` | 5-service local stack |

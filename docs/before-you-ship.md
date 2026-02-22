@@ -4,13 +4,15 @@
 
 NETrock works out of the box for local development, but there are things you need to configure before going to production. This checklist covers what the template **can't decide for you**.
 
+> **Start from the production template:** Copy `deploy/envs/production.env.example` to `deploy/envs/production.env` and fill in all values. Launch with `./deploy/up.sh production up -d`.
+
 ## Must Do
 
 - [ ] **Email service** — replace `NoOpEmailService` with a real provider (SMTP, SendGrid, Postmark, etc.). The NoOp service just logs emails to Seq. Configure via `Email__Smtp__*` env vars or swap the service registration in `ServiceCollectionExtensions.cs`
 - [ ] **CORS origins** — set `Cors__AllowedOrigins` to your production domain(s). The app **will refuse to start** if `AllowAllOrigins` is `true` outside of Development — this is intentional
 - [ ] **JWT secret** — the init script generates one, but verify it's set in production via `Authentication__Jwt__Key` (64+ chars, cryptographically random)
 - [ ] **Database** — point `ConnectionStrings__Database` to your production PostgreSQL instance
-- [ ] **CAPTCHA keys** — replace the Cloudflare Turnstile development keys with production keys (`Captcha__SecretKey` backend, `PUBLIC_TURNSTILE_SITE_KEY` frontend)
+- [ ] **CAPTCHA keys** — replace the Cloudflare Turnstile development keys with production keys (`Captcha__SecretKey` backend, `TURNSTILE_SITE_KEY` frontend — runtime-configurable via `$env/dynamic/private` and SSR layout data)
 - [ ] **Frontend URL in emails** — set `Email__FrontendBaseUrl` to your production domain so email verification and password reset links work
 
 ## Should Do

@@ -6,7 +6,7 @@
 
 ### Frontend dev — tweak backend config without touching code
 
-Edit `.env`, restart Docker:
+Edit `deploy/envs/local.env`, restart Docker:
 
 ```bash
 # Longer JWT tokens, relaxed rate limit
@@ -15,14 +15,14 @@ RateLimiting__Global__PermitLimit=1000
 ```
 
 ```bash
-docker compose -f docker-compose.local.yml up -d
+./deploy/up.sh local up -d
 ```
 
 ### Backend dev — debug with breakpoints in Rider/VS
 
-1. Stop the API container: `docker compose -f docker-compose.local.yml stop api`
-2. Set `API_URL=http://host.docker.internal:5142` in `.env`
-3. Restart frontend: `docker compose -f docker-compose.local.yml restart frontend`
+1. Stop the API container: `./deploy/up.sh local stop api`
+2. Set `API_URL=http://host.docker.internal:5142` in `deploy/envs/local.env`
+3. Restart frontend: `./deploy/up.sh local restart frontend`
 4. Launch API from your IDE — breakpoints work, frontend proxies to it
 
 ---
@@ -45,8 +45,8 @@ Migrations auto-apply on startup in Development.
 Build and push Docker images with semantic versioning:
 
 ```bash
-./deploy.sh backend --minor    # Build, bump minor version, push to registry
-./deploy.sh frontend --patch   # Same for frontend
+./deploy/build.sh backend --minor    # Build, bump minor version, push to registry
+./deploy/build.sh frontend --patch   # Same for frontend
 ```
 
 Supports Docker Hub, GitHub Container Registry, Azure ACR, AWS ECR, DigitalOcean, and custom registries.

@@ -37,7 +37,7 @@ Every project starts the same way: authentication, role management, rate limitin
 
 **Frontend** — Svelte 5 runes, type-safe API client generated from OpenAPI, automatic token refresh, Tailwind CSS 4 with shadcn-svelte, BFF proxy with CSRF protection, i18n, security headers, permission guards, dark mode, admin panel with user/role/job management. [See full details →](docs/features.md#frontend--sveltekit--svelte-5)
 
-**Infrastructure** — Single `docker compose up` for 5 services, init script for project bootstrapping, deploy script with multi-registry support, GitHub Actions CI with smart path filtering, Dependabot. [See full details →](docs/features.md#infrastructure--devops)
+**Infrastructure** — Single `./deploy/up.sh local` for 5 services, init script for project bootstrapping, build script with multi-registry support, GitHub Actions CI with smart path filtering, Dependabot. [See full details →](docs/features.md#infrastructure--devops)
 
 **Security** — Security-first design with HttpOnly JWT cookies, refresh token rotation with reuse detection, security stamp propagation, CSP with nonces, CORS startup guard, rate limiting, and input validation everywhere. [See full details →](docs/security.md)
 
@@ -77,7 +77,7 @@ The init script will ask for your project name and base port, then rename everyt
 ### 2. Launch Everything
 
 ```bash
-docker compose -f docker-compose.local.yml up -d --build
+./deploy/up.sh local up -d --build
 ```
 
 That's it. Your entire stack is running:

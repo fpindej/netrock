@@ -6,7 +6,7 @@ Thanks for your interest in contributing! NETrock is a production-grade template
 
 1. **Fork the repository** and clone your fork
 2. **Run the init script** — `./init.sh` (macOS/Linux) or `.\init.ps1` (Windows)
-3. **Start Docker** — `docker compose -f docker-compose.local.yml up -d --build`
+3. **Start Docker** — `./deploy/up.sh local up -d --build`
 4. **Read the docs** — at minimum, read [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) before making changes
 
 ## How to Contribute
