@@ -213,7 +213,7 @@ public sealed class CachingOptions : IValidatableObject
             if (SizeLimit is null)
             {
                 yield return new ValidationResult(
-                    "SizeLimit is required when Redis is disabled. Set a positive value or enable Redis.",
+                    "SizeLimit is required. Set a positive integer value.",
                     [nameof(SizeLimit)]);
             }
             else if (SizeLimit <= 0)
