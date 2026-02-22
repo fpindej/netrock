@@ -6,7 +6,7 @@
 src/
 ├── lib/
 │   ├── api/                       # client.ts, error-handling.ts, mutation.ts, v1.d.ts (GENERATED)
-│   ├── auth/auth.ts               # getUser(), logout()
+│   ├── auth/                      # auth.ts (getUser, logout), middleware.ts (token refresh)
 │   ├── components/
 │   │   ├── ui/                    # shadcn (generated, customizable)
 │   │   ├── auth/                  # LoginForm, RegisterDialog, ForgotPasswordForm, TurnstileWidget
@@ -30,9 +30,19 @@ src/
 
 ## API Client
 
-Two clients: `browserClient` (component code) and `createApiClient(fetch, url.origin)` (server load functions).
+Two layers: `lib/api/` (auth-agnostic client factory) and `lib/auth/` (all auth concerns).
 
-Both auto-handle 401 → refresh → retry. Server-side for initial data, client-side for mutations.
+| Export                                                 | Module      | Purpose                                                                                 |
+| ------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------- |
+| `createApiClient(fetch?, baseUrl?, middleware?)`       | `$lib/api`  | Creates typed openapi-fetch client. Server load functions pass `fetch` + `url.origin`.  |
+| `browserClient`                                        | `$lib/api`  | Singleton for client-side code. Created bare — auth wired at runtime.                   |
+| `initBrowserAuth(middleware)`                          | `$lib/api`  | Registers auth middleware on `browserClient` exactly once (idempotent guard).           |
+| `createAuthMiddleware(fetch, baseUrl, onAuthFailure?)` | `$lib/auth` | 401 → deduplicated refresh → retry idempotent methods only.                             |
+| `getUser(fetch, origin)`                               | `$lib/auth` | Returns `GetUserResult` — distinguishes "not authenticated" from "backend unavailable". |
+
+**Auth middleware wiring** — the root layout calls `initBrowserAuth()` in `onMount`. The guard prevents middleware stacking on HMR/remounts. Server clients never get auth middleware (SvelteKit's `fetch` forwards cookies automatically).
+
+**Auth middleware flow**: 401 → deduplicated refresh → retry GET/HEAD/OPTIONS only. Non-idempotent methods return 401 to caller (prevents double-submission). On refresh failure → `onAuthFailure` callback (toast + redirect to `/login`).
 
 ### Type Generation
 
@@ -156,11 +166,11 @@ CSS variables in `themes.css` (`:root` + `.dark`), mapped in `tailwind.css` (`@t
 ## Routing & Auth
 
 ```
-hooks.server.ts → +layout.server.ts (root: getUser) → (app)/+layout.server.ts (redirect if no user)
+hooks.server.ts → +layout.server.ts (root: getUser) → (app)/+layout.server.ts (503 if backend down, redirect if no user)
                                                       → (public)/login (redirect if user exists)
 ```
 
-Root layout fetches user **once**. Child layouts use `parent()` — never re-fetch.
+Root layout fetches user **once** via `getUser()` which returns `GetUserResult` — distinguishes "not authenticated" (null user, no error) from "backend unavailable" (null user, error set). The `(app)` layout throws 503 when backend is down instead of incorrectly redirecting to login. Child layouts use `parent()` — never re-fetch.
 
 ### Permission Guards
 
