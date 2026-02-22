@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-22
 **Scope:** Deployment infrastructure, frontend runtime config
-**Files changed:** 31 (647 insertions, 272 deletions)
+**Files changed:** 36 (~700 insertions, ~280 deletions)
 
 ## Summary
 
@@ -16,6 +16,10 @@ Overhauled the deployment setup from a flat root-level layout into a structured 
 | `refactor(deploy): restructure deployment into environment profiles` | Split monolithic compose into base + overlays. Create `deploy/` directory with `up.sh`/`build.sh`, env templates, production profile. Update init scripts and gitignore. |
 | `docs: update all references for new deployment structure` | Update README, AGENTS, SKILLS, FILEMAP, CONTRIBUTING, development.md, before-you-ship.md, gen-types command. |
 | `fix(deploy): harden production profile and address review feedback` | Add container hardening (cap_drop, read_only, no-new-privileges, memory limits, log rotation). Add frontend healthcheck. Fix Redis password leak in healthcheck. Remove Turnstile testing key default from base compose. |
+| `fix(security): isolate frontend env, add USER directives and container hardening` | Remove env_file from frontend (prevents secret leakage), add USER directives to Dockerfiles, add pids_limit, CPU limits, restart:always for production. |
+| `refactor(frontend): rename turnstile key and scope to public routes` | Rename `PUBLIC_TURNSTILE_SITE_KEY` → `TURNSTILE_SITE_KEY`, scope to `(public)` layout only. |
+| `fix(deploy): harden scripts and add operational comments` | `set -euo pipefail`, PowerShell exit code propagation, REDISCLI_AUTH/redis comments, legacy .env gitignore. |
+| `docs: add TLS, backup, resource tuning, and volume migration guidance` | TLS termination guide with Caddy example, pg_dump backup command, resource limit tuning note, volume migration instructions. |
 
 ## Architecture
 
@@ -42,3 +46,7 @@ deploy/
 - **Thin `up.sh` wrapper** over fat orchestration script: resolves paths, validates, then `exec docker compose`
 - **Testing key only in local.env.example**, not base compose: prevents silent CAPTCHA bypass in production
 - **`REDISCLI_AUTH` env var** over `-a` CLI flag: avoids password leak in process listings
+- **Frontend env isolation**: frontend container receives only the vars it needs via compose `environment:` block, never the full env file with backend secrets
+- **Non-root containers**: `USER node` (frontend) and `USER $APP_UID` (backend) for defense-in-depth
+- **`TURNSTILE_SITE_KEY`** renamed from `PUBLIC_TURNSTILE_SITE_KEY`: the `PUBLIC_` prefix was a SvelteKit `$env/static/public` convention that no longer applies
+- **Turnstile scoped to `(public)` layout**: key only serialized into login/register/forgot-password pages, not every page
