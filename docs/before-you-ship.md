@@ -17,12 +17,25 @@ NETrock works out of the box for local development, but there are things you nee
 
 ## Should Do
 
+- [ ] **TLS termination** — the production compose exposes API (8080) and frontend (3000) as plain HTTP. Put a reverse proxy (nginx, Caddy, Traefik) in front to terminate TLS. Set `ORIGIN=https://your-domain.com` in the frontend env so SvelteKit generates correct URLs. Example with Caddy:
+  ```
+  your-domain.com {
+      reverse_proxy frontend:3000
+  }
+  api.your-domain.com {
+      reverse_proxy api:8080
+  }
+  ```
 - [ ] **Redis** — enable for production (`Caching__Redis__Enabled=true`) with real credentials. Without it, the app falls back to in-memory cache (fine for single-instance, not for scaling)
 - [ ] **Reverse proxy** — if behind nginx/load balancer, configure `Hosting__ReverseProxy__TrustedNetworks` and `TrustedProxies` so rate limiting uses real client IPs
 - [ ] **Logging** — replace Seq with your production logging solution or point Serilog at your provider. Adjust log levels (`Serilog__MinimumLevel__Default=Information`)
 - [ ] **Rate limits** — review the production defaults in `appsettings.json` and adjust for your expected traffic
-- [ ] **Backups** — set up automated PostgreSQL backups. NETrock uses soft delete, but that doesn't replace real backups
+- [ ] **Backups** — set up automated PostgreSQL backups. NETrock uses soft delete, but that doesn't replace real backups. Quick manual backup via compose:
+  ```bash
+  ./deploy/up.sh production exec db pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup.sql
+  ```
 - [ ] **Monitoring** — the health check endpoints (`/health`, `/health/ready`, `/health/live`) are ready for your uptime monitoring
+- [ ] **Resource limits** — the production compose ships with conservative defaults (API: 1 CPU / 512M, frontend: 0.5 CPU / 256M, Postgres: 1 CPU / 512M, Redis: 0.5 CPU / 256M). Tune these in `deploy/docker-compose.production.yml` for your workload — PostgreSQL alone typically wants 25% of available memory for `shared_buffers`
 
 ## Good to Know
 
@@ -30,3 +43,4 @@ NETrock works out of the box for local development, but there are things you nee
 - **HTTPS** is forced in production via `Hosting__ForceHttps=true` (default). Development runs on HTTP
 - **Dev config is stripped** from production Docker images — `appsettings.Development.json` and `appsettings.Testing.json` are removed at build time
 - **CORS startup guard** will crash the app on purpose if you deploy with `AllowAllOrigins=true` — this is a security feature, not a bug
+- **Volume migration** — if upgrading from the pre-`deploy/` layout, Docker named volumes will get new project-prefixed names. Your old data stays in the old volumes. To migrate: stop the old stack, `docker volume create` the new names, and copy data across (or start fresh for dev)
