@@ -6,7 +6,7 @@ Regenerate frontend API types from the backend OpenAPI spec.
    ```bash
    curl -sf http://localhost:8080/openapi/v1.json > /dev/null || echo "Backend not running"
    ```
-   If not running: `docker compose -f docker-compose.local.yml up -d api` and wait ~10s
+   If not running: `./deploy/up.sh local up -d api` and wait ~10s
 
 2. Generate types:
    ```bash

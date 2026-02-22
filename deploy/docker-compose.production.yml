@@ -1,0 +1,83 @@
+# ══════════════════════════════════════════════════════════════════════════════
+#  Production Overlay
+# ══════════════════════════════════════════════════════════════════════════════
+#
+#  Uses pre-built images from a container registry. No dev tools, no source
+#  mounts, no host port exposure for DB/Redis (internal only).
+#  Containers are hardened: read-only root, no new privileges, all caps dropped.
+#
+#  1. Copy and fill in the env template:
+#     cp deploy/envs/production.env.example deploy/envs/production.env
+#
+#  2. Start the stack:
+#     ./deploy/up.sh production up -d
+#
+# ══════════════════════════════════════════════════════════════════════════════
+
+name: {INIT_PROJECT_SLUG}
+
+x-hardened: &hardened
+  restart: always
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  read_only: true
+  pids_limit: 200
+  tmpfs:
+    - /tmp
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  api:
+    image: ${API_IMAGE}
+    # Paths are relative to --project-directory (repo root), set by up.sh
+    env_file: deploy/envs/production.env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "${API_PORT:-8080}:8080"
+    <<: *hardened
+    # .NET needs a writable home for data-protection keys and diagnostics.
+    # tmpfs keeps it ephemeral — keys rotate on restart (fine for JWT-based auth).
+    tmpfs:
+      - /tmp
+      - /home/app
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+
+  frontend:
+    image: ${FRONTEND_IMAGE}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    <<: *hardened
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+  redis:
+    <<: *hardened
+    read_only: false
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  db:
+    <<: *hardened
+    read_only: false
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G

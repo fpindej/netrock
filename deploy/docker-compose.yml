@@ -1,0 +1,109 @@
+# ══════════════════════════════════════════════════════════════════════════════
+#  Base Service Topology
+# ══════════════════════════════════════════════════════════════════════════════
+#
+#  Shared service definitions, dependencies, health checks, and networks.
+#  Never used standalone — always combined with an environment overlay:
+#
+#    ./deploy/up.sh local up -d --build     (uses docker-compose.local.yml)
+#    ./deploy/up.sh production up -d        (uses docker-compose.production.yml)
+#
+# ══════════════════════════════════════════════════════════════════════════════
+
+services:
+  api:
+    restart: unless-stopped
+    networks:
+      - frontend
+      - backend
+    environment:
+      ConnectionStrings__Database: Host=db;Port=5432;Database=${POSTGRES_DB:-{INIT_PROJECT_SLUG}};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Caching__Redis__ConnectionString: redis:6379
+      Caching__Redis__Password: ${REDIS_PASSWORD}
+      Authentication__Jwt__Key: ${JWT_SECRET_KEY}
+      Hosting__ReverseProxy__TrustedNetworks__0: 172.16.0.0/12
+    healthcheck:
+      test: ["CMD", "dotnet", "/app/healthprobe/HealthProbe.dll", "http://localhost:8080/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - backend
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    # Password is passed as an env var and written to a temp config at startup.
+    # Process listing shows only "redis-server /tmp/redis.conf" — no secret leak.
+    command:
+      - sh
+      - -c
+      - |
+        printf 'requirepass %s\nappendonly yes\n' "$$REDIS_PASSWORD" > /tmp/redis.conf
+        exec redis-server /tmp/redis.conf
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    networks:
+      - backend
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-{INIT_PROJECT_SLUG}}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+  frontend:
+    restart: unless-stopped
+    networks:
+      - frontend
+    environment:
+      API_URL: ${API_URL:-http://api:8080}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      XFF_DEPTH: ${XFF_DEPTH:-0}
+      ORIGIN: ${ORIGIN:-}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000').then(r=>{process.exit(r.ok?0:1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  db_data:
+  redis_data:
+
+networks:
+  frontend:
+    name: {INIT_PROJECT_SLUG}-frontend
+    driver: bridge
+  backend:
+    name: {INIT_PROJECT_SLUG}-backend
+    driver: bridge

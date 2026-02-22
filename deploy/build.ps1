@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-    Unified Deploy Script
+    Build & Push Script
 
 .DESCRIPTION
     Builds and pushes Docker images for the backend API and/or frontend.
     Manages version numbering automatically with auto-increment.
 
 .PARAMETER Target
-    What to deploy: backend, frontend, or all
+    What to build: backend, frontend, or all
 
 .PARAMETER Patch
     Bump patch version: 0.1.0 -> 0.1.1 (default)
@@ -34,15 +34,15 @@
     Skip confirmation prompts
 
 .EXAMPLE
-    .\deploy.ps1
+    .\deploy\build.ps1
     # Interactive mode - shows menu
 
 .EXAMPLE
-    .\deploy.ps1 backend -Minor
-    # Deploy backend with minor version bump
+    .\deploy\build.ps1 backend -Minor
+    # Build backend with minor version bump
 
 .EXAMPLE
-    .\deploy.ps1 all -NoPush
+    .\deploy\build.ps1 all -NoPush
     # Build both without pushing
 #>
 
@@ -65,9 +65,10 @@ param (
 
 $ErrorActionPreference = "Stop"
 
-# Get script directory and ensure we're working from there
+# Get script directory and project root (one level up)
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-Push-Location $ScriptDir
+$ProjectRoot = Split-Path -Parent $ScriptDir
+Push-Location $ProjectRoot
 
 try {
 
@@ -186,7 +187,7 @@ function Get-BumpedVersion {
 # -----------------------------------------------------------------------------
 # Configuration Management
 # -----------------------------------------------------------------------------
-$ConfigFile = Join-Path $ScriptDir "deploy.config.json"
+$ConfigFile = Join-Path $ScriptDir "config.json"
 
 function Get-Config {
     if (-not (Test-Path $ConfigFile)) {
@@ -545,7 +546,7 @@ function Build-Frontend {
 
     $fullImage = "$($Config.registry)/$($Config.frontendImage)"
 
-    $dockerfile = Join-Path $ScriptDir "src\frontend\Dockerfile"
+    $dockerfile = Join-Path $ProjectRoot "src\frontend\Dockerfile"
     if (-not (Test-Path $dockerfile)) {
         Write-ErrorMessage "Dockerfile not found: $dockerfile"
         return $false
@@ -569,13 +570,6 @@ function Build-Frontend {
     }
     else {
         $buildArgs += "--load"
-    }
-
-    # SvelteKit $env/static/public vars must be passed at build time.
-    $turnstileKey = $env:PUBLIC_TURNSTILE_SITE_KEY
-    if ($turnstileKey) {
-        $buildArgs += "--build-arg"
-        $buildArgs += "PUBLIC_TURNSTILE_SITE_KEY=$turnstileKey"
     }
 
     $buildArgs += "."
@@ -611,10 +605,10 @@ function Build-Frontend {
 # -----------------------------------------------------------------------------
 $startTime = Get-Date
 
-Write-Header "Deploy"
+Write-Header "Build & Push"
 
 # Verify we're in the project root
-if (-not (Test-Path (Join-Path $ScriptDir "src/backend")) -or -not (Test-Path (Join-Path $ScriptDir "src/frontend"))) {
+if (-not (Test-Path (Join-Path $ProjectRoot "src/backend")) -or -not (Test-Path (Join-Path $ProjectRoot "src/frontend"))) {
     Write-ErrorMessage "This script must be run from the project root directory."
     Write-Info "Expected to find src/backend and src/frontend directories."
     exit 1
@@ -665,7 +659,7 @@ if ([string]::IsNullOrWhiteSpace($Target)) {
     $Config = Show-ConfigureRegistry $Config
 
     Write-Host ""
-    Write-Host "What would you like to deploy?" -ForegroundColor White
+    Write-Host "What would you like to build?" -ForegroundColor White
     Write-Host ""
     Write-Host "  [1] Backend API"
     Write-Host "  [2] Frontend"
@@ -717,7 +711,7 @@ if ($BumpType -ne "none") {
 Write-Header "Summary"
 
 Write-Host ""
-Write-Host "  Deploy Target" -ForegroundColor White
+Write-Host "  Build Target" -ForegroundColor White
 Write-Host "  -------------------------------------"
 switch ($Target) {
     "backend" { Write-Host "  Target:   " -NoNewline; Write-Host "Backend API" -ForegroundColor Cyan }
@@ -751,7 +745,7 @@ if ($DoCommit) { Write-Host "Yes" -ForegroundColor Green } else { Write-Host "No
 Write-Host ""
 
 # Confirmation
-$proceed = Read-YesNo "Proceed with deployment?" $true
+$proceed = Read-YesNo "Proceed with build?" $true
 if (-not $proceed) {
     Write-WarnMsg "Aborted by user"
     exit 0
@@ -787,7 +781,7 @@ if ($Target -eq "frontend" -or $Target -eq "all") {
 }
 
 if ($Failed) {
-    Write-Header "Deploy Failed"
+    Write-Header "Build Failed"
     Write-ErrorMessage "One or more builds failed. Version not updated."
     exit 1
 }
@@ -804,7 +798,7 @@ if ($BumpType -ne "none") {
         $Config.frontendVersion = $NewFrontendVersion
     }
     Save-Config $Config
-    Write-Success "Version updated in deploy.config.json"
+    Write-Success "Version updated in config.json"
 
     # Commit the version bump
     if ($DoCommit) {
@@ -812,7 +806,7 @@ if ($BumpType -ne "none") {
         $gitCheck = git rev-parse --git-dir 2>&1
         if ($LASTEXITCODE -eq 0) {
             # Build commit message
-            $commitMsg = "chore(deploy): bump"
+            $commitMsg = "chore(build): bump"
             if ($Target -eq "backend") {
                 $commitMsg = "$commitMsg backend to $NewBackendVersion"
             }
@@ -845,10 +839,10 @@ if ($BumpType -ne "none") {
 }
 
 # Complete
-Write-Header "Deploy Complete!"
+Write-Header "Build Complete!"
 
 Write-Host ""
-Write-Host "  Deployed Images" -ForegroundColor White
+Write-Host "  Built Images" -ForegroundColor White
 Write-Host "  -------------------------------------"
 if ($Target -eq "backend" -or $Target -eq "all") {
     Write-Host "  $($Config.registry)/$($Config.backendImage):$NewBackendVersion" -ForegroundColor Cyan

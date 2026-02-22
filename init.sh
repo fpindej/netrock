@@ -489,32 +489,30 @@ if [ -f "src/frontend/.env.example" ]; then
     print_substep "Created frontend .env.local from .env.example"
 fi
 
-if [ -f ".env.example" ]; then
-    JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n/+=' | cut -c1-64)
-    cp .env.example .env
-    sed_inplace "s|^JWT_SECRET_KEY=.*|JWT_SECRET_KEY=$JWT_SECRET|" .env
-    print_substep "Generated .env with random JWT secret"
-fi
+# Generate random JWT secret for local development
+JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n/+=' | cut -c1-64)
 
-print_substep "Replacing port placeholders..."
+print_substep "Replacing placeholders..."
 if [ "$OS" = "Darwin" ]; then
     # macOS
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_REDIS_PORT}\|{INIT_SEQ_PORT}\|{INIT_PROJECT_SLUG}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_REDIS_PORT}\|{INIT_SEQ_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
         -e "s/{INIT_DB_PORT}/$DB_PORT/g" \
         -e "s/{INIT_REDIS_PORT}/$REDIS_PORT/g" \
         -e "s/{INIT_SEQ_PORT}/$SEQ_PORT/g" \
-        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" 2>/dev/null || true
+        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" \
+        -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" 2>/dev/null || true
 else
     # Linux
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_REDIS_PORT}\|{INIT_SEQ_PORT}\|{INIT_PROJECT_SLUG}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_REDIS_PORT}\|{INIT_SEQ_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
         -e "s/{INIT_DB_PORT}/$DB_PORT/g" \
         -e "s/{INIT_REDIS_PORT}/$REDIS_PORT/g" \
         -e "s/{INIT_SEQ_PORT}/$SEQ_PORT/g" \
-        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" 2>/dev/null || true
+        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" \
+        -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" 2>/dev/null || true
 fi
 
 print_success "Port configuration complete"
@@ -665,12 +663,12 @@ print_success "Init scripts removed"
 # Step 6: Start Docker
 if [[ "$START_DOCKER" == "y" ]]; then
     print_step "Starting Docker containers..."
-    if docker compose -f docker-compose.local.yml up -d --build; then
+    if ./deploy/up.sh local up -d --build; then
         print_success "Docker containers started"
     else
         print_warning "Docker failed to start. Is Docker running?"
         print_info "You can start containers manually later with:"
-        echo "  docker compose -f docker-compose.local.yml up -d --build"
+        echo "  ./deploy/up.sh local up -d --build"
     fi
 fi
 
@@ -685,7 +683,7 @@ echo -e "
   ${BOLD}Quick Start${NC}
   ─────────────────────────────────────
   ${DIM}# Start the development environment${NC}
-  docker compose -f docker-compose.local.yml up -d --build
+  ./deploy/up.sh local up -d --build
 
   ${DIM}# Or run the API directly${NC}
   cd src/backend/$NEW_NAME.WebApi

@@ -21,4 +21,4 @@
 	<meta name="description" content={m.meta_login_description()} />
 </svelte:head>
 
-<LoginForm apiUrl={data.apiUrl} />
+<LoginForm apiUrl={data.apiUrl} turnstileSiteKey={data.turnstileSiteKey} />

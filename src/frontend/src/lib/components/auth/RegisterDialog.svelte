@@ -10,14 +10,14 @@
 	import { Loader2 } from '@lucide/svelte';
 	import { createFieldShakes, createCooldown } from '$lib/state';
 	import { TurnstileWidget } from '$lib/components/auth';
-	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
 
 	interface Props {
 		open?: boolean;
 		onSuccess?: (email: string) => void;
+		turnstileSiteKey: string;
 	}
 
-	let { open = $bindable(false), onSuccess }: Props = $props();
+	let { open = $bindable(false), onSuccess, turnstileSiteKey }: Props = $props();
 
 	let email = $state('');
 	let password = $state('');
@@ -265,7 +265,7 @@
 				{/if}
 			</div>
 			<TurnstileWidget
-				siteKey={PUBLIC_TURNSTILE_SITE_KEY}
+				siteKey={turnstileSiteKey}
 				onVerified={(t) => (captchaToken = t)}
 				onError={() => (error = m.auth_captcha_error())}
 				resetRef={(fn) => (resetCaptcha = fn)}

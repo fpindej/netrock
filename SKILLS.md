@@ -147,7 +147,7 @@ Step-by-step recipes for common operations. Each recipe lists exact paths, patte
        .ValidateDataAnnotations()
        .ValidateOnStart();
    ```
-5. Add env var to `.env.example` if configurable at deploy time
+5. Add env var to `deploy/envs/local.env` (and `deploy/envs/production.env.example`) if configurable at deploy time
 
 ### Run a Migration
 
@@ -711,9 +711,9 @@ cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run
 
 **Backend-consumed variable:**
 
-1. Add to `.env.example` with a working default value and comment
+1. Add to `deploy/envs/local.env` with a working default value and comment (and `deploy/envs/production.env.example` with a placeholder)
 2. If it maps to an Options class: use `Section__Key` naming (e.g., `Authentication__Jwt__AccessTokenLifetime=01:40:00`)
-3. If it needs Docker wiring: add to `docker-compose.local.yml` `environment` block with `${VAR}` interpolation
+3. If it needs Docker wiring: add to `deploy/docker-compose.yml` (or the appropriate overlay) `environment` block with `${VAR}` interpolation
 4. If it needs an Options class: follow [Add an Options Class](#add-an-options-class)
 
 **Frontend-consumed variable:**
@@ -727,9 +727,11 @@ cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run
 
 1. Steps 1–2 above
 2. Add `ARG` + `ENV` to `src/frontend/Dockerfile` (before `pnpm run build`)
-3. Add `--build-arg` to `deploy.sh`, `deploy.ps1`, and `.github/workflows/docker.yml`
-4. Add to `docker-compose.local.yml` `x-frontend-environment` anchor with dev default
+3. Add `--build-arg` to `deploy/build.sh`, `deploy/build.ps1`, and `.github/workflows/docker.yml`
+4. Add to `deploy/docker-compose.yml` (or appropriate overlay) `x-frontend-environment` anchor with dev default
 5. Import in components: `import { PUBLIC_VAR } from '$env/static/public';`
+
+> **Note:** For secrets or keys that differ per environment (like Turnstile site keys), prefer runtime configuration via `$env/dynamic/private` with SSR layout data instead of build-time `PUBLIC_*` args. This avoids rebuilding images per environment.
 
 ### Add a Full-Stack Feature
 

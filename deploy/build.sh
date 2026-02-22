@@ -1,12 +1,12 @@
 #!/bin/bash
 
 #══════════════════════════════════════════════════════════════════════════════
-#  Unified Deploy Script
+#  Build & Push Script
 #══════════════════════════════════════════════════════════════════════════════
 #
 #  Usage:
-#    Interactive:     ./deploy.sh
-#    Direct deploy:   ./deploy.sh backend|frontend|all [options]
+#    Interactive:     ./deploy/build.sh
+#    Direct build:    ./deploy/build.sh backend|frontend|all [options]
 #
 #  Options:
 #    --patch         Bump patch version (default): 0.1.0 → 0.1.1
@@ -104,16 +104,16 @@ prompt_value() {
 }
 
 show_help() {
-    echo "Unified Deploy Script"
+    echo "Build & Push Script"
     echo ""
     echo "Usage:"
-    echo "  ./deploy.sh                   Interactive mode (menu)"
-    echo "  ./deploy.sh <target>          Deploy specific target"
+    echo "  ./deploy/build.sh                   Interactive mode (menu)"
+    echo "  ./deploy/build.sh <target>          Build specific target"
     echo ""
     echo "Targets:"
-    echo "  backend                       Deploy backend API only"
-    echo "  frontend                      Deploy frontend only"
-    echo "  all                           Deploy both"
+    echo "  backend                       Build backend API only"
+    echo "  frontend                      Build frontend only"
+    echo "  all                           Build both"
     echo ""
     echo "Options:"
     echo "  --patch                       Bump patch version: 0.1.0 → 0.1.1 (default)"
@@ -127,9 +127,9 @@ show_help() {
     echo "  -h, --help                    Show this help message"
     echo ""
     echo "Examples:"
-    echo "  ./deploy.sh backend --minor   Deploy backend with minor version bump"
-    echo "  ./deploy.sh all --no-push     Build both without pushing"
-    echo "  ./deploy.sh frontend -y       Deploy frontend, skip prompts"
+    echo "  ./deploy/build.sh backend --minor   Build backend with minor version bump"
+    echo "  ./deploy/build.sh all --no-push     Build both without pushing"
+    echo "  ./deploy/build.sh frontend -y       Build frontend, skip prompts"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -163,7 +163,7 @@ bump_version() {
 # ─────────────────────────────────────────────────────────────────────────────
 # Configuration Management
 # ─────────────────────────────────────────────────────────────────────────────
-CONFIG_FILE="deploy.config.json"
+# CONFIG_FILE is set after SCRIPT_DIR is resolved in the Main Script section.
 
 create_default_config() {
     # Try to detect project name from directory structure
@@ -267,7 +267,7 @@ prompt_registry() {
 }
 
 configure_registry() {
-    print_header "Deploy Configuration"
+    print_header "Build Configuration"
 
     echo ""
     print_info "Current configuration:"
@@ -529,11 +529,6 @@ build_frontend() {
         build_args="$build_args --load"
     fi
 
-    # SvelteKit $env/static/public vars must be passed at build time.
-    if [ -n "${PUBLIC_TURNSTILE_SITE_KEY:-}" ]; then
-        build_args="$build_args --build-arg PUBLIC_TURNSTILE_SITE_KEY=$PUBLIC_TURNSTILE_SITE_KEY"
-    fi
-
     pushd src/frontend > /dev/null
     local build_result=0
     docker buildx build $build_args . 2>&1 || build_result=$?
@@ -616,11 +611,14 @@ done
 # Main Script
 # ─────────────────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPT_DIR"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+cd "$PROJECT_ROOT"
+
+CONFIG_FILE="$SCRIPT_DIR/config.json"
 
 START_TIME=$(date +%s)
 
-print_header "Deploy"
+print_header "Build & Push"
 
 # Verify we're in the project root
 if [[ ! -d "src/backend" || ! -d "src/frontend" ]]; then
@@ -673,7 +671,7 @@ if [ -z "$TARGET" ]; then
     configure_registry
 
     echo ""
-    echo -e "${BOLD}What would you like to deploy?${NC}"
+    echo -e "${BOLD}What would you like to build?${NC}"
     echo ""
     echo "  [1] Backend API"
     echo "  [2] Frontend"
@@ -718,7 +716,7 @@ fi
 print_header "Summary"
 
 echo ""
-echo -e "  ${BOLD}Deploy Target${NC}"
+echo -e "  ${BOLD}Build Target${NC}"
 echo -e "  ─────────────────────────────────────"
 case $TARGET in
     backend)  echo -e "  Target:   ${CYAN}Backend API${NC}" ;;
@@ -743,7 +741,7 @@ echo -e "  Commit version:   $([ "$DO_COMMIT" == "true" ] && echo -e "${GREEN}Ye
 echo ""
 
 # Confirmation
-PROCEED=$(prompt_yn "Proceed with deployment?" "y")
+PROCEED=$(prompt_yn "Proceed with build?" "y")
 if [[ "$PROCEED" != "y" ]]; then
     print_warning "Aborted by user"
     exit 0
@@ -767,7 +765,7 @@ if [[ "$TARGET" == "frontend" || "$TARGET" == "all" ]]; then
 fi
 
 if [[ "$FAILED" == "true" ]]; then
-    print_header "Deploy Failed"
+    print_header "Build Failed"
     print_error "One or more builds failed. Version not updated."
     exit 1
 fi
@@ -776,7 +774,7 @@ fi
 if [[ "$BUMP_TYPE" != "none" ]]; then
     print_step "Updating version..."
 
-    # Update only the versions that were deployed
+    # Update only the versions that were built
     if [[ "$TARGET" == "backend" || "$TARGET" == "all" ]]; then
         BACKEND_VERSION=$NEW_BACKEND_VERSION
     fi
@@ -790,7 +788,7 @@ if [[ "$BUMP_TYPE" != "none" ]]; then
     if [[ "$DO_COMMIT" == "true" ]]; then
         if git rev-parse --git-dir > /dev/null 2>&1; then
             # Build commit message
-            commit_msg="chore(deploy): bump"
+            commit_msg="chore(build): bump"
             if [[ "$TARGET" == "backend" ]]; then
                 commit_msg="$commit_msg backend to $NEW_BACKEND_VERSION"
             elif [[ "$TARGET" == "frontend" ]]; then
@@ -811,10 +809,10 @@ if [[ "$BUMP_TYPE" != "none" ]]; then
 fi
 
 # Complete
-print_header "Deploy Complete!"
+print_header "Build Complete!"
 
 echo ""
-echo -e "  ${BOLD}Deployed Images${NC}"
+echo -e "  ${BOLD}Built Images${NC}"
 echo -e "  ─────────────────────────────────────"
 if [[ "$TARGET" == "backend" || "$TARGET" == "all" ]]; then
     echo -e "  ${CYAN}$REGISTRY/$BACKEND_IMAGE:$NEW_BACKEND_VERSION${NC}"
