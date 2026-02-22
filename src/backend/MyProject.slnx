@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/solution items/">
-    <File Path="../../docker-compose.local.yml" />
+    <File Path="../../deploy/docker-compose.yml" />
+    <File Path="../../deploy/docker-compose.local.yml" />
+    <File Path="../../deploy/docker-compose.production.yml" />
     <File Path="../../.config/dotnet-tools.json" />
     <File Path="../../global.json" />
     <File Path="Directory.Build.props" />
