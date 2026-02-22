@@ -17,8 +17,10 @@ const REFRESH_PATHNAME = '/api/auth/refresh' satisfies keyof paths;
  * Creates an openapi-fetch middleware that handles 401 responses by
  * refreshing the access token via cookies and retrying idempotent requests.
  *
- * This middleware is designed for **browser-side** use only (cookie auth,
- * `onAuthFailure` typically calls `goto`/`invalidateAll`).
+ * Works on both browser-side and server-side (SvelteKit load functions).
+ * On the browser, `onAuthFailure` typically calls `goto`/`invalidateAll`.
+ * On the server, omit `onAuthFailure` — a failed refresh simply passes
+ * through the original 401 for the caller to handle.
  *
  * - On 401: triggers a single `POST /api/auth/refresh` (deduplicated across
  *   concurrent requests via a shared promise).

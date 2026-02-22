@@ -2,6 +2,7 @@ import { goto, invalidateAll } from '$app/navigation';
 import { resolve } from '$app/paths';
 import { browserClient, createApiClient } from '$lib/api';
 import type { User } from '$lib/types';
+import { createAuthMiddleware } from './middleware';
 
 /**
  * Result of a server-side user fetch. Distinguishes between "not authenticated"
@@ -15,6 +16,11 @@ export interface GetUserResult {
 /**
  * Fetches the current authenticated user from the backend.
  *
+ * Wires `createAuthMiddleware` so that expired access tokens are transparently
+ * refreshed via cookies — works on both server-side (SvelteKit load) and
+ * browser-side fetch. No `onAuthFailure` callback on server side; if refresh
+ * fails, the 401 passes through and is handled as "not authenticated".
+ *
  * Returns a structured result so callers can distinguish between:
  * - Authenticated user → `{ user, error: null }`
  * - Not authenticated (401) → `{ user: null, error: null }`
@@ -24,7 +30,7 @@ export async function getUser(
 	fetch: typeof globalThis.fetch,
 	origin: string
 ): Promise<GetUserResult> {
-	const client = createApiClient(fetch, origin);
+	const client = createApiClient(fetch, origin, [createAuthMiddleware(fetch, origin)]);
 
 	try {
 		const { data: user, response } = await client.GET('/api/users/me');

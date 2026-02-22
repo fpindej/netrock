@@ -17,7 +17,8 @@ Added 20 unit tests covering all middleware code paths, then hardened the implem
 | `src/frontend/src/lib/api/index.ts` | Exports `createApiClient`, `browserClient` (no auth exports) | API barrel stays auth-agnostic |
 | `src/frontend/src/lib/auth/middleware.ts` | `createAuthMiddleware()` — 401 refresh, retry, failure callback | All auth logic consolidated under `lib/auth/` |
 | `src/frontend/src/lib/auth/middleware.test.ts` | New — 20 vitest tests | Cover all code paths: pass-through, method routing, URL construction, refresh failure, callback resilience, deduplication, guard safety |
-| `src/frontend/src/lib/auth/auth.ts` | `getUser()` now returns `GetUserResult` with `{ user, error }` instead of `User \| null`. Added `GetUserResult` interface. | Distinguish "not authenticated" from "backend unavailable" |
+| `src/frontend/src/lib/auth/auth.ts` | `getUser()` now returns `GetUserResult` with `{ user, error }` instead of `User \| null`. Added `GetUserResult` interface. Wires `createAuthMiddleware` so server-side loads transparently refresh expired access tokens. | Distinguish "not authenticated" from "backend unavailable"; prevent silent redirect to login when only the access token is expired |
+| `src/frontend/src/lib/auth/auth.test.ts` | New — 7 vitest tests for `getUser()` | Cover basic response handling (200, 401, 403, 5xx, network error) and server-side refresh integration (refresh succeeds → retry, refresh fails → not-authenticated) |
 | `src/frontend/src/lib/auth/index.ts` | Added `GetUserResult` type re-export | Barrel export consistency |
 | `src/frontend/src/routes/+layout.server.ts` | Destructures `{ user, error }` from `getUser()`, passes `backendError` to children | Propagate backend error state to child layouts |
 | `src/frontend/src/routes/(app)/+layout.server.ts` | Added `backendError` check → throws 503 before redirect check | Prevent misleading redirect to login when backend is down |
@@ -142,5 +143,6 @@ A strict security review was performed, resulting in hardening fixes:
 - [ ] Consider adding a loading skeleton or spinner while the refresh attempt is in-flight
 - [ ] Monitor whether concurrent 401 deduplication handles edge cases in production (e.g., tab switching, background tabs)
 - [ ] Add component tests for Svelte auth components (`LoginDialog`, `RegisterDialog`) using `@testing-library/svelte`
-- [ ] Add tests for `getUser()` in `auth.ts` (structured `GetUserResult` return paths)
+- [x] Add tests for `getUser()` in `auth.ts` (structured `GetUserResult` return paths)
+- [x] Wire `createAuthMiddleware` into `getUser()` for server-side token refresh
 - [ ] Add frontend test coverage reporting to CI

@@ -6,8 +6,8 @@ import type { paths } from './v1';
  * Creates a typed openapi-fetch client.
  *
  * The client is middleware-agnostic — callers inject behaviour (auth, logging,
- * etc.) via the `middleware` array. Server-side load functions typically pass
- * no middleware; the browser client has auth middleware wired in the root layout.
+ * etc.) via the `middleware` array. `getUser()` wires auth middleware for
+ * server-side token refresh; the browser client has it wired in the root layout.
  *
  * @param customFetch - Custom fetch function (use SvelteKit's `fetch` in server load functions)
  * @param baseUrl - Base URL for API requests (set to `url.origin` in server load functions)
