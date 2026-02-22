@@ -77,6 +77,13 @@ export function handleMutationError(
 	error: unknown,
 	{ cooldown, fallback, onRateLimited, onValidationError, onError }: MutationErrorOptions
 ): void {
+	// Backend/proxy failure — the backend-monitor middleware already triggers
+	// the 503 error page transition via invalidateAll(). Suppress the toast
+	// so the user sees the error page, not a confusing component-level message.
+	if (response.status === 502 || response.status === 503) {
+		return;
+	}
+
 	if (isRateLimited(response)) {
 		const retryAfter = getRetryAfterSeconds(response);
 		if (retryAfter) cooldown.start(retryAfter);

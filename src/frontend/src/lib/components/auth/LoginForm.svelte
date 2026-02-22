@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { cn } from '$lib/utils';
-	import { createShake, createCooldown } from '$lib/state';
-	import { onMount } from 'svelte';
+	import { createShake, createCooldown, healthState } from '$lib/state';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
@@ -28,7 +27,6 @@
 	let email = $state('');
 	let password = $state('');
 	let rememberMe = $state(false);
-	let isApiOnline = $state(false);
 	let isSuccess = $state(false);
 	let isRedirecting = $state(false);
 	const shake = createShake();
@@ -37,14 +35,9 @@
 
 	const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-	onMount(async () => {
-		try {
-			const res = await fetch('/api/health');
-			isApiOnline = res.ok;
-		} catch {
-			isApiOnline = false;
-		}
-	});
+	// Assume online until the first health check completes — prevents a flash
+	// of "API is offline" on hard navigations where the polling restarts.
+	let isApiOnline = $derived(!healthState.checked || healthState.online);
 
 	function onRegisterSuccess(newEmail: string) {
 		email = newEmail;

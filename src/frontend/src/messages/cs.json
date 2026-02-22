@@ -85,6 +85,9 @@
 	"auth_sessionExpired_title": "Relace vypršela",
 	"auth_sessionExpired_description": "Byli jste odhlášeni. Přihlaste se prosím znovu.",
 
+	"auth_passwordChanged_title": "Heslo změněno",
+	"auth_passwordChanged_description": "Vaše heslo bylo aktualizováno. Přihlaste se prosím novým heslem.",
+
 	"auth_register_title": "Vytvořit účet",
 	"auth_register_description": "Zadejte své údaje pro vytvoření účtu",
 	"auth_register_email": "E-mail",
@@ -218,6 +221,9 @@
 	"error_404_description": "Stránku, kterou hledáte, se nepodařilo najít. Možná ji unesli mimozemšťané.",
 	"error_500_title": "Chyba serveru",
 	"error_500_description": "Něco se pokazilo na naší straně. Zkuste to prosím později.",
+	"error_503_title": "Pauza na kafe",
+	"error_503_description": "Server zrovna řeší drby v kuchyňce. Snažíme se jej zavolat zpátky do práce.",
+	"error_503_retrying": "Zkouším se připojit...",
 	"error_default_title": "Počítač říká ne",
 	"error_default_description": "Něco se pokazilo. Nejsme si jistí co, ale pravděpodobně to není dobré.",
 	"error_goHome": "Zpět na úvod",

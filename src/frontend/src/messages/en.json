@@ -85,6 +85,9 @@
 	"auth_sessionExpired_title": "Session expired",
 	"auth_sessionExpired_description": "You've been logged out. Please sign in again.",
 
+	"auth_passwordChanged_title": "Password changed",
+	"auth_passwordChanged_description": "Your password was updated. Please sign in with your new password.",
+
 	"auth_register_title": "Create an account",
 	"auth_register_description": "Enter your details below to create your account",
 	"auth_register_email": "Email",
@@ -218,6 +221,9 @@
 	"error_404_description": "We couldn't find the page you're looking for. It might have been abducted by aliens.",
 	"error_500_title": "Server Meltdown",
 	"error_500_description": "The server is having a bad day. Our code monkeys are working hard to fix it.",
+	"error_503_title": "Gone Fishing",
+	"error_503_description": "The server stepped out for a coffee break. We're keeping an eye on the door.",
+	"error_503_retrying": "Trying to reconnect...",
 	"error_default_title": "Computer Says No",
 	"error_default_description": "Something went wrong. We're not sure what, but it's probably not good.",
 	"error_goHome": "Go back home",
