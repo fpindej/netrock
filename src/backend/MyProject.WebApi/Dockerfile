@@ -53,5 +53,6 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 
 EXPOSE 8080
+USER $APP_UID
 
 ENTRYPOINT ["dotnet", "MyProject.WebApi.dll"]

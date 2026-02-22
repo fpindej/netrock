@@ -74,6 +74,8 @@ services:
       API_URL: ${API_URL:-http://api:8080}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
       PUBLIC_TURNSTILE_SITE_KEY: ${PUBLIC_TURNSTILE_SITE_KEY:-}
+      XFF_DEPTH: ${XFF_DEPTH:-0}
+      ORIGIN: ${ORIGIN:-}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000').then(r=>{process.exit(r.ok?0:1)}).catch(()=>process.exit(1))"]
       interval: 10s

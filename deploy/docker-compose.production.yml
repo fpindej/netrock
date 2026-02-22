@@ -17,11 +17,13 @@
 name: {INIT_PROJECT_SLUG}
 
 x-hardened: &hardened
+  restart: always
   security_opt:
     - no-new-privileges:true
   cap_drop:
     - ALL
   read_only: true
+  pids_limit: 200
   tmpfs:
     - /tmp
   logging:
@@ -43,18 +45,18 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "1.0"
           memory: 512M
 
   frontend:
     image: ${FRONTEND_IMAGE}
-    # Paths are relative to --project-directory (repo root), set by up.sh
-    env_file: deploy/envs/production.env
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     <<: *hardened
     deploy:
       resources:
         limits:
+          cpus: "0.5"
           memory: 256M
 
   redis:
@@ -63,6 +65,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "0.5"
           memory: 256M
 
   db:
@@ -71,4 +74,5 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "1.0"
           memory: 512M
