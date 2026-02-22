@@ -70,6 +70,18 @@ Replaced the per-component health check with a global reactive state (`$lib/stat
 | `src/lib/state/index.ts` | Export health state |
 | `src/routes/+layout.svelte` | Initialize health polling |
 | `src/lib/components/auth/LoginForm.svelte` | Use global health state |
+| `src/routes/(public)/login/+page.server.ts` | Generalized `sessionExpired` boolean to typed `LoginReason` union |
+| `src/routes/(public)/login/+page.svelte` | Handle both `session_expired` and `password_changed` toasts |
+| `src/lib/components/settings/ChangePasswordForm.svelte` | Hard navigation to `/login?reason=password_changed` |
+| `src/messages/en.json`, `cs.json` | Added `auth_passwordChanged_*` i18n messages |
+
+## Review follow-up
+
+| Finding | Fix |
+|---------|-----|
+| Client-only singleton comment | Added JSDoc warning to `health.svelte.ts` |
+| `initHealthCheck` not idempotent | Added `initialized` guard with early return |
+| Inconsistent optional chaining on cleanup | Changed `cleanupHealth()` to `cleanupHealth?.()` |
 
 ## Tests added
 
@@ -77,5 +89,5 @@ Replaced the per-component health check with a global reactive state (`$lib/stat
 |------|-------|--------|
 | `src/routes/layout.server.test.ts` | 5 | Root layout: cookie read timing, hadSession flag |
 | `src/routes/(app)/layout.server.test.ts` | 5 | Auth guard: redirect logic with hadSession from parent |
-| `src/routes/(public)/login/page.server.test.ts` | 4 | Login page: sessionExpired flag, authenticated redirect |
+| `src/routes/(public)/login/page.server.test.ts` | 5 | Login page: reason parsing, authenticated redirect, password_changed |
 | `src/lib/state/health.test.ts` | 7 | Health polling: state transitions, adaptive intervals, cleanup |
