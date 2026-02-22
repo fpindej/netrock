@@ -51,10 +51,13 @@ internal class JwtTokenProvider(
         var permissions = await GetPermissionsForRolesAsync(userRoles);
         claims.AddRange(permissions.Select(p => new Claim(AppPermissions.ClaimType, p)));
 
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+
         var token = new JwtSecurityToken(
             _jwtOptions.Issuer,
             _jwtOptions.Audience,
             claims,
+            notBefore: now,
             expires: expires,
             signingCredentials: credentials
         );

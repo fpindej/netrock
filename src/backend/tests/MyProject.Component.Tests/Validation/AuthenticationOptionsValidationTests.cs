@@ -193,4 +193,70 @@ public class AuthenticationOptionsValidationTests
     }
 
     #endregion
+
+    #region JwtOptions.SecurityStampClaimType
+
+    [Theory]
+    [InlineData("security_stamp")]
+    [InlineData("sec_stamp")]
+    [InlineData("custom_claim")]
+    public void JwtOptions_SecurityStampClaimType_ValidValue_NoErrors(string claimType)
+    {
+        var options = new AuthenticationOptions.JwtOptions
+        {
+            Key = "ThisIsATestSigningKeyWithAtLeast32Chars!",
+            Issuer = "test",
+            Audience = "test",
+            SecurityStampClaimType = claimType
+        };
+
+        var results = Validate(options);
+
+        Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(AuthenticationOptions.JwtOptions.SecurityStampClaimType)));
+    }
+
+    [Theory]
+    [InlineData("sub")]
+    [InlineData("email")]
+    [InlineData("jti")]
+    [InlineData("unique_name")]
+    [InlineData("iss")]
+    [InlineData("aud")]
+    [InlineData("exp")]
+    [InlineData("nbf")]
+    [InlineData("iat")]
+    [InlineData("role")]
+    [InlineData("permission")]
+    public void JwtOptions_SecurityStampClaimType_ReservedClaimName_ReturnsError(string claimType)
+    {
+        var options = new AuthenticationOptions.JwtOptions
+        {
+            Key = "ThisIsATestSigningKeyWithAtLeast32Chars!",
+            Issuer = "test",
+            Audience = "test",
+            SecurityStampClaimType = claimType
+        };
+
+        var results = Validate(options);
+
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(AuthenticationOptions.JwtOptions.SecurityStampClaimType)));
+    }
+
+    [Fact]
+    public void JwtOptions_SecurityStampClaimType_Empty_ReturnsError()
+    {
+        var options = new AuthenticationOptions.JwtOptions
+        {
+            Key = "ThisIsATestSigningKeyWithAtLeast32Chars!",
+            Issuer = "test",
+            Audience = "test",
+            SecurityStampClaimType = string.Empty
+        };
+
+        var results = Validate(options);
+
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(AuthenticationOptions.JwtOptions.SecurityStampClaimType)));
+    }
+
+    #endregion
 }
