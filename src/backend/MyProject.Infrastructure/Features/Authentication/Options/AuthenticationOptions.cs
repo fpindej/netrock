@@ -106,8 +106,7 @@ public sealed class AuthenticationOptions
                     [nameof(AccessTokenLifetime)]);
             }
 
-            if (!string.IsNullOrEmpty(SecurityStampClaimType) &&
-                ReservedClaimTypes.Contains(SecurityStampClaimType))
+            if (ReservedClaimTypes.Contains(SecurityStampClaimType))
             {
                 yield return new ValidationResult(
                     $"SecurityStampClaimType '{SecurityStampClaimType}' collides with a registered JWT claim name or built-in claim type.",

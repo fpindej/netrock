@@ -30,7 +30,8 @@ internal class JwtTokenProvider(
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = timeProvider.GetUtcNow().UtcDateTime.Add(_jwtOptions.AccessTokenLifetime);
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var expires = now.Add(_jwtOptions.AccessTokenLifetime);
 
         var claims = new List<Claim>
         {
@@ -50,8 +51,6 @@ internal class JwtTokenProvider(
 
         var permissions = await GetPermissionsForRolesAsync(userRoles);
         claims.AddRange(permissions.Select(p => new Claim(AppPermissions.ClaimType, p)));
-
-        var now = timeProvider.GetUtcNow().UtcDateTime;
 
         var token = new JwtSecurityToken(
             _jwtOptions.Issuer,

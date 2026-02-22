@@ -762,7 +762,15 @@ internal class AdminService(
 
     private async Task InvalidateUserCacheAsync(Guid userId)
     {
-        await cacheService.RemoveAsync(CacheKeys.User(userId));
+        try
+        {
+            await cacheService.RemoveAsync(CacheKeys.User(userId));
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex,
+                "Failed to evict user cache for user '{UserId}'", userId);
+        }
     }
 
     /// <summary>

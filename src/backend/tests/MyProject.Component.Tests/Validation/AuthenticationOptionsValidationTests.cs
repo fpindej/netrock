@@ -226,7 +226,10 @@ public class AuthenticationOptionsValidationTests
     [InlineData("nbf")]
     [InlineData("iat")]
     [InlineData("role")]
+    [InlineData("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")]
     [InlineData("permission")]
+    [InlineData("SUB")]
+    [InlineData("Email")]
     public void JwtOptions_SecurityStampClaimType_ReservedClaimName_ReturnsError(string claimType)
     {
         var options = new AuthenticationOptions.JwtOptions
