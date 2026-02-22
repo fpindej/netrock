@@ -109,7 +109,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 |---|---|
 | **Backend endpoint route** | Frontend API calls + regenerate types |
 | **Backend response shape** | Regenerate types → update frontend components |
-| **Backend auth/cookie behavior** | Frontend `$lib/api/client.ts` (refresh logic), `$lib/auth/auth.ts` |
+| **Backend auth/cookie behavior** | Frontend `$lib/auth/middleware.ts` (refresh logic), `$lib/auth/auth.ts` |
 | **`.env.example`** (root) | `docker-compose.local.yml` if variable needs Docker wiring |
 | **`.env.example`** (frontend) | `src/frontend/.env.test` if new `PUBLIC_*` var added |
 | **`.env.test`** (frontend) | `ci.yml` loads it via `cp .env.test .env`; keep in sync with `.env.example` vars |

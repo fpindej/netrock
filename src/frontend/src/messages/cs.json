@@ -82,6 +82,9 @@
 	"auth_login_signUp": "Zaregistrovat se",
 	"auth_login_forgotPassword": "Zapomenuté heslo?",
 
+	"auth_sessionExpired_title": "Relace vypršela",
+	"auth_sessionExpired_description": "Byli jste odhlášeni. Přihlaste se prosím znovu.",
+
 	"auth_register_title": "Vytvořit účet",
 	"auth_register_description": "Zadejte své údaje pro vytvoření účtu",
 	"auth_register_email": "E-mail",
