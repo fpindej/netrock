@@ -7,10 +7,14 @@
  * lifecycle rather than application logic. If component testing infrastructure
  * (e.g. @testing-library/svelte) is added later, a smoke test for the toast
  * would be a reasonable addition.
+ *
+ * Note: hadSession is determined by the root layout (reads the cookie before
+ * getUser can mutate it) and passed down via parent(). These tests verify
+ * that the (app) layout correctly uses it for redirect decisions.
  */
 import { describe, expect, it, vi } from 'vitest';
 import { isHttpError, isRedirect } from '@sveltejs/kit';
-import { load, REFRESH_TOKEN_COOKIE } from './+layout.server';
+import { load } from './+layout.server';
 
 type LoadEvent = Parameters<typeof load>[0];
 
@@ -27,6 +31,13 @@ const MOCK_USER = {
 
 /** Stubs for all `ServerLoadEvent` properties the load function does NOT use. */
 const EVENT_DEFAULTS = {
+	cookies: {
+		get: vi.fn(),
+		getAll: vi.fn(() => []),
+		set: vi.fn(),
+		delete: vi.fn(),
+		serialize: vi.fn()
+	},
 	fetch: vi.fn() as typeof fetch,
 	getClientAddress: () => '127.0.0.1',
 	locals: { user: null, locale: 'en' },
@@ -49,21 +60,14 @@ function mockLoadEvent(
 	overrides: {
 		user?: typeof MOCK_USER | null;
 		backendError?: 'backend_unavailable' | null;
-		refreshCookie?: string;
+		hadSession?: boolean;
 	} = {}
 ) {
-	const { user = null, backendError = null, refreshCookie } = overrides;
+	const { user = null, backendError = null, hadSession = false } = overrides;
 
 	return {
 		...EVENT_DEFAULTS,
-		parent: vi.fn().mockResolvedValue({ user, backendError }),
-		cookies: {
-			get: vi.fn((name: string) => (name === REFRESH_TOKEN_COOKIE ? refreshCookie : undefined)),
-			getAll: vi.fn(() => []),
-			set: vi.fn(),
-			delete: vi.fn(),
-			serialize: vi.fn()
-		}
+		parent: vi.fn().mockResolvedValue({ user, backendError, hadSession })
 	} as LoadEvent;
 }
 
@@ -102,9 +106,7 @@ describe('(app) layout server load', () => {
 
 	it('backend unavailable takes precedence over missing user', async () => {
 		try {
-			await load(
-				mockLoadEvent({ backendError: 'backend_unavailable', refreshCookie: 'some-token' })
-			);
+			await load(mockLoadEvent({ backendError: 'backend_unavailable', hadSession: true }));
 			expect.fail('Expected error to be thrown');
 		} catch (e) {
 			// Should throw 503, not redirect — backend error is checked first
@@ -115,29 +117,15 @@ describe('(app) layout server load', () => {
 
 	// ── Session expired detection ───────────────────────────────────
 
-	it('no user, no refresh cookie — redirects to /login', async () => {
+	it('no user, no prior session — redirects to /login', async () => {
 		await expectRedirect(() => load(mockLoadEvent()), 303, '/login');
 	});
 
-	it('no user, refresh cookie present — redirects with session_expired reason', async () => {
+	it('no user, had session — redirects with session_expired reason', async () => {
 		await expectRedirect(
-			() => load(mockLoadEvent({ refreshCookie: 'some-token-value' })),
+			() => load(mockLoadEvent({ hadSession: true })),
 			303,
 			'/login?reason=session_expired'
 		);
-	});
-
-	it('reads the correct cookie name', async () => {
-		const event = mockLoadEvent();
-
-		try {
-			await load(event);
-		} catch {
-			// redirect is expected
-		}
-
-		// Literal string intentional — this is a contract test against the backend's
-		// CookieNames.RefreshToken. If the exported constant drifts, this catches it.
-		expect(vi.mocked(event.cookies.get)).toHaveBeenCalledWith('__Secure-REFRESH-TOKEN');
 	});
 });
