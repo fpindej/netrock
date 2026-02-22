@@ -22,6 +22,9 @@ function responseParams(request: Request, response: Response) {
 	};
 }
 
+/** Expected shape of the refresh fetch call. */
+const REFRESH_INIT = { method: 'POST', credentials: 'same-origin' };
+
 describe('createAuthMiddleware', () => {
 	// ── Pass-through ────────────────────────────────────────────────
 
@@ -51,7 +54,23 @@ describe('createAuthMiddleware', () => {
 		expect(onAuthFailure).not.toHaveBeenCalled();
 	});
 
-	// ── Successful refresh + retry ──────────────────────────────────
+	it('401 on path containing refresh substring — triggers refresh normally', async () => {
+		const fetchFn = vi.fn<typeof fetch>();
+		fetchFn.mockResolvedValueOnce(mockResponse(200)); // refresh
+		fetchFn.mockResolvedValueOnce(mockResponse(200)); // retry
+
+		const mw = createAuthMiddleware(fetchFn, '');
+
+		const result = await mw.onResponse!(
+			responseParams(mockRequest('http://localhost/api/auth/refresh-tokens'), mockResponse(401))
+		);
+
+		// Must NOT be treated as the refresh endpoint itself
+		expect(fetchFn).toHaveBeenCalledTimes(2);
+		expect(result).toBeInstanceOf(Response);
+	});
+
+	// ── Successful refresh + retry (idempotent) ─────────────────────
 
 	it('401 + successful refresh + GET — retries the request', async () => {
 		const retryResponse = mockResponse(200);
@@ -65,9 +84,7 @@ describe('createAuthMiddleware', () => {
 		const result = await mw.onResponse!(responseParams(originalRequest, mockResponse(401)));
 
 		expect(fetchFn).toHaveBeenCalledTimes(2);
-		expect(fetchFn).toHaveBeenNthCalledWith(1, 'http://localhost/api/auth/refresh', {
-			method: 'POST'
-		});
+		expect(fetchFn).toHaveBeenNthCalledWith(1, 'http://localhost/api/auth/refresh', REFRESH_INIT);
 		expect(fetchFn).toHaveBeenNthCalledWith(2, originalRequest);
 		expect(result).toBe(retryResponse);
 	});
@@ -87,6 +104,23 @@ describe('createAuthMiddleware', () => {
 		expect(result).toBe(retryResponse);
 	});
 
+	it('401 + successful refresh + OPTIONS — retries the request', async () => {
+		const retryResponse = mockResponse(200);
+		const fetchFn = vi.fn<typeof fetch>();
+		fetchFn.mockResolvedValueOnce(mockResponse(200)); // refresh
+		fetchFn.mockResolvedValueOnce(retryResponse); // retry
+
+		const mw = createAuthMiddleware(fetchFn, '');
+
+		const originalRequest = mockRequest('http://localhost/api/users', 'OPTIONS');
+		const result = await mw.onResponse!(responseParams(originalRequest, mockResponse(401)));
+
+		expect(fetchFn).toHaveBeenCalledTimes(2);
+		expect(result).toBe(retryResponse);
+	});
+
+	// ── Successful refresh + non-idempotent (no retry) ──────────────
+
 	it('401 + successful refresh + POST — does not retry', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockResolvedValueOnce(mockResponse(200)); // refresh
@@ -95,6 +129,20 @@ describe('createAuthMiddleware', () => {
 
 		const result = await mw.onResponse!(
 			responseParams(mockRequest('http://localhost/api/users', 'POST'), mockResponse(401))
+		);
+
+		expect(fetchFn).toHaveBeenCalledTimes(1);
+		expect(result).toBeUndefined();
+	});
+
+	it('401 + successful refresh + PUT — does not retry', async () => {
+		const fetchFn = vi.fn<typeof fetch>();
+		fetchFn.mockResolvedValueOnce(mockResponse(200)); // refresh
+
+		const mw = createAuthMiddleware(fetchFn, '');
+
+		const result = await mw.onResponse!(
+			responseParams(mockRequest('http://localhost/api/users/1', 'PUT'), mockResponse(401))
 		);
 
 		expect(fetchFn).toHaveBeenCalledTimes(1);
@@ -113,6 +161,36 @@ describe('createAuthMiddleware', () => {
 
 		expect(fetchFn).toHaveBeenCalledTimes(1);
 		expect(result).toBeUndefined();
+	});
+
+	it('401 + successful refresh + DELETE — does not retry', async () => {
+		const fetchFn = vi.fn<typeof fetch>();
+		fetchFn.mockResolvedValueOnce(mockResponse(200)); // refresh
+
+		const mw = createAuthMiddleware(fetchFn, '');
+
+		const result = await mw.onResponse!(
+			responseParams(mockRequest('http://localhost/api/users/1', 'DELETE'), mockResponse(401))
+		);
+
+		expect(fetchFn).toHaveBeenCalledTimes(1);
+		expect(result).toBeUndefined();
+	});
+
+	// ── Refresh URL construction ────────────────────────────────────
+
+	it('baseUrl with trailing slash — normalized correctly', async () => {
+		const fetchFn = vi.fn<typeof fetch>();
+		fetchFn.mockResolvedValueOnce(mockResponse(200)); // refresh
+		fetchFn.mockResolvedValueOnce(mockResponse(200)); // retry
+
+		const mw = createAuthMiddleware(fetchFn, 'http://localhost/');
+
+		await mw.onResponse!(
+			responseParams(mockRequest('http://localhost/api/users'), mockResponse(401))
+		);
+
+		expect(fetchFn).toHaveBeenNthCalledWith(1, 'http://localhost/api/auth/refresh', REFRESH_INIT);
 	});
 
 	// ── Refresh failure ─────────────────────────────────────────────
@@ -158,24 +236,71 @@ describe('createAuthMiddleware', () => {
 		).resolves.toBeUndefined();
 	});
 
+	it('onAuthFailure throws synchronously — does not break middleware', async () => {
+		const fetchFn = vi.fn<typeof fetch>();
+		fetchFn.mockResolvedValueOnce(mockResponse(401)); // refresh fails
+
+		const onAuthFailure = vi.fn(() => {
+			throw new Error('callback exploded');
+		});
+		const mw = createAuthMiddleware(fetchFn, '', onAuthFailure);
+
+		const result = await mw.onResponse!(
+			responseParams(mockRequest('http://localhost/api/users'), mockResponse(401))
+		);
+
+		expect(onAuthFailure).toHaveBeenCalledOnce();
+		expect(result).toBeUndefined();
+	});
+
+	it('onAuthFailure rejects — does not break middleware', async () => {
+		const fetchFn = vi.fn<typeof fetch>();
+		fetchFn.mockRejectedValueOnce(new TypeError('Failed to fetch')); // refresh network error
+
+		const onAuthFailure = vi.fn().mockRejectedValueOnce(new Error('async failure'));
+		const mw = createAuthMiddleware(fetchFn, '', onAuthFailure);
+
+		const result = await mw.onResponse!(
+			responseParams(mockRequest('http://localhost/api/users'), mockResponse(401))
+		);
+
+		expect(onAuthFailure).toHaveBeenCalledOnce();
+		expect(result).toBeUndefined();
+	});
+
 	// ── Deduplication and guards ────────────────────────────────────
 
 	it('concurrent 401s — single refresh request', async () => {
+		let resolveRefresh: (value: Response) => void;
+		const pendingRefresh = new Promise<Response>((r) => {
+			resolveRefresh = r;
+		});
+
 		const fetchFn = vi.fn<typeof fetch>();
-		fetchFn.mockResolvedValueOnce(mockResponse(200)); // single refresh
+		fetchFn.mockReturnValueOnce(pendingRefresh); // single refresh (pending)
 		fetchFn.mockResolvedValueOnce(mockResponse(200)); // retry for first 401
 		fetchFn.mockResolvedValueOnce(mockResponse(200)); // retry for second 401
 
 		const mw = createAuthMiddleware(fetchFn, '');
 
-		const [r1, r2] = await Promise.all([
-			mw.onResponse!(responseParams(mockRequest('http://localhost/api/a'), mockResponse(401))),
-			mw.onResponse!(responseParams(mockRequest('http://localhost/api/b'), mockResponse(401)))
-		]);
+		// Fire both 401s while refresh is still pending
+		const p1 = mw.onResponse!(
+			responseParams(mockRequest('http://localhost/api/a'), mockResponse(401))
+		);
+		const p2 = mw.onResponse!(
+			responseParams(mockRequest('http://localhost/api/b'), mockResponse(401))
+		);
+
+		// Only one refresh call so far
+		expect(fetchFn).toHaveBeenCalledTimes(1);
+		expect(fetchFn).toHaveBeenNthCalledWith(1, '/api/auth/refresh', REFRESH_INIT);
+
+		// Resolve the refresh
+		resolveRefresh!(mockResponse(200));
+		const [r1, r2] = await Promise.all([p1, p2]);
 
 		// One refresh + two retries = 3 calls total
 		expect(fetchFn).toHaveBeenCalledTimes(3);
-		expect(fetchFn).toHaveBeenNthCalledWith(1, '/api/auth/refresh', { method: 'POST' });
 		expect(r1).toBeInstanceOf(Response);
 		expect(r2).toBeInstanceOf(Response);
 	});
@@ -205,5 +330,29 @@ describe('createAuthMiddleware', () => {
 		await Promise.all([p1, p2]);
 
 		expect(onAuthFailure).toHaveBeenCalledOnce();
+	});
+
+	it('second 401 after completed refresh cycle — triggers new refresh', async () => {
+		const fetchFn = vi.fn<typeof fetch>();
+		// First cycle: refresh + retry
+		fetchFn.mockResolvedValueOnce(mockResponse(200));
+		fetchFn.mockResolvedValueOnce(mockResponse(200));
+
+		const mw = createAuthMiddleware(fetchFn, '');
+
+		// First 401 — triggers first refresh cycle
+		await mw.onResponse!(responseParams(mockRequest('http://localhost/api/a'), mockResponse(401)));
+		expect(fetchFn).toHaveBeenCalledTimes(2);
+
+		// Second cycle: new refresh + retry
+		fetchFn.mockResolvedValueOnce(mockResponse(200));
+		fetchFn.mockResolvedValueOnce(mockResponse(200));
+
+		const result = await mw.onResponse!(
+			responseParams(mockRequest('http://localhost/api/b'), mockResponse(401))
+		);
+
+		expect(fetchFn).toHaveBeenCalledTimes(4);
+		expect(result).toBeInstanceOf(Response);
 	});
 });
