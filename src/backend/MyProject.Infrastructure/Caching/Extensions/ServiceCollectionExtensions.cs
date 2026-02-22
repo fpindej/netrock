@@ -29,7 +29,7 @@ public static class ServiceCollectionExtensions
 
         if (cachingOptions?.Enabled is false)
         {
-            services.AddScoped<ICacheService, NullCacheService>();
+            services.AddSingleton<ICacheService, NullCacheService>();
             return services;
         }
 
