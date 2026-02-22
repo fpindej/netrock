@@ -40,8 +40,13 @@ services:
       - app
     volumes:
       - redis_data:/data
+    # NOTE: --requirepass is visible via `docker inspect`. For higher security,
+    # mount a redis.conf with the password instead.
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     healthcheck:
+      # REDISCLI_AUTH is set inline so the password doesn't appear in the process
+      # listing. $REDIS_PASSWORD is interpolated by Docker Compose (not the
+      # container shell), so the literal password is baked into the healthcheck.
       test: ["CMD-SHELL", "REDISCLI_AUTH=$REDIS_PASSWORD redis-cli ping"]
       interval: 5s
       timeout: 3s

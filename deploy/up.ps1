@@ -78,3 +78,4 @@ if ($ComposeArgs) {
 }
 
 & docker @dockerArgs
+exit $LASTEXITCODE
