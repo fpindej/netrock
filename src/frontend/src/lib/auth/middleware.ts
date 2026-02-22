@@ -1,4 +1,5 @@
 import type { Middleware } from 'openapi-fetch';
+import type { paths } from '$lib/api/v1';
 
 /**
  * HTTP methods that are safe to automatically retry after a token refresh.
@@ -9,8 +10,8 @@ import type { Middleware } from 'openapi-fetch';
  */
 const IDEMPOTENT_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
-/** The pathname used for cookie-based token refresh. */
-const REFRESH_PATHNAME = '/api/auth/refresh';
+/** The pathname used for cookie-based token refresh, tied to the generated OpenAPI spec. */
+const REFRESH_PATHNAME = '/api/auth/refresh' satisfies keyof paths;
 
 /**
  * Creates an openapi-fetch middleware that handles 401 responses by
