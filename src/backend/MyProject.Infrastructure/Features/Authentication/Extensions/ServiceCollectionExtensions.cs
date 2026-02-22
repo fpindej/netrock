@@ -64,7 +64,8 @@ public static class ServiceCollectionExtensions
             .AddEntityFrameworkStores<TContext>()
                 .AddDefaultTokenProviders();
 
-            var authOptions = configuration.GetSection(AuthenticationOptions.SectionName).Get<AuthenticationOptions>()!;
+            var authOptions = configuration.GetSection(AuthenticationOptions.SectionName).Get<AuthenticationOptions>()
+                ?? throw new InvalidOperationException($"Missing '{AuthenticationOptions.SectionName}' configuration section.");
             services.Configure<DataProtectionTokenProviderOptions>(opt =>
                 opt.TokenLifespan = authOptions.EmailToken.Lifetime);
 
@@ -78,7 +79,8 @@ public static class ServiceCollectionExtensions
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
-            var authOptions = configuration.GetSection(AuthenticationOptions.SectionName).Get<AuthenticationOptions>()!;
+            var authOptions = configuration.GetSection(AuthenticationOptions.SectionName).Get<AuthenticationOptions>()
+                ?? throw new InvalidOperationException($"Missing '{AuthenticationOptions.SectionName}' configuration section.");
             var jwtOptions = authOptions.Jwt;
             var key = Encoding.UTF8.GetBytes(jwtOptions.Key);
             var securityStampClaimType = jwtOptions.SecurityStampClaimType;

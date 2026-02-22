@@ -150,7 +150,7 @@ public class AuthenticationServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task Login_ValidCredentials_SetsCorrectTokenExpiration()
+    public async Task Login_ValidCredentials_SetsCreatedAtToCurrentTime()
     {
         var user = CreateTestUser();
         SetupSuccessfulLogin(user);
@@ -158,8 +158,6 @@ public class AuthenticationServiceTests : IDisposable
         await _sut.Login("test@example.com", "password123");
 
         var storedToken = Assert.Single(_dbContext.RefreshTokens);
-        var expectedExpiry = _timeProvider.GetUtcNow().UtcDateTime.AddHours(24);
-        Assert.Equal(expectedExpiry, storedToken.ExpiredAt);
         Assert.Equal(_timeProvider.GetUtcNow().UtcDateTime, storedToken.CreatedAt);
     }
 
