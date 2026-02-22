@@ -1,9 +1,9 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
 
-	"app_name": "Test",
+	"app_name": "MyProject",
 
-	"meta_titleTemplate": "{title} | Test",
+	"meta_titleTemplate": "{title} | MyProject",
 	"meta_description": "Produkční šablona webové aplikace.",
 	"meta_login_title": "Přihlášení",
 	"meta_login_description": "Přihlaste se ke svému účtu.",
