@@ -1,10 +1,22 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
-	import { Ghost, Ban, Timer, TriangleAlert, Home, SearchX, type IconProps } from '@lucide/svelte';
+	import {
+		Ghost,
+		Ban,
+		Timer,
+		TriangleAlert,
+		Home,
+		SearchX,
+		WifiOff,
+		LoaderCircle,
+		type IconProps
+	} from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
+	import { healthState } from '$lib/state';
 	import type { Component } from 'svelte';
 
 	function getErrorContent(status: number): {
@@ -42,6 +54,13 @@
 					icon: TriangleAlert,
 					iconColor: 'text-destructive'
 				};
+			case 503:
+				return {
+					title: m.error_503_title,
+					description: m.error_503_description,
+					icon: WifiOff,
+					iconColor: 'text-warning'
+				};
 			default:
 				return {
 					title: m.error_default_title,
@@ -56,6 +75,20 @@
 	let message = $derived(page.error?.message);
 	let content = $derived(getErrorContent(status));
 	let Icon = $derived(content.icon);
+	let is503 = $derived(status === 503);
+
+	// Auto-recover: when health polling detects the backend is back, reload.
+	let recovering = $state(false);
+	$effect(() => {
+		if (is503 && healthState.online && !recovering) {
+			recovering = true;
+			invalidateAll().then(() => {
+				// If invalidateAll resolves but we're still on the error page,
+				// force a hard reload as a fallback.
+				window.location.reload();
+			});
+		}
+	});
 </script>
 
 <div class="flex min-h-screen flex-col justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
@@ -78,10 +111,17 @@
 				</p>
 			</Card.Content>
 			<Card.Footer class="flex justify-center pb-8">
-				<Button href={resolve('/')} variant="default" size="lg" class="gap-2">
-					<Home class="h-4 w-4" />
-					{m.error_goHome()}
-				</Button>
+				{#if is503}
+					<div class="flex items-center gap-2 text-sm text-muted-foreground">
+						<LoaderCircle class="h-4 w-4 animate-spin" />
+						{m.error_503_retrying()}
+					</div>
+				{:else}
+					<Button href={resolve('/')} variant="default" size="lg" class="gap-2">
+						<Home class="h-4 w-4" />
+						{m.error_goHome()}
+					</Button>
+				{/if}
 			</Card.Footer>
 		</Card.Root>
 	</div>
