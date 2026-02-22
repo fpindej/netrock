@@ -12,7 +12,7 @@
 	import { logout, createAuthMiddleware } from '$lib/auth';
 	import { initBrowserAuth } from '$lib/api';
 	import { ShortcutsHelp } from '$lib/components/layout';
-	import { toggleSidebar } from '$lib/state';
+	import { toggleSidebar, initHealthCheck } from '$lib/state';
 
 	let { children } = $props();
 
@@ -26,7 +26,12 @@
 				await goto(resolve('/login'));
 			})
 		);
-		return initTheme();
+		const cleanupTheme = initTheme();
+		const cleanupHealth = initHealthCheck();
+		return () => {
+			cleanupTheme?.();
+			cleanupHealth();
+		};
 	});
 
 	async function handleSettings() {
