@@ -35,7 +35,7 @@ NETrock works out of the box for local development, but there are things you nee
   ./deploy/up.sh production exec db pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup.sql
   ```
 - [ ] **Monitoring** — the health check endpoints (`/health`, `/health/ready`, `/health/live`) are ready for your uptime monitoring
-- [ ] **Resource limits** — the production compose ships with conservative defaults (API: 1 CPU / 512M, frontend: 0.5 CPU / 256M, Postgres: 1 CPU / 512M, Redis: 0.5 CPU / 256M). Tune these in `deploy/docker-compose.production.yml` for your workload — PostgreSQL alone typically wants 25% of available memory for `shared_buffers`
+- [ ] **Resource limits** — the production compose ships with reasonable defaults (API: 2 CPU / 1G, frontend: 1 CPU / 512M, Postgres: 1 CPU / 1G, Redis: 0.5 CPU / 256M). Tune these in `deploy/docker-compose.production.yml` for your workload — PostgreSQL alone typically wants 25% of available memory for `shared_buffers`
 
 ## Good to Know
 
