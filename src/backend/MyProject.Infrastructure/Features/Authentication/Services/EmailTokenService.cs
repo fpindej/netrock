@@ -37,7 +37,7 @@ internal class EmailTokenService(
             IdentityToken = identityToken,
             Purpose = purpose,
             CreatedAt = utcNow,
-            ExpiresAt = utcNow.AddHours(_emailTokenOptions.ExpiresInHours),
+            ExpiresAt = utcNow.Add(_emailTokenOptions.Lifetime),
             IsUsed = false,
             UserId = userId
         };

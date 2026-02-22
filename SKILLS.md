@@ -712,7 +712,7 @@ cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run
 **Backend-consumed variable:**
 
 1. Add to `.env.example` with a working default value and comment
-2. If it maps to an Options class: use `Section__Key` naming (e.g., `Authentication__Jwt__ExpiresInMinutes=100`)
+2. If it maps to an Options class: use `Section__Key` naming (e.g., `Authentication__Jwt__AccessTokenLifetime=01:40:00`)
 3. If it needs Docker wiring: add to `docker-compose.local.yml` `environment` block with `${VAR}` interpolation
 4. If it needs an Options class: follow [Add an Options Class](#add-an-options-class)
 

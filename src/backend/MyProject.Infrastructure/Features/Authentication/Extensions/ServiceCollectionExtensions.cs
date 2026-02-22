@@ -64,8 +64,9 @@ public static class ServiceCollectionExtensions
             .AddEntityFrameworkStores<TContext>()
                 .AddDefaultTokenProviders();
 
+            var authOptions = configuration.GetSection(AuthenticationOptions.SectionName).Get<AuthenticationOptions>()!;
             services.Configure<DataProtectionTokenProviderOptions>(opt =>
-                opt.TokenLifespan = TimeSpan.FromHours(24));
+                opt.TokenLifespan = authOptions.EmailToken.Lifetime);
 
             return services;
         }
