@@ -23,6 +23,7 @@ let visible = true;
 let initialized = false;
 
 async function check() {
+	if (!initialized) return;
 	try {
 		const res = await fetch('/api/health');
 		healthState.online = res.ok;
