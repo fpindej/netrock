@@ -42,11 +42,16 @@ services:
     ports:
       - "${API_PORT:-8080}:8080"
     <<: *hardened
+    # .NET needs a writable home for data-protection keys and diagnostics.
+    # tmpfs keeps it ephemeral — keys rotate on restart (fine for JWT-based auth).
+    tmpfs:
+      - /tmp
+      - /home/app
     deploy:
       resources:
         limits:
-          cpus: "1.0"
-          memory: 512M
+          cpus: "2.0"
+          memory: 1G
 
   frontend:
     image: ${FRONTEND_IMAGE}
@@ -56,8 +61,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: 256M
+          cpus: "1.0"
+          memory: 512M
 
   redis:
     <<: *hardened
@@ -75,4 +80,4 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 512M
+          memory: 1G

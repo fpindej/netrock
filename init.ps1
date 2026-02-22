@@ -155,6 +155,7 @@ function Test-Prerequisites {
     if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { $missing += "dotnet" }
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { $missing += "docker" }
     if (-not (Get-Command node -ErrorAction SilentlyContinue)) { $missing += "node" }
+    if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) { $missing += "pnpm (run: corepack enable)" }
 
     if ($missing.Count -gt 0) {
         Write-ErrorMessage "Missing required tools: $($missing -join ', ')"

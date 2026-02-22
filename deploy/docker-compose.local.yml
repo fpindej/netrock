@@ -30,7 +30,7 @@ services:
         condition: service_started
 
   seq:
-    image: datalust/seq:latest
+    image: datalust/seq:2025
     restart: unless-stopped
     networks:
       - backend

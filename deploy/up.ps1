@@ -55,8 +55,13 @@ if (-not (Test-Path $Overlay)) {
 if (-not (Test-Path $EnvFile)) {
     Write-Host "Error: Environment file not found: $EnvFile" -ForegroundColor Red
     Write-Host ""
-    Write-Host "Create it from the example:"
-    Write-Host "  Copy-Item `"$ScriptDir\envs\$Environment.env.example`" `"$EnvFile`""
+    $Example = Join-Path $ScriptDir "envs\$Environment.env.example"
+    if (Test-Path $Example) {
+        Write-Host "Create it from the example:"
+        Write-Host "  Copy-Item `"$Example`" `"$EnvFile`""
+    } else {
+        Write-Host "Ensure the environment file exists at: $EnvFile"
+    }
     exit 1
 }
 

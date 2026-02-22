@@ -65,8 +65,13 @@ fi
 if [[ ! -f "$ENV_FILE" ]]; then
     echo "Error: Environment file not found: $ENV_FILE"
     echo ""
-    echo "Create it from the example:"
-    echo "  cp ${SCRIPT_DIR}/envs/${ENV_NAME}.env.example ${ENV_FILE}"
+    EXAMPLE="${SCRIPT_DIR}/envs/${ENV_NAME}.env.example"
+    if [[ -f "$EXAMPLE" ]]; then
+        echo "Create it from the example:"
+        echo "  cp $EXAMPLE $ENV_FILE"
+    else
+        echo "Ensure the environment file exists at: $ENV_FILE"
+    fi
     exit 1
 fi
 
