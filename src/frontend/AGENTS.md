@@ -208,6 +208,82 @@ Nonce-based `script-src`. `style-src: unsafe-inline` required for Svelte transit
 
 API proxy validates `Origin` header on mutations. Same-origin + `ALLOWED_ORIGINS` env var allowed.
 
+## Testing
+
+Uses [vitest](https://vitest.dev/) with the SvelteKit vite config (aliases like `$lib/*` and `$app/*` resolve automatically — no separate vitest config needed).
+
+### Test Setup (`src/test-setup.ts`)
+
+Global mocks for all `$app/*` modules used in the codebase, loaded automatically before every test file via `setupFiles` in `vite.config.ts`. Provides sensible defaults so tests don't repeat boilerplate.
+
+**Mocked modules and defaults:**
+
+| Module             | Exports                                                                                               | Default                                     |
+| ------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `$app/navigation`  | `goto`, `invalidateAll`, `beforeNavigate`, `afterNavigate`, `onNavigate`, `pushState`, `replaceState` | All `vi.fn()`                               |
+| `$app/paths`       | `base`, `assets`, `resolve`                                                                           | `''`, `''`, identity fn                     |
+| `$app/environment` | `browser`, `dev`, `building`, `version`                                                               | `true`, `false`, `false`, `'test'`          |
+| `$app/state`       | `page`, `navigating`, `updated`                                                                       | Localhost URL, `null`, `{ check: vi.fn() }` |
+
+**`$env/*` modules are NOT globally mocked** — they contain project-specific values that vary per test. Mock them individually with `vi.mock('$env/dynamic/public', ...)`.
+
+### Overriding Mocks Per-Test
+
+All mocks reset automatically between tests (`restoreMocks: true` in config). Override defaults in individual tests:
+
+```typescript
+import { vi } from 'vitest';
+import { goto } from '$app/navigation';
+
+it('redirects on failure', async () => {
+	vi.mocked(goto).mockResolvedValueOnce(undefined);
+	// ... test code
+	expect(goto).toHaveBeenCalledWith('/login');
+});
+```
+
+For `$app/state` (object with properties, not functions), re-mock the whole module:
+
+```typescript
+vi.mock('$app/state', () => ({
+	page: {
+		url: new URL('http://localhost/admin'),
+		params: { id: '123' },
+		route: { id: '/admin/[id]' },
+		status: 200,
+		error: null,
+		data: { user: { role: 'admin' } },
+		state: {},
+		form: null
+	},
+	navigating: null,
+	updated: { check: vi.fn() }
+}));
+```
+
+### Environment Strategy
+
+- **Default: `node`** — pure TS module tests (auth, middleware, utils) don't need DOM. Fastest startup.
+- **Per-file override:** add `// @vitest-environment jsdom` at the top of files that need DOM (component tests). This avoids making every test pay jsdom startup cost.
+- **When to add `@testing-library/svelte`:** install it when writing the first Svelte component test, not before. It provides `render()`, `fireEvent()`, and DOM queries for `.svelte` files.
+
+### Conventions
+
+- **Co-locate tests with source:** `foo.ts` → `foo.test.ts` in the same directory
+- **Structure:** `describe('moduleName')` → `it('does X')` with explicit imports from `vitest`
+- **Import from vitest:** `import { describe, it, expect, vi } from 'vitest'` (no implicit globals)
+- **`vi.mock('$lib/...')`** — mock internal modules by path
+- **`vi.fn()`** — mock individual functions; `vi.spyOn()` for partial mocks
+- **No manual mock cleanup needed** — `restoreMocks: true` handles it globally
+
+### Running
+
+```bash
+pnpm run test              # all tests (CI mode)
+pnpm run test:watch        # watch mode
+pnpm run test -- -t "name" # filter by test name
+```
+
 ## Don'ts
 
 - `export let` — use `$props()`

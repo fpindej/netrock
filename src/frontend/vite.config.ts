@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
@@ -13,5 +14,12 @@ export default defineConfig({
 		host: true,
 		port: 5173,
 		allowedHosts: true
+	},
+	test: {
+		include: ['src/**/*.test.ts'],
+		environment: 'node',
+		setupFiles: ['src/test-setup.ts'],
+		restoreMocks: true,
+		passWithNoTests: true
 	}
 });

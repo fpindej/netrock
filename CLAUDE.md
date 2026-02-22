@@ -44,7 +44,7 @@ Run before every commit. Fix all errors before committing. **Loop until green â€
 dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.slnx -c Release
 
 # Frontend (run when src/frontend/ changed)
-cd src/frontend && pnpm run format && pnpm run lint && pnpm run check
+cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check
 ```
 
 ## Autonomous Behaviors
