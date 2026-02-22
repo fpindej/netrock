@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { LoginForm } from '$lib/components/auth';
@@ -8,7 +8,14 @@
 
 	let { data } = $props();
 
-	onMount(() => {
+	onMount(async () => {
+		if (!data.reason) return;
+
+		// Defer one tick so the Toaster portal (rendered in the root layout)
+		// is fully initialised after hydration. Without this, toasts fired
+		// during the very first mount cycle of a hard navigation are lost.
+		await tick();
+
 		if (data.reason === 'session_expired') {
 			toast.error(m.auth_sessionExpired_title(), {
 				description: m.auth_sessionExpired_description()
@@ -20,9 +27,7 @@
 		}
 
 		// Clean URL so bookmarking or refreshing won't re-show the toast
-		if (data.reason) {
-			replaceState(resolve('/login'), {});
-		}
+		replaceState(resolve('/login'), {});
 	});
 </script>
 

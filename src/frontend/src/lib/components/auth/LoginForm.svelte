@@ -35,7 +35,9 @@
 
 	const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-	let isApiOnline = $derived(healthState.online);
+	// Assume online until the first health check completes — prevents a flash
+	// of "API is offline" on hard navigations where the polling restarts.
+	let isApiOnline = $derived(!healthState.checked || healthState.online);
 
 	function onRegisterSuccess(newEmail: string) {
 		email = newEmail;

@@ -22,11 +22,17 @@ describe('health state', () => {
 	beforeEach(() => {
 		vi.useFakeTimers();
 		healthState.online = false;
+		healthState.checked = false;
 	});
 
 	afterEach(() => {
 		cleanup?.();
 		vi.useRealTimers();
+	});
+
+	it('starts unchecked', () => {
+		expect(healthState.checked).toBe(false);
+		expect(healthState.online).toBe(false);
 	});
 
 	it('sets online to true when health check succeeds', async () => {
@@ -36,6 +42,7 @@ describe('health state', () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(healthState.online).toBe(true);
+		expect(healthState.checked).toBe(true);
 	});
 
 	it('sets online to false when health check returns non-ok', async () => {
@@ -45,6 +52,7 @@ describe('health state', () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(healthState.online).toBe(false);
+		expect(healthState.checked).toBe(true);
 	});
 
 	it('sets online to false when fetch throws', async () => {
@@ -54,6 +62,7 @@ describe('health state', () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(healthState.online).toBe(false);
+		expect(healthState.checked).toBe(true);
 	});
 
 	it('recovers when backend comes back online', async () => {

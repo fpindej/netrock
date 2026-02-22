@@ -16,7 +16,7 @@
 const ONLINE_INTERVAL = 30_000;
 const OFFLINE_INTERVAL = 5_000;
 
-export const healthState = $state({ online: false });
+export const healthState = $state({ online: false, checked: false });
 
 let timer: ReturnType<typeof setTimeout> | null = null;
 let visible = true;
@@ -29,6 +29,7 @@ async function check() {
 	} catch {
 		healthState.online = false;
 	}
+	healthState.checked = true;
 	schedule();
 }
 
