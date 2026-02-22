@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
@@ -166,14 +167,28 @@ public static class ServiceCollectionExtensions
 
         var cacheOptions = CacheEntryOptions.AbsoluteExpireIn(TimeSpan.FromMinutes(5));
 
-        var currentStampHash = await cacheService.GetOrSetAsync(
-            CacheKeys.SecurityStamp(userId),
-            async ct =>
-            {
-                var user = await userManager.FindByIdAsync(userId.ToString());
-                return user?.SecurityStamp is not null ? HashHelper.Sha256(user.SecurityStamp) : string.Empty;
-            },
-            cacheOptions);
+        string? currentStampHash;
+        try
+        {
+            currentStampHash = await cacheService.GetOrSetAsync(
+                CacheKeys.SecurityStamp(userId),
+                async ct =>
+                {
+                    var user = await userManager.FindByIdAsync(userId.ToString());
+                    return user?.SecurityStamp is not null ? HashHelper.Sha256(user.SecurityStamp) : string.Empty;
+                },
+                cacheOptions);
+        }
+        catch (Exception ex)
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                .CreateLogger(typeof(ServiceCollectionExtensions));
+            logger.LogWarning(ex,
+                "Cache unavailable during security stamp validation for user '{UserId}', falling back to database", userId);
+
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            currentStampHash = user?.SecurityStamp is not null ? HashHelper.Sha256(user.SecurityStamp) : string.Empty;
+        }
 
         if (string.IsNullOrEmpty(currentStampHash))
         {
