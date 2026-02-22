@@ -9,11 +9,18 @@
 	let { data } = $props();
 
 	onMount(() => {
-		if (data.sessionExpired) {
+		if (data.reason === 'session_expired') {
 			toast.error(m.auth_sessionExpired_title(), {
 				description: m.auth_sessionExpired_description()
 			});
-			// Clean URL so bookmarking or refreshing won't re-show the toast
+		} else if (data.reason === 'password_changed') {
+			toast.success(m.auth_passwordChanged_title(), {
+				description: m.auth_passwordChanged_description()
+			});
+		}
+
+		// Clean URL so bookmarking or refreshing won't re-show the toast
+		if (data.reason) {
 			replaceState(resolve('/login'), {});
 		}
 	});

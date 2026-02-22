@@ -77,20 +77,25 @@ describe('login page server load', () => {
 		}
 	});
 
-	// ── Session expired query param parsing ─────────────────────────
+	// ── Reason query param parsing ──────────────────────────────────
 
-	it('no reason param — returns sessionExpired: false', async () => {
+	it('no reason param — returns reason: null', async () => {
 		const result = await load(mockLoadEvent());
-		expect(result).toEqual({ sessionExpired: false });
+		expect(result).toEqual({ reason: null });
 	});
 
-	it('reason=session_expired — returns sessionExpired: true', async () => {
+	it('reason=session_expired — returns reason', async () => {
 		const result = await load(mockLoadEvent({ searchParams: { reason: 'session_expired' } }));
-		expect(result).toEqual({ sessionExpired: true });
+		expect(result).toEqual({ reason: 'session_expired' });
 	});
 
-	it('unrelated reason param — returns sessionExpired: false', async () => {
+	it('reason=password_changed — returns reason', async () => {
+		const result = await load(mockLoadEvent({ searchParams: { reason: 'password_changed' } }));
+		expect(result).toEqual({ reason: 'password_changed' });
+	});
+
+	it('unrecognized reason param — returns reason: null', async () => {
 		const result = await load(mockLoadEvent({ searchParams: { reason: 'other' } }));
-		expect(result).toEqual({ sessionExpired: false });
+		expect(result).toEqual({ reason: null });
 	});
 });

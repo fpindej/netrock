@@ -85,6 +85,9 @@
 	"auth_sessionExpired_title": "Session expired",
 	"auth_sessionExpired_description": "You've been logged out. Please sign in again.",
 
+	"auth_passwordChanged_title": "Password changed",
+	"auth_passwordChanged_description": "Your password was updated. Please sign in with your new password.",
+
 	"auth_register_title": "Create an account",
 	"auth_register_description": "Enter your details below to create your account",
 	"auth_register_email": "Email",

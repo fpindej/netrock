@@ -6,7 +6,6 @@
 	import * as m from '$lib/paraglide/messages';
 	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
-	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { createFieldShakes, createCooldown } from '$lib/state';
 
@@ -42,12 +41,10 @@
 			});
 
 			if (response.ok) {
-				currentPassword = '';
-				newPassword = '';
-				confirmPassword = '';
-				toast.success(m.settings_changePassword_success());
-				await invalidateAll();
-				await goto(resolve('/login'));
+				// Hard navigation clears all client-side state (cached JWT, SvelteKit
+				// load data). The backend already revoked all refresh tokens — the
+				// first SSR load will fail to authenticate and show the login page.
+				window.location.href = `${resolve('/login')}?reason=password_changed`;
 			} else {
 				handleMutationError(response, apiError, {
 					cooldown,

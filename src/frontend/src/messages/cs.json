@@ -85,6 +85,9 @@
 	"auth_sessionExpired_title": "Relace vypršela",
 	"auth_sessionExpired_description": "Byli jste odhlášeni. Přihlaste se prosím znovu.",
 
+	"auth_passwordChanged_title": "Heslo změněno",
+	"auth_passwordChanged_description": "Vaše heslo bylo aktualizováno. Přihlaste se prosím novým heslem.",
+
 	"auth_register_title": "Vytvořit účet",
 	"auth_register_description": "Zadejte své údaje pro vytvoření účtu",
 	"auth_register_email": "E-mail",
