@@ -569,8 +569,8 @@ internal class AuthenticationService(
     }
 
     /// <summary>
-    /// Formats a <see cref="TimeSpan"/> as a human-readable lifetime string (e.g. "24 hours", "7 days").
-    /// Prefers the largest whole unit: hours first, then days (so 24 h → "24 hours", 48 h → "2 days").
+    /// Formats a <see cref="TimeSpan"/> as a human-readable lifetime string.
+    /// Uses hours if evenly divisible (e.g. "24 hours", "48 hours"), otherwise minutes (e.g. "90 minutes").
     /// </summary>
     internal static string FormatLifetime(TimeSpan lifetime)
     {
@@ -580,12 +580,6 @@ internal class AuthenticationService(
         {
             var hours = (int)lifetime.TotalHours;
             return hours == 1 ? "1 hour" : $"{hours} hours";
-        }
-
-        if (lifetime.TotalDays >= 1 && lifetime.TotalDays % 1 == 0)
-        {
-            var days = (int)lifetime.TotalDays;
-            return days == 1 ? "1 day" : $"{days} days";
         }
 
         var minutes = (int)lifetime.TotalMinutes;

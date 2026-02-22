@@ -31,10 +31,9 @@ public class FormatLifetimeTests
     }
 
     [Fact]
-    public void FormatLifetime_NonWholeHoursAndDays_ReturnsDays()
+    public void FormatLifetime_FractionalDaysWholeHours_ReturnsHours()
     {
-        // 2 days + 12 hours: not whole hours (60h % 1 == 0? yes it is), actually 2.5 days = 60 hours
-        // 60 hours is whole hours, so returns "60 hours"
+        // 2.5 days = 60 hours — whole hours, so returns "60 hours"
         Assert.Equal("60 hours", AuthenticationService.FormatLifetime(TimeSpan.FromDays(2.5)));
     }
 
