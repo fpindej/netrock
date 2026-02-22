@@ -12,7 +12,7 @@ NETrock works out of the box for local development, but there are things you nee
 - [ ] **CORS origins** — set `Cors__AllowedOrigins` to your production domain(s). The app **will refuse to start** if `AllowAllOrigins` is `true` outside of Development — this is intentional
 - [ ] **JWT secret** — the init script generates one, but verify it's set in production via `Authentication__Jwt__Key` (64+ chars, cryptographically random)
 - [ ] **Database** — point `ConnectionStrings__Database` to your production PostgreSQL instance
-- [ ] **CAPTCHA keys** — replace the Cloudflare Turnstile development keys with production keys (`Captcha__SecretKey` backend, `TURNSTILE_SITE_KEY` frontend — runtime-configurable via `$env/dynamic/private` and SSR layout data)
+- [ ] **CAPTCHA keys** — replace the Cloudflare Turnstile development keys with production keys (`Captcha__SecretKey` backend, `TURNSTILE_SITE_KEY` frontend — runtime-configurable via the `(public)` layout server load)
 - [ ] **Frontend URL in emails** — set `Email__FrontendBaseUrl` to your production domain so email verification and password reset links work
 
 ## Should Do

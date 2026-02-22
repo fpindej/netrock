@@ -9,7 +9,6 @@ export const load: LayoutServerLoad = async ({ locals, fetch, url }) => {
 		user,
 		backendError,
 		locale: locals.locale,
-		apiUrl: dev ? SERVER_CONFIG.API_URL : undefined,
-		turnstileSiteKey: SERVER_CONFIG.TURNSTILE_SITE_KEY
+		apiUrl: dev ? SERVER_CONFIG.API_URL : undefined
 	};
 };
