@@ -1,6 +1,16 @@
+/**
+ * Tests for the (app) layout server guard — the auth boundary for protected routes.
+ *
+ * These cover the server-side load function only. The client-side behavior
+ * (toast + replaceState in login/+page.svelte) is inside an `onMount` callback
+ * whose logic is a trivial conditional — verifying it would test Svelte's
+ * lifecycle rather than application logic. If component testing infrastructure
+ * (e.g. @testing-library/svelte) is added later, a smoke test for the toast
+ * would be a reasonable addition.
+ */
 import { describe, expect, it, vi } from 'vitest';
 import { isHttpError, isRedirect } from '@sveltejs/kit';
-import { load } from './+layout.server';
+import { load, REFRESH_TOKEN_COOKIE } from './+layout.server';
 
 type LoadEvent = Parameters<typeof load>[0];
 
@@ -48,7 +58,7 @@ function mockLoadEvent(
 		...EVENT_DEFAULTS,
 		parent: vi.fn().mockResolvedValue({ user, backendError }),
 		cookies: {
-			get: vi.fn((name: string) => (name === '__Secure-REFRESH-TOKEN' ? refreshCookie : undefined)),
+			get: vi.fn((name: string) => (name === REFRESH_TOKEN_COOKIE ? refreshCookie : undefined)),
 			getAll: vi.fn(() => []),
 			set: vi.fn(),
 			delete: vi.fn(),
@@ -126,6 +136,8 @@ describe('(app) layout server load', () => {
 			// redirect is expected
 		}
 
+		// Literal string intentional — this is a contract test against the backend's
+		// CookieNames.RefreshToken. If the exported constant drifts, this catches it.
 		expect(vi.mocked(event.cookies.get)).toHaveBeenCalledWith('__Secure-REFRESH-TOKEN');
 	});
 });
