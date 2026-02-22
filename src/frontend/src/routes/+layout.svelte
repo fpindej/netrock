@@ -30,7 +30,7 @@
 		const cleanupHealth = initHealthCheck();
 		return () => {
 			cleanupTheme?.();
-			cleanupHealth();
+			cleanupHealth?.();
 		};
 	});
 

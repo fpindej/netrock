@@ -8,6 +8,9 @@
  *
  * Initialize once in the root layout's `onMount`. Any component can read
  * `healthState.online` reactively.
+ *
+ * Client-only singleton — never import in `.server.ts` files. Module-level
+ * state would leak across SSR requests.
  */
 
 const ONLINE_INTERVAL = 30_000;
@@ -17,6 +20,7 @@ export const healthState = $state({ online: false });
 
 let timer: ReturnType<typeof setTimeout> | null = null;
 let visible = true;
+let initialized = false;
 
 async function check() {
 	try {
@@ -47,12 +51,17 @@ function handleVisibility() {
 
 /**
  * Start health polling. Call in `onMount`; returns a cleanup function.
+ * Idempotent — safe to call during HMR re-mounts.
  */
 export function initHealthCheck() {
+	if (initialized) return () => {};
+	initialized = true;
+
 	check();
 	document.addEventListener('visibilitychange', handleVisibility);
 
 	return () => {
+		initialized = false;
 		if (timer) clearTimeout(timer);
 		timer = null;
 		document.removeEventListener('visibilitychange', handleVisibility);
