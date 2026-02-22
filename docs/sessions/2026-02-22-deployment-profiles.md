@@ -20,6 +20,9 @@ Overhauled the deployment setup from a flat root-level layout into a structured 
 | `refactor(frontend): rename turnstile key and scope to public routes` | Rename `PUBLIC_TURNSTILE_SITE_KEY` → `TURNSTILE_SITE_KEY`, scope to `(public)` layout only. |
 | `fix(deploy): harden scripts and add operational comments` | `set -euo pipefail`, PowerShell exit code propagation, REDISCLI_AUTH/redis comments, legacy .env gitignore. |
 | `docs: add TLS, backup, resource tuning, and volume migration guidance` | TLS termination guide with Caddy example, pg_dump backup command, resource limit tuning note, volume migration instructions. |
+| `refactor(deploy): replace redis CLI password with config file generation` | Pass Redis password as env var, generate `/tmp/redis.conf` at startup via `printf`+`exec`. Process listing no longer shows the literal password. |
+| `feat(deploy): segment networks into frontend and backend tiers` | Replace flat `app` network with `frontend` (frontend ↔ api) and `backend` (api ↔ db/redis/seq). Explicit `name:` with project slug for multi-tenant host safety. |
+| `refactor(deploy): replace curl with .NET health probe binary` | Remove `curl` from production API image. Add minimal `HealthProbe` console app (zero NuGet deps) for Docker healthcheck. |
 
 ## Architecture
 
@@ -45,8 +48,10 @@ deploy/
 - **YAML anchor `x-hardened`** in production overlay: DRY container hardening (cap_drop, read_only, no-new-privileges, memory limits)
 - **Thin `up.sh` wrapper** over fat orchestration script: resolves paths, validates, then `exec docker compose`
 - **Testing key only in local.env.example**, not base compose: prevents silent CAPTCHA bypass in production
-- **`REDISCLI_AUTH` env var** over `-a` CLI flag: avoids password leak in process listings
+- **Redis password via config file** over `--requirepass` CLI flag: password invisible in `ps aux` / `/proc/pid/cmdline`. `exec redis-server` for proper signal handling
 - **Frontend env isolation**: frontend container receives only the vars it needs via compose `environment:` block, never the full env file with backend secrets
 - **Non-root containers**: `USER node` (frontend) and `USER $APP_UID` (backend) for defense-in-depth
 - **`TURNSTILE_SITE_KEY`** renamed from `PUBLIC_TURNSTILE_SITE_KEY`: the `PUBLIC_` prefix was a SvelteKit `$env/static/public` convention that no longer applies
 - **Turnstile scoped to `(public)` layout**: key only serialized into login/register/forgot-password pages, not every page
+- **Two-tier network segmentation** over flat network: frontend cannot reach DB/Redis directly. Slug-prefixed network names for multi-tenant Docker host safety
+- **HealthProbe .NET console app** over `curl` in production image: removes attack surface (curl is a powerful exfiltration tool), uses `dotnet` already present in the image. Zero NuGet dependencies
