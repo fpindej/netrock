@@ -23,7 +23,7 @@ services:
       Authentication__Jwt__Key: ${JWT_SECRET_KEY}
       Hosting__ReverseProxy__TrustedNetworks__0: 172.16.0.0/12
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      test: ["CMD", "dotnet", "/app/healthprobe/HealthProbe.dll", "http://localhost:8080/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -102,6 +102,8 @@ volumes:
 
 networks:
   frontend:
+    name: {INIT_PROJECT_SLUG}-frontend
     driver: bridge
   backend:
+    name: {INIT_PROJECT_SLUG}-backend
     driver: bridge
