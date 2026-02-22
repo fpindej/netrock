@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { LoginForm } from '$lib/components/auth';
@@ -7,13 +8,15 @@
 
 	let { data } = $props();
 
-	if (data.sessionExpired) {
-		toast.error(m.auth_sessionExpired_title(), {
-			description: m.auth_sessionExpired_description()
-		});
-		// Clean URL so bookmarking or refreshing won't re-show the toast
-		replaceState(resolve('/login'), {});
-	}
+	onMount(() => {
+		if (data.sessionExpired) {
+			toast.error(m.auth_sessionExpired_title(), {
+				description: m.auth_sessionExpired_description()
+			});
+			// Clean URL so bookmarking or refreshing won't re-show the toast
+			replaceState(resolve('/login'), {});
+		}
+	});
 </script>
 
 <svelte:head>
