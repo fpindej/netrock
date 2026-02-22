@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { ForgotPasswordForm } from '$lib/components/auth';
 	import * as m from '$lib/paraglide/messages';
+
+	let { data } = $props();
 </script>
 
 <svelte:head>
@@ -8,4 +10,4 @@
 	<meta name="description" content={m.meta_forgotPassword_description()} />
 </svelte:head>
 
-<ForgotPasswordForm />
+<ForgotPasswordForm turnstileSiteKey={data.turnstileSiteKey} />

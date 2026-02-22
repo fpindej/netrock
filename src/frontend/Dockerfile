@@ -12,11 +12,6 @@ FROM base AS builder
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY . .
 
-# SvelteKit $env/static/public vars are inlined at build time.
-# Pass via: docker build --build-arg PUBLIC_TURNSTILE_SITE_KEY=...
-ARG PUBLIC_TURNSTILE_SITE_KEY
-ENV PUBLIC_TURNSTILE_SITE_KEY=${PUBLIC_TURNSTILE_SITE_KEY}
-
 RUN pnpm run build
 
 FROM node:22-alpine

@@ -18,7 +18,12 @@
 	import { LoginBackground, RegisterDialog } from '$lib/components/auth';
 	import { toast } from '$lib/components/ui/sonner';
 
-	let { apiUrl }: { apiUrl?: string } = $props();
+	interface Props {
+		apiUrl?: string;
+		turnstileSiteKey: string;
+	}
+
+	let { apiUrl, turnstileSiteKey }: Props = $props();
 
 	let email = $state('');
 	let password = $state('');
@@ -204,4 +209,4 @@
 	{/if}
 </LoginBackground>
 
-<RegisterDialog bind:open={isRegisterOpen} onSuccess={onRegisterSuccess} />
+<RegisterDialog bind:open={isRegisterOpen} onSuccess={onRegisterSuccess} {turnstileSiteKey} />

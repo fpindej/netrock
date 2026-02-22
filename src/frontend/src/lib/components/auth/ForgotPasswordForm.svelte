@@ -13,7 +13,12 @@
 	import { MailCheck } from '@lucide/svelte';
 	import { LoginBackground, TurnstileWidget } from '$lib/components/auth';
 	import { toast } from '$lib/components/ui/sonner';
-	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
+
+	interface Props {
+		turnstileSiteKey: string;
+	}
+
+	let { turnstileSiteKey }: Props = $props();
 
 	let email = $state('');
 	let captchaToken = $state('');
@@ -101,7 +106,7 @@
 						</div>
 
 						<TurnstileWidget
-							siteKey={PUBLIC_TURNSTILE_SITE_KEY}
+							siteKey={turnstileSiteKey}
 							onVerified={(t) => (captchaToken = t)}
 							onError={() => toast.error(m.auth_captcha_error())}
 							resetRef={(fn) => (resetCaptcha = fn)}
