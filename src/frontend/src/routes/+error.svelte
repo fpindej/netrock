@@ -108,7 +108,9 @@
 			</Card.Header>
 			<Card.Content>
 				<p class="text-muted-foreground">
-					{message && message !== 'An unexpected error occurred.' ? message : content.description()}
+					{!is503 && message && message !== 'An unexpected error occurred.'
+						? message
+						: content.description()}
 				</p>
 			</Card.Content>
 			<Card.Footer class="flex justify-center pb-8">

@@ -11,12 +11,14 @@
 	import { resolve } from '$app/paths';
 	import { logout, createAuthMiddleware } from '$lib/auth';
 	import { initBrowserAuth } from '$lib/api';
+	import { initBackendMonitor } from '$lib/api/backend-monitor';
 	import { ShortcutsHelp } from '$lib/components/layout';
 	import { toggleSidebar, initHealthCheck } from '$lib/state';
 
 	let { children } = $props();
 
 	onMount(() => {
+		initBackendMonitor();
 		initBrowserAuth(
 			createAuthMiddleware(fetch, '', async () => {
 				toast.error(m.auth_sessionExpired_title(), {
