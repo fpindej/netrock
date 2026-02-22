@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyProject.Application.Caching;
 using MyProject.Infrastructure.Caching.Options;
@@ -7,20 +8,30 @@ using MyProject.Infrastructure.Caching.Options;
 namespace MyProject.Infrastructure.Caching.Services;
 
 /// <summary>
-/// Redis-backed implementation of <see cref="ICacheService"/> using JSON serialization.
+/// Distributed-cache-backed implementation of <see cref="ICacheService"/> using JSON serialization.
+/// All <see cref="IDistributedCache"/> operations are wrapped in try/catch so that a cache
+/// infrastructure outage (e.g. Redis down) degrades gracefully instead of crashing the request.
 /// </summary>
 internal class CacheService(
     IDistributedCache distributedCache,
-    IOptions<CachingOptions> cachingOptions) : ICacheService
+    IOptions<CachingOptions> cachingOptions,
+    ILogger<CacheService> logger) : ICacheService
 {
     private readonly TimeSpan _defaultExpiration = cachingOptions.Value.DefaultExpiration;
 
     /// <inheritdoc />
     public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
     {
-        var cachedValue = await distributedCache.GetStringAsync(key, cancellationToken);
-
-        return string.IsNullOrEmpty(cachedValue) ? default : JsonSerializer.Deserialize<T>(cachedValue);
+        try
+        {
+            var cachedValue = await distributedCache.GetStringAsync(key, cancellationToken);
+            return string.IsNullOrEmpty(cachedValue) ? default : JsonSerializer.Deserialize<T>(cachedValue);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Cache get failed for key '{CacheKey}', returning default", key);
+            return default;
+        }
     }
 
     /// <inheritdoc />
@@ -30,8 +41,15 @@ internal class CacheService(
         CacheEntryOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var serializedValue = JsonSerializer.Serialize(value);
-        await distributedCache.SetStringAsync(key, serializedValue, ToDistributedOptions(options), cancellationToken);
+        try
+        {
+            var serializedValue = JsonSerializer.Serialize(value);
+            await distributedCache.SetStringAsync(key, serializedValue, ToDistributedOptions(options), cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Cache set failed for key '{CacheKey}'", key);
+        }
     }
 
     /// <inheritdoc />
@@ -59,7 +77,14 @@ internal class CacheService(
     /// <inheritdoc />
     public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
     {
-        await distributedCache.RemoveAsync(key, cancellationToken);
+        try
+        {
+            await distributedCache.RemoveAsync(key, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Cache remove failed for key '{CacheKey}'", key);
+        }
     }
 
     private DistributedCacheEntryOptions ToDistributedOptions(CacheEntryOptions? options)

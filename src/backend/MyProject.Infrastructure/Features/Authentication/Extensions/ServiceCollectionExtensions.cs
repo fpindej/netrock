@@ -141,7 +141,7 @@ public static class ServiceCollectionExtensions
 
     /// <summary>
     /// Validates the security stamp claim in the JWT token against the current stamp in the database.
-    /// Uses Redis caching (5 minute TTL) to avoid a database hit on every request.
+    /// Uses distributed caching (5 minute TTL) to avoid a database hit on every request.
     /// If the stamp has changed (password change, role update, session revocation), the token is rejected.
     /// </summary>
     private static async Task ValidateSecurityStampAsync(TokenValidatedContext context, string securityStampClaimType)

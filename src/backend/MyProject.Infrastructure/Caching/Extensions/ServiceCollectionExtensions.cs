@@ -27,6 +27,12 @@ public static class ServiceCollectionExtensions
 
         var cachingOptions = configuration.GetSection(CachingOptions.SectionName).Get<CachingOptions>();
 
+        if (cachingOptions?.Enabled is false)
+        {
+            services.AddSingleton<ICacheService, NoOpCacheService>();
+            return services;
+        }
+
         if (cachingOptions?.Redis.Enabled is true)
         {
             var configurationOptions = BuildConfigurationOptions(cachingOptions.Redis);
