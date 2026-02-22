@@ -76,13 +76,17 @@ internal class AuthenticationService(
         var refreshTokenString = tokenProvider.GenerateRefreshToken();
         var utcNow = timeProvider.GetUtcNow();
 
+        var refreshLifetime = rememberMe
+            ? _jwtOptions.RefreshToken.PersistentLifetime
+            : _jwtOptions.RefreshToken.SessionLifetime;
+
         var refreshTokenEntity = new RefreshToken
         {
             Id = Guid.NewGuid(),
             Token = HashHelper.Sha256(refreshTokenString),
             UserId = user.Id,
             CreatedAt = utcNow.UtcDateTime,
-            ExpiredAt = utcNow.UtcDateTime.AddDays(_jwtOptions.RefreshToken.ExpiresInDays),
+            ExpiredAt = utcNow.UtcDateTime.Add(refreshLifetime),
             IsUsed = false,
             IsInvalidated = false,
             IsPersistent = rememberMe
@@ -94,7 +98,7 @@ internal class AuthenticationService(
         if (useCookies)
         {
             SetAuthCookies(accessToken, refreshTokenString, rememberMe, utcNow,
-                utcNow.AddDays(_jwtOptions.RefreshToken.ExpiresInDays));
+                utcNow.Add(refreshLifetime));
         }
 
         var output = new AuthenticationOutput(
@@ -315,7 +319,7 @@ internal class AuthenticationService(
             <p>You requested a password reset. Click the link below to set a new password:</p>
             <p><a href="{safeResetUrl}">Reset Password</a></p>
             <p>If you didn't request this, you can safely ignore this email.</p>
-            <p>This link will expire in {_emailTokenOptions.ExpiresInHours} hours.</p>
+            <p>This link will expire in {_emailTokenOptions.Lifetime.ToHumanReadable()}.</p>
             """;
 
         var plainTextBody = $"""
@@ -465,7 +469,7 @@ internal class AuthenticationService(
         cookieService.SetSecureCookie(
             key: CookieNames.AccessToken,
             value: accessToken,
-            expires: persistent ? utcNow.AddMinutes(_jwtOptions.ExpiresInMinutes) : null);
+            expires: persistent ? utcNow.Add(_jwtOptions.AccessTokenLifetime) : null);
 
         cookieService.SetSecureCookie(
             key: CookieNames.RefreshToken,

@@ -55,10 +55,11 @@ public class AuthenticationServiceTests : IDisposable
                 Key = "ThisIsATestSigningKeyWithAtLeast32Chars!",
                 Issuer = "test-issuer",
                 Audience = "test-audience",
-                ExpiresInMinutes = 10,
+                AccessTokenLifetime = TimeSpan.FromMinutes(10),
                 RefreshToken = new AuthenticationOptions.JwtOptions.RefreshTokenOptions
                 {
-                    ExpiresInDays = 7
+                    PersistentLifetime = TimeSpan.FromDays(7),
+                    SessionLifetime = TimeSpan.FromHours(24)
                 }
             }
         });
@@ -149,7 +150,7 @@ public class AuthenticationServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task Login_ValidCredentials_SetsCorrectTokenExpiration()
+    public async Task Login_ValidCredentials_SetsCreatedAtToCurrentTime()
     {
         var user = CreateTestUser();
         SetupSuccessfulLogin(user);
@@ -157,9 +158,33 @@ public class AuthenticationServiceTests : IDisposable
         await _sut.Login("test@example.com", "password123");
 
         var storedToken = Assert.Single(_dbContext.RefreshTokens);
+        Assert.Equal(_timeProvider.GetUtcNow().UtcDateTime, storedToken.CreatedAt);
+    }
+
+    [Fact]
+    public async Task Login_WithRememberMe_UsesPersistentLifetime()
+    {
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
+
+        await _sut.Login("test@example.com", "password123", rememberMe: true);
+
+        var storedToken = Assert.Single(_dbContext.RefreshTokens);
         var expectedExpiry = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7);
         Assert.Equal(expectedExpiry, storedToken.ExpiredAt);
-        Assert.Equal(_timeProvider.GetUtcNow().UtcDateTime, storedToken.CreatedAt);
+    }
+
+    [Fact]
+    public async Task Login_WithoutRememberMe_UsesSessionLifetime()
+    {
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
+
+        await _sut.Login("test@example.com", "password123", rememberMe: false);
+
+        var storedToken = Assert.Single(_dbContext.RefreshTokens);
+        var expectedExpiry = _timeProvider.GetUtcNow().UtcDateTime.AddHours(24);
+        Assert.Equal(expectedExpiry, storedToken.ExpiredAt);
     }
 
     [Fact]

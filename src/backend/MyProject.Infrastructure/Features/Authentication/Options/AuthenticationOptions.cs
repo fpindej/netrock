@@ -29,7 +29,7 @@ public sealed class AuthenticationOptions
     /// <summary>
     /// Configuration options for JWT token generation and validation.
     /// </summary>
-    public sealed class JwtOptions
+    public sealed class JwtOptions : IValidatableObject
     {
         /// <summary>
         /// Gets or sets the symmetric signing key for JWT tokens.
@@ -54,11 +54,10 @@ public sealed class AuthenticationOptions
         public string Audience { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the JWT access token lifetime in minutes.
-        /// Defaults to 10 minutes. Must be between 1 and 120.
+        /// Gets or sets the JWT access token lifetime.
+        /// Defaults to 10 minutes. Valid range: 1 minute – 2 hours.
         /// </summary>
-        [Range(1, 120)]
-        public int ExpiresInMinutes { get; init; } = 10;
+        public TimeSpan AccessTokenLifetime { get; [UsedImplicitly] init; } = TimeSpan.FromMinutes(10);
 
         /// <summary>
         /// Gets or sets the refresh token configuration.
@@ -72,24 +71,65 @@ public sealed class AuthenticationOptions
         /// </summary>
         public string SecurityStampClaimType { get; init; } = "security_stamp";
 
+        /// <inheritdoc />
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (AccessTokenLifetime < TimeSpan.FromMinutes(1) || AccessTokenLifetime > TimeSpan.FromHours(2))
+            {
+                yield return new ValidationResult(
+                    $"AccessTokenLifetime must be between 1 minute and 2 hours, but was {AccessTokenLifetime}.",
+                    [nameof(AccessTokenLifetime)]);
+            }
+        }
+
         /// <summary>
         /// Configuration options for refresh token generation and lifetime.
         /// </summary>
-        public sealed class RefreshTokenOptions
+        public sealed class RefreshTokenOptions : IValidatableObject
         {
             /// <summary>
-            /// Gets or sets the refresh token lifetime in days.
-            /// Defaults to 7 days. Must be between 1 and 365.
+            /// Gets or sets the refresh token lifetime for persistent (remember-me) sessions.
+            /// Defaults to 7 days. Valid range: 1 day – 365 days.
             /// </summary>
-            [Range(1, 365)]
-            public int ExpiresInDays { get; [UsedImplicitly] init; } = 7;
+            public TimeSpan PersistentLifetime { get; [UsedImplicitly] init; } = TimeSpan.FromDays(7);
+
+            /// <summary>
+            /// Gets or sets the refresh token lifetime for non-persistent (session) logins.
+            /// Defaults to 24 hours. Valid range: 10 minutes – 30 days. Must be ≤ PersistentLifetime.
+            /// </summary>
+            public TimeSpan SessionLifetime { get; [UsedImplicitly] init; } = TimeSpan.FromHours(24);
+
+            /// <inheritdoc />
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+            {
+                if (PersistentLifetime < TimeSpan.FromDays(1) || PersistentLifetime > TimeSpan.FromDays(365))
+                {
+                    yield return new ValidationResult(
+                        $"PersistentLifetime must be between 1 day and 365 days, but was {PersistentLifetime}.",
+                        [nameof(PersistentLifetime)]);
+                }
+
+                if (SessionLifetime < TimeSpan.FromMinutes(10) || SessionLifetime > TimeSpan.FromDays(30))
+                {
+                    yield return new ValidationResult(
+                        $"SessionLifetime must be between 10 minutes and 30 days, but was {SessionLifetime}.",
+                        [nameof(SessionLifetime)]);
+                }
+
+                if (SessionLifetime > PersistentLifetime)
+                {
+                    yield return new ValidationResult(
+                        $"SessionLifetime ({SessionLifetime}) must not exceed PersistentLifetime ({PersistentLifetime}).",
+                        [nameof(SessionLifetime)]);
+                }
+            }
         }
     }
 
     /// <summary>
     /// Configuration options for opaque email tokens used in password-reset and email-verification links.
     /// </summary>
-    public sealed class EmailTokenOptions
+    public sealed class EmailTokenOptions : IValidatableObject
     {
         /// <summary>
         /// Gets or sets the length of the random token in bytes.
@@ -99,10 +139,20 @@ public sealed class AuthenticationOptions
         public int TokenLengthInBytes { get; [UsedImplicitly] init; } = 32;
 
         /// <summary>
-        /// Gets or sets the token lifetime in hours.
-        /// Defaults to 24 hours. Must be between 1 and 168 (7 days).
+        /// Gets or sets the email token lifetime.
+        /// Defaults to 24 hours. Valid range: 1 hour – 7 days.
         /// </summary>
-        [Range(1, 168)]
-        public int ExpiresInHours { get; [UsedImplicitly] init; } = 24;
+        public TimeSpan Lifetime { get; [UsedImplicitly] init; } = TimeSpan.FromHours(24);
+
+        /// <inheritdoc />
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Lifetime < TimeSpan.FromHours(1) || Lifetime > TimeSpan.FromDays(7))
+            {
+                yield return new ValidationResult(
+                    $"Lifetime must be between 1 hour and 7 days, but was {Lifetime}.",
+                    [nameof(Lifetime)]);
+            }
+        }
     }
 }

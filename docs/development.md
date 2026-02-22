@@ -10,7 +10,7 @@ Edit `.env`, restart Docker:
 
 ```bash
 # Longer JWT tokens, relaxed rate limit
-Authentication__Jwt__ExpiresInMinutes=300
+Authentication__Jwt__AccessTokenLifetime=05:00:00
 RateLimiting__Global__PermitLimit=1000
 ```
 
