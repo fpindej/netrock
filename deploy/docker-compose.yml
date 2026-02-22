@@ -14,7 +14,8 @@ services:
   api:
     restart: unless-stopped
     networks:
-      - app
+      - frontend
+      - backend
     environment:
       ConnectionStrings__Database: Host=db;Port=5432;Database=${POSTGRES_DB:-{INIT_PROJECT_SLUG}};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       Caching__Redis__ConnectionString: redis:6379
@@ -37,7 +38,7 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     networks:
-      - app
+      - backend
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
@@ -61,7 +62,7 @@ services:
     image: postgres:15-alpine
     restart: unless-stopped
     networks:
-      - app
+      - backend
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-{INIT_PROJECT_SLUG}}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -78,7 +79,7 @@ services:
   frontend:
     restart: unless-stopped
     networks:
-      - app
+      - frontend
     environment:
       API_URL: ${API_URL:-http://api:8080}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
@@ -100,5 +101,7 @@ volumes:
   redis_data:
 
 networks:
-  app:
+  frontend:
+    driver: bridge
+  backend:
     driver: bridge

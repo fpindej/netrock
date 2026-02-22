@@ -33,7 +33,7 @@ services:
     image: datalust/seq:latest
     restart: unless-stopped
     networks:
-      - app
+      - backend
     environment:
       ACCEPT_EULA: "Y"
       SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
