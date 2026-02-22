@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Options;
 
 namespace MyProject.Infrastructure.Caching.Options;
 
@@ -28,12 +29,14 @@ public sealed class CachingOptions : IValidatableObject
     /// Gets or sets the Redis cache configuration.
     /// When Redis.Enabled is true, Redis will be used as the distributed cache.
     /// </summary>
+    [ValidateObjectMembers]
     public RedisOptions Redis { get; init; } = new();
 
     /// <summary>
     /// Gets or sets the in-memory cache configuration.
     /// Used as fallback when Redis is disabled.
     /// </summary>
+    [ValidateObjectMembers]
     public InMemoryOptions InMemory { get; init; } = new();
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -43,28 +46,6 @@ public sealed class CachingOptions : IValidatableObject
             yield return new ValidationResult(
                 "DefaultExpiration must be greater than zero.",
                 [nameof(DefaultExpiration)]);
-        }
-
-        if (!Enabled)
-        {
-            yield break;
-        }
-
-        if (Redis.Enabled)
-        {
-            // Validate Redis options when enabled
-            foreach (var result in Redis.Validate(validationContext))
-            {
-                yield return result;
-            }
-        }
-        else
-        {
-            // Validate InMemory options when Redis is disabled
-            foreach (var result in InMemory.Validate(validationContext))
-            {
-                yield return result;
-            }
         }
     }
 
@@ -143,10 +124,15 @@ public sealed class CachingOptions : IValidatableObject
         public int KeepAliveSeconds { get; init; } = 60;
 
         /// <summary>
-        /// Validates Redis options. Only called when Redis is enabled.
+        /// Validates Redis options. Skips validation when Redis is disabled.
         /// </summary>
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
+            if (!Enabled)
+            {
+                yield break;
+            }
+
             if (string.IsNullOrWhiteSpace(ConnectionString))
             {
                 yield return new ValidationResult(

@@ -5,7 +5,7 @@ namespace MyProject.Infrastructure.Features.Captcha.Options;
 /// <summary>
 /// Configuration options for Cloudflare Turnstile CAPTCHA verification.
 /// </summary>
-internal sealed class CaptchaOptions
+public sealed class CaptchaOptions
 {
     /// <summary>
     /// The configuration section name in appsettings.
