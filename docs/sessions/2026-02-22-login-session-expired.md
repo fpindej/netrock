@@ -73,7 +73,19 @@ Replaced the per-component health check with a global reactive state (`$lib/stat
 | `src/routes/(public)/login/+page.server.ts` | Generalized `sessionExpired` boolean to typed `LoginReason` union |
 | `src/routes/(public)/login/+page.svelte` | Handle both `session_expired` and `password_changed` toasts |
 | `src/lib/components/settings/ChangePasswordForm.svelte` | Hard navigation to `/login?reason=password_changed` |
-| `src/messages/en.json`, `cs.json` | Added `auth_passwordChanged_*` i18n messages |
+| `src/messages/en.json`, `cs.json` | Added `auth_passwordChanged_*` i18n messages, rewrote 503 messaging |
+| `src/lib/api/backend-monitor.ts` | New browser-side middleware: 503 → mark health offline |
+| `src/routes/+error.svelte` | Guard recovery reload, use i18n description for 503 |
+
+### Reactive 503 from API calls
+
+Added `$lib/api/backend-monitor.ts` — a browser-side middleware on the API client that intercepts 503 responses and sets `healthState.online = false`. This triggers the existing reactive flow (`invalidateAll` → 503 error page) immediately when a user clicks a button that makes an API call while the backend is down, instead of showing a confusing generic error toast.
+
+### 503 error page polish
+
+- Guarded `window.location.reload()` behind `page.status === 503` check so recovery doesn't cause a double-load when `invalidateAll()` successfully exits the error boundary.
+- Updated 503 page to always use i18n description (previously the raw `'Backend unavailable'` error message overrode it).
+- Rewrote 503 messaging to match the cheeky tone of other error pages: "Gone Fishing" / "The server stepped out for a coffee break."
 
 ## Review follow-up
 
@@ -82,6 +94,9 @@ Replaced the per-component health check with a global reactive state (`$lib/stat
 | Client-only singleton comment | Added JSDoc warning to `health.svelte.ts` |
 | `initHealthCheck` not idempotent | Added `initialized` guard with early return |
 | Inconsistent optional chaining on cleanup | Changed `cleanupHealth()` to `cleanupHealth?.()` |
+| 503 recovery double-reload | Guard reload behind `page.status === 503` check |
+| API calls show generic toast on 503 | Added `backend-monitor.ts` middleware to trigger 503 page |
+| 503 page messaging repetitive | Rewrote to "Gone Fishing" / coffee break theme |
 
 ## Tests added
 
@@ -90,4 +105,4 @@ Replaced the per-component health check with a global reactive state (`$lib/stat
 | `src/routes/layout.server.test.ts` | 5 | Root layout: cookie read timing, hadSession flag |
 | `src/routes/(app)/layout.server.test.ts` | 5 | Auth guard: redirect logic with hadSession from parent |
 | `src/routes/(public)/login/page.server.test.ts` | 5 | Login page: reason parsing, authenticated redirect, password_changed |
-| `src/lib/state/health.test.ts` | 7 | Health polling: state transitions, adaptive intervals, cleanup |
+| `src/lib/state/health.test.ts` | 8 | Health polling: state transitions, adaptive intervals, cleanup |
