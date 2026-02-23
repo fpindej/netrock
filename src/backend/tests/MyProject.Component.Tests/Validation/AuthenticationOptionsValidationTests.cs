@@ -33,7 +33,7 @@ public class AuthenticationOptionsValidationTests
     [Theory]
     [InlineData("")]
     [InlineData("short")]
-    [InlineData("exactly-thirty-one-characters!")]
+    [InlineData("this-key-is-exactly-31-chars!!!")]
     public void JwtOptions_Key_EmptyOrTooShort_ReturnsError(string key)
     {
         var options = new AuthenticationOptions.JwtOptions
