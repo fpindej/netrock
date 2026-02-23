@@ -64,6 +64,15 @@ services:
           cpus: "1.0"
           memory: 512M
 
+  storage:
+    <<: *hardened
+    read_only: false
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
   redis:
     <<: *hardened
     read_only: false

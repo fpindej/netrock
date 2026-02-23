@@ -42,6 +42,11 @@ services:
     volumes:
       - seq_data:/data
 
+  storage:
+    ports:
+      - "${STORAGE_PORT:-13010}:9000"
+      - "${STORAGE_CONSOLE_PORT:-13012}:9001"
+
   redis:
     ports:
       - "${REDIS_PORT:-13006}:6379"
