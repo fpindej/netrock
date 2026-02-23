@@ -39,4 +39,12 @@ public interface IUserContext
     /// <param name="role">The role name to check.</param>
     /// <returns><c>true</c> if the user is in the role; otherwise <c>false</c>.</returns>
     bool IsInRole(string role);
+
+    /// <summary>
+    /// Determines whether the current user has the specified permission.
+    /// SuperAdmin role implicitly has all permissions.
+    /// </summary>
+    /// <param name="permission">The permission claim value to check.</param>
+    /// <returns><c>true</c> if the user has the permission or is SuperAdmin; otherwise <c>false</c>.</returns>
+    bool HasPermission(string permission);
 }
