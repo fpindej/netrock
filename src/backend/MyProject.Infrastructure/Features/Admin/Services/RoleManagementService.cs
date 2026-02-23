@@ -271,7 +271,7 @@ internal class RoleManagementService(
         var caller = await userManager.FindByIdAsync(callerUserId.ToString());
         if (caller is null)
         {
-            return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
+            return Result.Failure(ErrorMessages.Auth.InsufficientPermissions, ErrorType.Forbidden);
         }
 
         var callerRoles = await userManager.GetRolesAsync(caller);
@@ -295,7 +295,7 @@ internal class RoleManagementService(
 
         if (!requestedPermissions.All(callerPermissions.Contains))
         {
-            return Result.Failure(ErrorMessages.Roles.CannotGrantUnheldPermission);
+            return Result.Failure(ErrorMessages.Roles.CannotGrantUnheldPermission, ErrorType.Forbidden);
         }
 
         return Result.Success();

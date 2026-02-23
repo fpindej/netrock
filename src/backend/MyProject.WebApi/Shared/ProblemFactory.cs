@@ -36,6 +36,7 @@ internal static class ProblemFactory
         ErrorType.Validation => StatusCodes.Status400BadRequest,
         ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
         ErrorType.NotFound => StatusCodes.Status404NotFound,
+        ErrorType.Forbidden => StatusCodes.Status403Forbidden,
         _ => StatusCodes.Status400BadRequest
     };
 }

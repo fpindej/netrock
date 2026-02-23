@@ -12,5 +12,8 @@ public enum ErrorType
     Unauthorized = 1,
 
     /// <summary>Requested resource not found (404 Not Found).</summary>
-    NotFound = 2
+    NotFound = 2,
+
+    /// <summary>Authenticated but insufficient privileges for this action (403 Forbidden).</summary>
+    Forbidden = 3
 }
