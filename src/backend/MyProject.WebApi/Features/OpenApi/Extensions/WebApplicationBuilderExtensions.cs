@@ -43,6 +43,7 @@ internal static class WebApplicationBuilderExtensions
             opt.WithOperationTitleSource(OperationTitleSource.Path);
             opt.SortTagsAlphabetically();
             opt.WithSearchHotKey("k");
+            opt.DisableAgent();
         });
     }
 }
