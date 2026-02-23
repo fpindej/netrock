@@ -195,6 +195,155 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/api/users/me/avatar': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		/**
+		 * Uploads or replaces the current user's avatar image.
+		 *     The image is validated, resized to 512x512 max, and stored as WebP.
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			/** @description The avatar upload request containing the image file */
+			requestBody: {
+				content: {
+					'multipart/form-data': {
+						/** Format: binary */
+						File?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Avatar uploaded successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['UserResponse'];
+					};
+				};
+				/** @description If the file is invalid (too large, wrong format, corrupt) */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		post?: never;
+		/** Removes the current user's avatar image. */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Avatar removed successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['UserResponse'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/users/{userId}/avatar': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Gets a user's avatar image by user ID. */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					/** @description The user ID */
+					userId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Returns the avatar image */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user has no avatar */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	'/api/auth/login': {
 		parameters: {
 			query?: never;
@@ -2575,8 +2724,8 @@ export interface components {
 			phoneNumber?: null | string;
 			/** @description A short biography or description of the user. */
 			bio?: null | string;
-			/** @description The URL to the user's avatar image. */
-			avatarUrl?: null | string;
+			/** @description Whether the user has an avatar image. */
+			hasAvatar?: boolean;
 			/** @description The roles assigned to the user. */
 			roles?: string[];
 			/** @description Whether the user's email address has been confirmed. */
@@ -2921,11 +3070,6 @@ export interface components {
 			phoneNumber?: null | string;
 			/** @description A short biography or description of the user. */
 			bio?: null | string;
-			/**
-			 * Format: uri
-			 * @description The URL to the user's avatar image.
-			 */
-			avatarUrl?: null | string;
 		};
 		/** @description Represents the current user's information. */
 		UserResponse: {
@@ -2946,8 +3090,8 @@ export interface components {
 			phoneNumber?: null | string;
 			/** @description A short biography or description of the user. */
 			bio?: null | string;
-			/** @description The URL to the user's avatar image. */
-			avatarUrl?: null | string;
+			/** @description Whether the user has an avatar image. */
+			hasAvatar?: boolean;
 			/** @description The roles assigned to the user. */
 			roles?: string[];
 			/** @description The atomic permissions granted to the user through their roles. */

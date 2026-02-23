@@ -45,8 +45,8 @@
 		<Avatar.Root
 			class="relative h-24 w-24 ring-2 ring-border transition-all group-hover:ring-primary/50"
 		>
-			{#if user?.avatarUrl}
-				<Avatar.Image src={user.avatarUrl} alt={displayName} />
+			{#if user?.hasAvatar && user?.id}
+				<Avatar.Image src={`/api/users/${user.id}/avatar`} alt={displayName} />
 			{/if}
 			<Avatar.Fallback class="text-lg">
 				{initials}
@@ -58,7 +58,7 @@
 		<p class="text-sm text-muted-foreground">{user?.email ?? ''}</p>
 		<AvatarDialog
 			bind:open={avatarDialogOpen}
-			currentAvatarUrl={user?.avatarUrl}
+			hasAvatar={user?.hasAvatar}
 			{displayName}
 			{initials}
 		/>
