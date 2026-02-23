@@ -528,7 +528,8 @@ public class AdminController(IAdminService adminService, IRoleManagementService 
         [FromBody] SetPermissionsRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await roleManagementService.SetRolePermissionsAsync(id, request.ToInput(), cancellationToken);
+        var callerUserId = userContext.AuthenticatedUserId;
+        var result = await roleManagementService.SetRolePermissionsAsync(id, request.ToInput(), callerUserId, cancellationToken);
 
         if (!result.IsSuccess)
         {

@@ -23,10 +23,16 @@ public class ErrorTypeTests
     }
 
     [Fact]
-    public void ShouldHaveExactlyThreeValues()
+    public void Forbidden_ShouldHaveValue3()
+    {
+        Assert.Equal(3, (int)ErrorType.Forbidden);
+    }
+
+    [Fact]
+    public void ShouldHaveExactlyFourValues()
     {
         var values = Enum.GetValues<ErrorType>();
 
-        Assert.Equal(3, values.Length);
+        Assert.Equal(4, values.Length);
     }
 }

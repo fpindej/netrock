@@ -185,7 +185,7 @@ internal class RoleManagementService(
 
     /// <inheritdoc />
     public async Task<Result> SetRolePermissionsAsync(Guid roleId, SetRolePermissionsInput input,
-        CancellationToken cancellationToken = default)
+        Guid callerUserId, CancellationToken cancellationToken = default)
     {
         var role = await roleManager.FindByIdAsync(roleId.ToString());
         if (role is null)
@@ -205,6 +205,13 @@ internal class RoleManagementService(
         if (invalidPermissions.Count > 0)
         {
             return Result.Failure(ErrorMessages.Roles.InvalidPermission);
+        }
+
+        // Escalation guard: callers cannot grant permissions they don't hold
+        var escalationResult = await EnforcePermissionEscalationAsync(callerUserId, input.Permissions);
+        if (escalationResult.IsFailure)
+        {
+            return escalationResult;
         }
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -247,6 +254,51 @@ internal class RoleManagementService(
                 kvp.Key,
                 kvp.Value.Select(p => p.Value).ToList()))
             .ToList();
+    }
+
+    /// <summary>
+    /// Verifies that the caller holds every permission being granted.
+    /// SuperAdmin callers are exempt (implicit all permissions).
+    /// </summary>
+    private async Task<Result> EnforcePermissionEscalationAsync(Guid callerUserId,
+        IReadOnlyList<string> requestedPermissions)
+    {
+        if (requestedPermissions.Count == 0)
+        {
+            return Result.Success();
+        }
+
+        var caller = await userManager.FindByIdAsync(callerUserId.ToString());
+        if (caller is null)
+        {
+            return Result.Failure(ErrorMessages.Auth.InsufficientPermissions, ErrorType.Forbidden);
+        }
+
+        var callerRoles = await userManager.GetRolesAsync(caller);
+        if (callerRoles.Contains(AppRoles.SuperAdmin))
+        {
+            return Result.Success();
+        }
+
+        var callerPermissions = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var roleName in callerRoles)
+        {
+            var callerRole = await roleManager.FindByNameAsync(roleName);
+            if (callerRole is null) continue;
+
+            var claims = await roleManager.GetClaimsAsync(callerRole);
+            foreach (var claim in claims.Where(c => c.Type == AppPermissions.ClaimType))
+            {
+                callerPermissions.Add(claim.Value);
+            }
+        }
+
+        if (!requestedPermissions.All(callerPermissions.Contains))
+        {
+            return Result.Failure(ErrorMessages.Roles.CannotGrantUnheldPermission, ErrorType.Forbidden);
+        }
+
+        return Result.Success();
     }
 
     /// <summary>
