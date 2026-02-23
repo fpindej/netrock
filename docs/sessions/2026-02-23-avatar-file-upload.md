@@ -144,6 +144,8 @@ Code review identified and fixed:
 | `feat(health)` | Added S3 health check to `/health/ready` endpoint — verifies storage connectivity at startup and during readiness probes |
 | `test(avatar)` | Added 12 unit tests for UserService avatar methods (upload/remove/get success/failure paths, DeleteAccount avatar cleanup) |
 | `docs` | Updated FILEMAP, SKILLS (file storage recipes, provider swap, removal guide), backend AGENTS (file storage conventions), frontend AGENTS (file upload patterns) |
+| `docs` | Updated README, features.md, architecture.md, before-you-ship.md — added file storage/MinIO references, updated service count (5→6), added MinIO Console to URL table, added FileStorage checklist to Before You Ship |
+| `fix(avatar)` | Fixed `Date.now()` in `$derived` causing avatar re-fetches on every Svelte render tick — replaced with version counter bumped on dialog close. Removed cache-busting from UserNav (navbar doesn't need it). Added missing `AvatarUpload`/`AvatarRemove` audit labels in `audit.ts` and i18n keys. Reset file input after upload. Handle non-JSON errors (413). S3 health check now uses `EnsureBucketExistsAsync` (only needs `s3:HeadBucket` permission). Added 2 missing tests (`RemoveAvatar_UserNotFound`, `GetAvatar_StorageFailure`), strengthened `UpdateAsync` assertions. |
 
 ## Follow-Up Items
 
