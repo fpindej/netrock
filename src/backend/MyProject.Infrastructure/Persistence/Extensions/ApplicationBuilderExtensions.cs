@@ -2,22 +2,24 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MyProject.Application.Identity.Constants;
-using MyProject.Infrastructure.Features.Authentication.Constants;
 using MyProject.Infrastructure.Features.Authentication.Models;
+using MyProject.Infrastructure.Persistence.Options;
+using Serilog;
 
 namespace MyProject.Infrastructure.Persistence.Extensions;
 
 /// <summary>
-/// Extension methods for database initialization at startup — migrations, role seeding, and development data.
+/// Extension methods for database initialization at startup — migrations, role seeding, and user seeding.
 /// </summary>
 public static class ApplicationBuilderExtensions
 {
     /// <summary>
     /// Initializes the database: applies migrations (development only), seeds roles (always),
-    /// and seeds test users (development only).
+    /// and seeds users from configuration (always — env vars gate whether any users are seeded).
     /// </summary>
     /// <param name="appBuilder">The application builder.</param>
     public static async Task InitializeDatabaseAsync(this IApplicationBuilder appBuilder)
@@ -33,11 +35,7 @@ public static class ApplicationBuilderExtensions
 
         await SeedRolesAsync(services);
         await SeedRolePermissionsAsync(services);
-
-        if (isDevelopment)
-        {
-            await SeedDevelopmentUsersAsync(services);
-        }
+        await SeedUsersFromConfigurationAsync(services);
     }
 
     private static void ApplyMigrations(IServiceProvider serviceProvider)
@@ -96,13 +94,49 @@ public static class ApplicationBuilderExtensions
         }
     }
 
-    private static async Task SeedDevelopmentUsersAsync(IServiceProvider serviceProvider)
+    /// <summary>
+    /// Seeds users from the <c>Seed:Users</c> configuration section.
+    /// Each entry must have a non-empty Email, Password, and a valid Role.
+    /// Incomplete or invalid entries are logged as warnings and skipped.
+    /// Idempotent — existing users (matched by email) are not modified.
+    /// </summary>
+    private static async Task SeedUsersFromConfigurationAsync(IServiceProvider serviceProvider)
     {
-        var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+        var seedOptions = configuration.GetSection(SeedOptions.SectionName).Get<SeedOptions>();
 
-        await SeedUserAsync(userManager, SeedUsers.TestUserEmail, SeedUsers.TestUserPassword, AppRoles.User);
-        await SeedUserAsync(userManager, SeedUsers.AdminEmail, SeedUsers.AdminPassword, AppRoles.Admin);
-        await SeedUserAsync(userManager, SeedUsers.SuperAdminEmail, SeedUsers.SuperAdminPassword, AppRoles.SuperAdmin);
+        if (seedOptions?.Users is not { Count: > 0 })
+        {
+            return;
+        }
+
+        var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var validRoles = AppRoles.All.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        for (var i = 0; i < seedOptions.Users.Count; i++)
+        {
+            var entry = seedOptions.Users[i];
+
+            if (string.IsNullOrWhiteSpace(entry.Email) || string.IsNullOrWhiteSpace(entry.Password))
+            {
+                Log.Warning("Seed:Users[{Index}] is missing Email or Password — skipping", i);
+                continue;
+            }
+
+            if (!validRoles.Contains(entry.Role))
+            {
+                Log.Warning(
+                    "Seed:Users[{Index}] has invalid role '{Role}' — skipping. Valid roles: {ValidRoles}",
+                    i, entry.Role, string.Join(", ", AppRoles.All));
+                continue;
+            }
+
+            // Resolve the exact role name (case-insensitive match → canonical casing).
+            var role = AppRoles.All.First(r => string.Equals(r, entry.Role, StringComparison.OrdinalIgnoreCase));
+
+            await SeedUserAsync(userManager, entry.Email, entry.Password, role);
+            Log.Information("Seed: ensured user {Email} with role {Role}", entry.Email, role);
+        }
     }
 
     private static async Task SeedUserAsync(
