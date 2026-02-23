@@ -13,6 +13,115 @@ public class AuthenticationOptionsValidationTests
         return results;
     }
 
+    #region JwtOptions.Key
+
+    [Fact]
+    public void JwtOptions_Key_ValidLength_NoErrors()
+    {
+        var options = new AuthenticationOptions.JwtOptions
+        {
+            Key = "ThisIsATestSigningKeyWithAtLeast32Chars!",
+            Issuer = "test",
+            Audience = "test"
+        };
+
+        var results = Validate(options);
+
+        Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(AuthenticationOptions.JwtOptions.Key)));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("short")]
+    [InlineData("this-key-is-exactly-31-chars!!!")]
+    public void JwtOptions_Key_EmptyOrTooShort_ReturnsError(string key)
+    {
+        var options = new AuthenticationOptions.JwtOptions
+        {
+            Key = key,
+            Issuer = "test",
+            Audience = "test"
+        };
+
+        var results = Validate(options);
+
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(AuthenticationOptions.JwtOptions.Key)));
+    }
+
+    #endregion
+
+    #region JwtOptions.Issuer
+
+    [Fact]
+    public void JwtOptions_Issuer_Valid_NoErrors()
+    {
+        var options = new AuthenticationOptions.JwtOptions
+        {
+            Key = "ThisIsATestSigningKeyWithAtLeast32Chars!",
+            Issuer = "MyProjectIssuer",
+            Audience = "test"
+        };
+
+        var results = Validate(options);
+
+        Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(AuthenticationOptions.JwtOptions.Issuer)));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void JwtOptions_Issuer_EmptyOrNull_ReturnsError(string? issuer)
+    {
+        var options = new AuthenticationOptions.JwtOptions
+        {
+            Key = "ThisIsATestSigningKeyWithAtLeast32Chars!",
+            Issuer = issuer!,
+            Audience = "test"
+        };
+
+        var results = Validate(options);
+
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(AuthenticationOptions.JwtOptions.Issuer)));
+    }
+
+    #endregion
+
+    #region JwtOptions.Audience
+
+    [Fact]
+    public void JwtOptions_Audience_Valid_NoErrors()
+    {
+        var options = new AuthenticationOptions.JwtOptions
+        {
+            Key = "ThisIsATestSigningKeyWithAtLeast32Chars!",
+            Issuer = "test",
+            Audience = "MyProjectAudience"
+        };
+
+        var results = Validate(options);
+
+        Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(AuthenticationOptions.JwtOptions.Audience)));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void JwtOptions_Audience_EmptyOrNull_ReturnsError(string? audience)
+    {
+        var options = new AuthenticationOptions.JwtOptions
+        {
+            Key = "ThisIsATestSigningKeyWithAtLeast32Chars!",
+            Issuer = "test",
+            Audience = audience!
+        };
+
+        var results = Validate(options);
+
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(AuthenticationOptions.JwtOptions.Audience)));
+    }
+
+    #endregion
+
     #region JwtOptions.AccessTokenLifetime
 
     [Theory]
@@ -155,6 +264,42 @@ public class AuthenticationOptionsValidationTests
         Assert.DoesNotContain(results, r =>
             r.MemberNames.Contains(nameof(AuthenticationOptions.JwtOptions.RefreshTokenOptions.SessionLifetime))
             && r.ErrorMessage!.Contains("must not exceed"));
+    }
+
+    #endregion
+
+    #region EmailTokenOptions.TokenLengthInBytes
+
+    [Theory]
+    [InlineData(16)]
+    [InlineData(32)]
+    [InlineData(128)]
+    public void EmailTokenOptions_TokenLengthInBytes_ValidRange_NoErrors(int length)
+    {
+        var options = new AuthenticationOptions.EmailTokenOptions
+        {
+            TokenLengthInBytes = length
+        };
+
+        var results = Validate(options);
+
+        Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(AuthenticationOptions.EmailTokenOptions.TokenLengthInBytes)));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(15)]
+    [InlineData(129)]
+    public void EmailTokenOptions_TokenLengthInBytes_OutOfRange_ReturnsError(int length)
+    {
+        var options = new AuthenticationOptions.EmailTokenOptions
+        {
+            TokenLengthInBytes = length
+        };
+
+        var results = Validate(options);
+
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(AuthenticationOptions.EmailTokenOptions.TokenLengthInBytes)));
     }
 
     #endregion
