@@ -62,6 +62,7 @@ public static class ErrorMessages
         public const string DeleteSelfAction = "Cannot delete your own account.";
         public const string EmailVerificationRequired = "User must have a verified email address before being assigned this role.";
         public const string EmailAlreadyRegistered = "A user with this email address already exists.";
+        public const string RoleAssignEscalation = "Cannot assign a role that grants permissions you do not hold.";
     }
 
     /// <summary>

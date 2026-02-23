@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -185,6 +186,147 @@ public class AdminServiceTests : IDisposable
         _userManager.AddToRoleAsync(target, "CustomRole").Returns(IdentityResult.Success);
 
         var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("CustomRole"));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task AssignRole_CustomRoleWithUnheldPermissions_ReturnsForbidden()
+    {
+        SetupCallerAsAdmin();
+        SetupTargetAsUser();
+
+        var callerAdminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin };
+        _roleManager.FindByNameAsync(AppRoles.Admin).Returns(callerAdminRole);
+        _roleManager.GetClaimsAsync(callerAdminRole).Returns(
+            [new Claim(AppPermissions.ClaimType, AppPermissions.Users.View)]);
+
+        var customRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "PrivilegedRole" };
+        _roleManager.FindByNameAsync("PrivilegedRole").Returns(customRole);
+        _roleManager.GetClaimsAsync(customRole).Returns(
+            [new Claim(AppPermissions.ClaimType, AppPermissions.Roles.Manage)]);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("PrivilegedRole"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.RoleAssignEscalation, result.Error);
+        Assert.Equal(ErrorType.Forbidden, result.ErrorType);
+    }
+
+    [Fact]
+    public async Task AssignRole_CustomRoleWithHeldPermissions_Succeeds()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+
+        var callerAdminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin };
+        _roleManager.FindByNameAsync(AppRoles.Admin).Returns(callerAdminRole);
+        _roleManager.GetClaimsAsync(callerAdminRole).Returns(
+            [new Claim(AppPermissions.ClaimType, AppPermissions.Users.View)]);
+
+        var customRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "ViewerRole" };
+        _roleManager.FindByNameAsync("ViewerRole").Returns(customRole);
+        _roleManager.GetClaimsAsync(customRole).Returns(
+            [new Claim(AppPermissions.ClaimType, AppPermissions.Users.View)]);
+
+        _userManager.IsInRoleAsync(target, "ViewerRole").Returns(false);
+        _userManager.AddToRoleAsync(target, "ViewerRole").Returns(IdentityResult.Success);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("ViewerRole"));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task AssignRole_MultipleCallerRoles_AggregatesPermissions()
+    {
+        // Caller has Admin (with users.view) + a custom "Ops" role (with roles.manage).
+        // Target custom role requires both — should succeed via union of caller permissions.
+        var caller = new ApplicationUser { Id = _callerId, UserName = "admin@test.com" };
+        _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
+        _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Admin, "Ops" });
+
+        var target = SetupTargetAsUser();
+
+        var callerAdminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin };
+        _roleManager.FindByNameAsync(AppRoles.Admin).Returns(callerAdminRole);
+        _roleManager.GetClaimsAsync(callerAdminRole).Returns(
+            [new Claim(AppPermissions.ClaimType, AppPermissions.Users.View)]);
+
+        var callerOpsRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "Ops" };
+        _roleManager.FindByNameAsync("Ops").Returns(callerOpsRole);
+        _roleManager.GetClaimsAsync(callerOpsRole).Returns(
+            [new Claim(AppPermissions.ClaimType, AppPermissions.Roles.Manage)]);
+
+        var customRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "PowerRole" };
+        _roleManager.FindByNameAsync("PowerRole").Returns(customRole);
+        _roleManager.GetClaimsAsync(customRole).Returns(
+        [
+            new Claim(AppPermissions.ClaimType, AppPermissions.Users.View),
+            new Claim(AppPermissions.ClaimType, AppPermissions.Roles.Manage)
+        ]);
+
+        _userManager.IsInRoleAsync(target, "PowerRole").Returns(false);
+        _userManager.AddToRoleAsync(target, "PowerRole").Returns(IdentityResult.Success);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("PowerRole"));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task AssignRole_SuperAdmin_CanAssignAnyCustomRole()
+    {
+        var caller = new ApplicationUser { Id = _callerId, UserName = "superadmin@test.com" };
+        _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
+        _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.SuperAdmin });
+
+        var target = SetupTargetAsUser();
+
+        var customRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "PrivilegedRole" };
+        _roleManager.FindByNameAsync("PrivilegedRole").Returns(customRole);
+        _roleManager.GetClaimsAsync(customRole).Returns(
+            [new Claim(AppPermissions.ClaimType, AppPermissions.Roles.Manage)]);
+
+        _userManager.IsInRoleAsync(target, "PrivilegedRole").Returns(false);
+        _userManager.AddToRoleAsync(target, "PrivilegedRole").Returns(IdentityResult.Success);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("PrivilegedRole"));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task AssignRole_SystemRole_SkipsPermissionCheck()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+
+        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _userManager.IsInRoleAsync(target, "User").Returns(false);
+        _userManager.AddToRoleAsync(target, "User").Returns(IdentityResult.Success);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("User"));
+
+        Assert.True(result.IsSuccess);
+        // GetClaimsAsync should NOT be called for system roles (rank > 0)
+        await _roleManager.DidNotReceive().GetClaimsAsync(Arg.Any<ApplicationRole>());
+    }
+
+    [Fact]
+    public async Task AssignRole_CustomRoleNoPermissions_Succeeds()
+    {
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+
+        var customRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "LabelRole" };
+        _roleManager.FindByNameAsync("LabelRole").Returns(customRole);
+        _roleManager.GetClaimsAsync(customRole).Returns(new List<Claim>());
+
+        _userManager.IsInRoleAsync(target, "LabelRole").Returns(false);
+        _userManager.AddToRoleAsync(target, "LabelRole").Returns(IdentityResult.Success);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("LabelRole"));
 
         Assert.True(result.IsSuccess);
     }
