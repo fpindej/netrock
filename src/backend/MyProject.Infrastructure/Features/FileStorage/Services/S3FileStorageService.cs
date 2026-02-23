@@ -151,6 +151,8 @@ internal sealed class S3FileStorageService(
     /// <summary>
     /// Creates the bucket if it does not already exist (idempotent, thread-safe).
     /// Uses double-check locking so only the first concurrent request pays the S3 call cost.
+    /// Handles <see cref="AmazonS3Exception"/> with "BucketAlreadyOwnedByYou" which MinIO throws
+    /// instead of silently succeeding like AWS S3.
     /// </summary>
     private async Task EnsureBucketExistsAsync(CancellationToken ct)
     {
@@ -161,9 +163,14 @@ internal sealed class S3FileStorageService(
         {
             if (_bucketEnsured) return;
 
-            await s3Client.EnsureBucketExistsAsync(_bucketName);
+            await s3Client.PutBucketAsync(new PutBucketRequest { BucketName = _bucketName }, ct);
             _bucketEnsured = true;
             logger.LogDebug("Bucket '{Bucket}' is ready", _bucketName);
+        }
+        catch (AmazonS3Exception ex) when (ex.ErrorCode is "BucketAlreadyOwnedByYou" or "BucketAlreadyExists")
+        {
+            _bucketEnsured = true;
+            logger.LogDebug("Bucket '{Bucket}' already exists", _bucketName);
         }
         catch (AmazonS3Exception ex)
         {

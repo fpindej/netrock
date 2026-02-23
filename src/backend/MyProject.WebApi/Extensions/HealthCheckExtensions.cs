@@ -1,4 +1,5 @@
 using Amazon.S3;
+using Amazon.S3.Model;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using MyProject.Infrastructure.Caching.Options;
@@ -119,8 +120,8 @@ internal static class HealthCheckExtensions
 
     /// <summary>
     /// Health check that verifies connectivity to S3-compatible storage.
-    /// Uses HeadBucket which only requires <c>s3:HeadBucket</c> permission on the configured bucket,
-    /// unlike ListBuckets which requires the global <c>s3:ListAllMyBuckets</c> permission.
+    /// Uses GetBucketLocation which is a lightweight read-only operation,
+    /// avoiding <c>EnsureBucketExistsAsync</c> which throws on MinIO when the bucket already exists.
     /// </summary>
     private sealed class S3HealthCheck(IAmazonS3 s3Client, IOptions<FileStorageOptions> options) : IHealthCheck
     {
@@ -129,12 +130,18 @@ internal static class HealthCheckExtensions
         {
             try
             {
-                await s3Client.EnsureBucketExistsAsync(options.Value.BucketName);
+                await s3Client.GetBucketLocationAsync(
+                    new GetBucketLocationRequest { BucketName = options.Value.BucketName },
+                    cancellationToken);
+
                 return HealthCheckResult.Healthy();
             }
             catch (Exception ex)
             {
-                return HealthCheckResult.Unhealthy("S3 storage is unreachable.", ex);
+                return new HealthCheckResult(
+                    context.Registration.FailureStatus,
+                    "S3 storage is unreachable.",
+                    ex);
             }
         }
     }
