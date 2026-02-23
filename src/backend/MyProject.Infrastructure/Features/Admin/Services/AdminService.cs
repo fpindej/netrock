@@ -11,6 +11,7 @@ using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Email;
+using MyProject.Application.Features.FileStorage;
 using MyProject.Application.Identity.Constants;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Features.Authentication.Services;
@@ -42,6 +43,7 @@ internal class AdminService(
     IEmailService emailService,
     EmailTokenService emailTokenService,
     IAuditService auditService,
+    IFileStorageService fileStorageService,
     IOptions<EmailOptions> emailOptions,
     ILogger<AdminService> logger) : IAdminService
 {
@@ -329,6 +331,17 @@ internal class AdminService(
         }
 
         await RevokeUserSessionsAsync(user, userId, cancellationToken);
+
+        // Clean up avatar from storage if present (best-effort — don't block account deletion)
+        if (user.HasAvatar)
+        {
+            var avatarDeleteResult = await fileStorageService.DeleteAsync($"avatars/{userId}.webp", cancellationToken);
+            if (!avatarDeleteResult.IsSuccess)
+            {
+                logger.LogWarning("Failed to delete avatar for user {UserId} during admin deletion: {Error}",
+                    userId, avatarDeleteResult.Error);
+            }
+        }
 
         var result = await userManager.DeleteAsync(user);
 
