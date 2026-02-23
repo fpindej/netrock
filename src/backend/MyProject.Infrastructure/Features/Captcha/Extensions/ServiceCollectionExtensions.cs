@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
         /// <returns>The service collection for chaining.</returns>
         public IServiceCollection AddCaptchaServices()
         {
+            services.AddHttpContextAccessor();
             services.AddOptions<CaptchaOptions>()
                 .BindConfiguration(CaptchaOptions.SectionName)
                 .ValidateDataAnnotations()
