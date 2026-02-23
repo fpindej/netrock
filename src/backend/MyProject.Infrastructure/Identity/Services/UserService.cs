@@ -189,7 +189,14 @@ internal sealed class UserService(
         }
 
         user.HasAvatar = true;
-        await userManager.UpdateAsync(user);
+        var updateResult = await userManager.UpdateAsync(user);
+
+        if (!updateResult.Succeeded)
+        {
+            logger.LogError("Failed to update HasAvatar flag for user {UserId}: {Errors}",
+                userId.Value, string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+            return Result<UserOutput>.Failure(ErrorMessages.Avatar.ProcessingFailed);
+        }
 
         await InvalidateUserCache(userId.Value);
         await auditService.LogAsync(AuditActions.AvatarUpload, userId: userId.Value, ct: ct);
@@ -224,7 +231,14 @@ internal sealed class UserService(
         }
 
         user.HasAvatar = false;
-        await userManager.UpdateAsync(user);
+        var updateResult = await userManager.UpdateAsync(user);
+
+        if (!updateResult.Succeeded)
+        {
+            logger.LogError("Failed to clear HasAvatar flag for user {UserId}: {Errors}",
+                userId.Value, string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+            return Result<UserOutput>.Failure(ErrorMessages.Avatar.ProcessingFailed);
+        }
 
         await InvalidateUserCache(userId.Value);
         await auditService.LogAsync(AuditActions.AvatarRemove, userId: userId.Value, ct: ct);

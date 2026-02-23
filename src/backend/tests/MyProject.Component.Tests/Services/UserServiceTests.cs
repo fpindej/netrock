@@ -407,6 +407,48 @@ public class UserServiceTests : IDisposable
         Assert.False(user.HasAvatar);
     }
 
+    [Fact]
+    public async Task UploadAvatar_DbUpdateFails_ReturnsFailure()
+    {
+        var user = new ApplicationUser { Id = _userId, UserName = "test@example.com" };
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns(user);
+        _userManager.UpdateAsync(user).Returns(IdentityResult.Failed(new IdentityError { Description = "DB error" }));
+
+        var processed = new ProcessedImageOutput([1, 2, 3], "image/webp", 3);
+        _imageProcessingService.ProcessAvatar(Arg.Any<byte[]>(), Arg.Any<string>(), Arg.Any<int>())
+            .Returns(Result<ProcessedImageOutput>.Success(processed));
+        _fileStorageService.UploadAsync(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var result = await _sut.UploadAvatarAsync([0xFF, 0xD8], "photo.jpg", CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        await _auditService.DidNotReceive().LogAsync(
+            AuditActions.AvatarUpload, userId: Arg.Any<Guid>(),
+            targetEntityType: Arg.Any<string?>(), targetEntityId: Arg.Any<Guid?>(),
+            metadata: Arg.Any<string?>(), ct: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RemoveAvatar_DbUpdateFails_ReturnsFailure()
+    {
+        var user = new ApplicationUser { Id = _userId, UserName = "test@example.com", HasAvatar = true };
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns(user);
+        _userManager.UpdateAsync(user).Returns(IdentityResult.Failed(new IdentityError { Description = "DB error" }));
+        _fileStorageService.DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var result = await _sut.RemoveAvatarAsync(CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        await _auditService.DidNotReceive().LogAsync(
+            AuditActions.AvatarRemove, userId: Arg.Any<Guid>(),
+            targetEntityType: Arg.Any<string?>(), targetEntityId: Arg.Any<Guid?>(),
+            metadata: Arg.Any<string?>(), ct: Arg.Any<CancellationToken>());
+    }
+
     #endregion
 
     #region RemoveAvatar

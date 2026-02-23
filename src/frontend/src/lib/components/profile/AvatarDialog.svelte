@@ -32,16 +32,18 @@
 	$effect(() => {
 		if (open) {
 			selectedFile = null;
+			if (previewUrl) URL.revokeObjectURL(previewUrl);
 			previewUrl = null;
 			fileError = '';
 		}
 	});
 
-	// Clean up object URL when preview changes
+	// Clean up object URL when component unmounts or previewUrl changes
 	$effect(() => {
+		const url = previewUrl;
 		return () => {
-			if (previewUrl) {
-				URL.revokeObjectURL(previewUrl);
+			if (url) {
+				URL.revokeObjectURL(url);
 			}
 		};
 	});
