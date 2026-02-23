@@ -11,7 +11,8 @@
 		CheckCircle,
 		XCircle,
 		AtSign,
-		Loader2
+		Loader2,
+		EyeOff
 	} from '@lucide/svelte';
 	import { InfoItem } from '$lib/components/profile';
 	import { browserClient, handleMutationError } from '$lib/api';
@@ -24,10 +25,11 @@
 	interface Props {
 		user: AdminUser;
 		canManage: boolean;
+		piiMasked: boolean;
 		cooldown: Cooldown;
 	}
 
-	let { user, canManage, cooldown }: Props = $props();
+	let { user, canManage, piiMasked, cooldown }: Props = $props();
 
 	let isVerifying = $state(false);
 
@@ -61,15 +63,36 @@
 		</InfoItem>
 
 		<InfoItem icon={AtSign} label={m.admin_userDetail_username()}>
-			{user.username}
+			{#if piiMasked}
+				<span class="inline-flex items-center gap-1.5 text-muted-foreground italic">
+					<EyeOff class="h-3.5 w-3.5" />
+					{m.admin_pii_masked()}
+				</span>
+			{:else}
+				{user.username}
+			{/if}
 		</InfoItem>
 
 		<InfoItem icon={Mail} label={m.admin_userDetail_email()}>
-			{user.email}
+			{#if piiMasked}
+				<span class="inline-flex items-center gap-1.5 text-muted-foreground italic">
+					<EyeOff class="h-3.5 w-3.5" />
+					{m.admin_pii_masked()}
+				</span>
+			{:else}
+				{user.email}
+			{/if}
 		</InfoItem>
 
 		<InfoItem icon={Phone} label={m.admin_userDetail_phone()}>
-			{user.phoneNumber ?? m.admin_userDetail_notSet()}
+			{#if piiMasked}
+				<span class="inline-flex items-center gap-1.5 text-muted-foreground italic">
+					<EyeOff class="h-3.5 w-3.5" />
+					{m.admin_pii_masked()}
+				</span>
+			{:else}
+				{user.phoneNumber ?? m.admin_userDetail_notSet()}
+			{/if}
 		</InfoItem>
 
 		<InfoItem icon={UserIcon} label={m.admin_userDetail_firstName()}>

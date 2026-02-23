@@ -2,12 +2,14 @@
 	import { resolve } from '$app/paths';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { UserDetailCards, AuditTrailCard } from '$lib/components/admin';
-	import { ArrowLeft } from '@lucide/svelte';
+	import { ArrowLeft, EyeOff } from '@lucide/svelte';
+	import { hasPermission, Permissions, cn } from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
-	import { cn } from '$lib/utils';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	let piiMasked = $derived(!hasPermission(data.user, Permissions.Users.ViewPii));
 </script>
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -- hrefs are pre-resolved using resolve() -->
@@ -33,7 +35,14 @@
 					{data.adminUser?.username}
 				{/if}
 			</h3>
-			<p class="text-sm text-muted-foreground">{data.adminUser?.email}</p>
+			{#if piiMasked}
+				<p class="inline-flex items-center gap-1.5 text-sm text-muted-foreground italic">
+					<EyeOff class="h-3.5 w-3.5" />
+					{m.admin_pii_emailMasked()}
+				</p>
+			{:else}
+				<p class="text-sm text-muted-foreground">{data.adminUser?.email}</p>
+			{/if}
 		</div>
 	</div>
 	<div class="h-px w-full bg-border"></div>

@@ -126,4 +126,7 @@ internal static class TestAuth
             : "Test roles=Admin";
 
     public static string SuperAdmin() => "Test roles=SuperAdmin";
+
+    public static string WithUserAndPermissions(Guid userId, params string[] permissions) =>
+        $"Test userId={userId} permissions={string.Join(',', permissions)}";
 }

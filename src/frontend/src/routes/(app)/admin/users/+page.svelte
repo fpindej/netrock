@@ -18,6 +18,7 @@
 	let inviteDialogOpen = $state(false);
 
 	let canManageUsers = $derived(hasPermission(data.user, Permissions.Users.Manage));
+	let piiMasked = $derived(!hasPermission(data.user, Permissions.Users.ViewPii));
 
 	// page.url.pathname is already resolved — no need to pass through resolve()
 	function handleSearch(value: string) {
@@ -90,7 +91,7 @@
 
 	<Card.Root>
 		<Card.Content class="p-0">
-			<UserTable users={data.users?.items ?? []} />
+			<UserTable users={data.users?.items ?? []} {piiMasked} />
 		</Card.Content>
 	</Card.Root>
 

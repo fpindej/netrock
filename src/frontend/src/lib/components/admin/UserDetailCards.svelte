@@ -20,9 +20,10 @@
 	let canManage = $derived(
 		canManageByHierarchy && hasPermission(currentUser, Permissions.Users.Manage)
 	);
+	let piiMasked = $derived(!hasPermission(currentUser, Permissions.Users.ViewPii));
 </script>
 
 <div class="grid gap-6 xl:grid-cols-2">
-	<AccountInfoCard {user} {canManage} {cooldown} />
+	<AccountInfoCard {user} {canManage} {piiMasked} {cooldown} />
 	<UserManagementCard {user} {roles} {currentUser} {cooldown} />
 </div>

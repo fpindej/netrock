@@ -169,6 +169,125 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
 
     #endregion
 
+    #region PII Masking
+
+    [Fact]
+    public async Task ListUsers_ViewOnly_MasksPiiExceptSelf()
+    {
+        var callerId = Guid.Parse(TestAuthHandler.DefaultUserId);
+        var otherId = Guid.NewGuid();
+        _factory.AdminService.GetUsersAsync(1, 10, null, Arg.Any<CancellationToken>())
+            .Returns(new AdminUserListOutput(
+            [
+                new AdminUserOutput(callerId, "caller@test.com", "Alice", "A", "+420111222333", null, false, ["User"], true, true, null, 0, false),
+                new AdminUserOutput(otherId, "other@test.com", "Bob", "B", "+420999888777", null, false, ["User"], true, true, null, 0, false)
+            ], 2, 1, 10));
+
+        var response = await _client.SendAsync(
+            Get("/api/v1/admin/users?pageNumber=1&pageSize=10", TestAuth.WithPermissions(AppPermissions.Users.View)));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AdminUserListResponse>();
+        Assert.NotNull(body);
+        Assert.Equal(2, body.Items.Count);
+
+        var callerEntry = body.Items.Single(u => u.Id == callerId);
+        Assert.Equal("caller@test.com", callerEntry.Email);
+        Assert.Equal("+420111222333", callerEntry.PhoneNumber);
+
+        var otherEntry = body.Items.Single(u => u.Id == otherId);
+        Assert.NotEqual("other@test.com", otherEntry.Email);
+        Assert.Contains("***", otherEntry.Email);
+        Assert.Equal("***", otherEntry.PhoneNumber);
+    }
+
+    [Fact]
+    public async Task GetUser_ViewOnly_OtherUser_ReturnsMaskedPii()
+    {
+        var otherId = Guid.NewGuid();
+        _factory.AdminService.GetUserByIdAsync(otherId, Arg.Any<CancellationToken>())
+            .Returns(Result<AdminUserOutput>.Success(new AdminUserOutput(
+                otherId, "other@test.com", "Bob", "B", "+420999888777", null, false,
+                ["User"], true, true, null, 0, false)));
+
+        var response = await _client.SendAsync(
+            Get($"/api/v1/admin/users/{otherId}", TestAuth.WithPermissions(AppPermissions.Users.View)));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AdminUserResponse>();
+        Assert.NotNull(body);
+        Assert.NotEqual("other@test.com", body.Email);
+        Assert.Contains("***", body.Email);
+        Assert.NotEqual("other@test.com", body.Username);
+        Assert.Equal("***", body.PhoneNumber);
+        // Non-PII fields are preserved
+        Assert.Equal("Bob", body.FirstName);
+        Assert.Equal("B", body.LastName);
+    }
+
+    [Fact]
+    public async Task GetUser_SelfView_WithoutViewPii_ReturnsUnmaskedPii()
+    {
+        var callerId = Guid.Parse(TestAuthHandler.DefaultUserId);
+        _factory.AdminService.GetUserByIdAsync(callerId, Arg.Any<CancellationToken>())
+            .Returns(Result<AdminUserOutput>.Success(new AdminUserOutput(
+                callerId, "caller@test.com", "Alice", "A", "+420111222333", null, false,
+                ["User"], true, true, null, 0, false)));
+
+        var response = await _client.SendAsync(
+            Get($"/api/v1/admin/users/{callerId}", TestAuth.WithPermissions(AppPermissions.Users.View)));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AdminUserResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("caller@test.com", body.Email);
+        Assert.Equal("caller@test.com", body.Username);
+        Assert.Equal("+420111222333", body.PhoneNumber);
+    }
+
+    [Fact]
+    public async Task ListUsers_SuperAdmin_ReturnsUnmaskedPii()
+    {
+        var userId = Guid.NewGuid();
+        _factory.AdminService.GetUsersAsync(1, 10, null, Arg.Any<CancellationToken>())
+            .Returns(new AdminUserListOutput(
+            [
+                new AdminUserOutput(userId, "user@test.com", "John", "D", "+420123456789", null, false, ["User"], true, true, null, 0, false)
+            ], 1, 1, 10));
+
+        var response = await _client.SendAsync(
+            Get("/api/v1/admin/users?pageNumber=1&pageSize=10", TestAuth.SuperAdmin()));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AdminUserListResponse>();
+        Assert.NotNull(body);
+        Assert.Single(body.Items);
+        Assert.Equal("user@test.com", body.Items[0].Email);
+        Assert.Equal("+420123456789", body.Items[0].PhoneNumber);
+    }
+
+    [Fact]
+    public async Task GetUser_SuperAdmin_ReturnsUnmaskedPii()
+    {
+        var userId = Guid.NewGuid();
+        _factory.AdminService.GetUserByIdAsync(userId, Arg.Any<CancellationToken>())
+            .Returns(Result<AdminUserOutput>.Success(new AdminUserOutput(
+                userId, "user@test.com", "John", "D", "+420123456789", null, false,
+                ["User"], true, true, null, 0, false)));
+
+        var response = await _client.SendAsync(
+            Get($"/api/v1/admin/users/{userId}", TestAuth.SuperAdmin()));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AdminUserResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("user@test.com", body.Email);
+        Assert.Equal("user@test.com", body.Username);
+        Assert.Equal("+420123456789", body.PhoneNumber);
+    }
+
+    #endregion
+
     #region AssignRole
 
     [Fact]

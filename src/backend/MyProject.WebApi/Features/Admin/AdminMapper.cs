@@ -112,6 +112,7 @@ internal static class AdminMapper
     public static AdminUserResponse WithMaskedPii(this AdminUserResponse response) => new()
     {
         Id = response.Id,
+        // Username is always identical to Email in this system — mask with the same strategy.
         Username = PiiMasker.MaskEmail(response.Username),
         Email = PiiMasker.MaskEmail(response.Email),
         FirstName = response.FirstName,

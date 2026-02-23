@@ -2,15 +2,17 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Users, ChevronRight } from '@lucide/svelte';
+	import * as Tooltip from '$lib/components/ui/tooltip';
+	import { Users, ChevronRight, EyeOff } from '@lucide/svelte';
 	import type { AdminUser } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
 		users: AdminUser[];
+		piiMasked?: boolean;
 	}
 
-	let { users }: Props = $props();
+	let { users, piiMasked = false }: Props = $props();
 
 	function displayName(user: AdminUser): string {
 		if (user.firstName || user.lastName) {
@@ -50,7 +52,9 @@
 							<Badge variant="destructive" class="shrink-0 text-xs">{m.admin_users_locked()}</Badge>
 						{/if}
 					</div>
-					<p class="mt-0.5 truncate text-xs text-muted-foreground">{user.email}</p>
+					<p class="mt-0.5 truncate text-xs text-muted-foreground" class:italic={piiMasked}>
+						{user.email}
+					</p>
 					{#if (user.roles ?? []).length > 0}
 						<div class="mt-1.5 flex flex-wrap gap-1">
 							{#each user.roles ?? [] as role (role)}
@@ -73,7 +77,21 @@
 						{m.admin_users_name()}
 					</th>
 					<th class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground">
-						{m.admin_users_email()}
+						<span class="inline-flex items-center gap-1.5">
+							{m.admin_users_email()}
+							{#if piiMasked}
+								<Tooltip.Root>
+									<Tooltip.Trigger>
+										<EyeOff class="h-3.5 w-3.5 text-muted-foreground/60" />
+									</Tooltip.Trigger>
+									<Tooltip.Portal>
+										<Tooltip.Content>
+											{m.admin_pii_maskedTooltip()}
+										</Tooltip.Content>
+									</Tooltip.Portal>
+								</Tooltip.Root>
+							{/if}
+						</span>
 					</th>
 					<th class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground">
 						{m.admin_users_roles()}
@@ -107,7 +125,7 @@
 							<span class="truncate">{displayName(user)}</span>
 						</td>
 						<td class="px-4 py-3 text-muted-foreground">
-							<span class="truncate">{user.email}</span>
+							<span class="truncate" class:italic={piiMasked}>{user.email}</span>
 						</td>
 						<td class="px-4 py-3">
 							<div class="flex flex-wrap gap-1">
