@@ -21,7 +21,8 @@
 | **Admin Panel API** | User CRUD with search and pagination, custom role management with permission editor, role assignment with hierarchy enforcement |
 | **Background Jobs** | Hangfire with PostgreSQL persistence — recurring jobs via `IRecurringJobDefinition`, fire-and-forget, admin UI with trigger/pause/resume/restore, persistent pause state |
 | **Email** | Pluggable email service (NoOp for dev — swap in your SMTP/SendGrid/etc.), templated emails for verification and password reset |
-| **Health Checks** | `/health` (all), `/health/ready` (DB + Redis), `/health/live` (liveness) — Docker healthcheck integration |
+| **File Storage** | S3-compatible blob storage via generic `IFileStorageService` — MinIO locally, any S3 provider in production (AWS S3, Cloudflare R2, DigitalOcean Spaces, Backblaze B2). Avatar upload with SkiaSharp image processing (resize, WebP compression) |
+| **Health Checks** | `/health` (all), `/health/ready` (DB + Redis + S3), `/health/live` (liveness) — Docker healthcheck integration |
 | **Search** | User lookup with search and pagination in admin panel, PostgreSQL trigram similarity function pre-registered for custom use |
 | **Testing** | 4 test projects — unit, component (mocked services), API integration (WebApplicationFactory), architecture enforcement |
 
@@ -42,13 +43,14 @@
 | **Keyboard Shortcuts** | Global shortcuts (Cmd/Ctrl combos), platform-aware display, help dialog |
 | **Error Handling** | Unified mutation error handler — rate limiting with cooldown timers, field-level validation with shake animations, generic errors with toast |
 | **Admin UI** | User table with search/pagination, role card grid, permission checkbox editor, job dashboard with execution history |
+| **Avatar Upload** | Drag-and-drop file upload with client-side validation, preview, SkiaSharp server-side compression to WebP, S3 storage |
 | **Login UX** | API health indicator, form draft persistence (registration), animated success transition, CAPTCHA integration |
 
 ## Infrastructure & DevOps
 
 | Feature | Implementation |
 |---|---|
-| **Fully Dockerized** | One `docker compose up` for 5 services — API, frontend (hot-reload), DB, Redis, Seq |
+| **Fully Dockerized** | One `docker compose up` for 6 services — API, frontend (hot-reload), DB, Redis, Seq, MinIO (S3 storage) |
 | **Init Script** | Interactive project bootstrapping — renames solution, configures ports, generates secrets, creates migration, starts Docker |
 | **Deploy Script** | Multi-registry support (Docker Hub, GHCR, ACR, ECR, DigitalOcean), semantic versioning, platform selection |
 | **CI Pipeline** | GitHub Actions with smart path filtering — backend-only PRs skip frontend checks and vice versa |
