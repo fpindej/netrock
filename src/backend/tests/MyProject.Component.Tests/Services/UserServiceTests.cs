@@ -4,7 +4,9 @@ using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Audit;
+using MyProject.Application.Features.Avatar;
 using MyProject.Application.Features.Authentication.Dtos;
+using MyProject.Application.Features.FileStorage;
 using MyProject.Application.Identity;
 using MyProject.Application.Identity.Constants;
 using MyProject.Application.Identity.Dtos;
@@ -24,6 +26,8 @@ public class UserServiceTests : IDisposable
     private readonly ICacheService _cacheService;
     private readonly ICookieService _cookieService;
     private readonly IAuditService _auditService;
+    private readonly IFileStorageService _fileStorageService;
+    private readonly IImageProcessingService _imageProcessingService;
     private readonly MyProjectDbContext _dbContext;
     private readonly UserService _sut;
 
@@ -37,11 +41,13 @@ public class UserServiceTests : IDisposable
         _cacheService = Substitute.For<ICacheService>();
         _cookieService = Substitute.For<ICookieService>();
         _auditService = Substitute.For<IAuditService>();
+        _fileStorageService = Substitute.For<IFileStorageService>();
+        _imageProcessingService = Substitute.For<IImageProcessingService>();
         _dbContext = TestDbContextFactory.Create();
 
         _sut = new UserService(
             _userManager, _roleManager, _userContext, _cacheService, _dbContext, _cookieService,
-            _auditService);
+            _auditService, _fileStorageService, _imageProcessingService);
     }
 
     public void Dispose()
@@ -115,7 +121,7 @@ public class UserServiceTests : IDisposable
         _userManager.GetRolesAsync(user).Returns(new List<string> { "User" });
 
         var result = await _sut.UpdateProfileAsync(
-            new UpdateProfileInput("Jane", "Doe", null, "Bio text", null));
+            new UpdateProfileInput("Jane", "Doe", null, "Bio text"));
 
         Assert.True(result.IsSuccess);
         Assert.Equal("Jane", result.Value.FirstName);
@@ -146,7 +152,7 @@ public class UserServiceTests : IDisposable
         _userManager.Users.Returns(_dbContext.Users);
 
         var result = await _sut.UpdateProfileAsync(
-            new UpdateProfileInput(null, null, "+420123456789", null, null));
+            new UpdateProfileInput(null, null, "+420123456789", null));
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.User.PhoneNumberTaken, result.Error);
@@ -158,7 +164,7 @@ public class UserServiceTests : IDisposable
         _userContext.UserId.Returns((Guid?)null);
 
         var result = await _sut.UpdateProfileAsync(
-            new UpdateProfileInput("Jane", null, null, null, null));
+            new UpdateProfileInput("Jane", null, null, null));
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.User.NotAuthenticated, result.Error);
@@ -172,7 +178,7 @@ public class UserServiceTests : IDisposable
         _userManager.FindByIdAsync(_userId.ToString()).Returns((ApplicationUser?)null);
 
         var result = await _sut.UpdateProfileAsync(
-            new UpdateProfileInput("Jane", null, null, null, null));
+            new UpdateProfileInput("Jane", null, null, null));
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.User.NotFound, result.Error);

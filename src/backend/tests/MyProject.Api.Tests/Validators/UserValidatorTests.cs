@@ -1,7 +1,9 @@
 using FluentValidation.TestHelper;
+using Microsoft.AspNetCore.Http;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Users.Dtos;
 using MyProject.WebApi.Features.Users.Dtos.DeleteAccount;
+using MyProject.WebApi.Features.Users.Dtos.UploadAvatar;
 
 namespace MyProject.Api.Tests.Validators;
 
@@ -58,8 +60,7 @@ public class UpdateUserRequestValidatorTests
             FirstName = "Jane",
             LastName = "Doe",
             PhoneNumber = "+420123456789",
-            Bio = "Hello",
-            AvatarUrl = "https://example.com/avatar.jpg"
+            Bio = "Hello"
         }).ShouldNotHaveAnyValidationErrors();
 
     [Fact]
@@ -92,18 +93,62 @@ public class UpdateUserRequestValidatorTests
     public void BioTooLong_ShouldFail() =>
         _validator.TestValidate(new UpdateUserRequest { Bio = new string('a', 1001) })
             .ShouldHaveValidationErrorFor(x => x.Bio);
+}
+
+public class UploadAvatarRequestValidatorTests
+{
+    private readonly UploadAvatarRequestValidator _validator = new();
+
+    [Fact]
+    public void NullFile_ShouldFail() =>
+        _validator.TestValidate(new UploadAvatarRequest())
+            .ShouldHaveValidationErrorFor(x => x.File);
+
+    [Fact]
+    public void EmptyFile_ShouldFail()
+    {
+        var file = Substitute.For<IFormFile>();
+        file.Length.Returns(0);
+        file.ContentType.Returns("image/jpeg");
+
+        _validator.TestValidate(new UploadAvatarRequest { File = file })
+            .ShouldHaveValidationErrorFor(x => x.File.Length);
+    }
+
+    [Fact]
+    public void FileTooLarge_ShouldFail()
+    {
+        var file = Substitute.For<IFormFile>();
+        file.Length.Returns(6 * 1024 * 1024); // 6 MB
+        file.ContentType.Returns("image/jpeg");
+
+        _validator.TestValidate(new UploadAvatarRequest { File = file })
+            .ShouldHaveValidationErrorFor(x => x.File.Length);
+    }
+
+    [Fact]
+    public void InvalidContentType_ShouldFail()
+    {
+        var file = Substitute.For<IFormFile>();
+        file.Length.Returns(1024);
+        file.ContentType.Returns("application/pdf");
+
+        _validator.TestValidate(new UploadAvatarRequest { File = file })
+            .ShouldHaveValidationErrorFor(x => x.File.ContentType);
+    }
 
     [Theory]
-    [InlineData("https://example.com/avatar.jpg")]
-    [InlineData("http://example.com/photo.png")]
-    public void ValidAvatarUrl_ShouldPass(string url) =>
-        _validator.TestValidate(new UpdateUserRequest { AvatarUrl = url })
-            .ShouldNotHaveValidationErrorFor(x => x.AvatarUrl);
+    [InlineData("image/jpeg")]
+    [InlineData("image/png")]
+    [InlineData("image/webp")]
+    [InlineData("image/gif")]
+    public void ValidFile_ShouldPass(string contentType)
+    {
+        var file = Substitute.For<IFormFile>();
+        file.Length.Returns(1024);
+        file.ContentType.Returns(contentType);
 
-    [Theory]
-    [InlineData("ftp://example.com")]
-    [InlineData("not-a-url")]
-    public void InvalidAvatarUrl_ShouldFail(string url) =>
-        _validator.TestValidate(new UpdateUserRequest { AvatarUrl = url })
-            .ShouldHaveValidationErrorFor(x => x.AvatarUrl);
+        _validator.TestValidate(new UploadAvatarRequest { File = file })
+            .ShouldNotHaveAnyValidationErrors();
+    }
 }

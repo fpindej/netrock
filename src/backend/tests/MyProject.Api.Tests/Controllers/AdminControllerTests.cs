@@ -114,7 +114,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var userId = Guid.NewGuid();
         _factory.AdminService.GetUserByIdAsync(userId, Arg.Any<CancellationToken>())
             .Returns(Result<AdminUserOutput>.Success(new AdminUserOutput(
-                userId, "user@test.com", "John", "Doe", null, null, null,
+                userId, "user@test.com", "John", "Doe", null, null, false,
                 ["User"], true, true, null, 0, false)));
 
         var response = await _client.SendAsync(

@@ -6,12 +6,12 @@ internal record RegisterUserResponse(Guid Id);
 
 // Users
 internal record UserMeResponse(Guid Id, string Username, string Email, string? FirstName, string? LastName,
-    string? PhoneNumber, string? Bio, string? AvatarUrl, List<string> Roles, List<string> Permissions,
+    string? PhoneNumber, string? Bio, bool HasAvatar, List<string> Roles, List<string> Permissions,
     bool EmailConfirmed);
 
 // Admin - Users
 internal record AdminUserResponse(Guid Id, string Username, string Email, string? FirstName, string? LastName,
-    string? PhoneNumber, string? Bio, string? AvatarUrl, List<string> Roles,
+    string? PhoneNumber, string? Bio, bool HasAvatar, List<string> Roles,
     bool EmailConfirmed, bool LockoutEnabled, DateTimeOffset? LockoutEnd, int AccessFailedCount, bool IsLockedOut);
 internal record AdminUserListResponse(List<AdminUserResponse> Items, int TotalCount, int PageNumber, int PageSize,
     int TotalPages, bool HasPreviousPage, bool HasNextPage);
