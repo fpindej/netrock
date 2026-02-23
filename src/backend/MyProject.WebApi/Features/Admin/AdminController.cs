@@ -547,7 +547,6 @@ public class AdminController(IAdminService adminService, IRoleManagementService 
     /// </summary>
     /// <param name="id">The user ID</param>
     /// <param name="request">Pagination parameters</param>
-    /// <param name="cancellationToken">A cancellation token</param>
     /// <returns>A paginated list of audit events for the user</returns>
     /// <response code="200">Returns the audit events</response>
     /// <response code="401">If the user is not authenticated</response>
