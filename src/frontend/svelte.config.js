@@ -14,7 +14,7 @@ const config = {
 				'default-src': ['self'],
 				'script-src': ['self', 'nonce', 'https://challenges.cloudflare.com'],
 				'style-src': ['self', 'unsafe-inline'],
-				'img-src': ['self', 'https:', 'data:'],
+				'img-src': ['self', 'https:', 'data:', 'blob:'],
 				'font-src': ['self'],
 				'connect-src': ['self'],
 				'frame-src': ['https://challenges.cloudflare.com'],
