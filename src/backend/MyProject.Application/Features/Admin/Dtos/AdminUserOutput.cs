@@ -9,7 +9,7 @@ namespace MyProject.Application.Features.Admin.Dtos;
 /// <param name="LastName">The user's last name, or <c>null</c> if not set.</param>
 /// <param name="PhoneNumber">The user's phone number, or <c>null</c> if not set.</param>
 /// <param name="Bio">The user's biography text, or <c>null</c> if not set.</param>
-/// <param name="AvatarUrl">The user's avatar URL, or <c>null</c> if not set.</param>
+/// <param name="HasAvatar">Whether the user has an uploaded avatar image.</param>
 /// <param name="Roles">The roles assigned to the user.</param>
 /// <param name="EmailConfirmed">Whether the user's email address has been confirmed.</param>
 /// <param name="LockoutEnabled">Whether lockout is enabled for this user.</param>
@@ -23,7 +23,7 @@ public record AdminUserOutput(
     string? LastName,
     string? PhoneNumber,
     string? Bio,
-    string? AvatarUrl,
+    bool HasAvatar,
     IReadOnlyList<string> Roles,
     bool EmailConfirmed,
     bool LockoutEnabled,

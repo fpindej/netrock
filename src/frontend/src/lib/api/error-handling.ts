@@ -46,7 +46,6 @@ const DEFAULT_FIELD_MAP: Record<string, string> = {
 	LastName: 'lastName',
 	PhoneNumber: 'phoneNumber',
 	Bio: 'bio',
-	AvatarUrl: 'avatarUrl',
 	Email: 'email',
 	Password: 'password',
 	ConfirmPassword: 'confirmPassword',

@@ -21,6 +21,12 @@ services:
       Caching__Redis__ConnectionString: redis:6379
       Caching__Redis__Password: ${REDIS_PASSWORD}
       Authentication__Jwt__Key: ${JWT_SECRET_KEY}
+      FileStorage__Endpoint: ${FileStorage__Endpoint:-http://storage:9000}
+      FileStorage__AccessKey: ${MINIO_ROOT_USER}
+      FileStorage__SecretKey: ${MINIO_ROOT_PASSWORD}
+      FileStorage__BucketName: ${FileStorage__BucketName:-{INIT_PROJECT_SLUG}-files}
+      FileStorage__Region: ${FileStorage__Region:-}
+      FileStorage__UseSSL: ${FileStorage__UseSSL:-false}
       Hosting__ReverseProxy__TrustedNetworks__0: 172.16.0.0/12
     healthcheck:
       test: ["CMD", "dotnet", "/app/healthprobe/HealthProbe.dll", "http://localhost:8080/health/live"]
@@ -31,6 +37,26 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      storage:
+        condition: service_healthy
+
+  storage:
+    image: minio/minio
+    restart: unless-stopped
+    networks:
+      - backend
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - storage_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   redis:
     image: redis:7-alpine
@@ -97,6 +123,7 @@ services:
 volumes:
   db_data:
   redis_data:
+  storage_data:
 
 networks:
   frontend:

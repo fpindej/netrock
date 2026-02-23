@@ -6,6 +6,7 @@ using MyProject.Application.Caching;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Email;
+using MyProject.Application.Features.FileStorage;
 using MyProject.Application.Identity.Constants;
 using MyProject.Component.Tests.Fixtures;
 using MyProject.Infrastructure.Features.Admin.Services;
@@ -54,9 +55,11 @@ public class AdminServiceTests : IDisposable
         var emailTokenService = new EmailTokenService(_dbContext, _timeProvider, authOptions);
         _auditService = Substitute.For<IAuditService>();
 
+        var fileStorageService = Substitute.For<IFileStorageService>();
+
         _sut = new AdminService(
             _userManager, _roleManager, _dbContext, _cacheService, _timeProvider,
-            _emailService, emailTokenService, _auditService, emailOptions, logger);
+            _emailService, emailTokenService, _auditService, fileStorageService, emailOptions, logger);
     }
 
     public void Dispose()

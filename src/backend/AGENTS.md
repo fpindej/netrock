@@ -125,6 +125,7 @@ WebApi response DTOs: classes with `init` properties and `[UsedImplicitly]` from
 - Public endpoints use `ControllerBase` directly (route `api/[controller]`)
 - Always: `/// <summary>`, `[ProducesResponseType]` per status code, `CancellationToken` as last param
 - Never `/// <param name="cancellationToken">` — it leaks into OAS `requestBody.description`
+- File uploads: `[FromForm]` with `IFormFile`, `[Consumes("multipart/form-data")]`, `[RequestSizeLimit(bytes)]`
 - Error responses: always `ProblemFactory.Create()` — never `NotFound()`, `BadRequest()`, `StatusCode(int, object)`, or anonymous objects
 - Success responses: `Ok(response)`, `Created(string.Empty, response)` — never `CreatedAtAction`
 - `[ProducesResponseType]` without `typeof(...)` on error codes (400, 401, 403, 404, 429) — ASP.NET auto-types as ProblemDetails
@@ -177,6 +178,26 @@ Pagination: `Paginate(PaginatedRequest)` extension on `IQueryable<T>` returns `P
 ## Caching
 
 `ICacheService` wraps `IDistributedCache` (Redis). Keys defined in `CacheKeys` constants. `UserCacheInvalidationInterceptor` auto-clears user cache on entity changes.
+
+## File Storage
+
+`IFileStorageService` — generic S3-compatible interface (`Upload`, `Download`, `Delete`, `Exists`). Implementation: `S3FileStorageService` (works with MinIO locally, any S3-compatible provider in production).
+
+**Configuration:** `FileStorageOptions` in `appsettings.json` / env vars (`FileStorage__Endpoint`, `FileStorage__AccessKey`, etc.). `ForcePathStyle = true` for MinIO compatibility.
+
+**Uploading files from a controller:**
+1. Accept `IFormFile` via `[FromForm]` + `[Consumes("multipart/form-data")]` + `[RequestSizeLimit]`
+2. Read to `byte[]` in the controller: `using var ms = new MemoryStream(); await file.CopyToAsync(ms); var data = ms.ToArray();`
+3. Pass to the service for validation/processing (e.g., `IImageProcessingService` for avatar images)
+4. Store via `fileStorageService.UploadAsync(key, data, contentType, ct)` — returns `Result`
+
+**Storage keys:** Use `{feature}/{id}.{ext}` pattern (e.g., `avatars/{userId}.webp`). Overwrite replaces the old file.
+
+**Avatar pattern:** `ApplicationUser.HasAvatar` boolean flag. Frontend constructs URL: `/api/users/{id}/avatar`. Backend serves via `File(data, contentType)` with `[ResponseCache(Duration = 300, Location = Client)]`.
+
+**Swapping S3 provider:** Only `FileStorageOptions` changes — `S3FileStorageService` is provider-agnostic. Cloudflare R2, DigitalOcean Spaces, Backblaze B2 all work with path-style S3 API. Update `FileStorage__Endpoint`, credentials, and `UseSSL` in production env.
+
+**Removing file storage:** Delete the `storage` Docker service, `FileStorage*` options/services/extensions, avatar endpoints, `HasAvatar` from `ApplicationUser`, and frontend avatar components. Remove `AWSSDK.S3` and `SkiaSharp` from `Directory.Packages.props`.
 
 ## OpenAPI
 

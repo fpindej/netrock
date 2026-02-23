@@ -14,6 +14,7 @@ NETrock works out of the box for local development, but there are things you nee
 - [ ] **Database** — point `ConnectionStrings__Database` to your production PostgreSQL instance
 - [ ] **CAPTCHA keys** — replace the Cloudflare Turnstile development keys with production keys (`Captcha__SecretKey` backend, `TURNSTILE_SITE_KEY` frontend — runtime-configurable via the `(public)` layout server load)
 - [ ] **Frontend URL in emails** — set `Email__FrontendBaseUrl` to your production domain so email verification and password reset links work
+- [ ] **File storage** — configure `FileStorage__*` env vars for your S3-compatible provider. Local dev uses MinIO (included in Docker stack). For production, point to your preferred provider — AWS S3, Cloudflare R2, DigitalOcean Spaces, Backblaze B2, or any S3-compatible service. Set `FileStorage__Endpoint`, `FileStorage__AccessKey`, `FileStorage__SecretKey`, `FileStorage__BucketName`, `FileStorage__Region` (if applicable), and `FileStorage__UseSSL=true`. See `SKILLS.md` → "Swap S3 Provider" for provider-specific configs. If you don't need file storage, see `SKILLS.md` → "Remove File Storage Entirely"
 
 ## Should Do
 

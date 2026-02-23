@@ -20,7 +20,7 @@ internal static class UserMapper
         LastName = user.LastName,
         PhoneNumber = user.PhoneNumber,
         Bio = user.Bio,
-        AvatarUrl = user.AvatarUrl,
+        HasAvatar = user.HasAvatar,
         Roles = user.Roles,
         Permissions = user.Permissions,
         EmailConfirmed = user.IsEmailConfirmed

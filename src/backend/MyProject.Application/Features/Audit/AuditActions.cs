@@ -73,4 +73,10 @@ public static class AuditActions
 
     /// <summary>Admin updated role permissions.</summary>
     public const string AdminSetRolePermissions = "AdminSetRolePermissions";
+
+    /// <summary>User uploaded an avatar image.</summary>
+    public const string AvatarUpload = "AvatarUpload";
+
+    /// <summary>User removed their avatar image.</summary>
+    public const string AvatarRemove = "AvatarRemove";
 }

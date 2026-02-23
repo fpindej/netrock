@@ -6,7 +6,9 @@ using MyProject.Infrastructure.Caching.Extensions;
 using MyProject.Infrastructure.Cookies.Extensions;
 using MyProject.Infrastructure.Features.Admin.Extensions;
 using MyProject.Infrastructure.Features.Audit.Extensions;
+using MyProject.Infrastructure.Features.Avatar.Extensions;
 using MyProject.Infrastructure.Features.Captcha.Extensions;
+using MyProject.Infrastructure.Features.FileStorage.Extensions;
 using MyProject.Infrastructure.Features.Email.Extensions;
 using MyProject.Infrastructure.Features.Jobs.Extensions;
 using MyProject.Infrastructure.Identity.Extensions;
@@ -62,6 +64,12 @@ try
 
         Log.Debug("Adding email services");
         builder.Services.AddEmailServices(builder.Configuration);
+
+        Log.Debug("Adding file storage services");
+        builder.Services.AddFileStorageServices(builder.Configuration);
+
+        Log.Debug("Adding avatar services");
+        builder.Services.AddAvatarServices();
 
         Log.Debug("Adding captcha services");
         builder.Services.AddCaptchaServices();

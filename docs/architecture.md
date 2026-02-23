@@ -15,6 +15,7 @@ Backend API (.NET :8080)
     │
     ├── PostgreSQL (:5432)  — EF Core, soft delete, audit trails, Hangfire storage
     ├── Redis (:6379)       — Distributed cache, security stamp lookup
+    ├── MinIO (:9000)       — S3-compatible blob storage (avatars, file uploads)
     ├── Hangfire            — Recurring + fire-and-forget background jobs
     └── Seq (:80)           — Structured log aggregation
 ```
@@ -50,7 +51,7 @@ src/
 │   ├── YourProject.Shared/           # Result pattern, error types, cross-cutting utilities
 │   ├── YourProject.Domain/           # Entities with audit fields and soft delete
 │   ├── YourProject.Application/      # Interfaces, DTOs, service contracts, permissions
-│   ├── YourProject.Infrastructure/   # EF Core, Identity, Redis, Hangfire, email, implementations
+│   ├── YourProject.Infrastructure/   # EF Core, Identity, Redis, Hangfire, S3 storage, email, implementations
 │   ├── YourProject.WebApi/           # Controllers, middleware, validation, authorization
 │   └── tests/
 │       ├── YourProject.Unit.Tests/        # Pure logic tests (Result, entities, roles, permissions)

@@ -57,6 +57,8 @@ export type User = components['schemas']['UserResponse'];
 
 If the backend doesn't provide data you need — propose the endpoint, don't work around it.
 
+**File uploads**: Use native `fetch()` with `FormData` — not `browserClient`. The openapi-fetch typed client doesn't reliably handle multipart/`File` objects. After upload success, call `invalidateAll()` to refresh server data.
+
 ## Error Handling
 
 ### Generic Errors
@@ -203,6 +205,22 @@ Add to both `en.json` and `cs.json`. Use: `import * as m from '$lib/paraglide/me
 | `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()` |
 | `sidebar.svelte.ts`   | `sidebarState`, `toggleSidebar()`           |
 | `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()`  |
+
+## File Upload
+
+Use native `fetch()` with `FormData` for file uploads — `browserClient` (openapi-fetch) doesn't reliably handle multipart `File` objects.
+
+```typescript
+const formData = new FormData();
+formData.append('File', selectedFile); // Key must match C# property name
+const response = await fetch('/api/endpoint', { method: 'PUT', body: formData });
+```
+
+**Avatar URLs:** If `user.hasAvatar` is true, construct `/api/users/${user.id}/avatar?v=${version}` where `version` is a `$state` variable bumped on avatar dialog close (see `ProfileHeader.svelte`). **Do NOT use `Date.now()` directly in `$derived`** — it re-evaluates on every Svelte render tick, causing excessive refetches. Otherwise show initials fallback via the `Avatar` component.
+
+**Client-side validation:** Validate file size and MIME type before upload to give instant feedback. Must match backend rules (5 MB, `image/jpeg|png|webp|gif`).
+
+**Drag-and-drop:** Use `ondrop`, `ondragover`, `ondragleave` on a `<button>` element. Call `e.preventDefault()` in both drop and dragover handlers.
 
 ## Security
 

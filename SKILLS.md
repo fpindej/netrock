@@ -383,6 +383,79 @@ backgroundJobClient.Schedule<WelcomeEmailJob>(
 
 See `ExampleFireAndForgetJob.cs` in the codebase for a working reference. The Hangfire dashboard and admin UI at `/admin/jobs` show one-time job executions alongside recurring jobs.
 
+### Use File Storage (Upload / Download / Delete)
+
+`IFileStorageService` provides generic S3-compatible file operations. Inject it in any service:
+
+```csharp
+// Upload
+var result = await fileStorageService.UploadAsync("documents/123.pdf", data, "application/pdf", ct);
+
+// Download
+var result = await fileStorageService.DownloadAsync("documents/123.pdf", ct);
+if (result.IsSuccess) { var bytes = result.Value.Data; var mime = result.Value.ContentType; }
+
+// Delete (best-effort pattern — log warning, don't block)
+var deleteResult = await fileStorageService.DeleteAsync("documents/123.pdf", ct);
+if (!deleteResult.IsSuccess) logger.LogWarning("...");
+
+// Check existence
+var exists = await fileStorageService.ExistsAsync("documents/123.pdf", ct);
+```
+
+**Storage key convention:** `{feature}/{id}.{ext}` (e.g., `avatars/{userId}.webp`). Overwriting the same key replaces the file.
+
+### Swap S3 Provider (Cloudflare R2, DigitalOcean Spaces, etc.)
+
+No code changes needed — `S3FileStorageService` uses the standard S3 API. Only configuration changes:
+
+**1. Update `deploy/envs/production.env.example`** (or your actual env):
+
+```env
+# Cloudflare R2
+FileStorage__Endpoint=https://<account-id>.r2.cloudflarestorage.com
+FileStorage__AccessKey=<R2-access-key>
+FileStorage__SecretKey=<R2-secret-key>
+FileStorage__BucketName=my-bucket
+FileStorage__UseSSL=true
+FileStorage__Region=auto
+
+# DigitalOcean Spaces
+FileStorage__Endpoint=https://<region>.digitaloceanspaces.com
+FileStorage__AccessKey=<spaces-key>
+FileStorage__SecretKey=<spaces-secret>
+FileStorage__BucketName=my-space
+FileStorage__UseSSL=true
+FileStorage__Region=<region>
+
+# Backblaze B2 (S3-compatible)
+FileStorage__Endpoint=https://s3.<region>.backblazeb2.com
+FileStorage__AccessKey=<b2-key-id>
+FileStorage__SecretKey=<b2-application-key>
+FileStorage__BucketName=my-bucket
+FileStorage__UseSSL=true
+FileStorage__Region=<region>
+```
+
+**2. Pre-create the bucket** in your provider's console (auto-creation requires elevated permissions).
+
+**3. Restart** — no code changes, no rebuild.
+
+### Remove File Storage Entirely
+
+If you don't need file uploads:
+
+1. **Docker:** Remove `storage` service from `docker-compose.yml`, `local.yml`, `production.yml`
+2. **Backend:** Remove `Application/Features/FileStorage/`, `Application/Features/Avatar/`, `Infrastructure/Features/FileStorage/`, `Infrastructure/Features/Avatar/`
+3. **Entity:** Remove `HasAvatar` from `ApplicationUser`
+4. **Endpoints:** Remove avatar endpoints from `UsersController`, `UploadAvatar/` DTOs
+5. **DTOs:** Remove `HasAvatar` from `UserOutput`, `AdminUserOutput`, `UserResponse`, `AdminUserResponse`, mappers
+6. **DI:** Remove `AddFileStorageServices()` and `AddAvatarServices()` from `Program.cs`
+7. **NuGet:** Remove `AWSSDK.S3`, `SkiaSharp`, `SkiaSharp.NativeAssets.Linux` from `Directory.Packages.props`
+8. **Frontend:** Remove `AvatarDialog.svelte`, update `ProfileHeader.svelte` and `UserNav.svelte` to remove avatar image
+9. **Config:** Remove `FileStorage` section from all `appsettings*.json` and env files
+10. **Health check:** Remove S3 health check from `HealthCheckExtensions.cs`
+
 ### Run Tests
 
 ```bash

@@ -193,15 +193,18 @@
 
 	"profile_avatar_change": "Change Avatar",
 	"profile_avatar_dialogTitle": "Change Avatar",
-	"profile_avatar_dialogDescription": "Enter a URL to an image to use as your avatar.",
-	"profile_avatar_url": "Avatar URL",
-	"profile_avatar_urlPlaceholder": "https://example.com/avatar.jpg",
-	"profile_avatar_urlHint": "Enter a valid URL starting with https://",
-	"profile_avatar_urlInvalid": "Please enter a valid URL (http:// or https://)",
-	"profile_avatar_save": "Save Avatar",
+	"profile_avatar_dialogDescription": "Upload an image to use as your avatar. Accepted formats: JPEG, PNG, WebP, GIF. Max 5 MB.",
+	"profile_avatar_dropzone": "Click to browse or drag and drop an image",
+	"profile_avatar_dropzoneActive": "Drop image here",
+	"profile_avatar_fileTooLarge": "File is too large. Maximum size is 5 MB.",
+	"profile_avatar_unsupportedFormat": "Unsupported format. Use JPEG, PNG, WebP, or GIF.",
+	"profile_avatar_uploading": "Uploading...",
+	"profile_avatar_save": "Upload Avatar",
 	"profile_avatar_remove": "Remove Avatar",
 	"profile_avatar_updateSuccess": "Avatar updated successfully",
 	"profile_avatar_updateError": "Failed to update avatar",
+	"profile_avatar_removeSuccess": "Avatar removed successfully",
+	"profile_avatar_removeError": "Failed to remove avatar",
 
 	"profile_account_title": "Account Details",
 	"profile_account_description": "Manage your account settings.",
@@ -455,5 +458,7 @@
 	"audit_action_adminCreateRole": "Role created",
 	"audit_action_adminUpdateRole": "Role updated",
 	"audit_action_adminDeleteRole": "Role deleted",
-	"audit_action_adminSetRolePermissions": "Permissions updated"
+	"audit_action_adminSetRolePermissions": "Permissions updated",
+	"audit_action_avatarUpload": "Avatar uploaded",
+	"audit_action_avatarRemove": "Avatar removed"
 }

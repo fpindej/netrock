@@ -28,6 +28,9 @@
     <PackageVersion Include="Hangfire.Core" Version="1.8.23" />
     <PackageVersion Include="Hangfire.PostgreSql" Version="1.21.1" />
     <PackageVersion Include="Serilog.Sinks.Seq" Version="9.0.0" />
+    <PackageVersion Include="AWSSDK.S3" Version="3.7.415.1" />
+    <PackageVersion Include="SkiaSharp" Version="3.119.2" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2" />
   </ItemGroup>
   <ItemGroup Label="Test">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />

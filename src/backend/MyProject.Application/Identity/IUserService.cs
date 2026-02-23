@@ -1,4 +1,5 @@
 using MyProject.Application.Features.Authentication.Dtos;
+using MyProject.Application.Features.FileStorage.Dtos;
 using MyProject.Application.Identity.Dtos;
 using MyProject.Shared;
 
@@ -39,4 +40,28 @@ public interface IUserService
     /// <param name="userId">The user ID to get roles for.</param>
     /// <returns>A list of role names.</returns>
     Task<IList<string>> GetUserRolesAsync(Guid userId);
+
+    /// <summary>
+    /// Uploads and processes an avatar image for the current user.
+    /// </summary>
+    /// <param name="imageData">The raw uploaded file bytes.</param>
+    /// <param name="fileName">The original file name.</param>
+    /// <param name="ct">A cancellation token.</param>
+    /// <returns>A Result containing the updated user output.</returns>
+    Task<Result<UserOutput>> UploadAvatarAsync(byte[] imageData, string fileName, CancellationToken ct);
+
+    /// <summary>
+    /// Removes the current user's avatar image.
+    /// </summary>
+    /// <param name="ct">A cancellation token.</param>
+    /// <returns>A Result containing the updated user output.</returns>
+    Task<Result<UserOutput>> RemoveAvatarAsync(CancellationToken ct);
+
+    /// <summary>
+    /// Gets the avatar image for a specific user.
+    /// </summary>
+    /// <param name="userId">The user ID whose avatar to retrieve.</param>
+    /// <param name="ct">A cancellation token.</param>
+    /// <returns>A Result containing the file data and content type.</returns>
+    Task<Result<FileDownloadOutput>> GetAvatarAsync(Guid userId, CancellationToken ct);
 }

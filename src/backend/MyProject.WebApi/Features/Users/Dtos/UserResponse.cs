@@ -43,9 +43,9 @@ public class UserResponse
     public string? Bio { [UsedImplicitly] get; init; }
 
     /// <summary>
-    /// The URL to the user's avatar image.
+    /// Whether the user has an uploaded avatar image.
     /// </summary>
-    public string? AvatarUrl { [UsedImplicitly] get; init; }
+    public bool HasAvatar { [UsedImplicitly] get; init; }
 
     /// <summary>
     /// The roles assigned to the user.

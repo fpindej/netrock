@@ -9,7 +9,7 @@ namespace MyProject.Application.Features.Authentication.Dtos;
 /// <param name="LastName">The user's last name, or <c>null</c> if not set.</param>
 /// <param name="PhoneNumber">The user's phone number, or <c>null</c> if not set.</param>
 /// <param name="Bio">The user's biography text, or <c>null</c> if not set.</param>
-/// <param name="AvatarUrl">The user's avatar URL, or <c>null</c> if not set.</param>
+/// <param name="HasAvatar">Whether the user has an uploaded avatar image.</param>
 /// <param name="Roles">The roles assigned to the user.</param>
 /// <param name="Permissions">The atomic permissions granted to the user through their roles.</param>
 /// <param name="IsEmailConfirmed">Whether the user's email address has been confirmed.</param>
@@ -20,7 +20,7 @@ public record UserOutput(
     string? LastName,
     string? PhoneNumber,
     string? Bio,
-    string? AvatarUrl,
+    bool HasAvatar,
     IEnumerable<string> Roles,
     IReadOnlyList<string> Permissions,
     bool IsEmailConfirmed = false

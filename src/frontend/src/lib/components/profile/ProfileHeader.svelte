@@ -11,6 +11,7 @@
 	let { user }: Props = $props();
 
 	let avatarDialogOpen = $state(false);
+	let avatarVersion = $state(Date.now());
 
 	// Computed display name
 	const displayName = $derived.by(() => {
@@ -20,6 +21,18 @@
 			return [first, last].filter(Boolean).join(' ');
 		}
 		return user?.username ?? m.common_user();
+	});
+
+	// Avatar URL with cache-busting (version bumps after upload/remove via invalidateAll)
+	const avatarUrl = $derived(
+		user?.hasAvatar && user?.id ? `/api/users/${user.id}/avatar?v=${avatarVersion}` : null
+	);
+
+	// Bump version when the dialog closes (avatar may have changed)
+	$effect(() => {
+		if (!avatarDialogOpen) {
+			avatarVersion = Date.now();
+		}
 	});
 
 	// Computed initials for avatar
@@ -45,8 +58,8 @@
 		<Avatar.Root
 			class="relative h-24 w-24 ring-2 ring-border transition-all group-hover:ring-primary/50"
 		>
-			{#if user?.avatarUrl}
-				<Avatar.Image src={user.avatarUrl} alt={displayName} />
+			{#if avatarUrl}
+				<Avatar.Image src={avatarUrl} alt={displayName} />
 			{/if}
 			<Avatar.Fallback class="text-lg">
 				{initials}
@@ -58,7 +71,7 @@
 		<p class="text-sm text-muted-foreground">{user?.email ?? ''}</p>
 		<AvatarDialog
 			bind:open={avatarDialogOpen}
-			currentAvatarUrl={user?.avatarUrl}
+			hasAvatar={user?.hasAvatar}
 			{displayName}
 			{initials}
 		/>

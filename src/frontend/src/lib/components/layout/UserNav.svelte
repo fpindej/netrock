@@ -15,6 +15,9 @@
 
 	let { user }: Props = $props();
 
+	// Avatar URL — stable until user object changes via invalidateAll
+	const avatarUrl = $derived(user?.hasAvatar && user?.id ? `/api/users/${user.id}/avatar` : null);
+
 	function getInitials(name: string) {
 		return name
 			.split(' ')
@@ -30,8 +33,8 @@
 		{#snippet child({ props })}
 			<Button variant="ghost" size="icon" class="rounded-full" {...props}>
 				<Avatar.Root class="h-7 w-7">
-					{#if user?.avatarUrl}
-						<Avatar.Image src={user.avatarUrl} alt={user.username || m.common_user()} />
+					{#if avatarUrl}
+						<Avatar.Image src={avatarUrl} alt={user?.username || m.common_user()} />
 					{/if}
 					<Avatar.Fallback>{getInitials(user?.username || m.common_user())}</Avatar.Fallback>
 				</Avatar.Root>
