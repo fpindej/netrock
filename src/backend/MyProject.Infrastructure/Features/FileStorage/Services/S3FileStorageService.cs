@@ -49,6 +49,11 @@ internal sealed class S3FileStorageService(
             logger.LogError(ex, "Failed to upload object '{Key}' to bucket '{Bucket}'", key, _bucketName);
             return Result.Failure("Failed to upload file to storage.");
         }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Unexpected error uploading object '{Key}' to bucket '{Bucket}'", key, _bucketName);
+            return Result.Failure("Failed to upload file to storage.");
+        }
     }
 
     /// <inheritdoc />
@@ -78,6 +83,11 @@ internal sealed class S3FileStorageService(
             logger.LogError(ex, "Failed to download object '{Key}' from bucket '{Bucket}'", key, _bucketName);
             return Result<FileDownloadOutput>.Failure("Failed to retrieve file from storage.");
         }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Unexpected error downloading object '{Key}' from bucket '{Bucket}'", key, _bucketName);
+            return Result<FileDownloadOutput>.Failure("Failed to retrieve file from storage.");
+        }
     }
 
     /// <inheritdoc />
@@ -99,6 +109,11 @@ internal sealed class S3FileStorageService(
         catch (AmazonS3Exception ex)
         {
             logger.LogError(ex, "Failed to delete object '{Key}' from bucket '{Bucket}'", key, _bucketName);
+            return Result.Failure("Failed to delete file from storage.");
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Unexpected error deleting object '{Key}' from bucket '{Bucket}'", key, _bucketName);
             return Result.Failure("Failed to delete file from storage.");
         }
     }
@@ -124,6 +139,11 @@ internal sealed class S3FileStorageService(
         catch (AmazonS3Exception ex)
         {
             logger.LogWarning(ex, "Failed to check existence of '{Key}' in bucket '{Bucket}'", key, _bucketName);
+            return false;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, "Unexpected error checking existence of '{Key}' in bucket '{Bucket}'", key, _bucketName);
             return false;
         }
     }
