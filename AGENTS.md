@@ -42,6 +42,7 @@ All layers reference Shared (Result, ErrorType, ErrorMessages)
 | **Application** | Interfaces, DTOs (Input/Output), service contracts. |
 | **Infrastructure** | EF Core, Identity, Redis, service implementations. All `internal`. |
 | **WebApi** | Controllers, middleware, validation, request/response DTOs. Entry point. |
+| **HealthProbe** | Minimal console app used as Docker health check binary (`/health/live`). |
 
 ## Code Quality
 

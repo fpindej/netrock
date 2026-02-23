@@ -9,16 +9,16 @@ src/
 │   ├── auth/                      # auth.ts (getUser, logout), middleware.ts (token refresh)
 │   ├── components/
 │   │   ├── ui/                    # shadcn (generated, customizable)
-│   │   ├── auth/                  # LoginForm, RegisterDialog, ForgotPasswordForm, TurnstileWidget
-│   │   ├── layout/                # Header, Sidebar, SidebarNav, UserNav, ThemeToggle, LanguageSelector
-│   │   ├── profile/               # ProfileForm, AvatarDialog, AccountDetails
+│   │   ├── auth/                  # LoginForm, LoginBackground, RegisterDialog, ForgotPasswordForm, ResetPasswordForm, EmailVerificationBanner, TurnstileWidget
+│   │   ├── layout/                # Header, Sidebar, SidebarNav, UserNav, ThemeToggle, LanguageSelector, ShortcutsHelp
+│   │   ├── profile/               # ProfileForm, ProfileHeader, AvatarDialog, AccountDetails, InfoItem
 │   │   ├── settings/              # ChangePasswordForm, DeleteAccountDialog, ActivityLog
 │   │   ├── admin/                 # UserTable, RoleCardGrid, UserManagementCard, AuditTrailCard, ...
 │   │   └── common/                # StatusIndicator, WorkInProgress
 │   ├── config/                    # i18n.ts (client-safe), server.ts (server-only — never export from barrel)
 │   ├── state/                     # .svelte.ts files only (cooldown, health, shake, theme, sidebar, shortcuts)
 │   ├── types/index.ts             # Type aliases from API schemas
-│   └── utils/                     # cn(), permissions.ts, audit.ts, platform.ts
+│   └── utils/                     # ui.ts (cn()), permissions.ts, audit.ts, platform.ts, roles.ts
 ├── routes/
 │   ├── (app)/                     # Authenticated (redirect guard)
 │   │   └── admin/                 # Permission-guarded per page
