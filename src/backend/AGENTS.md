@@ -201,6 +201,25 @@ Pagination: `Paginate(PaginatedRequest)` extension on `IQueryable<T>` returns `P
 
 **Removing file storage:** Delete the `storage` Docker service, `FileStorage*` options/services/extensions, avatar endpoints, `HasAvatar` from `ApplicationUser`, and frontend avatar components. Remove `AWSSDK.S3` and `SkiaSharp` from `Directory.Packages.props`.
 
+## Email Templates
+
+Transactional emails use [Fluid](https://github.com/sebastienros/fluid) (Liquid) templates rendered by `IEmailTemplateRenderer`. Templates are embedded resources compiled once and cached for the application lifetime.
+
+**Architecture:** `IEmailTemplateRenderer.Render<TModel>(templateName, model)` returns a `RenderedEmail` (subject, HTML body, optional plain text). Services inject `IEmailTemplateRenderer` alongside `IEmailService` to render then send.
+
+**3-file pattern** per email in `Infrastructure/Features/Email/Templates/`:
+- `{name}.liquid` — HTML body fragment (inline styles, injected into `_base.liquid`)
+- `{name}.subject.liquid` — Subject line (plain text)
+- `{name}.text.liquid` — Plain text alternative (optional but recommended)
+
+**Model records** in `Application/Features/Email/Models/EmailTemplateModels.cs` — one record per template. Properties auto-map to snake_case Liquid variables (e.g. `ResetUrl` becomes `reset_url`).
+
+**Shared layout:** `_base.liquid` wraps all HTML emails with header (`{{ app_name }}`), card container, and footer. Fragments provide inner content only — the layout handles the outer HTML document.
+
+**Security:** HTML body is rendered with `HtmlEncoder.Default` preventing XSS. Subject and plain text are unencoded. The `{{ body | raw }}` filter in `_base.liquid` safely injects pre-encoded child HTML.
+
+**Adding a new template:** See [SKILLS.md — Add a Transactional Email Template](../../../SKILLS.md#add-a-transactional-email-template).
+
 ## OpenAPI
 
 - `/// <summary>` on every controller action and DTO property → generates OAS descriptions

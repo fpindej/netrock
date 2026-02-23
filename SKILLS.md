@@ -456,6 +456,73 @@ If you don't need file uploads:
 9. **Config:** Remove `FileStorage` section from all `appsettings*.json` and env files
 10. **Health check:** Remove S3 health check from `HealthCheckExtensions.cs`
 
+### Add a Transactional Email Template
+
+The template uses [Fluid](https://github.com/sebastienros/fluid) (Liquid) for rendering email templates. Each email has a 3-file pattern plus a model record.
+
+**1. Create the model record** in `src/backend/MyProject.Application/Features/Email/Models/EmailTemplateModels.cs`:
+
+```csharp
+/// <summary>
+/// Model for the order-confirmation template. Exposed as <c>order_number</c> and <c>total</c> in Liquid.
+/// </summary>
+/// <param name="OrderNumber">The order number.</param>
+/// <param name="Total">The formatted order total (e.g. "$42.00").</param>
+public record OrderConfirmationModel(string OrderNumber, string Total);
+```
+
+Properties are automatically exposed as snake_case Liquid variables (e.g. `OrderNumber` becomes `order_number`).
+
+**2. Create the 3 template files** in `src/backend/MyProject.Infrastructure/Features/Email/Templates/`:
+
+- `order-confirmation.liquid` — HTML body fragment (injected into `_base.liquid` via `{{ body | raw }}`):
+  ```html
+  <h2 style="margin: 0 0 20px 0; font-size: 22px; font-weight: 700; color: #333333;">Order Confirmed</h2>
+  <p style="margin: 0 0 16px 0;">Your order <strong>{{ order_number }}</strong> totaling {{ total }} has been confirmed.</p>
+  ```
+- `order-confirmation.subject.liquid` — Subject line (plain text, no HTML):
+  ```
+  Order {{ order_number }} Confirmed
+  ```
+- `order-confirmation.text.liquid` — Plain text body (optional but recommended):
+  ```
+  Order Confirmed
+
+  Your order {{ order_number }} totaling {{ total }} has been confirmed.
+  ```
+
+All three files must be marked as **EmbeddedResource** — verify the `.csproj` has `<EmbeddedResource Include="Features\Email\Templates\*.liquid" />` (already present).
+
+**3. Register the model type** in `FluidEmailTemplateRenderer.CreateOptions()` in `src/backend/MyProject.Infrastructure/Features/Email/Services/FluidEmailTemplateRenderer.cs`:
+
+```csharp
+options.MemberAccessStrategy.Register<OrderConfirmationModel>();
+```
+
+**4. Use in a service** — inject `IEmailTemplateRenderer`:
+
+```csharp
+var rendered = emailTemplateRenderer.Render("order-confirmation",
+    new OrderConfirmationModel(order.Number, order.FormattedTotal));
+
+await emailService.SendAsync(new EmailMessage(
+    to: customer.Email,
+    subject: rendered.Subject,
+    htmlBody: rendered.HtmlBody,
+    plainTextBody: rendered.PlainTextBody), cancellationToken);
+```
+
+**5. Add tests** in `src/backend/tests/MyProject.Component.Tests/Services/FluidEmailTemplateRendererTests.cs` — at minimum test subject rendering, HTML variable injection, and plain text variant.
+
+**6. Verify:** `dotnet test src/backend/MyProject.slnx -c Release`
+
+Key conventions:
+- Template names use kebab-case: `order-confirmation`, not `orderConfirmation`
+- HTML templates use inline styles (email clients ignore `<style>` blocks in fragments)
+- The shared base layout (`_base.liquid`) provides the HTML wrapper, header with `{{ app_name }}`, card container, and footer — fragments only provide inner content
+- HTML body is rendered with `HtmlEncoder.Default` (XSS-safe); subject and plain text are unencoded
+- `{{ app_name }}` is automatically available in all templates from `EmailOptions.FromName`
+
 ### Run Tests
 
 ```bash
