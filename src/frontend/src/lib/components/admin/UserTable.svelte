@@ -81,8 +81,8 @@
 							{m.admin_users_email()}
 							{#if piiMasked}
 								<Tooltip.Root>
-									<Tooltip.Trigger>
-										<EyeOff class="h-3.5 w-3.5 text-muted-foreground/60" />
+									<Tooltip.Trigger aria-label={m.admin_pii_maskedTooltip()}>
+										<EyeOff class="h-3.5 w-3.5 text-muted-foreground/60" aria-hidden="true" />
 									</Tooltip.Trigger>
 									<Tooltip.Portal>
 										<Tooltip.Content>

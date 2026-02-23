@@ -37,7 +37,7 @@
 			</h3>
 			{#if piiMasked}
 				<p class="inline-flex items-center gap-1.5 text-sm text-muted-foreground italic">
-					<EyeOff class="h-3.5 w-3.5" />
+					<EyeOff class="h-3.5 w-3.5" aria-hidden="true" />
 					{m.admin_pii_emailMasked()}
 				</p>
 			{:else}

@@ -65,7 +65,7 @@
 		<InfoItem icon={AtSign} label={m.admin_userDetail_username()}>
 			{#if piiMasked}
 				<span class="inline-flex items-center gap-1.5 text-muted-foreground italic">
-					<EyeOff class="h-3.5 w-3.5" />
+					<EyeOff class="h-3.5 w-3.5" aria-hidden="true" />
 					{m.admin_pii_masked()}
 				</span>
 			{:else}
@@ -76,7 +76,7 @@
 		<InfoItem icon={Mail} label={m.admin_userDetail_email()}>
 			{#if piiMasked}
 				<span class="inline-flex items-center gap-1.5 text-muted-foreground italic">
-					<EyeOff class="h-3.5 w-3.5" />
+					<EyeOff class="h-3.5 w-3.5" aria-hidden="true" />
 					{m.admin_pii_masked()}
 				</span>
 			{:else}
@@ -87,7 +87,7 @@
 		<InfoItem icon={Phone} label={m.admin_userDetail_phone()}>
 			{#if piiMasked}
 				<span class="inline-flex items-center gap-1.5 text-muted-foreground italic">
-					<EyeOff class="h-3.5 w-3.5" />
+					<EyeOff class="h-3.5 w-3.5" aria-hidden="true" />
 					{m.admin_pii_masked()}
 				</span>
 			{:else}

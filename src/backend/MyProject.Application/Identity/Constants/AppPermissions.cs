@@ -28,7 +28,7 @@ public static class AppPermissions
         /// <summary>View user list and details in the admin panel.</summary>
         public const string View = "users.view";
 
-        /// <summary>View unmasked PII (email, phone) in admin user endpoints.</summary>
+        /// <summary>View unmasked PII (email, username, phone) in admin user endpoints.</summary>
         public const string ViewPii = "users.view_pii";
 
         /// <summary>Lock, unlock, and delete user accounts.</summary>
