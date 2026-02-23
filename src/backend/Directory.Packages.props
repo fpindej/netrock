@@ -23,6 +23,7 @@
     <PackageVersion Include="Serilog" Version="4.3.1" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
+    <!-- Hangfire transitively depends on an older Newtonsoft.Json with CVE-2024-21907. Pinning to 13.0.4 forces the patched version. Not used directly — our code uses System.Text.Json only. -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.23" />
     <PackageVersion Include="Hangfire.Core" Version="1.8.23" />
