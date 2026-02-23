@@ -1,5 +1,7 @@
+using Amazon.S3;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MyProject.Infrastructure.Caching.Options;
+using MyProject.Infrastructure.Features.FileStorage.Options;
 
 namespace MyProject.WebApi.Extensions;
 
@@ -41,6 +43,18 @@ internal static class HealthCheckExtensions
                 redisConnectionString,
                 name: "Redis",
                 timeout: TimeSpan.FromSeconds(3),
+                tags: [ReadyTag]);
+        }
+
+        var fileStorageOptions = configuration
+            .GetSection(FileStorageOptions.SectionName)
+            .Get<FileStorageOptions>();
+
+        if (fileStorageOptions is not null && !string.IsNullOrEmpty(fileStorageOptions.Endpoint))
+        {
+            healthChecks.AddCheck<S3HealthCheck>(
+                "S3",
+                timeout: TimeSpan.FromSeconds(5),
                 tags: [ReadyTag]);
         }
 
@@ -99,6 +113,26 @@ internal static class HealthCheckExtensions
         }
 
         return string.Join(",", parts);
+    }
+
+    /// <summary>
+    /// Health check that verifies connectivity to S3-compatible storage by listing buckets.
+    /// </summary>
+    private sealed class S3HealthCheck(IAmazonS3 s3Client) : IHealthCheck
+    {
+        public async Task<HealthCheckResult> CheckHealthAsync(
+            HealthCheckContext context, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await s3Client.ListBucketsAsync(cancellationToken);
+                return HealthCheckResult.Healthy();
+            }
+            catch (Exception ex)
+            {
+                return HealthCheckResult.Unhealthy("S3 storage is unreachable.", ex);
+            }
+        }
     }
 
     /// <summary>
