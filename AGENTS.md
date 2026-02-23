@@ -107,15 +107,17 @@ Error messages flow: Backend `ErrorMessages.*` → `Result.Failure()` → `Probl
 ## Local Development
 
 ```bash
-./deploy/up.sh local up -d --build   # Start everything (local.env is committed)
+./deploy/up.sh local up -d --build   # Start everything (env files are committed)
 ```
 
-`deploy/envs/local.env` is committed with working defaults. Edit it directly to tune settings.
+`deploy/envs/local/` is committed with working defaults. Edit files directly to tune settings.
 
 | File | Purpose |
 |---|---|
-| `deploy/envs/local.env` | Local dev config (committed, single source of truth) |
-| `deploy/envs/production.env.example` | Production template — copy to `deploy/envs/production.env` |
+| `deploy/envs/local/compose.env` | Docker Compose interpolation vars (DB, Redis, MinIO, JWT, ports) |
+| `deploy/envs/local/api.env` | ASP.NET config overrides (auth, caching, CORS, logging, email) |
+| `deploy/envs/local/seed.env` | Seed user definitions (seeded on startup) |
+| `deploy/envs/production-example/` | Production template — `cp -r` to `deploy/envs/production/` |
 | `deploy/docker-compose.yml` | Base service definitions |
 | `deploy/docker-compose.local.yml` | Local dev overlay |
 | `deploy/docker-compose.production.yml` | Production overlay |

@@ -456,9 +456,7 @@ $RECYCLE.BIN/
 ## Data from docker
 /data/attachments/*
 
-# Environment files (contain secrets)
-deploy/envs/*.env
-!deploy/envs/local.env
-!deploy/envs/*.env.example
+# Production env directory (contains secrets — never commit)
+deploy/envs/production/
 # Legacy root .env from before the deploy/ restructure
 /.env

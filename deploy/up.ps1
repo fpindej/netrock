@@ -39,7 +39,8 @@ $ProjectRoot = Split-Path -Parent $ScriptDir
 # Resolve files
 # ─────────────────────────────────────────────────────────────────────────────
 $Overlay = Join-Path $ScriptDir "docker-compose.$Environment.yml"
-$EnvFile = Join-Path $ScriptDir "envs\$Environment.env"
+$EnvDir = Join-Path $ScriptDir "envs\$Environment"
+$ComposeEnv = Join-Path $EnvDir "compose.env"
 
 if (-not (Test-Path $Overlay)) {
     Write-Host "Error: Unknown environment '$Environment'" -ForegroundColor Red
@@ -52,16 +53,21 @@ if (-not (Test-Path $Overlay)) {
     exit 1
 }
 
-if (-not (Test-Path $EnvFile)) {
-    Write-Host "Error: Environment file not found: $EnvFile" -ForegroundColor Red
+if (-not (Test-Path $EnvDir)) {
+    Write-Host "Error: Environment directory not found: $EnvDir" -ForegroundColor Red
     Write-Host ""
-    $Example = Join-Path $ScriptDir "envs\$Environment.env.example"
+    $Example = Join-Path $ScriptDir "envs\$Environment-example"
     if (Test-Path $Example) {
         Write-Host "Create it from the example:"
-        Write-Host "  Copy-Item `"$Example`" `"$EnvFile`""
+        Write-Host "  Copy-Item -Recurse `"$Example`" `"$EnvDir`""
     } else {
-        Write-Host "Ensure the environment file exists at: $EnvFile"
+        Write-Host "Ensure the environment directory exists at: $EnvDir"
     }
+    exit 1
+}
+
+if (-not (Test-Path $ComposeEnv)) {
+    Write-Host "Error: compose.env not found in $EnvDir" -ForegroundColor Red
     exit 1
 }
 
@@ -75,7 +81,7 @@ $dockerArgs = @(
     "--project-directory", $ProjectRoot,
     "-f", $baseCompose,
     "-f", $Overlay,
-    "--env-file", $EnvFile
+    "--env-file", $ComposeEnv
 )
 
 if ($ComposeArgs) {
