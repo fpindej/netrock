@@ -165,12 +165,12 @@ src/backend/MyProject.{Layer}/
 
 ```
 src/frontend/src/
-  lib/api/          client.ts, error-handling.ts, mutation.ts, v1.d.ts (generated)
+  lib/api/          client.ts, error-handling.ts, mutation.ts, backend-monitor.ts, v1.d.ts (generated)
   lib/components/   {feature}/{Name}.svelte + index.ts (barrel)
   lib/components/ui/{component}/  (shadcn — generated)
   lib/state/        {feature}.svelte.ts
   lib/types/        index.ts (type aliases)
-  lib/utils/        permissions.ts (permission constants + helpers)
+  lib/utils/        ui.ts (cn()), permissions.ts, audit.ts, platform.ts, roles.ts
   messages/         en.json, cs.json
   routes/(app)/     {feature}/+page.svelte, +page.server.ts
   routes/(public)/  login/+page.svelte
