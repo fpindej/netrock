@@ -125,6 +125,7 @@ WebApi response DTOs: classes with `init` properties and `[UsedImplicitly]` from
 - Public endpoints use `ControllerBase` directly (route `api/[controller]`)
 - Always: `/// <summary>`, `[ProducesResponseType]` per status code, `CancellationToken` as last param
 - Never `/// <param name="cancellationToken">` — it leaks into OAS `requestBody.description`
+- File uploads: `[FromForm]` with `IFormFile`, `[Consumes("multipart/form-data")]`, `[RequestSizeLimit(bytes)]`
 - Error responses: always `ProblemFactory.Create()` — never `NotFound()`, `BadRequest()`, `StatusCode(int, object)`, or anonymous objects
 - Success responses: `Ok(response)`, `Created(string.Empty, response)` — never `CreatedAtAction`
 - `[ProducesResponseType]` without `typeof(...)` on error codes (400, 401, 403, 404, 429) — ASP.NET auto-types as ProblemDetails

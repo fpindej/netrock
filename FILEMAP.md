@@ -46,6 +46,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`BaseEntityConfiguration.cs`** | All entity configurations that extend it |
 | **`CustomWebApplicationFactory.cs`** (change mock setup) | All API integration tests that depend on factory mocks |
 | **`appsettings.Testing.json`** (change test config) | `CustomWebApplicationFactory` behavior; all API integration tests |
+| **`FileStorageOptions`** (change S3/MinIO config) | `appsettings.json`, `deploy/envs/local.env`, `deploy/envs/production.env.example`, `deploy/docker-compose.yml`, `appsettings.Testing.json` |
 | **`AuditActions.cs`** (add action constant) | Service that logs it, frontend `$lib/utils/audit.ts` (label, color, icon), i18n keys in `en.json`/`cs.json` |
 | **`AuditEvent` entity** (change fields) | `AuditEventConfiguration`, `AuditService`, Application DTOs (`AuditEventOutput`), WebApi DTOs, `AuditMapper`, frontend types |
 | **Test fixture** (change shared helper) | All tests using that fixture |

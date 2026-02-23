@@ -57,6 +57,8 @@ export type User = components['schemas']['UserResponse'];
 
 If the backend doesn't provide data you need — propose the endpoint, don't work around it.
 
+**File uploads**: Use native `fetch()` with `FormData` — not `browserClient`. The openapi-fetch typed client doesn't reliably handle multipart/`File` objects. After upload success, call `invalidateAll()` to refresh server data.
+
 ## Error Handling
 
 ### Generic Errors
