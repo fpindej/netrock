@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
@@ -21,7 +22,7 @@ namespace MyProject.Infrastructure.Identity.Services;
 /// <summary>
 /// Identity-backed implementation of <see cref="IUserService"/> with Redis caching.
 /// </summary>
-internal class UserService(
+internal sealed class UserService(
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,
     IUserContext userContext,
@@ -30,7 +31,8 @@ internal class UserService(
     ICookieService cookieService,
     IAuditService auditService,
     IFileStorageService fileStorageService,
-    IImageProcessingService imageProcessingService) : IUserService
+    IImageProcessingService imageProcessingService,
+    ILogger<UserService> logger) : IUserService
 {
     private static readonly CacheEntryOptions UserCacheOptions =
         CacheEntryOptions.AbsoluteExpireIn(TimeSpan.FromMinutes(1));
@@ -174,7 +176,7 @@ internal class UserService(
         var processResult = imageProcessingService.ProcessAvatar(imageData, fileName);
         if (!processResult.IsSuccess)
         {
-            return Result<UserOutput>.Failure(processResult.Error);
+            return Result<UserOutput>.Failure(processResult.Error ?? ErrorMessages.Avatar.ProcessingFailed);
         }
 
         var processed = processResult.Value;
@@ -183,7 +185,7 @@ internal class UserService(
         var uploadResult = await fileStorageService.UploadAsync(storageKey, processed.ImageData, processed.ContentType, ct);
         if (!uploadResult.IsSuccess)
         {
-            return Result<UserOutput>.Failure(uploadResult.Error);
+            return Result<UserOutput>.Failure(uploadResult.Error ?? ErrorMessages.Avatar.ProcessingFailed);
         }
 
         user.HasAvatar = true;
@@ -270,10 +272,15 @@ internal class UserService(
 
         await auditService.LogAsync(AuditActions.AccountDeletion, userId: userId.Value, ct: cancellationToken);
 
-        // Clean up avatar from storage if present
+        // Clean up avatar from storage if present (best-effort — don't block account deletion)
         if (user.HasAvatar)
         {
-            await fileStorageService.DeleteAsync($"avatars/{userId.Value}.webp", cancellationToken);
+            var avatarDeleteResult = await fileStorageService.DeleteAsync($"avatars/{userId.Value}.webp", cancellationToken);
+            if (!avatarDeleteResult.IsSuccess)
+            {
+                logger.LogWarning("Failed to delete avatar for user {UserId} during account deletion: {Error}",
+                    userId.Value, avatarDeleteResult.Error);
+            }
         }
 
         await RevokeUserTokens(user, userId.Value, cancellationToken);

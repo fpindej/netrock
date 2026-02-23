@@ -44,20 +44,30 @@ internal sealed class ImageProcessingService(ILogger<ImageProcessingService> log
             }
 
             var resized = ResizeProportionally(bitmap, maxDimension);
-            var webpData = EncodeToWebP(resized);
-
-            if (webpData is null || webpData.Length == 0)
+            try
             {
-                return Result<ProcessedImageOutput>.Failure(ErrorMessages.Avatar.ProcessingFailed);
+                var webpData = EncodeToWebP(resized);
+
+                if (webpData is null || webpData.Length == 0)
+                {
+                    return Result<ProcessedImageOutput>.Failure(ErrorMessages.Avatar.ProcessingFailed);
+                }
+
+                logger.LogDebug(
+                    "Processed avatar: {OriginalSize} bytes ({Width}x{Height}) → {ProcessedSize} bytes ({NewWidth}x{NewHeight}) WebP",
+                    imageData.Length, bitmap.Width, bitmap.Height,
+                    webpData.Length, resized.Width, resized.Height);
+
+                var output = new ProcessedImageOutput(webpData, WebPContentType, webpData.Length);
+                return Result<ProcessedImageOutput>.Success(output);
             }
-
-            logger.LogDebug(
-                "Processed avatar: {OriginalSize} bytes ({Width}x{Height}) → {ProcessedSize} bytes ({NewWidth}x{NewHeight}) WebP",
-                imageData.Length, bitmap.Width, bitmap.Height,
-                webpData.Length, resized.Width, resized.Height);
-
-            var output = new ProcessedImageOutput(webpData, WebPContentType, webpData.Length);
-            return Result<ProcessedImageOutput>.Success(output);
+            finally
+            {
+                if (!ReferenceEquals(resized, bitmap))
+                {
+                    resized.Dispose();
+                }
+            }
         }
         catch (Exception ex)
         {

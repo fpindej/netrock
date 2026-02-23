@@ -28,7 +28,9 @@ public static class ServiceCollectionExtensions
 
             var options = configuration
                 .GetSection(FileStorageOptions.SectionName)
-                .Get<FileStorageOptions>()!;
+                .Get<FileStorageOptions>()
+                ?? throw new InvalidOperationException(
+                    $"Configuration section '{FileStorageOptions.SectionName}' is missing or empty.");
 
             services.AddSingleton<IAmazonS3>(_ =>
             {

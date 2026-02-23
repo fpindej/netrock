@@ -247,17 +247,17 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
-    public async Task GetAvatar_NotFound_Returns400()
+    public async Task GetAvatar_NotFound_Returns404()
     {
         var userId = Guid.NewGuid();
         _factory.UserService.GetAvatarAsync(userId, Arg.Any<CancellationToken>())
-            .Returns(Result<FileDownloadOutput>.Failure(ErrorMessages.Avatar.NotFound));
+            .Returns(Result<FileDownloadOutput>.Failure(ErrorMessages.Avatar.NotFound, ErrorType.NotFound));
 
         var response = await _client.SendAsync(
             Get($"/api/users/{userId}/avatar", TestAuth.User()));
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Avatar.NotFound);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Avatar.NotFound);
     }
 
     [Fact]

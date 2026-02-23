@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
@@ -47,7 +48,8 @@ public class UserServiceTests : IDisposable
 
         _sut = new UserService(
             _userManager, _roleManager, _userContext, _cacheService, _dbContext, _cookieService,
-            _auditService, _fileStorageService, _imageProcessingService);
+            _auditService, _fileStorageService, _imageProcessingService,
+            Substitute.For<ILogger<UserService>>());
     }
 
     public void Dispose()

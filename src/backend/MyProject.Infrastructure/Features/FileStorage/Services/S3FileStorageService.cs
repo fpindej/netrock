@@ -19,26 +19,36 @@ internal sealed class S3FileStorageService(
     ILogger<S3FileStorageService> logger) : IFileStorageService
 {
     private readonly string _bucketName = options.Value.BucketName;
+    private readonly SemaphoreSlim _bucketInitLock = new(1, 1);
     private bool _bucketEnsured;
 
     /// <inheritdoc />
     public async Task<Result> UploadAsync(string key, byte[] data, string contentType, CancellationToken ct)
     {
-        await EnsureBucketExistsAsync(ct);
-
-        var request = new PutObjectRequest
+        try
         {
-            BucketName = _bucketName,
-            Key = key,
-            ContentType = contentType,
-            InputStream = new MemoryStream(data)
-        };
+            await EnsureBucketExistsAsync(ct);
 
-        await s3Client.PutObjectAsync(request, ct);
-        logger.LogDebug("Uploaded object '{Key}' to bucket '{Bucket}' ({Size} bytes)",
-            key, _bucketName, data.Length);
+            var request = new PutObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = key,
+                ContentType = contentType,
+                InputStream = new MemoryStream(data),
+                AutoCloseStream = true
+            };
 
-        return Result.Success();
+            await s3Client.PutObjectAsync(request, ct);
+            logger.LogDebug("Uploaded object '{Key}' to bucket '{Bucket}' ({Size} bytes)",
+                key, _bucketName, data.Length);
+
+            return Result.Success();
+        }
+        catch (AmazonS3Exception ex)
+        {
+            logger.LogError(ex, "Failed to upload object '{Key}' to bucket '{Bucket}'", key, _bucketName);
+            return Result.Failure("Failed to upload file to storage.");
+        }
     }
 
     /// <inheritdoc />
@@ -68,16 +78,24 @@ internal sealed class S3FileStorageService(
     /// <inheritdoc />
     public async Task<Result> DeleteAsync(string key, CancellationToken ct)
     {
-        var request = new DeleteObjectRequest
+        try
         {
-            BucketName = _bucketName,
-            Key = key
-        };
+            var request = new DeleteObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = key
+            };
 
-        await s3Client.DeleteObjectAsync(request, ct);
-        logger.LogDebug("Deleted object '{Key}' from bucket '{Bucket}'", key, _bucketName);
+            await s3Client.DeleteObjectAsync(request, ct);
+            logger.LogDebug("Deleted object '{Key}' from bucket '{Bucket}'", key, _bucketName);
 
-        return Result.Success();
+            return Result.Success();
+        }
+        catch (AmazonS3Exception ex)
+        {
+            logger.LogError(ex, "Failed to delete object '{Key}' from bucket '{Bucket}'", key, _bucketName);
+            return Result.Failure("Failed to delete file from storage.");
+        }
     }
 
     /// <inheritdoc />
@@ -101,14 +119,18 @@ internal sealed class S3FileStorageService(
     }
 
     /// <summary>
-    /// Creates the bucket if it does not already exist (idempotent).
+    /// Creates the bucket if it does not already exist (idempotent, thread-safe).
+    /// Uses double-check locking so only the first concurrent request pays the S3 call cost.
     /// </summary>
     private async Task EnsureBucketExistsAsync(CancellationToken ct)
     {
         if (_bucketEnsured) return;
 
+        await _bucketInitLock.WaitAsync(ct);
         try
         {
+            if (_bucketEnsured) return;
+
             await s3Client.EnsureBucketExistsAsync(_bucketName);
             _bucketEnsured = true;
             logger.LogDebug("Bucket '{Bucket}' is ready", _bucketName);
@@ -117,6 +139,10 @@ internal sealed class S3FileStorageService(
         {
             logger.LogWarning(ex, "Failed to ensure bucket '{Bucket}' exists", _bucketName);
             throw;
+        }
+        finally
+        {
+            _bucketInitLock.Release();
         }
     }
 }
