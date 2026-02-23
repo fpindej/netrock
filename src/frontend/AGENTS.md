@@ -32,14 +32,14 @@ src/
 
 Two layers: `lib/api/` (auth-agnostic client factory) and `lib/auth/` (all auth concerns).
 
-| Export                                                 | Module      | Purpose                                                                                 |
-| ------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------- |
-| `createApiClient(fetch?, baseUrl?, middleware?)`       | `$lib/api`  | Creates typed openapi-fetch client. Server load functions pass `fetch` + `url.origin`.  |
-| `browserClient`                                        | `$lib/api`  | Singleton for client-side code. Created bare — auth wired at runtime.                   |
-| `initBrowserAuth(middleware)`                          | `$lib/api`  | Registers auth middleware on `browserClient` exactly once (idempotent guard).           |
+| Export                                                 | Module                     | Purpose                                                                                    |
+| ------------------------------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------ |
+| `createApiClient(fetch?, baseUrl?, middleware?)`       | `$lib/api`                 | Creates typed openapi-fetch client. Server load functions pass `fetch` + `url.origin`.     |
+| `browserClient`                                        | `$lib/api`                 | Singleton for client-side code. Created bare — auth wired at runtime.                      |
+| `initBrowserAuth(middleware)`                          | `$lib/api`                 | Registers auth middleware on `browserClient` exactly once (idempotent guard).              |
 | `initBackendMonitor()`                                 | `$lib/api/backend-monitor` | Detects 502/503 → marks health offline → `invalidateAll()`. Not in barrel (direct import). |
-| `createAuthMiddleware(fetch, baseUrl, onAuthFailure?)` | `$lib/auth` | 401 → deduplicated refresh → retry idempotent methods only.                             |
-| `getUser(fetch, origin)`                               | `$lib/auth` | Returns `GetUserResult` — distinguishes "not authenticated" from "backend unavailable". |
+| `createAuthMiddleware(fetch, baseUrl, onAuthFailure?)` | `$lib/auth`                | 401 → deduplicated refresh → retry idempotent methods only.                                |
+| `getUser(fetch, origin)`                               | `$lib/auth`                | Returns `GetUserResult` — distinguishes "not authenticated" from "backend unavailable".    |
 
 **Auth middleware wiring** — the root layout calls `initBrowserAuth()` in `onMount`. The guard prevents middleware stacking on HMR/remounts. Server clients never get auth middleware (SvelteKit's `fetch` forwards cookies automatically).
 
@@ -199,14 +199,14 @@ Add to both `en.json` and `cs.json`. Use: `import * as m from '$lib/paraglide/me
 
 `.svelte.ts` files in `$lib/state/` only. Never mix reactive state with pure utilities.
 
-| File                  | Exports                                     |
-| --------------------- | ------------------------------------------- |
-| `cooldown.svelte.ts`  | `createCooldown()` — rate-limit countdown   |
-| `shake.svelte.ts`     | `createShake()`, `createFieldShakes()`      |
-| `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()` |
-| `sidebar.svelte.ts`   | `sidebarState`, `toggleSidebar()`           |
-| `health.svelte.ts`    | `healthState`, `initHealthCheck()` — adaptive backend polling  |
-| `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()`  |
+| File                  | Exports                                                       |
+| --------------------- | ------------------------------------------------------------- |
+| `cooldown.svelte.ts`  | `createCooldown()` — rate-limit countdown                     |
+| `shake.svelte.ts`     | `createShake()`, `createFieldShakes()`                        |
+| `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()`                   |
+| `sidebar.svelte.ts`   | `sidebarState`, `toggleSidebar()`                             |
+| `health.svelte.ts`    | `healthState`, `initHealthCheck()` — adaptive backend polling |
+| `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()`                    |
 
 ## File Upload
 
