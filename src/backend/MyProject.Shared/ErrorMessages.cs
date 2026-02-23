@@ -5,8 +5,9 @@ namespace MyProject.Shared;
 /// Constants are used in <c>Result.Failure()</c> calls so that messages remain consistent,
 /// greppable, and easy to extract into translation keys later.
 /// <para>
-/// For dynamic messages (containing runtime values like role names), use inline string
-/// interpolation in the service — only truly static messages belong here.
+/// All client-facing messages must be static constants — never interpolate runtime values
+/// (role names, user IDs, framework error descriptions) into error responses.
+/// Log runtime details server-side via <c>ILogger</c> instead.
 /// </para>
 /// </summary>
 public static class ErrorMessages

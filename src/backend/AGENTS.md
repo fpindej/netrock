@@ -88,8 +88,9 @@ return Result<Guid>.Success(entity.Id);
 // Static message — always use ErrorMessages constant
 return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
 
-// Dynamic message — inline interpolation
-return Result.Failure($"Role '{roleName}' does not exist.");
+// Runtime values go in server-side logs, never in client responses
+logger.LogWarning("Operation failed for user '{UserId}': {Errors}", userId, errors);
+return Result.Failure(ErrorMessages.Admin.DeleteFailed);
 ```
 
 | ErrorType | HTTP | When |
