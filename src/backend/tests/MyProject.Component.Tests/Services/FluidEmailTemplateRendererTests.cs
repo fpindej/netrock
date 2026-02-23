@@ -221,6 +221,28 @@ public class FluidEmailTemplateRendererTests
         Assert.Contains("&invited=1", result.PlainTextBody);
     }
 
+    [Fact]
+    public void HtmlTemplate_EncodesScriptTagsInModelValues()
+    {
+        var model = new VerifyEmailModel("https://example.com/verify?token=abc<script>alert('xss')</script>");
+
+        var result = _sut.Render("verify-email", model);
+
+        Assert.DoesNotContain("<script>", result.HtmlBody);
+        Assert.Contains("&lt;script&gt;", result.HtmlBody);
+    }
+
+    [Fact]
+    public void HtmlTemplate_EncodesHtmlEntitiesInModelValues()
+    {
+        var model = new ResetPasswordModel("https://example.com/reset?a=1&b=<img onerror=alert(1)>", "24 hours");
+
+        var result = _sut.Render("reset-password", model);
+
+        Assert.DoesNotContain("<img", result.HtmlBody);
+        Assert.Contains("&lt;img", result.HtmlBody);
+    }
+
     #endregion
 
     #region ErrorHandling

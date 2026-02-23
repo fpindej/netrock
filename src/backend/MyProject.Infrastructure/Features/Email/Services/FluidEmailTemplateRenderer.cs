@@ -12,6 +12,8 @@ namespace MyProject.Infrastructure.Features.Email.Services;
 /// <summary>
 /// Renders Liquid email templates from embedded resources using the Fluid template engine.
 /// Templates are compiled once and cached for the lifetime of the application.
+/// Thread-safe: each parse creates a new <see cref="FluidParser"/> and
+/// <see cref="Lazy{T}"/> guarantees single-execution per cache key.
 /// </summary>
 internal class FluidEmailTemplateRenderer : IEmailTemplateRenderer
 {
@@ -19,8 +21,7 @@ internal class FluidEmailTemplateRenderer : IEmailTemplateRenderer
     private static readonly string ResourcePrefix =
         typeof(FluidEmailTemplateRenderer).Namespace!.Replace(".Services", ".Templates");
 
-    private readonly FluidParser _parser = new();
-    private readonly ConcurrentDictionary<string, IFluidTemplate> _cache = new();
+    private readonly ConcurrentDictionary<string, Lazy<IFluidTemplate>> _cache = new();
     private readonly TemplateOptions _options;
     private readonly string _appName;
 
@@ -48,7 +49,8 @@ internal class FluidEmailTemplateRenderer : IEmailTemplateRenderer
 
         // Plain text: rendered without any encoding
         string? plainTextBody = null;
-        if (TryGetTemplate($"{templateName}.text", out var textTemplate))
+        var textTemplate = FindTemplate($"{templateName}.text");
+        if (textTemplate is not null)
         {
             var context = CreateContext(model);
             plainTextBody = textTemplate.Render(context).Trim();
@@ -95,48 +97,38 @@ internal class FluidEmailTemplateRenderer : IEmailTemplateRenderer
 
     /// <summary>
     /// Returns a cached compiled template, parsing the embedded resource on first access.
+    /// Uses <see cref="Lazy{T}"/> to guarantee the parse factory runs exactly once per key,
+    /// even under concurrent access.
     /// </summary>
     private IFluidTemplate GetOrParseTemplate(string templateName)
     {
-        return _cache.GetOrAdd(templateName, name =>
+        var lazy = _cache.GetOrAdd(templateName, static name => new Lazy<IFluidTemplate>(() =>
         {
             var source = ReadResource(name);
-            if (!_parser.TryParse(source, out var template, out var error))
+            var parser = new FluidParser();
+            if (!parser.TryParse(source, out var template, out var error))
             {
                 throw new InvalidOperationException($"Failed to parse Liquid template '{name}': {error}");
             }
             return template;
-        });
+        }));
+
+        return lazy.Value;
     }
 
     /// <summary>
-    /// Tries to get a template, returning false if the embedded resource does not exist.
+    /// Returns a cached compiled template if the embedded resource exists, or null if absent.
+    /// Used for optional template variants (e.g. plain text companions).
     /// </summary>
-    private bool TryGetTemplate(string templateName, out IFluidTemplate template)
+    private IFluidTemplate? FindTemplate(string templateName)
     {
-        if (_cache.TryGetValue(templateName, out template!))
-        {
-            return true;
-        }
-
         var resourceName = $"{ResourcePrefix}.{templateName}.liquid";
-        using var stream = ResourceAssembly.GetManifestResourceStream(resourceName);
-        if (stream is null)
+        if (ResourceAssembly.GetManifestResourceInfo(resourceName) is null)
         {
-            template = default!;
-            return false;
+            return null;
         }
 
-        using var reader = new StreamReader(stream);
-        var source = reader.ReadToEnd();
-
-        if (!_parser.TryParse(source, out var parsed, out var error))
-        {
-            throw new InvalidOperationException($"Failed to parse Liquid template '{templateName}': {error}");
-        }
-
-        template = _cache.GetOrAdd(templateName, parsed);
-        return true;
+        return GetOrParseTemplate(templateName);
     }
 
     /// <summary>
