@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
                 .ValidateOnStart();
 
             services.AddScoped<IEmailService, NoOpEmailService>();
+            services.AddSingleton<IEmailTemplateRenderer, FluidEmailTemplateRenderer>();
 
             return services;
         }

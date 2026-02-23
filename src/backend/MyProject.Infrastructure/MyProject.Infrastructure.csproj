@@ -6,6 +6,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Fluid.Core" />
         <PackageReference Include="Serilog" />
         <PackageReference Include="Serilog.AspNetCore" />
         <PackageReference Include="Serilog.Sinks.Async" />
@@ -25,6 +26,10 @@
         <PackageReference Include="AWSSDK.S3" />
         <PackageReference Include="SkiaSharp" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Features\Email\Templates\*.liquid" />
     </ItemGroup>
 
     <ItemGroup>
