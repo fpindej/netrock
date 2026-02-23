@@ -3,29 +3,43 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyProject.Application.Caching;
+using MyProject.Infrastructure.Caching.Extensions;
 using MyProject.Infrastructure.Caching.Options;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Registry;
 
 namespace MyProject.Infrastructure.Caching.Services;
 
 /// <summary>
 /// Distributed-cache-backed implementation of <see cref="ICacheService"/> using JSON serialization.
-/// All <see cref="IDistributedCache"/> operations are wrapped in try/catch so that a cache
-/// infrastructure outage (e.g. Redis down) degrades gracefully instead of crashing the request.
+/// All <see cref="IDistributedCache"/> operations are wrapped in a Polly resilience pipeline so that
+/// sustained cache outages are short-circuited — the circuit breaker eliminates per-operation latency
+/// and log spam after the failure threshold is reached.
 /// </summary>
 internal class CacheService(
     IDistributedCache distributedCache,
     IOptions<CachingOptions> cachingOptions,
+    ResiliencePipelineProvider<string> pipelineProvider,
     ILogger<CacheService> logger) : ICacheService
 {
     private readonly TimeSpan _defaultExpiration = cachingOptions.Value.DefaultExpiration;
+    private readonly ResiliencePipeline _pipeline = pipelineProvider.GetPipeline(ServiceCollectionExtensions.CachePipelineKey);
 
     /// <inheritdoc />
     public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
     {
         try
         {
-            var cachedValue = await distributedCache.GetStringAsync(key, cancellationToken);
+            var cachedValue = await _pipeline.ExecuteAsync(
+                async ct => await distributedCache.GetStringAsync(key, ct),
+                cancellationToken);
+
             return string.IsNullOrEmpty(cachedValue) ? default : JsonSerializer.Deserialize<T>(cachedValue);
+        }
+        catch (BrokenCircuitException)
+        {
+            return default;
         }
         catch (Exception ex)
         {
@@ -44,7 +58,14 @@ internal class CacheService(
         try
         {
             var serializedValue = JsonSerializer.Serialize(value);
-            await distributedCache.SetStringAsync(key, serializedValue, ToDistributedOptions(options), cancellationToken);
+
+            await _pipeline.ExecuteAsync(
+                async ct => await distributedCache.SetStringAsync(key, serializedValue, ToDistributedOptions(options), ct),
+                cancellationToken);
+        }
+        catch (BrokenCircuitException)
+        {
+            // Circuit is open — skip silently
         }
         catch (Exception ex)
         {
@@ -79,7 +100,13 @@ internal class CacheService(
     {
         try
         {
-            await distributedCache.RemoveAsync(key, cancellationToken);
+            await _pipeline.ExecuteAsync(
+                async ct => await distributedCache.RemoveAsync(key, ct),
+                cancellationToken);
+        }
+        catch (BrokenCircuitException)
+        {
+            // Circuit is open — skip silently
         }
         catch (Exception ex)
         {
