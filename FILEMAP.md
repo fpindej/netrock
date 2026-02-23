@@ -47,6 +47,10 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`CustomWebApplicationFactory.cs`** (change mock setup) | All API integration tests that depend on factory mocks |
 | **`appsettings.Testing.json`** (change test config) | `CustomWebApplicationFactory` behavior; all API integration tests |
 | **`FileStorageOptions`** (change S3/MinIO config) | `appsettings.json`, `deploy/envs/local.env`, `deploy/envs/production.env.example`, `deploy/docker-compose.yml`, `appsettings.Testing.json` |
+| **`IFileStorageService`** (change upload/download contract) | `S3FileStorageService`, `UserService` (avatar ops), any future consumer |
+| **`IImageProcessingService`** (change avatar processing) | `ImageProcessingService`, `UserService.UploadAvatarAsync` |
+| **`ApplicationUser.HasAvatar`** (change avatar flag) | `UserOutput`, `AdminUserOutput`, `UserResponse`, `AdminUserResponse`, `UserMapper`, `AdminMapper`, frontend `v1.d.ts` types, `ProfileHeader.svelte`, `UserNav.svelte` |
+| **Avatar endpoints** (`PUT/DELETE/GET`) | `UploadAvatarRequest`, `UploadAvatarRequestValidator`, `UserMapper`, frontend `AvatarDialog.svelte` |
 | **`AuditActions.cs`** (add action constant) | Service that logs it, frontend `$lib/utils/audit.ts` (label, color, icon), i18n keys in `en.json`/`cs.json` |
 | **`AuditEvent` entity** (change fields) | `AuditEventConfiguration`, `AuditService`, Application DTOs (`AuditEventOutput`), WebApi DTOs, `AuditMapper`, frontend types |
 | **Test fixture** (change shared helper) | All tests using that fixture |

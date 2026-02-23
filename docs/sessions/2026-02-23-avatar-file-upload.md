@@ -138,6 +138,12 @@ Code review identified and fixed:
 | `fix(openapi)` | Removed `<param name="cancellationToken">` XML docs from UsersController and AdminController — they leaked "A cancellation token" into the OpenAPI spec request body descriptions |
 | `chore(types)` | Regenerated `v1.d.ts` from live API (replaces hand-edited stubs with proper generated types) |
 | `fix(storage)` | Added general `AmazonS3Exception` catch to `DownloadAsync` and `ExistsAsync` (non-404 errors were unhandled); log warning on avatar storage delete failure in `RemoveAvatarAsync`; set `ResponseCacheLocation.Client` on GET avatar to prevent proxy/CDN caching of authenticated images |
+| `fix(admin)` | AdminService.DeleteUserAsync now cleans up avatar from S3 before deleting user (was orphaning files) |
+| `fix(storage)` | Added catch-all for non-cancellation exceptions (HttpRequestException, TimeoutException, etc.) in all S3 operations |
+| `fix(frontend)` | Added `?v=${Date.now()}` cache-busting to avatar URLs in ProfileHeader and UserNav so browser fetches fresh image after upload |
+| `feat(health)` | Added S3 health check to `/health/ready` endpoint — verifies storage connectivity at startup and during readiness probes |
+| `test(avatar)` | Added 12 unit tests for UserService avatar methods (upload/remove/get success/failure paths, DeleteAccount avatar cleanup) |
+| `docs` | Updated FILEMAP, SKILLS (file storage recipes, provider swap, removal guide), backend AGENTS (file storage conventions), frontend AGENTS (file upload patterns) |
 
 ## Follow-Up Items
 
