@@ -26,8 +26,7 @@ public class AdminServiceTests : IDisposable
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly ICacheService _cacheService;
-    private readonly IEmailService _emailService;
-    private readonly IEmailTemplateRenderer _emailTemplateRenderer;
+    private readonly ITemplatedEmailSender _templatedEmailSender;
     private readonly IAuditService _auditService;
     private readonly FakeTimeProvider _timeProvider;
     private readonly MyProjectDbContext _dbContext;
@@ -41,10 +40,7 @@ public class AdminServiceTests : IDisposable
         _userManager = IdentityMockHelpers.CreateMockUserManager();
         _roleManager = IdentityMockHelpers.CreateMockRoleManager();
         _cacheService = Substitute.For<ICacheService>();
-        _emailService = Substitute.For<IEmailService>();
-        _emailTemplateRenderer = Substitute.For<IEmailTemplateRenderer>();
-        _emailTemplateRenderer.Render<object>(Arg.Any<string>(), Arg.Any<object>())
-            .ReturnsForAnyArgs(callInfo => new RenderedEmail("Test Subject", "<html>test</html>", "test plain text"));
+        _templatedEmailSender = Substitute.For<ITemplatedEmailSender>();
         _timeProvider = new FakeTimeProvider(new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero));
         _dbContext = TestDbContextFactory.Create();
         var logger = Substitute.For<ILogger<AdminService>>();
@@ -65,7 +61,7 @@ public class AdminServiceTests : IDisposable
 
         _sut = new AdminService(
             _userManager, _roleManager, _dbContext, _cacheService, _timeProvider,
-            _emailService, _emailTemplateRenderer, emailTokenService, _auditService,
+            _templatedEmailSender, emailTokenService, _auditService,
             fileStorageService, authOptions, emailOptions, logger);
     }
 
@@ -860,13 +856,12 @@ public class AdminServiceTests : IDisposable
             targetEntityId: _targetId,
             metadata: Arg.Any<string?>(),
             ct: Arg.Any<CancellationToken>());
-        _emailTemplateRenderer.Received(1).Render(
+        await _templatedEmailSender.Received(1).SendSafeAsync(
             "admin-reset-password",
             Arg.Is<AdminResetPasswordModel>(m =>
                 m.ResetUrl.Contains("https://example.com/reset-password?token=") &&
-                !m.ResetUrl.Contains("email=")));
-        await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m => m.To == "user@test.com"),
+                !m.ResetUrl.Contains("email=")),
+            "user@test.com",
             Arg.Any<CancellationToken>());
     }
 
@@ -947,8 +942,10 @@ public class AdminServiceTests : IDisposable
             targetEntityId: newUserId,
             metadata: Arg.Any<string?>(),
             ct: Arg.Any<CancellationToken>());
-        await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m => m.To == "new@test.com"),
+        await _templatedEmailSender.Received(1).SendSafeAsync(
+            "invitation",
+            Arg.Any<InvitationModel>(),
+            "new@test.com",
             Arg.Any<CancellationToken>());
     }
 
@@ -977,14 +974,13 @@ public class AdminServiceTests : IDisposable
 
         await _sut.CreateUserAsync(_callerId, new CreateUserInput("invite@test.com", null, null));
 
-        _emailTemplateRenderer.Received(1).Render(
+        await _templatedEmailSender.Received(1).SendSafeAsync(
             "invitation",
             Arg.Is<InvitationModel>(m =>
                 m.SetPasswordUrl.Contains("https://example.com/reset-password?token=") &&
                 m.SetPasswordUrl.Contains("&invited=1") &&
-                !m.SetPasswordUrl.Contains("email=")));
-        await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m => m.To == "invite@test.com"),
+                !m.SetPasswordUrl.Contains("email=")),
+            "invite@test.com",
             Arg.Any<CancellationToken>());
 
         var emailToken = Assert.Single(_dbContext.EmailTokens);

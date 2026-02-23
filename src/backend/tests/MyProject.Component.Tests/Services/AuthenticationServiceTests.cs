@@ -32,8 +32,7 @@ public class AuthenticationServiceTests : IDisposable
     private readonly ICookieService _cookieService;
     private readonly IUserContext _userContext;
     private readonly ICacheService _cacheService;
-    private readonly IEmailService _emailService;
-    private readonly IEmailTemplateRenderer _emailTemplateRenderer;
+    private readonly ITemplatedEmailSender _templatedEmailSender;
     private readonly IAuditService _auditService;
     private readonly MyProjectDbContext _dbContext;
     private readonly AuthenticationService _sut;
@@ -47,10 +46,7 @@ public class AuthenticationServiceTests : IDisposable
         _cookieService = Substitute.For<ICookieService>();
         _userContext = Substitute.For<IUserContext>();
         _cacheService = Substitute.For<ICacheService>();
-        _emailService = Substitute.For<IEmailService>();
-        _emailTemplateRenderer = Substitute.For<IEmailTemplateRenderer>();
-        _emailTemplateRenderer.Render<object>(Arg.Any<string>(), Arg.Any<object>())
-            .ReturnsForAnyArgs(callInfo => new RenderedEmail("Test Subject", "<html>test</html>", "test plain text"));
+        _templatedEmailSender = Substitute.For<ITemplatedEmailSender>();
         _dbContext = TestDbContextFactory.Create();
 
         var authOptions = Options.Create(new AuthenticationOptions
@@ -87,8 +83,7 @@ public class AuthenticationServiceTests : IDisposable
             _cookieService,
             _userContext,
             _cacheService,
-            _emailService,
-            _emailTemplateRenderer,
+            _templatedEmailSender,
             emailTokenService,
             _auditService,
             authOptions,
@@ -923,11 +918,10 @@ public class AuthenticationServiceTests : IDisposable
         var result = await _sut.ForgotPasswordAsync("test@example.com");
 
         Assert.True(result.IsSuccess);
-        _emailTemplateRenderer.Received(1).Render(
+        await _templatedEmailSender.Received(1).SendSafeAsync(
             "reset-password",
-            Arg.Is<ResetPasswordModel>(m => m.ResetUrl.Contains("https://test.example.com/reset-password?token=")));
-        await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m => m.To == "test@example.com"),
+            Arg.Is<ResetPasswordModel>(m => m.ResetUrl.Contains("https://test.example.com/reset-password?token=")),
+            "test@example.com",
             Arg.Any<CancellationToken>());
     }
 
@@ -939,8 +933,8 @@ public class AuthenticationServiceTests : IDisposable
         var result = await _sut.ForgotPasswordAsync("unknown@example.com");
 
         Assert.True(result.IsSuccess);
-        await _emailService.DidNotReceive().SendEmailAsync(
-            Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>());
+        await _templatedEmailSender.DidNotReceiveWithAnyArgs().SendSafeAsync<object>(
+            default!, default!, default!, default);
     }
 
     [Fact]
@@ -952,11 +946,13 @@ public class AuthenticationServiceTests : IDisposable
 
         await _sut.ForgotPasswordAsync("test@example.com");
 
-        _emailTemplateRenderer.Received(1).Render(
+        await _templatedEmailSender.Received(1).SendSafeAsync(
             "reset-password",
             Arg.Is<ResetPasswordModel>(m =>
                 m.ResetUrl.Contains("https://test.example.com/reset-password?token=") &&
-                !m.ResetUrl.Contains("email=")));
+                !m.ResetUrl.Contains("email=")),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -973,20 +969,6 @@ public class AuthenticationServiceTests : IDisposable
         Assert.Equal("reset-token", storedToken.IdentityToken);
         Assert.Equal(EmailTokenPurpose.PasswordReset, storedToken.Purpose);
         Assert.False(storedToken.IsUsed);
-    }
-
-    [Fact]
-    public async Task ForgotPassword_EmailSendFails_StillReturnsSuccess()
-    {
-        var user = CreateTestUser();
-        _userManager.FindByEmailAsync("test@example.com").Returns(user);
-        _userManager.GeneratePasswordResetTokenAsync(user).Returns("reset-token");
-        _emailService.SendEmailAsync(Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException(new HttpRequestException("Email provider unavailable")));
-
-        var result = await _sut.ForgotPasswordAsync("test@example.com");
-
-        Assert.True(result.IsSuccess);
     }
 
     #endregion
@@ -1277,11 +1259,10 @@ public class AuthenticationServiceTests : IDisposable
         var result = await _sut.ResendVerificationEmailAsync();
 
         Assert.True(result.IsSuccess);
-        _emailTemplateRenderer.Received(1).Render(
+        await _templatedEmailSender.Received(1).SendSafeAsync(
             "verify-email",
-            Arg.Is<VerifyEmailModel>(m => m.VerifyUrl.Contains("https://test.example.com/verify-email?token=")));
-        await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m => m.To == "test@example.com"),
+            Arg.Is<VerifyEmailModel>(m => m.VerifyUrl.Contains("https://test.example.com/verify-email?token=")),
+            "test@example.com",
             Arg.Any<CancellationToken>());
     }
 
@@ -1346,34 +1327,11 @@ public class AuthenticationServiceTests : IDisposable
 
         await _sut.Register(input);
 
-        _emailTemplateRenderer.Received(1).Render(
+        await _templatedEmailSender.Received(1).SendSafeAsync(
             "verify-email",
-            Arg.Any<VerifyEmailModel>());
-        await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m => m.To == "test@example.com"),
+            Arg.Any<VerifyEmailModel>(),
+            "test@example.com",
             Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Register_EmailSendFails_StillReturnsSuccess()
-    {
-        var input = new RegisterInput("test@example.com", "Password1!", null, null, null);
-        _userManager.CreateAsync(Arg.Any<ApplicationUser>(), "Password1!")
-            .Returns(callInfo =>
-            {
-                callInfo.Arg<ApplicationUser>().Id = Guid.NewGuid();
-                return IdentityResult.Success;
-            });
-        _userManager.AddToRoleAsync(Arg.Any<ApplicationUser>(), "User")
-            .Returns(IdentityResult.Success);
-        _userManager.GenerateEmailConfirmationTokenAsync(Arg.Any<ApplicationUser>())
-            .Returns("confirm-token");
-        _emailService.SendEmailAsync(Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException(new HttpRequestException("Email provider unavailable")));
-
-        var result = await _sut.Register(input);
-
-        Assert.True(result.IsSuccess);
     }
 
     #endregion

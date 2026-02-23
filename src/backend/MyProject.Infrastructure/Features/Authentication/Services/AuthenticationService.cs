@@ -34,8 +34,7 @@ internal class AuthenticationService(
     ICookieService cookieService,
     IUserContext userContext,
     ICacheService cacheService,
-    IEmailService emailService,
-    IEmailTemplateRenderer emailTemplateRenderer,
+    ITemplatedEmailSender templatedEmailSender,
     EmailTokenService emailTokenService,
     IAuditService auditService,
     IOptions<AuthenticationOptions> authenticationOptions,
@@ -315,7 +314,7 @@ internal class AuthenticationService(
         var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}";
 
         var model = new ResetPasswordModel(resetUrl, _emailTokenOptions.Lifetime.ToHumanReadable());
-        await SendTemplatedEmailSafeAsync("reset-password", model, email, cancellationToken);
+        await templatedEmailSender.SendSafeAsync("reset-password", model, email, cancellationToken);
 
         await auditService.LogAsync(AuditActions.PasswordResetRequest, userId: user.Id, ct: cancellationToken);
 
@@ -476,26 +475,6 @@ internal class AuthenticationService(
     }
 
     /// <summary>
-    /// Renders a templated email and sends it, swallowing both rendering and delivery failures.
-    /// Transient provider outages (quota, auth, network) and template errors are logged
-    /// but never propagate to the caller.
-    /// </summary>
-    private async Task SendTemplatedEmailSafeAsync<TModel>(
-        string templateName, TModel model, string to, CancellationToken cancellationToken) where TModel : class
-    {
-        try
-        {
-            var rendered = emailTemplateRenderer.Render(templateName, model);
-            var message = new EmailMessage(to, rendered.Subject, rendered.HtmlBody, rendered.PlainTextBody);
-            await emailService.SendEmailAsync(message, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to send templated email '{TemplateName}' to {To}", templateName, to);
-        }
-    }
-
-    /// <summary>
     /// Sends a verification email to the specified user with a confirmation link.
     /// </summary>
     private async Task SendVerificationEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
@@ -511,7 +490,7 @@ internal class AuthenticationService(
         var verifyUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/verify-email?token={opaqueToken}";
 
         var model = new VerifyEmailModel(verifyUrl);
-        await SendTemplatedEmailSafeAsync("verify-email", model, user.Email, cancellationToken);
+        await templatedEmailSender.SendSafeAsync("verify-email", model, user.Email, cancellationToken);
     }
 
     /// <summary>

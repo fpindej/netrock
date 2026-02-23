@@ -499,17 +499,12 @@ All three files must be marked as **EmbeddedResource** — verify the `.csproj` 
 options.MemberAccessStrategy.Register<OrderConfirmationModel>();
 ```
 
-**4. Use in a service** — inject `IEmailTemplateRenderer`:
+**4. Use in a service** — inject `ITemplatedEmailSender`:
 
 ```csharp
-var rendered = emailTemplateRenderer.Render("order-confirmation",
-    new OrderConfirmationModel(order.Number, order.FormattedTotal));
-
-await emailService.SendAsync(new EmailMessage(
-    to: customer.Email,
-    subject: rendered.Subject,
-    htmlBody: rendered.HtmlBody,
-    plainTextBody: rendered.PlainTextBody), cancellationToken);
+await templatedEmailSender.SendSafeAsync("order-confirmation",
+    new OrderConfirmationModel(order.Number, order.FormattedTotal),
+    customer.Email, cancellationToken);
 ```
 
 **5. Add tests** in `src/backend/tests/MyProject.Component.Tests/Services/FluidEmailTemplateRendererTests.cs` — at minimum test subject rendering, HTML variable injection, and plain text variant.

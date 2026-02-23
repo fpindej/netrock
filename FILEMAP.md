@@ -47,11 +47,13 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`CustomWebApplicationFactory.cs`** (change mock setup) | All API integration tests that depend on factory mocks |
 | **`appsettings.Testing.json`** (change test config) | `CustomWebApplicationFactory` behavior; all API integration tests |
 | **`FileStorageOptions`** (change S3/MinIO config) | `appsettings.json`, `deploy/envs/local/compose.env`, `deploy/envs/production-example/compose.env`, `deploy/docker-compose.yml`, `appsettings.Testing.json` |
-| **`IEmailTemplateRenderer`** (change rendering contract) | `FluidEmailTemplateRenderer`, all services calling `Render<TModel>()` (`AuthenticationService`, `AdminService`), `FluidEmailTemplateRendererTests` |
+| **`IEmailTemplateRenderer`** (change rendering contract) | `FluidEmailTemplateRenderer`, `TemplatedEmailSender`, `FluidEmailTemplateRendererTests` |
+| **`ITemplatedEmailSender`** (change send-safe contract) | `TemplatedEmailSender`, all services calling `SendSafeAsync()` (`AuthenticationService`, `AdminService`), `TemplatedEmailSenderTests` |
 | **`EmailTemplateModels.cs`** (add/rename model record) | Matching `.liquid` templates (variables must match snake_case model properties), `FluidEmailTemplateRenderer.CreateOptions()` (register new model type), services that construct the model, `FluidEmailTemplateRendererTests` |
 | **`.liquid` email template** (change variable/layout) | Matching model record in `EmailTemplateModels.cs`, `_base.liquid` if layout change, `FluidEmailTemplateRendererTests` |
 | **`_base.liquid`** (shared email layout) | All rendered HTML emails, `FluidEmailTemplateRendererTests` layout assertions |
-| **`FluidEmailTemplateRenderer`** (change rendering/caching logic) | `FluidEmailTemplateRendererTests`, all services using `IEmailTemplateRenderer` |
+| **`FluidEmailTemplateRenderer`** (change rendering/caching logic) | `FluidEmailTemplateRendererTests`, `TemplatedEmailSender` |
+| **`TemplatedEmailSender`** (change render+send wrapping) | `TemplatedEmailSenderTests`, `AuthenticationService`, `AdminService` |
 | **`IFileStorageService`** (change upload/download contract) | `S3FileStorageService`, `UserService` (avatar ops), any future consumer |
 | **`IImageProcessingService`** (change avatar processing) | `ImageProcessingService`, `UserService.UploadAvatarAsync` |
 | **`ApplicationUser.HasAvatar`** (change avatar flag) | `UserOutput`, `AdminUserOutput`, `UserResponse`, `AdminUserResponse`, `UserMapper`, `AdminMapper`, frontend `v1.d.ts` types, `ProfileHeader.svelte`, `UserNav.svelte` |
@@ -209,11 +211,13 @@ src/backend/MyProject.WebApi/Features/Admin/
 ```
 src/backend/MyProject.Application/Features/Email/
   IEmailTemplateRenderer.cs                         Rendering interface (Render<TModel>)
+  ITemplatedEmailSender.cs                          Safe render+send interface (SendSafeAsync)
   Models/EmailTemplateModels.cs                     Model records (one per template)
   IEmailService.cs                                  Sending interface
   EmailMessage.cs                                   Message envelope DTO
 src/backend/MyProject.Infrastructure/Features/Email/
   Services/FluidEmailTemplateRenderer.cs            Fluid-based renderer (singleton, cached)
+  Services/TemplatedEmailSender.cs                  Render+send wrapper (swallows failures)
   Services/NoOpEmailService.cs                      Dev/test no-op sender
   Templates/_base.liquid                            Shared HTML email layout (header, card, footer)
   Templates/{name}.liquid                           HTML body fragment

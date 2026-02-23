@@ -28,6 +28,7 @@ public static class ServiceCollectionExtensions
 
             services.AddScoped<IEmailService, NoOpEmailService>();
             services.AddSingleton<IEmailTemplateRenderer, FluidEmailTemplateRenderer>();
+            services.AddScoped<ITemplatedEmailSender, TemplatedEmailSender>();
 
             return services;
         }

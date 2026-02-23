@@ -245,6 +245,76 @@ public class FluidEmailTemplateRendererTests
 
     #endregion
 
+    #region AppNameSpecialCharacters
+
+    [Fact]
+    public void AppName_WithHtmlSpecialChars_EncodesInHtml()
+    {
+        var emailOptions = Options.Create(new EmailOptions
+        {
+            FromName = "Foo & Bar <Baz>",
+            FrontendBaseUrl = "https://test.example.com"
+        });
+        var renderer = new FluidEmailTemplateRenderer(emailOptions);
+        var model = new VerifyEmailModel("https://example.com/verify?token=abc");
+
+        var result = renderer.Render("verify-email", model);
+
+        Assert.DoesNotContain("Foo & Bar <Baz>", result.HtmlBody);
+        Assert.Contains("Foo &amp; Bar &lt;Baz&gt;", result.HtmlBody);
+    }
+
+    #endregion
+
+    #region Concurrency
+
+    [Fact]
+    public async Task ConcurrentRenders_ProduceSameResults()
+    {
+        var model = new VerifyEmailModel("https://example.com/verify?token=abc");
+        const int concurrency = 50;
+
+        var tasks = Enumerable.Range(0, concurrency)
+            .Select(_ => Task.Run(() => _sut.Render("verify-email", model)))
+            .ToArray();
+
+        var results = await Task.WhenAll(tasks);
+
+        Assert.All(results, r =>
+        {
+            Assert.Equal("Verify Your Email Address", r.Subject);
+            Assert.Contains("https://example.com/verify?token=abc", r.HtmlBody);
+            Assert.Contains("<!DOCTYPE html>", r.HtmlBody);
+        });
+    }
+
+    [Fact]
+    public async Task ConcurrentRenders_DifferentTemplates_AllSucceed()
+    {
+        const int concurrency = 20;
+
+        var tasks = Enumerable.Range(0, concurrency).Select(i =>
+        {
+            return Task.Run(() => (i % 4) switch
+            {
+                0 => _sut.Render("verify-email", new VerifyEmailModel("https://example.com/verify")),
+                1 => _sut.Render("reset-password", new ResetPasswordModel("https://example.com/reset", "24 hours")),
+                2 => _sut.Render("admin-reset-password", new AdminResetPasswordModel("https://example.com/reset", "24 hours")),
+                _ => _sut.Render("invitation", new InvitationModel("https://example.com/invite", "24 hours"))
+            });
+        }).ToArray();
+
+        var results = await Task.WhenAll(tasks);
+
+        Assert.All(results, r =>
+        {
+            Assert.False(string.IsNullOrEmpty(r.Subject));
+            Assert.Contains("<!DOCTYPE html>", r.HtmlBody);
+        });
+    }
+
+    #endregion
+
     #region ErrorHandling
 
     [Fact]

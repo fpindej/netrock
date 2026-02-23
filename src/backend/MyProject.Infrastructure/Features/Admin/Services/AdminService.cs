@@ -41,8 +41,7 @@ internal class AdminService(
     MyProjectDbContext dbContext,
     ICacheService cacheService,
     TimeProvider timeProvider,
-    IEmailService emailService,
-    IEmailTemplateRenderer emailTemplateRenderer,
+    ITemplatedEmailSender templatedEmailSender,
     EmailTokenService emailTokenService,
     IAuditService auditService,
     IFileStorageService fileStorageService,
@@ -475,7 +474,7 @@ internal class AdminService(
         var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}";
 
         var model = new AdminResetPasswordModel(resetUrl, _emailTokenOptions.Lifetime.ToHumanReadable());
-        await SendTemplatedEmailSafeAsync("admin-reset-password", model, email, cancellationToken);
+        await templatedEmailSender.SendSafeAsync("admin-reset-password", model, email, cancellationToken);
 
         logger.LogInformation("Password reset email sent for user '{UserId}' by admin '{CallerUserId}'",
             userId, callerUserId);
@@ -528,7 +527,7 @@ internal class AdminService(
         var setPasswordUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}&invited=1";
 
         var invitationModel = new InvitationModel(setPasswordUrl, _emailTokenOptions.Lifetime.ToHumanReadable());
-        await SendTemplatedEmailSafeAsync("invitation", invitationModel, input.Email, cancellationToken);
+        await templatedEmailSender.SendSafeAsync("invitation", invitationModel, input.Email, cancellationToken);
 
         logger.LogInformation("User '{UserId}' created via admin invitation for email '{Email}' by admin '{CallerUserId}'",
             user.Id, input.Email, callerUserId);
@@ -780,26 +779,6 @@ internal class AdminService(
     private async Task InvalidateUserCacheAsync(Guid userId)
     {
         await cacheService.RemoveAsync(CacheKeys.User(userId));
-    }
-
-    /// <summary>
-    /// Renders a templated email and sends it, swallowing both rendering and delivery failures.
-    /// Transient provider outages (quota, auth, network) and template errors are logged
-    /// but never propagate to the caller.
-    /// </summary>
-    private async Task SendTemplatedEmailSafeAsync<TModel>(
-        string templateName, TModel model, string to, CancellationToken cancellationToken) where TModel : class
-    {
-        try
-        {
-            var rendered = emailTemplateRenderer.Render(templateName, model);
-            var message = new EmailMessage(to, rendered.Subject, rendered.HtmlBody, rendered.PlainTextBody);
-            await emailService.SendEmailAsync(message, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to send templated email '{TemplateName}' to {To}", templateName, to);
-        }
     }
 
     /// <summary>

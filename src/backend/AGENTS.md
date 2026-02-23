@@ -205,7 +205,7 @@ Pagination: `Paginate(PaginatedRequest)` extension on `IQueryable<T>` returns `P
 
 Transactional emails use [Fluid](https://github.com/sebastienros/fluid) (Liquid) templates rendered by `IEmailTemplateRenderer`. Templates are embedded resources compiled once and cached for the application lifetime.
 
-**Architecture:** `IEmailTemplateRenderer.Render<TModel>(templateName, model)` returns a `RenderedEmail` (subject, HTML body, optional plain text). Services inject `IEmailTemplateRenderer` alongside `IEmailService` to render then send.
+**Architecture:** `IEmailTemplateRenderer.Render<TModel>(templateName, model)` returns a `RenderedEmail` (subject, HTML body, optional plain text). Services inject `ITemplatedEmailSender` which wraps render + send in a try/catch (failures are logged but never propagated).
 
 **3-file pattern** per email in `Infrastructure/Features/Email/Templates/`:
 - `{name}.liquid` — HTML body fragment (inline styles, injected into `_base.liquid`)
