@@ -17,6 +17,7 @@ const config = {
 				'img-src': ['self', 'https:', 'data:', 'blob:'],
 				'font-src': ['self'],
 				'connect-src': ['self'],
+				'worker-src': ['self', 'blob:'],
 				'frame-src': ['https://challenges.cloudflare.com'],
 				'frame-ancestors': ['none'],
 				'base-uri': ['self'],
