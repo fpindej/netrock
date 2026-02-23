@@ -98,7 +98,7 @@ internal class AdminService(
         var roleExists = await roleManager.FindByNameAsync(input.Role) is not null;
         if (!roleExists)
         {
-            return Result.Failure($"Role '{input.Role}' does not exist.");
+            return Result.Failure(ErrorMessages.Admin.RoleNotFound);
         }
 
         var user = await userManager.FindByIdAsync(userId.ToString());
@@ -133,7 +133,7 @@ internal class AdminService(
 
         if (await userManager.IsInRoleAsync(user, input.Role))
         {
-            return Result.Failure($"User already has the '{input.Role}' role.");
+            return Result.Failure(ErrorMessages.Admin.RoleAlreadyAssigned);
         }
 
         if (AppRoles.GetRoleRank(input.Role) > 0 && !user.EmailConfirmed)
@@ -145,8 +145,9 @@ internal class AdminService(
 
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors);
+            logger.LogWarning("AddToRoleAsync failed for user '{UserId}': {Errors}",
+                userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+            return Result.Failure(ErrorMessages.Admin.RoleAssignFailed);
         }
 
         await RotateSecurityStampAsync(user, userId, cancellationToken);
@@ -168,7 +169,7 @@ internal class AdminService(
         var roleExists = await roleManager.FindByNameAsync(role) is not null;
         if (!roleExists)
         {
-            return Result.Failure($"Role '{role}' does not exist.");
+            return Result.Failure(ErrorMessages.Admin.RoleNotFound);
         }
 
         var user = await userManager.FindByIdAsync(userId.ToString());
@@ -199,7 +200,7 @@ internal class AdminService(
 
         if (!await userManager.IsInRoleAsync(user, role))
         {
-            return Result.Failure($"User does not have the '{role}' role.");
+            return Result.Failure(ErrorMessages.Admin.RoleNotAssigned);
         }
 
         var lastAdminResult = await EnforceLastAdminProtectionAsync(userId, role, cancellationToken);
@@ -212,8 +213,9 @@ internal class AdminService(
 
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors);
+            logger.LogWarning("RemoveFromRoleAsync failed for user '{UserId}': {Errors}",
+                userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+            return Result.Failure(ErrorMessages.Admin.RoleRemoveFailed);
         }
 
         await RotateSecurityStampAsync(user, userId, cancellationToken);
@@ -256,8 +258,9 @@ internal class AdminService(
 
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors);
+            logger.LogWarning("SetLockoutEndDateAsync (lock) failed for user '{UserId}': {Errors}",
+                userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+            return Result.Failure(ErrorMessages.Admin.LockFailed);
         }
 
         await RevokeUserSessionsAsync(user, userId, cancellationToken);
@@ -292,8 +295,9 @@ internal class AdminService(
 
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors);
+            logger.LogWarning("SetLockoutEndDateAsync (unlock) failed for user '{UserId}': {Errors}",
+                userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+            return Result.Failure(ErrorMessages.Admin.UnlockFailed);
         }
 
         // Reset access failed count
@@ -356,8 +360,9 @@ internal class AdminService(
 
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors);
+            logger.LogWarning("DeleteAsync failed for user '{UserId}': {Errors}",
+                userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+            return Result.Failure(ErrorMessages.Admin.DeleteFailed);
         }
 
         await InvalidateUserCacheAsync(userId);
@@ -428,8 +433,9 @@ internal class AdminService(
 
         if (!confirmResult.Succeeded)
         {
-            var errors = string.Join(", ", confirmResult.Errors.Select(e => e.Description));
-            return Result.Failure(errors);
+            logger.LogWarning("ConfirmEmailAsync failed for user '{UserId}': {Errors}",
+                userId, string.Join(", ", confirmResult.Errors.Select(e => e.Description)));
+            return Result.Failure(ErrorMessages.Admin.EmailVerificationFailed);
         }
 
         await InvalidateUserCacheAsync(userId);
@@ -525,8 +531,9 @@ internal class AdminService(
         var createResult = await userManager.CreateAsync(user, tempPassword);
         if (!createResult.Succeeded)
         {
-            var errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
-            return Result<Guid>.Failure(errors);
+            logger.LogWarning("CreateAsync failed for admin-created user '{Email}': {Errors}",
+                input.Email, string.Join(", ", createResult.Errors.Select(e => e.Description)));
+            return Result<Guid>.Failure(ErrorMessages.Admin.CreateUserFailed);
         }
 
         var roleResult = await userManager.AddToRoleAsync(user, AppRoles.User);
@@ -618,7 +625,7 @@ internal class AdminService(
 
         if (usersInRoleCount <= 1)
         {
-            return Result.Failure($"Cannot remove the '{role}' role — this is the last user with this role.");
+            return Result.Failure(ErrorMessages.Admin.LastRoleHolder);
         }
 
         return Result.Success();
@@ -641,8 +648,7 @@ internal class AdminService(
 
             if (usersInRoleCount <= 1)
             {
-                return Result.Failure(
-                    $"Cannot delete this user — they are the last user with the '{role}' role.");
+                return Result.Failure(ErrorMessages.Admin.LastAdminCannotDelete);
             }
         }
 

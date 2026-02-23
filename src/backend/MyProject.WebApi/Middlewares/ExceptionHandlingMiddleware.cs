@@ -61,7 +61,7 @@ public class ExceptionHandlingMiddleware(
         var problemDetails = new ProblemDetails
         {
             Status = status,
-            Detail = customMessage ?? exception.Message
+            Detail = customMessage ?? ErrorMessages.Server.InternalError
         };
 
         if (env.IsDevelopment() && exception.StackTrace is not null)

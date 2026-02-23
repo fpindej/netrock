@@ -258,7 +258,7 @@ public class UserServiceTests : IDisposable
         var result = await _sut.DeleteAccountAsync(new DeleteAccountInput("correct"));
 
         Assert.True(result.IsFailure);
-        Assert.Contains("last user", result.Error);
+        Assert.Equal(ErrorMessages.User.LastAdminCannotDelete, result.Error);
     }
 
     [Fact]

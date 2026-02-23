@@ -46,6 +46,9 @@ public static class ErrorMessages
         public const string NotFound = "User not found.";
         public const string DeleteInvalidPassword = "Invalid password.";
         public const string PhoneNumberTaken = "This phone number is already in use.";
+        public const string UpdateFailed = "Failed to update profile.";
+        public const string DeleteFailed = "Failed to delete account.";
+        public const string LastAdminCannotDelete = "Cannot delete your account while you are the last administrator.";
     }
 
     /// <summary>
@@ -63,6 +66,18 @@ public static class ErrorMessages
         public const string EmailVerificationRequired = "User must have a verified email address before being assigned this role.";
         public const string EmailAlreadyRegistered = "A user with this email address already exists.";
         public const string RoleAssignEscalation = "Cannot assign a role that grants permissions you do not hold.";
+        public const string RoleNotFound = "Role not found.";
+        public const string RoleAlreadyAssigned = "User already has this role.";
+        public const string RoleNotAssigned = "User does not have this role.";
+        public const string LastRoleHolder = "Cannot remove this role — this is the last user holding it.";
+        public const string RoleAssignFailed = "Failed to assign role.";
+        public const string RoleRemoveFailed = "Failed to remove role.";
+        public const string LockFailed = "Failed to lock user account.";
+        public const string UnlockFailed = "Failed to unlock user account.";
+        public const string DeleteFailed = "Failed to delete user account.";
+        public const string EmailVerificationFailed = "Failed to verify email address.";
+        public const string CreateUserFailed = "Failed to create user account.";
+        public const string LastAdminCannotDelete = "Cannot delete this user — they are the last user holding an administrative role.";
     }
 
     /// <summary>
@@ -79,6 +94,9 @@ public static class ErrorMessages
         public const string SystemRoleNameReserved = "This name is reserved for a system role.";
         public const string SuperAdminPermissionsFixed = "SuperAdmin permissions cannot be modified.";
         public const string CannotGrantUnheldPermission = "Cannot grant permissions that you do not hold.";
+        public const string CreateFailed = "Failed to create role.";
+        public const string UpdateFailed = "Failed to update role.";
+        public const string DeleteFailed = "Failed to delete role.";
     }
 
     /// <summary>

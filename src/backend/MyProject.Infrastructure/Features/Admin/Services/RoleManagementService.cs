@@ -79,8 +79,9 @@ internal class RoleManagementService(
         var result = await roleManager.CreateAsync(role);
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result<Guid>.Failure(errors);
+            logger.LogWarning("CreateAsync failed for role '{RoleName}': {Errors}",
+                input.Name, string.Join(", ", result.Errors.Select(e => e.Description)));
+            return Result<Guid>.Failure(ErrorMessages.Roles.CreateFailed);
         }
 
         logger.LogInformation("Custom role '{RoleName}' created with ID '{RoleId}'", input.Name, role.Id);
@@ -133,8 +134,9 @@ internal class RoleManagementService(
         var result = await roleManager.UpdateAsync(role);
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors);
+            logger.LogWarning("UpdateAsync failed for role '{RoleId}': {Errors}",
+                roleId, string.Join(", ", result.Errors.Select(e => e.Description)));
+            return Result.Failure(ErrorMessages.Roles.UpdateFailed);
         }
 
         logger.LogInformation("Role '{RoleId}' updated", roleId);
@@ -171,8 +173,9 @@ internal class RoleManagementService(
         var result = await roleManager.DeleteAsync(role);
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors);
+            logger.LogWarning("DeleteAsync failed for role '{RoleId}': {Errors}",
+                roleId, string.Join(", ", result.Errors.Select(e => e.Description)));
+            return Result.Failure(ErrorMessages.Roles.DeleteFailed);
         }
 
         logger.LogWarning("Custom role '{RoleName}' (ID '{RoleId}') deleted", role.Name, roleId);
