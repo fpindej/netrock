@@ -10,6 +10,7 @@ using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Features.Email;
+using MyProject.Application.Features.Email.Models;
 using MyProject.Application.Identity;
 using MyProject.Component.Tests.Fixtures;
 using MyProject.Infrastructure.Cryptography;
@@ -32,6 +33,7 @@ public class AuthenticationServiceTests : IDisposable
     private readonly IUserContext _userContext;
     private readonly ICacheService _cacheService;
     private readonly IEmailService _emailService;
+    private readonly IEmailTemplateRenderer _emailTemplateRenderer;
     private readonly IAuditService _auditService;
     private readonly MyProjectDbContext _dbContext;
     private readonly AuthenticationService _sut;
@@ -46,6 +48,9 @@ public class AuthenticationServiceTests : IDisposable
         _userContext = Substitute.For<IUserContext>();
         _cacheService = Substitute.For<ICacheService>();
         _emailService = Substitute.For<IEmailService>();
+        _emailTemplateRenderer = Substitute.For<IEmailTemplateRenderer>();
+        _emailTemplateRenderer.Render<object>(Arg.Any<string>(), Arg.Any<object>())
+            .ReturnsForAnyArgs(callInfo => new RenderedEmail("Test Subject", "<html>test</html>", "test plain text"));
         _dbContext = TestDbContextFactory.Create();
 
         var authOptions = Options.Create(new AuthenticationOptions
@@ -83,6 +88,7 @@ public class AuthenticationServiceTests : IDisposable
             _userContext,
             _cacheService,
             _emailService,
+            _emailTemplateRenderer,
             emailTokenService,
             _auditService,
             authOptions,
@@ -908,7 +914,7 @@ public class AuthenticationServiceTests : IDisposable
     #region ForgotPassword
 
     [Fact]
-    public async Task ForgotPassword_ExistingUser_SendsEmailAndReturnsSuccess()
+    public async Task ForgotPassword_ExistingUser_RendersTemplateAndSendsEmail()
     {
         var user = CreateTestUser();
         _userManager.FindByEmailAsync("test@example.com").Returns(user);
@@ -917,8 +923,11 @@ public class AuthenticationServiceTests : IDisposable
         var result = await _sut.ForgotPasswordAsync("test@example.com");
 
         Assert.True(result.IsSuccess);
+        _emailTemplateRenderer.Received(1).Render(
+            "reset-password",
+            Arg.Is<ResetPasswordModel>(m => m.ResetUrl.Contains("https://test.example.com/reset-password?token=")));
         await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m => m.To == "test@example.com" && m.Subject == "Reset Your Password"),
+            Arg.Is<EmailMessage>(m => m.To == "test@example.com"),
             Arg.Any<CancellationToken>());
     }
 
@@ -935,7 +944,7 @@ public class AuthenticationServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ForgotPassword_EmailContainsResetUrlWithoutEmail()
+    public async Task ForgotPassword_ResetUrlDoesNotContainEmail()
     {
         var user = CreateTestUser();
         _userManager.FindByEmailAsync("test@example.com").Returns(user);
@@ -943,11 +952,11 @@ public class AuthenticationServiceTests : IDisposable
 
         await _sut.ForgotPasswordAsync("test@example.com");
 
-        await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m =>
-                m.HtmlBody.Contains("https://test.example.com/reset-password?token=") &&
-                !m.HtmlBody.Contains("email=")),
-            Arg.Any<CancellationToken>());
+        _emailTemplateRenderer.Received(1).Render(
+            "reset-password",
+            Arg.Is<ResetPasswordModel>(m =>
+                m.ResetUrl.Contains("https://test.example.com/reset-password?token=") &&
+                !m.ResetUrl.Contains("email=")));
     }
 
     [Fact]
@@ -1255,7 +1264,7 @@ public class AuthenticationServiceTests : IDisposable
     #region ResendVerification
 
     [Fact]
-    public async Task ResendVerification_UnverifiedUser_SendsEmailAndReturnsSuccess()
+    public async Task ResendVerification_UnverifiedUser_RendersTemplateAndSendsEmail()
     {
         var userId = Guid.NewGuid();
         var user = CreateTestUser(userId);
@@ -1268,10 +1277,11 @@ public class AuthenticationServiceTests : IDisposable
         var result = await _sut.ResendVerificationEmailAsync();
 
         Assert.True(result.IsSuccess);
+        _emailTemplateRenderer.Received(1).Render(
+            "verify-email",
+            Arg.Is<VerifyEmailModel>(m => m.VerifyUrl.Contains("https://test.example.com/verify-email?token=")));
         await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m =>
-                m.To == "test@example.com" &&
-                m.Subject == "Verify Your Email Address"),
+            Arg.Is<EmailMessage>(m => m.To == "test@example.com"),
             Arg.Any<CancellationToken>());
     }
 
@@ -1336,10 +1346,11 @@ public class AuthenticationServiceTests : IDisposable
 
         await _sut.Register(input);
 
+        _emailTemplateRenderer.Received(1).Render(
+            "verify-email",
+            Arg.Any<VerifyEmailModel>());
         await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m =>
-                m.To == "test@example.com" &&
-                m.Subject == "Verify Your Email Address"),
+            Arg.Is<EmailMessage>(m => m.To == "test@example.com"),
             Arg.Any<CancellationToken>());
     }
 
