@@ -22,6 +22,11 @@
 		return user?.username ?? m.common_user();
 	});
 
+	// Avatar URL with cache-busting (re-derives when user object reference changes after invalidateAll)
+	const avatarUrl = $derived(
+		user?.hasAvatar && user?.id ? `/api/users/${user.id}/avatar?v=${Date.now()}` : null
+	);
+
 	// Computed initials for avatar
 	const initials = $derived.by(() => {
 		const first = user?.firstName;
@@ -45,8 +50,8 @@
 		<Avatar.Root
 			class="relative h-24 w-24 ring-2 ring-border transition-all group-hover:ring-primary/50"
 		>
-			{#if user?.hasAvatar && user?.id}
-				<Avatar.Image src={`/api/users/${user.id}/avatar`} alt={displayName} />
+			{#if avatarUrl}
+				<Avatar.Image src={avatarUrl} alt={displayName} />
 			{/if}
 			<Avatar.Fallback class="text-lg">
 				{initials}

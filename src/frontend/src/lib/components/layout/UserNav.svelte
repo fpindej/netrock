@@ -15,6 +15,11 @@
 
 	let { user }: Props = $props();
 
+	// Avatar URL with cache-busting (re-derives when user object reference changes after invalidateAll)
+	const avatarUrl = $derived(
+		user?.hasAvatar && user?.id ? `/api/users/${user.id}/avatar?v=${Date.now()}` : null
+	);
+
 	function getInitials(name: string) {
 		return name
 			.split(' ')
@@ -30,11 +35,8 @@
 		{#snippet child({ props })}
 			<Button variant="ghost" size="icon" class="rounded-full" {...props}>
 				<Avatar.Root class="h-7 w-7">
-					{#if user?.hasAvatar && user?.id}
-						<Avatar.Image
-							src={`/api/users/${user.id}/avatar`}
-							alt={user.username || m.common_user()}
-						/>
+					{#if avatarUrl}
+						<Avatar.Image src={avatarUrl} alt={user?.username || m.common_user()} />
 					{/if}
 					<Avatar.Fallback>{getInitials(user?.username || m.common_user())}</Avatar.Fallback>
 				</Avatar.Root>
