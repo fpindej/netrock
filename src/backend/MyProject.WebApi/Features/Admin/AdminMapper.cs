@@ -26,7 +26,7 @@ internal static class AdminMapper
         LastName = output.LastName,
         PhoneNumber = output.PhoneNumber,
         Bio = output.Bio,
-        AvatarUrl = output.AvatarUrl,
+        HasAvatar = output.HasAvatar,
         Roles = output.Roles,
         EmailConfirmed = output.EmailConfirmed,
         LockoutEnabled = output.LockoutEnabled,

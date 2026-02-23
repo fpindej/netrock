@@ -37,14 +37,7 @@ public class UpdateUserRequest
     public string? Bio { get; [UsedImplicitly] init; }
 
     /// <summary>
-    /// The URL to the user's avatar image.
-    /// </summary>
-    [MaxLength(500)]
-    [Url]
-    public string? AvatarUrl { get; [UsedImplicitly] init; }
-
-    /// <summary>
     /// Converts the request to an application layer input.
     /// </summary>
-    public UpdateProfileInput ToInput() => new(FirstName, LastName, PhoneNumber, Bio, AvatarUrl);
+    public UpdateProfileInput ToInput() => new(FirstName, LastName, PhoneNumber, Bio);
 }

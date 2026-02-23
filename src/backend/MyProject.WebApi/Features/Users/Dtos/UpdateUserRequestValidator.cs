@@ -27,12 +27,5 @@ public class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
 
         RuleFor(x => x.Bio)
             .MaximumLength(1000);
-
-        RuleFor(x => x.AvatarUrl)
-            .MaximumLength(500)
-            .Must(url => Uri.TryCreate(url, UriKind.Absolute, out var uri)
-                         && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
-            .WithMessage("Avatar URL must be a valid absolute HTTP or HTTPS URL.")
-            .When(x => !string.IsNullOrEmpty(x.AvatarUrl));
     }
 }

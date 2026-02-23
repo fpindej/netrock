@@ -7,6 +7,7 @@ using MyProject.WebApi.Features.Audit;
 using MyProject.WebApi.Features.Audit.Dtos.ListAuditEvents;
 using MyProject.WebApi.Features.Users.Dtos;
 using MyProject.WebApi.Features.Users.Dtos.DeleteAccount;
+using MyProject.WebApi.Features.Users.Dtos.UploadAvatar;
 using MyProject.WebApi.Shared;
 
 namespace MyProject.WebApi.Features.Users;
@@ -45,6 +46,7 @@ public class UsersController(IUserService userService, IAuditService auditServic
     /// Updates the current authenticated user's profile information
     /// </summary>
     /// <param name="request">The profile update request</param>
+    /// <param name="cancellationToken">A cancellation token</param>
     /// <returns>Updated user information</returns>
     /// <response code="200">Returns updated user information</response>
     /// <response code="400">If the request is invalid</response>
@@ -68,10 +70,92 @@ public class UsersController(IUserService userService, IAuditService auditServic
     }
 
     /// <summary>
+    /// Uploads or replaces the current user's avatar image.
+    /// The image is validated, resized to 512x512 max, and stored as WebP.
+    /// </summary>
+    /// <param name="request">The avatar upload request containing the image file</param>
+    /// <param name="cancellationToken">A cancellation token</param>
+    /// <returns>Updated user information</returns>
+    /// <response code="200">Avatar uploaded successfully</response>
+    /// <response code="400">If the file is invalid (too large, wrong format, corrupt)</response>
+    /// <response code="401">If the user is not authenticated</response>
+    [HttpPut("me/avatar")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(5 * 1024 * 1024)]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<UserResponse>> UploadAvatar(
+        [FromForm] UploadAvatarRequest request,
+        CancellationToken cancellationToken)
+    {
+        using var memoryStream = new MemoryStream();
+        await request.File.CopyToAsync(memoryStream, cancellationToken);
+        var imageData = memoryStream.ToArray();
+
+        var result = await userService.UploadAvatarAsync(imageData, request.File.FileName, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return Ok(result.Value.ToResponse());
+    }
+
+    /// <summary>
+    /// Removes the current user's avatar image.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token</param>
+    /// <response code="200">Avatar removed successfully</response>
+    /// <response code="401">If the user is not authenticated</response>
+    [HttpDelete("me/avatar")]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<UserResponse>> RemoveAvatar(CancellationToken cancellationToken)
+    {
+        var result = await userService.RemoveAvatarAsync(cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return Ok(result.Value.ToResponse());
+    }
+
+    /// <summary>
+    /// Gets a user's avatar image by user ID.
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <param name="cancellationToken">A cancellation token</param>
+    /// <returns>The avatar image file</returns>
+    /// <response code="200">Returns the avatar image</response>
+    /// <response code="404">If the user has no avatar</response>
+    /// <response code="401">If the user is not authenticated</response>
+    [HttpGet("{userId:guid}/avatar")]
+    [ResponseCache(Duration = 300)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> GetAvatar(Guid userId, CancellationToken cancellationToken)
+    {
+        var result = await userService.GetAvatarAsync(userId, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return File(result.Value.Data, result.Value.ContentType);
+    }
+
+    /// <summary>
     /// Permanently deletes the current authenticated user's account.
     /// Requires password confirmation. Revokes all tokens and clears auth cookies.
     /// </summary>
     /// <param name="request">The account deletion request containing the user's password</param>
+    /// <param name="cancellationToken">A cancellation token</param>
     /// <response code="204">Account successfully deleted</response>
     /// <response code="400">If the password is incorrect or the request is invalid</response>
     /// <response code="401">If the user is not authenticated</response>
