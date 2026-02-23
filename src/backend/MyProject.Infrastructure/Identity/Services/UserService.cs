@@ -5,7 +5,10 @@ using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Audit;
+using MyProject.Application.Features.Avatar;
 using MyProject.Application.Features.Authentication.Dtos;
+using MyProject.Application.Features.FileStorage;
+using MyProject.Application.Features.FileStorage.Dtos;
 using MyProject.Application.Identity;
 using MyProject.Application.Identity.Constants;
 using MyProject.Application.Identity.Dtos;
@@ -25,7 +28,9 @@ internal class UserService(
     ICacheService cacheService,
     MyProjectDbContext dbContext,
     ICookieService cookieService,
-    IAuditService auditService) : IUserService
+    IAuditService auditService,
+    IFileStorageService fileStorageService,
+    IImageProcessingService imageProcessingService) : IUserService
 {
     private static readonly CacheEntryOptions UserCacheOptions =
         CacheEntryOptions.AbsoluteExpireIn(TimeSpan.FromMinutes(1));
@@ -65,7 +70,7 @@ internal class UserService(
             LastName: user.LastName,
             PhoneNumber: user.PhoneNumber,
             Bio: user.Bio,
-            AvatarUrl: user.AvatarUrl,
+            HasAvatar: user.HasAvatar,
             Roles: roles,
             Permissions: permissions,
             IsEmailConfirmed: user.EmailConfirmed);
@@ -116,7 +121,6 @@ internal class UserService(
         user.LastName = input.LastName;
         user.PhoneNumber = normalizedPhone;
         user.Bio = input.Bio;
-        user.AvatarUrl = input.AvatarUrl;
 
         var result = await userManager.UpdateAsync(user);
 
@@ -140,7 +144,7 @@ internal class UserService(
             LastName: user.LastName,
             PhoneNumber: user.PhoneNumber,
             Bio: user.Bio,
-            AvatarUrl: user.AvatarUrl,
+            HasAvatar: user.HasAvatar,
             Roles: roles,
             Permissions: permissions,
             IsEmailConfirmed: user.EmailConfirmed);
@@ -148,6 +152,90 @@ internal class UserService(
         await auditService.LogAsync(AuditActions.ProfileUpdate, userId: userId.Value, ct: cancellationToken);
 
         return Result<UserOutput>.Success(output);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<UserOutput>> UploadAvatarAsync(byte[] imageData, string fileName, CancellationToken ct)
+    {
+        var userId = userContext.UserId;
+
+        if (!userId.HasValue)
+        {
+            return Result<UserOutput>.Failure(ErrorMessages.User.NotAuthenticated, ErrorType.Unauthorized);
+        }
+
+        var user = await userManager.FindByIdAsync(userId.Value.ToString());
+
+        if (user is null)
+        {
+            return Result<UserOutput>.Failure(ErrorMessages.User.NotFound);
+        }
+
+        var processResult = imageProcessingService.ProcessAvatar(imageData, fileName);
+        if (!processResult.IsSuccess)
+        {
+            return Result<UserOutput>.Failure(processResult.Error);
+        }
+
+        var processed = processResult.Value;
+        var storageKey = $"avatars/{userId.Value}.webp";
+
+        var uploadResult = await fileStorageService.UploadAsync(storageKey, processed.ImageData, processed.ContentType, ct);
+        if (!uploadResult.IsSuccess)
+        {
+            return Result<UserOutput>.Failure(uploadResult.Error);
+        }
+
+        user.HasAvatar = true;
+        await userManager.UpdateAsync(user);
+
+        await InvalidateUserCache(userId.Value);
+        await auditService.LogAsync(AuditActions.AvatarUpload, userId: userId.Value, ct: ct);
+
+        return await GetCurrentUserAsync(ct);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<UserOutput>> RemoveAvatarAsync(CancellationToken ct)
+    {
+        var userId = userContext.UserId;
+
+        if (!userId.HasValue)
+        {
+            return Result<UserOutput>.Failure(ErrorMessages.User.NotAuthenticated, ErrorType.Unauthorized);
+        }
+
+        var user = await userManager.FindByIdAsync(userId.Value.ToString());
+
+        if (user is null)
+        {
+            return Result<UserOutput>.Failure(ErrorMessages.User.NotFound);
+        }
+
+        var storageKey = $"avatars/{userId.Value}.webp";
+        await fileStorageService.DeleteAsync(storageKey, ct);
+
+        user.HasAvatar = false;
+        await userManager.UpdateAsync(user);
+
+        await InvalidateUserCache(userId.Value);
+        await auditService.LogAsync(AuditActions.AvatarRemove, userId: userId.Value, ct: ct);
+
+        return await GetCurrentUserAsync(ct);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<FileDownloadOutput>> GetAvatarAsync(Guid userId, CancellationToken ct)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+
+        if (user is null || !user.HasAvatar)
+        {
+            return Result<FileDownloadOutput>.Failure(ErrorMessages.Avatar.NotFound, ErrorType.NotFound);
+        }
+
+        var storageKey = $"avatars/{userId}.webp";
+        return await fileStorageService.DownloadAsync(storageKey, ct);
     }
 
     /// <inheritdoc />
@@ -181,6 +269,12 @@ internal class UserService(
         }
 
         await auditService.LogAsync(AuditActions.AccountDeletion, userId: userId.Value, ct: cancellationToken);
+
+        // Clean up avatar from storage if present
+        if (user.HasAvatar)
+        {
+            await fileStorageService.DeleteAsync($"avatars/{userId.Value}.webp", cancellationToken);
+        }
 
         await RevokeUserTokens(user, userId.Value, cancellationToken);
         await DeleteUser(user);

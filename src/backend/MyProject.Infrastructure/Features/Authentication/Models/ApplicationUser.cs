@@ -28,8 +28,7 @@ public class ApplicationUser : IdentityUser<Guid>
     public string? Bio { get; set; }
 
     /// <summary>
-    /// Gets or sets the URL to the user's avatar image.
+    /// Gets or sets whether the user has an uploaded avatar image stored in file storage.
     /// </summary>
-    [MaxLength(500)]
-    public string? AvatarUrl { get; set; }
+    public bool HasAvatar { get; set; }
 }
