@@ -231,6 +231,12 @@ public sealed class CachingOptions : IValidatableObject
                     "SamplingDuration must be greater than zero.",
                     [nameof(SamplingDuration)]);
             }
+            else if (SamplingDuration < BreakDuration)
+            {
+                yield return new ValidationResult(
+                    "SamplingDuration must be greater than or equal to BreakDuration.",
+                    [nameof(SamplingDuration), nameof(BreakDuration)]);
+            }
         }
     }
 

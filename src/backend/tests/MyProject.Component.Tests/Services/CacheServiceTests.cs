@@ -12,11 +12,12 @@ using Polly.Registry;
 
 namespace MyProject.Component.Tests.Services;
 
-public class CacheServiceTests
+public class CacheServiceTests : IDisposable
 {
     private readonly IDistributedCache _distributedCache;
     private readonly ILogger<CacheService> _logger;
     private readonly CacheService _sut;
+    private readonly ServiceProvider _serviceProvider;
 
     public CacheServiceTests()
     {
@@ -24,9 +25,14 @@ public class CacheServiceTests
         _logger = Substitute.For<ILogger<CacheService>>();
 
         var options = Options.Create(new CachingOptions());
-        var provider = CreateNoOpPipelineProvider();
+        (_serviceProvider, var provider) = CreateNoOpPipelineProvider();
 
         _sut = new CacheService(_distributedCache, options, provider, _logger);
+    }
+
+    public void Dispose()
+    {
+        _serviceProvider.Dispose();
     }
 
     #region GetAsync — Resilience
@@ -247,7 +253,9 @@ public class CacheServiceTests
     [Fact]
     public async Task GetAsync_WhenCircuitOpen_ReturnsDefaultWithoutHittingCache()
     {
-        var (sut, distributedCache, _) = CreateCircuitBreakerSut(failureThreshold: 2);
+        var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
+        using var sp = fixture.ServiceProvider;
+        var (sut, distributedCache, _) = (fixture.Sut, fixture.Cache, fixture.Logger);
 
         distributedCache
             .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
@@ -270,7 +278,9 @@ public class CacheServiceTests
     [Fact]
     public async Task SetAsync_WhenCircuitOpen_SkipsWithoutHittingCache()
     {
-        var (sut, distributedCache, _) = CreateCircuitBreakerSut(failureThreshold: 2);
+        var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
+        using var sp = fixture.ServiceProvider;
+        var (sut, distributedCache, _) = (fixture.Sut, fixture.Cache, fixture.Logger);
 
         distributedCache
             .SetAsync(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>(), Arg.Any<CancellationToken>())
@@ -293,7 +303,9 @@ public class CacheServiceTests
     [Fact]
     public async Task RemoveAsync_WhenCircuitOpen_SkipsWithoutHittingCache()
     {
-        var (sut, distributedCache, _) = CreateCircuitBreakerSut(failureThreshold: 2);
+        var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
+        using var sp = fixture.ServiceProvider;
+        var (sut, distributedCache, _) = (fixture.Sut, fixture.Cache, fixture.Logger);
 
         distributedCache
             .RemoveAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
@@ -315,7 +327,9 @@ public class CacheServiceTests
     [Fact]
     public async Task GetAsync_WhenCircuitOpen_DoesNotLogWarning()
     {
-        var (sut, distributedCache, logger) = CreateCircuitBreakerSut(failureThreshold: 2);
+        var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
+        using var sp = fixture.ServiceProvider;
+        var (sut, distributedCache, logger) = (fixture.Sut, fixture.Cache, fixture.Logger);
 
         distributedCache
             .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
@@ -343,10 +357,12 @@ public class CacheServiceTests
     {
         var timeProvider = new FakeTimeProvider();
         var breakDuration = TimeSpan.FromSeconds(5);
-        var (sut, distributedCache, _) = CreateCircuitBreakerSut(
+        var fixture = CreateCircuitBreakerSut(
             failureThreshold: 2,
             breakDuration: breakDuration,
             timeProvider: timeProvider);
+        using var sp = fixture.ServiceProvider;
+        var (sut, distributedCache, _) = (fixture.Sut, fixture.Cache, fixture.Logger);
 
         distributedCache
             .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
@@ -375,15 +391,15 @@ public class CacheServiceTests
 
     #region Helpers
 
-    private static ResiliencePipelineProvider<string> CreateNoOpPipelineProvider()
+    private static (ServiceProvider ServiceProvider, ResiliencePipelineProvider<string> Provider) CreateNoOpPipelineProvider()
     {
         var services = new ServiceCollection();
         services.AddResiliencePipeline(ServiceCollectionExtensions.CachePipelineKey, static _ => { });
         var sp = services.BuildServiceProvider();
-        return sp.GetRequiredService<ResiliencePipelineProvider<string>>();
+        return (sp, sp.GetRequiredService<ResiliencePipelineProvider<string>>());
     }
 
-    private static (CacheService Sut, IDistributedCache Cache, ILogger<CacheService> Logger) CreateCircuitBreakerSut(
+    private static (CacheService Sut, IDistributedCache Cache, ILogger<CacheService> Logger, ServiceProvider ServiceProvider) CreateCircuitBreakerSut(
         int failureThreshold = 2,
         TimeSpan? breakDuration = null,
         TimeSpan? samplingDuration = null,
@@ -419,7 +435,7 @@ public class CacheServiceTests
         var provider = sp.GetRequiredService<ResiliencePipelineProvider<string>>();
 
         var sut = new CacheService(distributedCache, options, provider, logger);
-        return (sut, distributedCache, logger);
+        return (sut, distributedCache, logger, sp);
     }
 
     #endregion
