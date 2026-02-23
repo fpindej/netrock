@@ -155,7 +155,7 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("User"));
 
         Assert.True(result.IsFailure);
-        Assert.Contains("already has", result.Error);
+        Assert.Equal(ErrorMessages.Admin.RoleAlreadyAssigned, result.Error);
     }
 
     [Fact]
@@ -394,7 +394,7 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.RemoveRoleAsync(_callerId, _targetId, "User");
 
         Assert.True(result.IsFailure);
-        Assert.Contains("does not have", result.Error);
+        Assert.Equal(ErrorMessages.Admin.RoleNotAssigned, result.Error);
     }
 
     #endregion
@@ -606,7 +606,7 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.DeleteUserAsync(_callerId, _targetId);
 
         Assert.True(result.IsFailure);
-        Assert.Contains("last user", result.Error);
+        Assert.Equal(ErrorMessages.Admin.LastAdminCannotDelete, result.Error);
     }
 
     #endregion

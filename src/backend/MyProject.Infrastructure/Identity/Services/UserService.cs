@@ -128,8 +128,9 @@ internal sealed class UserService(
 
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result<UserOutput>.Failure(errors);
+            logger.LogWarning("UpdateAsync failed for user '{UserId}': {Errors}",
+                userId.Value, string.Join(", ", result.Errors.Select(e => e.Description)));
+            return Result<UserOutput>.Failure(ErrorMessages.User.UpdateFailed);
         }
 
         // Invalidate cache after update
@@ -329,8 +330,7 @@ internal sealed class UserService(
 
             if (usersInRoleCount <= 1)
             {
-                return Result.Failure(
-                    $"Cannot delete your account — you are the last user with the '{role}' role.");
+                return Result.Failure(ErrorMessages.User.LastAdminCannotDelete);
             }
         }
 
@@ -371,8 +371,9 @@ internal sealed class UserService(
 
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            throw new InvalidOperationException($"Failed to delete user account: {errors}");
+            logger.LogWarning("DeleteAsync failed for user '{UserId}': {Errors}",
+                user.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
+            throw new InvalidOperationException(ErrorMessages.User.DeleteFailed);
         }
     }
 

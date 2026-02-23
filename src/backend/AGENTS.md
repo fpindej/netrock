@@ -88,8 +88,9 @@ return Result<Guid>.Success(entity.Id);
 // Static message — always use ErrorMessages constant
 return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
 
-// Dynamic message — inline interpolation
-return Result.Failure($"Role '{roleName}' does not exist.");
+// Runtime values go in server-side logs, never in client responses
+logger.LogWarning("Operation failed for user '{UserId}': {Errors}", userId, errors);
+return Result.Failure(ErrorMessages.Admin.DeleteFailed);
 ```
 
 | ErrorType | HTTP | When |
@@ -144,9 +145,10 @@ FluentValidation auto-discovered from WebApi assembly. Co-locate validators with
 
 ## Error Messages
 
-- Static messages: `const string` in `ErrorMessages.cs` nested classes — always referenced by constant
-- Dynamic messages: inline string interpolation in service
-- Identity errors: pass `.Description` through directly (already user-friendly)
+- All client-facing messages: `const string` in `ErrorMessages.cs` nested classes — always referenced by constant
+- Runtime values (role names, user IDs, framework errors): log server-side via `ILogger`, never in `Result.Failure()`
+- Identity errors: log `.Description` server-side, return a static `ErrorMessages` constant to the client
+- Exception: password validation errors (registration, change, reset) are forwarded as-is — they describe password policy, not internals
 
 ## Authorization
 
