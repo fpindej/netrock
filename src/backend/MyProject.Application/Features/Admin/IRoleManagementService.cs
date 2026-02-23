@@ -48,14 +48,15 @@ public interface IRoleManagementService
 
     /// <summary>
     /// Replaces all permission claims on a role. Rotates security stamps for all users in the role.
-    /// Cannot modify SuperAdmin permissions.
+    /// Cannot modify SuperAdmin permissions. Callers cannot grant permissions they do not hold.
     /// </summary>
     /// <param name="roleId">The role ID.</param>
     /// <param name="input">The new set of permissions.</param>
+    /// <param name="callerUserId">The ID of the user performing the operation.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>Success or failure with an error message.</returns>
     Task<Result> SetRolePermissionsAsync(Guid roleId, SetRolePermissionsInput input,
-        CancellationToken cancellationToken = default);
+        Guid callerUserId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Returns all available permissions grouped by category.

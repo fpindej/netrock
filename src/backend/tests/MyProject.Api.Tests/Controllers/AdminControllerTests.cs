@@ -733,12 +733,61 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     {
         var roleId = Guid.NewGuid();
         _factory.RoleManagementService.SetRolePermissionsAsync(
-                roleId, Arg.Any<SetRolePermissionsInput>(), Arg.Any<CancellationToken>())
+                roleId, Arg.Any<SetRolePermissionsInput>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(Result.Success());
 
         var response = await _client.SendAsync(
             Put($"/api/v1/admin/roles/{roleId}/permissions",
+                TestAuth.WithPermissions(AppPermissions.Roles.Manage, AppPermissions.Users.View),
+                JsonContent.Create(new { Permissions = new[] { "users.view" } })));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SetPermissions_CallerLacksPermission_Returns400()
+    {
+        var roleId = Guid.NewGuid();
+        _factory.RoleManagementService.SetRolePermissionsAsync(
+                roleId, Arg.Any<SetRolePermissionsInput>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.Roles.CannotGrantUnheldPermission));
+
+        var response = await _client.SendAsync(
+            Put($"/api/v1/admin/roles/{roleId}/permissions",
                 TestAuth.WithPermissions(AppPermissions.Roles.Manage),
+                JsonContent.Create(new { Permissions = new[] { "users.view" } })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Roles.CannotGrantUnheldPermission);
+    }
+
+    [Fact]
+    public async Task SetPermissions_SuperAdmin_CanGrantAnyPermission_Returns204()
+    {
+        var roleId = Guid.NewGuid();
+        _factory.RoleManagementService.SetRolePermissionsAsync(
+                roleId, Arg.Any<SetRolePermissionsInput>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Put($"/api/v1/admin/roles/{roleId}/permissions",
+                TestAuth.SuperAdmin(),
+                JsonContent.Create(new { Permissions = new[] { "users.view", "users.manage", "roles.manage" } })));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SetPermissions_CallerHoldsAllPermissions_Returns204()
+    {
+        var roleId = Guid.NewGuid();
+        _factory.RoleManagementService.SetRolePermissionsAsync(
+                roleId, Arg.Any<SetRolePermissionsInput>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Put($"/api/v1/admin/roles/{roleId}/permissions",
+                TestAuth.WithPermissions(AppPermissions.Roles.Manage, AppPermissions.Users.View),
                 JsonContent.Create(new { Permissions = new[] { "users.view" } })));
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
