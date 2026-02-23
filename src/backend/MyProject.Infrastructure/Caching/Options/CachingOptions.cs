@@ -39,6 +39,13 @@ public sealed class CachingOptions : IValidatableObject
     [ValidateObjectMembers]
     public InMemoryOptions InMemory { get; init; } = new();
 
+    /// <summary>
+    /// Gets or sets the circuit breaker configuration.
+    /// Controls how quickly cache operations are short-circuited during sustained outages.
+    /// </summary>
+    [ValidateObjectMembers]
+    public CircuitBreakerOptions CircuitBreaker { get; init; } = new();
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (DefaultExpiration <= TimeSpan.Zero)
@@ -180,6 +187,55 @@ public sealed class CachingOptions : IValidatableObject
                 yield return new ValidationResult(
                     "KeepAliveSeconds must be greater than 0.",
                     [nameof(KeepAliveSeconds)]);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Configuration options for the cache circuit breaker.
+    /// When the failure threshold is reached within the sampling window,
+    /// the circuit opens and all cache operations return defaults immediately
+    /// without attempting a connection, eliminating latency and log spam.
+    /// </summary>
+    public sealed class CircuitBreakerOptions : IValidatableObject
+    {
+        /// <summary>
+        /// Gets or sets the minimum number of actions in the sampling window
+        /// before the circuit breaker evaluates whether to open.
+        /// </summary>
+        [Range(1, 100)]
+        public int FailureThreshold { get; init; } = 5;
+
+        /// <summary>
+        /// Gets or sets how long the circuit stays open before allowing a probe request.
+        /// </summary>
+        public TimeSpan BreakDuration { get; init; } = TimeSpan.FromSeconds(30);
+
+        /// <summary>
+        /// Gets or sets the rolling window for counting failures.
+        /// </summary>
+        public TimeSpan SamplingDuration { get; init; } = TimeSpan.FromSeconds(30);
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (BreakDuration <= TimeSpan.Zero)
+            {
+                yield return new ValidationResult(
+                    "BreakDuration must be greater than zero.",
+                    [nameof(BreakDuration)]);
+            }
+
+            if (SamplingDuration <= TimeSpan.Zero)
+            {
+                yield return new ValidationResult(
+                    "SamplingDuration must be greater than zero.",
+                    [nameof(SamplingDuration)]);
+            }
+            else if (SamplingDuration < BreakDuration)
+            {
+                yield return new ValidationResult(
+                    "SamplingDuration must be greater than or equal to BreakDuration.",
+                    [nameof(SamplingDuration), nameof(BreakDuration)]);
             }
         }
     }

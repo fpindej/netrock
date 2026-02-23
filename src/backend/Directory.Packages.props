@@ -16,6 +16,7 @@
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(FrameworkVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="$(FrameworkVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(FrameworkVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Resilience" Version="10.3.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.12.41" />
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="$(FrameworkVersion)" />
