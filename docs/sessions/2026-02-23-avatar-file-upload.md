@@ -137,10 +137,10 @@ Code review identified and fixed:
 |--------|--------|
 | `fix(openapi)` | Removed `<param name="cancellationToken">` XML docs from UsersController and AdminController — they leaked "A cancellation token" into the OpenAPI spec request body descriptions |
 | `chore(types)` | Regenerated `v1.d.ts` from live API (replaces hand-edited stubs with proper generated types) |
+| `fix(storage)` | Added general `AmazonS3Exception` catch to `DownloadAsync` and `ExistsAsync` (non-404 errors were unhandled); log warning on avatar storage delete failure in `RemoveAvatarAsync`; set `ResponseCacheLocation.Client` on GET avatar to prevent proxy/CDN caching of authenticated images |
 
 ## Follow-Up Items
 
-- [ ] Restore init scripts (`init.sh`, `init.ps1`) — accidentally deleted in c2761f1 (stacked PR)
 - [ ] Add avatar display in admin user detail page
 - [ ] Consider pre-signed URL approach for CDN/edge caching at scale
 - [ ] Add bucket lifecycle policies for orphaned files cleanup
