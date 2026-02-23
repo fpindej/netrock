@@ -221,6 +221,23 @@ public class CachingOptionsValidationTests
         Assert.Contains(results, r => r.MemberNames.Contains(nameof(CachingOptions.RedisOptions.KeepAliveSeconds)));
     }
 
+    [Theory]
+    [InlineData(1)]
+    [InlineData(60)]
+    public void RedisOptions_WhenEnabled_KeepAliveSecondsValid_NoErrors(int seconds)
+    {
+        var options = new CachingOptions.RedisOptions
+        {
+            Enabled = true,
+            ConnectionString = "localhost:6379",
+            KeepAliveSeconds = seconds
+        };
+
+        var results = Validate(options);
+
+        Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(CachingOptions.RedisOptions.KeepAliveSeconds)));
+    }
+
     #endregion
 
     #region InMemoryOptions
