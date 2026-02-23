@@ -516,6 +516,7 @@ Key conventions:
 - HTML templates use inline styles (email clients ignore `<style>` blocks in fragments)
 - The shared base layout (`_base.liquid`) provides the HTML wrapper, header with `{{ app_name }}`, card container, and footer — fragments only provide inner content
 - HTML body is rendered with `HtmlEncoder.Default` (XSS-safe); subject and plain text are unencoded
+- Subject templates should use static text or config-sourced variables only — never raw user input (no HTML encoding applied, CRLF could cause header injection in poorly-configured SMTP libraries)
 - `{{ app_name }}` is automatically available in all templates from `EmailOptions.FromName`
 
 ### Run Tests

@@ -7,6 +7,7 @@ namespace MyProject.Infrastructure.Features.Email.Services;
 /// Renders an email template and sends the result, swallowing both rendering
 /// and delivery failures. Transient provider outages (quota, auth, network)
 /// and template errors are logged but never propagate to the caller.
+/// <see cref="OperationCanceledException"/> is re-thrown to respect cooperative cancellation.
 /// </summary>
 internal class TemplatedEmailSender(
     IEmailTemplateRenderer emailTemplateRenderer,
@@ -23,9 +24,13 @@ internal class TemplatedEmailSender(
             var message = new EmailMessage(to, rendered.Subject, rendered.HtmlBody, rendered.PlainTextBody);
             await emailService.SendEmailAsync(message, cancellationToken);
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send templated email '{TemplateName}' to {To}", templateName, to);
+            logger.LogError(ex, "Failed to send templated email '{TemplateName}'", templateName);
         }
     }
 }

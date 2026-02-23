@@ -18,10 +18,12 @@ namespace MyProject.Infrastructure.Features.Email.Services;
 internal class FluidEmailTemplateRenderer : IEmailTemplateRenderer
 {
     private static readonly Assembly ResourceAssembly = typeof(FluidEmailTemplateRenderer).Assembly;
-    private static readonly string ResourcePrefix =
-        typeof(FluidEmailTemplateRenderer).Namespace!.Replace(".Services", ".Templates");
+    private const string ResourcePrefix = "MyProject.Infrastructure.Features.Email.Templates";
 
     private readonly ConcurrentDictionary<string, Lazy<IFluidTemplate>> _cache = new();
+
+    // TemplateOptions is configured once at construction and treated as immutable.
+    // Each Render call creates its own TemplateContext; safe for concurrent use.
     private readonly TemplateOptions _options;
     private readonly string _appName;
 

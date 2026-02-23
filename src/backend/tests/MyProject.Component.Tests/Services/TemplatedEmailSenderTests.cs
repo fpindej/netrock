@@ -65,4 +65,19 @@ public class TemplatedEmailSenderTests
 
         Assert.Null(exception);
     }
+
+    [Fact]
+    public async Task SendSafeAsync_CancellationRequested_PropagatesCancellation()
+    {
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+        var rendered = new RenderedEmail("Subject", "<html>body</html>");
+        _emailTemplateRenderer.Render("test-template", Arg.Any<VerifyEmailModel>())
+            .Returns(rendered);
+        _emailService.SendEmailAsync(Arg.Any<EmailMessage>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromCanceled(cts.Token));
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            _sut.SendSafeAsync("test-template", new VerifyEmailModel("https://example.com"), "user@test.com", cts.Token));
+    }
 }

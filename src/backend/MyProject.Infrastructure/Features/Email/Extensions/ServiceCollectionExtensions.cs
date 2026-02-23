@@ -14,8 +14,8 @@ public static class ServiceCollectionExtensions
     extension(IServiceCollection services)
     {
         /// <summary>
-        /// Registers email options and the no-op email service implementation.
-        /// Replace the service registration with a real SMTP or API-based implementation for production use.
+        /// Registers email options, the template rendering pipeline, and the no-op email service.
+        /// Replace <see cref="NoOpEmailService"/> with a real SMTP or API-based implementation for production use.
         /// </summary>
         /// <param name="configuration">The application configuration for reading email options.</param>
         /// <returns>The service collection for chaining.</returns>
