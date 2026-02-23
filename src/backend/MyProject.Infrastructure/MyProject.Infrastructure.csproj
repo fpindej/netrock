@@ -22,6 +22,9 @@
         <PackageReference Include="Hangfire.Core" />
         <PackageReference Include="Hangfire.PostgreSql" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <PackageReference Include="AWSSDK.S3" />
+        <PackageReference Include="SkiaSharp" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
     </ItemGroup>
 
     <ItemGroup>
