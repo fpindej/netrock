@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import { Button } from '$lib/components/ui/button';
@@ -28,13 +29,15 @@
 
 	let fileInput: HTMLInputElement | undefined = $state();
 
-	// Reset state when dialog opens
+	// Reset state when dialog opens — untrack inner reads so only `open` is a dependency
 	$effect(() => {
 		if (open) {
-			selectedFile = null;
-			if (previewUrl) URL.revokeObjectURL(previewUrl);
-			previewUrl = null;
-			fileError = '';
+			untrack(() => {
+				selectedFile = null;
+				if (previewUrl) URL.revokeObjectURL(previewUrl);
+				previewUrl = null;
+				fileError = '';
+			});
 		}
 	});
 
