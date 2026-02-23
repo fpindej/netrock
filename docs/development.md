@@ -33,7 +33,7 @@ RateLimiting__Global__PermitLimit=1000
 dotnet ef migrations add <Name> \
   --project src/backend/<YourProject>.Infrastructure \
   --startup-project src/backend/<YourProject>.WebApi \
-  --output-dir Features/Postgres/Migrations
+  --output-dir Persistence/Migrations
 ```
 
 Migrations auto-apply on startup in Development.

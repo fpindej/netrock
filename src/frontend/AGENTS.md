@@ -5,7 +5,7 @@
 ```
 src/
 ├── lib/
-│   ├── api/                       # client.ts, error-handling.ts, mutation.ts, v1.d.ts (GENERATED)
+│   ├── api/                       # client.ts, error-handling.ts, mutation.ts, backend-monitor.ts, v1.d.ts (GENERATED)
 │   ├── auth/                      # auth.ts (getUser, logout), middleware.ts (token refresh)
 │   ├── components/
 │   │   ├── ui/                    # shadcn (generated, customizable)
@@ -16,7 +16,7 @@ src/
 │   │   ├── admin/                 # UserTable, RoleCardGrid, UserManagementCard, AuditTrailCard, ...
 │   │   └── common/                # StatusIndicator, WorkInProgress
 │   ├── config/                    # i18n.ts (client-safe), server.ts (server-only — never export from barrel)
-│   ├── state/                     # .svelte.ts files only (cooldown, shake, theme, sidebar, shortcuts)
+│   ├── state/                     # .svelte.ts files only (cooldown, health, shake, theme, sidebar, shortcuts)
 │   ├── types/index.ts             # Type aliases from API schemas
 │   └── utils/                     # cn(), permissions.ts, audit.ts, platform.ts
 ├── routes/
@@ -37,6 +37,7 @@ Two layers: `lib/api/` (auth-agnostic client factory) and `lib/auth/` (all auth 
 | `createApiClient(fetch?, baseUrl?, middleware?)`       | `$lib/api`  | Creates typed openapi-fetch client. Server load functions pass `fetch` + `url.origin`.  |
 | `browserClient`                                        | `$lib/api`  | Singleton for client-side code. Created bare — auth wired at runtime.                   |
 | `initBrowserAuth(middleware)`                          | `$lib/api`  | Registers auth middleware on `browserClient` exactly once (idempotent guard).           |
+| `initBackendMonitor()`                                 | `$lib/api/backend-monitor` | Detects 502/503 → marks health offline → `invalidateAll()`. Not in barrel (direct import). |
 | `createAuthMiddleware(fetch, baseUrl, onAuthFailure?)` | `$lib/auth` | 401 → deduplicated refresh → retry idempotent methods only.                             |
 | `getUser(fetch, origin)`                               | `$lib/auth` | Returns `GetUserResult` — distinguishes "not authenticated" from "backend unavailable". |
 
@@ -204,6 +205,7 @@ Add to both `en.json` and `cs.json`. Use: `import * as m from '$lib/paraglide/me
 | `shake.svelte.ts`     | `createShake()`, `createFieldShakes()`      |
 | `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()` |
 | `sidebar.svelte.ts`   | `sidebarState`, `toggleSidebar()`           |
+| `health.svelte.ts`    | `healthState`, `initHealthCheck()` — adaptive backend polling  |
 | `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()`  |
 
 ## File Upload
