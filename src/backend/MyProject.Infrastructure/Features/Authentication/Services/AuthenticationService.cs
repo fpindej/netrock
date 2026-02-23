@@ -1,4 +1,3 @@
-using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +11,7 @@ using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Features.Email;
+using MyProject.Application.Features.Email.Models;
 using MyProject.Application.Identity;
 using MyProject.Application.Identity.Constants;
 using MyProject.Infrastructure.Cryptography;
@@ -34,7 +34,7 @@ internal class AuthenticationService(
     ICookieService cookieService,
     IUserContext userContext,
     ICacheService cacheService,
-    IEmailService emailService,
+    ITemplatedEmailSender templatedEmailSender,
     EmailTokenService emailTokenService,
     IAuditService auditService,
     IOptions<AuthenticationOptions> authenticationOptions,
@@ -313,32 +313,8 @@ internal class AuthenticationService(
         var opaqueToken = await emailTokenService.CreateAsync(user.Id, identityToken, EmailTokenPurpose.PasswordReset, cancellationToken);
         var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}";
 
-        var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
-        var htmlBody = $"""
-            <h2>Reset Your Password</h2>
-            <p>You requested a password reset. Click the link below to set a new password:</p>
-            <p><a href="{safeResetUrl}">Reset Password</a></p>
-            <p>If you didn't request this, you can safely ignore this email.</p>
-            <p>This link will expire in {_emailTokenOptions.Lifetime.ToHumanReadable()}.</p>
-            """;
-
-        var plainTextBody = $"""
-            Reset Your Password
-
-            You requested a password reset. Visit the following link to set a new password:
-            {resetUrl}
-
-            If you didn't request this, you can safely ignore this email.
-            """;
-
-        var message = new EmailMessage(
-            To: email,
-            Subject: "Reset Your Password",
-            HtmlBody: htmlBody,
-            PlainTextBody: plainTextBody
-        );
-
-        await SendEmailSafeAsync(message, cancellationToken);
+        var model = new ResetPasswordModel(resetUrl, _emailTokenOptions.Lifetime.ToHumanReadable());
+        await templatedEmailSender.SendSafeAsync("reset-password", model, email, cancellationToken);
 
         await auditService.LogAsync(AuditActions.PasswordResetRequest, userId: user.Id, ct: cancellationToken);
 
@@ -499,22 +475,6 @@ internal class AuthenticationService(
     }
 
     /// <summary>
-    /// Sends an email, swallowing delivery failures. Transient provider outages
-    /// (quota, auth, network) are logged but never propagate to the caller.
-    /// </summary>
-    private async Task SendEmailSafeAsync(EmailMessage message, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await emailService.SendEmailAsync(message, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to send email to {To}", message.To);
-        }
-    }
-
-    /// <summary>
     /// Sends a verification email to the specified user with a confirmation link.
     /// </summary>
     private async Task SendVerificationEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
@@ -529,31 +489,8 @@ internal class AuthenticationService(
         var opaqueToken = await emailTokenService.CreateAsync(user.Id, identityToken, EmailTokenPurpose.EmailVerification, cancellationToken);
         var verifyUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/verify-email?token={opaqueToken}";
 
-        var safeVerifyUrl = WebUtility.HtmlEncode(verifyUrl);
-        var htmlBody = $"""
-            <h2>Verify Your Email Address</h2>
-            <p>Thank you for registering. Please click the link below to verify your email address:</p>
-            <p><a href="{safeVerifyUrl}">Verify Email</a></p>
-            <p>If you didn't create an account, you can safely ignore this email.</p>
-            """;
-
-        var plainTextBody = $"""
-            Verify Your Email Address
-
-            Thank you for registering. Visit the following link to verify your email address:
-            {verifyUrl}
-
-            If you didn't create an account, you can safely ignore this email.
-            """;
-
-        var message = new EmailMessage(
-            To: user.Email,
-            Subject: "Verify Your Email Address",
-            HtmlBody: htmlBody,
-            PlainTextBody: plainTextBody
-        );
-
-        await SendEmailSafeAsync(message, cancellationToken);
+        var model = new VerifyEmailModel(verifyUrl);
+        await templatedEmailSender.SendSafeAsync("verify-email", model, user.Email, cancellationToken);
     }
 
     /// <summary>

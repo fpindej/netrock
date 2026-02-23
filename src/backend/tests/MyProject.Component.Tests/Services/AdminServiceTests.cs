@@ -7,6 +7,7 @@ using MyProject.Application.Caching;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Email;
+using MyProject.Application.Features.Email.Models;
 using MyProject.Application.Features.FileStorage;
 using MyProject.Application.Identity.Constants;
 using MyProject.Component.Tests.Fixtures;
@@ -25,7 +26,7 @@ public class AdminServiceTests : IDisposable
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly ICacheService _cacheService;
-    private readonly IEmailService _emailService;
+    private readonly ITemplatedEmailSender _templatedEmailSender;
     private readonly IAuditService _auditService;
     private readonly FakeTimeProvider _timeProvider;
     private readonly MyProjectDbContext _dbContext;
@@ -39,7 +40,7 @@ public class AdminServiceTests : IDisposable
         _userManager = IdentityMockHelpers.CreateMockUserManager();
         _roleManager = IdentityMockHelpers.CreateMockRoleManager();
         _cacheService = Substitute.For<ICacheService>();
-        _emailService = Substitute.For<IEmailService>();
+        _templatedEmailSender = Substitute.For<ITemplatedEmailSender>();
         _timeProvider = new FakeTimeProvider(new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero));
         _dbContext = TestDbContextFactory.Create();
         var logger = Substitute.For<ILogger<AdminService>>();
@@ -60,7 +61,8 @@ public class AdminServiceTests : IDisposable
 
         _sut = new AdminService(
             _userManager, _roleManager, _dbContext, _cacheService, _timeProvider,
-            _emailService, emailTokenService, _auditService, fileStorageService, emailOptions, logger);
+            _templatedEmailSender, emailTokenService, _auditService,
+            fileStorageService, authOptions, emailOptions, logger);
     }
 
     public void Dispose()
@@ -854,10 +856,12 @@ public class AdminServiceTests : IDisposable
             targetEntityId: _targetId,
             metadata: Arg.Any<string?>(),
             ct: Arg.Any<CancellationToken>());
-        await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m =>
-                m.To == "user@test.com" &&
-                !m.PlainTextBody!.Contains("email=", StringComparison.OrdinalIgnoreCase)),
+        await _templatedEmailSender.Received(1).SendSafeAsync(
+            "admin-reset-password",
+            Arg.Is<AdminResetPasswordModel>(m =>
+                m.ResetUrl.Contains("https://example.com/reset-password?token=") &&
+                !m.ResetUrl.Contains("email=")),
+            "user@test.com",
             Arg.Any<CancellationToken>());
     }
 
@@ -938,8 +942,10 @@ public class AdminServiceTests : IDisposable
             targetEntityId: newUserId,
             metadata: Arg.Any<string?>(),
             ct: Arg.Any<CancellationToken>());
-        await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m => m.To == "new@test.com"),
+        await _templatedEmailSender.Received(1).SendSafeAsync(
+            "invitation",
+            Arg.Any<InvitationModel>(),
+            "new@test.com",
             Arg.Any<CancellationToken>());
     }
 
@@ -968,11 +974,13 @@ public class AdminServiceTests : IDisposable
 
         await _sut.CreateUserAsync(_callerId, new CreateUserInput("invite@test.com", null, null));
 
-        await _emailService.Received(1).SendEmailAsync(
-            Arg.Is<EmailMessage>(m =>
-                m.To == "invite@test.com" &&
-                m.Subject == "You've Been Invited" &&
-                !m.PlainTextBody!.Contains("email=", StringComparison.OrdinalIgnoreCase)),
+        await _templatedEmailSender.Received(1).SendSafeAsync(
+            "invitation",
+            Arg.Is<InvitationModel>(m =>
+                m.SetPasswordUrl.Contains("https://example.com/reset-password?token=") &&
+                m.SetPasswordUrl.Contains("&invited=1") &&
+                !m.SetPasswordUrl.Contains("email=")),
+            "invite@test.com",
             Arg.Any<CancellationToken>());
 
         var emailToken = Assert.Single(_dbContext.EmailTokens);

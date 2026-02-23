@@ -1,4 +1,3 @@
-using System.Net;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
@@ -11,9 +10,11 @@ using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Email;
+using MyProject.Application.Features.Email.Models;
 using MyProject.Application.Features.FileStorage;
 using MyProject.Application.Identity.Constants;
 using MyProject.Infrastructure.Features.Authentication.Models;
+using MyProject.Infrastructure.Features.Authentication.Options;
 using MyProject.Infrastructure.Features.Authentication.Services;
 using MyProject.Infrastructure.Features.Email.Options;
 using MyProject.Infrastructure.Persistence;
@@ -40,14 +41,16 @@ internal class AdminService(
     MyProjectDbContext dbContext,
     ICacheService cacheService,
     TimeProvider timeProvider,
-    IEmailService emailService,
+    ITemplatedEmailSender templatedEmailSender,
     EmailTokenService emailTokenService,
     IAuditService auditService,
     IFileStorageService fileStorageService,
+    IOptions<AuthenticationOptions> authenticationOptions,
     IOptions<EmailOptions> emailOptions,
     ILogger<AdminService> logger) : IAdminService
 {
     private readonly EmailOptions _emailOptions = emailOptions.Value;
+    private readonly AuthenticationOptions.EmailTokenOptions _emailTokenOptions = authenticationOptions.Value.EmailToken;
 
     /// <inheritdoc />
     public async Task<AdminUserListOutput> GetUsersAsync(int pageNumber, int pageSize, string? search = null,
@@ -470,32 +473,8 @@ internal class AdminService(
         var email = user.Email ?? user.UserName ?? string.Empty;
         var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}";
 
-        var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
-        var htmlBody = $"""
-            <h2>Reset Your Password</h2>
-            <p>An administrator has requested a password reset for your account. Click the link below to set a new password:</p>
-            <p><a href="{safeResetUrl}">Reset Password</a></p>
-            <p>If you did not expect this, please contact your administrator.</p>
-            <p>This link will expire in 24 hours.</p>
-            """;
-
-        var plainTextBody = $"""
-            Reset Your Password
-
-            An administrator has requested a password reset for your account. Visit the following link to set a new password:
-            {resetUrl}
-
-            If you did not expect this, please contact your administrator.
-            """;
-
-        var message = new EmailMessage(
-            To: email,
-            Subject: "Reset Your Password",
-            HtmlBody: htmlBody,
-            PlainTextBody: plainTextBody
-        );
-
-        await SendEmailSafeAsync(message, cancellationToken);
+        var model = new AdminResetPasswordModel(resetUrl, _emailTokenOptions.Lifetime.ToHumanReadable());
+        await templatedEmailSender.SendSafeAsync("admin-reset-password", model, email, cancellationToken);
 
         logger.LogInformation("Password reset email sent for user '{UserId}' by admin '{CallerUserId}'",
             userId, callerUserId);
@@ -545,33 +524,10 @@ internal class AdminService(
         // Send invitation email with password reset link
         var identityToken = await userManager.GeneratePasswordResetTokenAsync(user);
         var opaqueToken = await emailTokenService.CreateAsync(user.Id, identityToken, EmailTokenPurpose.PasswordReset, cancellationToken);
-        var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}&invited=1";
+        var setPasswordUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}&invited=1";
 
-        var safeResetUrl = WebUtility.HtmlEncode(resetUrl);
-        var htmlBody = $"""
-            <h2>You've Been Invited</h2>
-            <p>An account has been created for you. Click the link below to set your password and get started:</p>
-            <p><a href="{safeResetUrl}">Set Your Password</a></p>
-            <p>This link will expire in 24 hours.</p>
-            """;
-
-        var plainTextBody = $"""
-            You've Been Invited
-
-            An account has been created for you. Visit the following link to set your password and get started:
-            {resetUrl}
-
-            This link will expire in 24 hours.
-            """;
-
-        var message = new EmailMessage(
-            To: input.Email,
-            Subject: "You've Been Invited",
-            HtmlBody: htmlBody,
-            PlainTextBody: plainTextBody
-        );
-
-        await SendEmailSafeAsync(message, cancellationToken);
+        var invitationModel = new InvitationModel(setPasswordUrl, _emailTokenOptions.Lifetime.ToHumanReadable());
+        await templatedEmailSender.SendSafeAsync("invitation", invitationModel, input.Email, cancellationToken);
 
         logger.LogInformation("User '{UserId}' created via admin invitation for email '{Email}' by admin '{CallerUserId}'",
             user.Id, input.Email, callerUserId);
@@ -823,22 +779,6 @@ internal class AdminService(
     private async Task InvalidateUserCacheAsync(Guid userId)
     {
         await cacheService.RemoveAsync(CacheKeys.User(userId));
-    }
-
-    /// <summary>
-    /// Sends an email, swallowing delivery failures. Transient provider outages
-    /// (quota, auth, network) are logged but never propagate to the caller.
-    /// </summary>
-    private async Task SendEmailSafeAsync(EmailMessage message, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await emailService.SendEmailAsync(message, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to send email to {To}", message.To);
-        }
     }
 
     /// <summary>
