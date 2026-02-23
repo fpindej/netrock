@@ -1,9 +1,9 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using MyProject.Application.Caching;
-using System.Security.Claims;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Email;
@@ -233,6 +233,43 @@ public class AdminServiceTests : IDisposable
         _userManager.AddToRoleAsync(target, "ViewerRole").Returns(IdentityResult.Success);
 
         var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("ViewerRole"));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task AssignRole_MultipleCallerRoles_AggregatesPermissions()
+    {
+        // Caller has Admin (with users.view) + a custom "Ops" role (with roles.manage).
+        // Target custom role requires both — should succeed via union of caller permissions.
+        var caller = new ApplicationUser { Id = _callerId, UserName = "admin@test.com" };
+        _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
+        _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Admin, "Ops" });
+
+        var target = SetupTargetAsUser();
+
+        var callerAdminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin };
+        _roleManager.FindByNameAsync(AppRoles.Admin).Returns(callerAdminRole);
+        _roleManager.GetClaimsAsync(callerAdminRole).Returns(
+            [new Claim(AppPermissions.ClaimType, AppPermissions.Users.View)]);
+
+        var callerOpsRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "Ops" };
+        _roleManager.FindByNameAsync("Ops").Returns(callerOpsRole);
+        _roleManager.GetClaimsAsync(callerOpsRole).Returns(
+            [new Claim(AppPermissions.ClaimType, AppPermissions.Roles.Manage)]);
+
+        var customRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "PowerRole" };
+        _roleManager.FindByNameAsync("PowerRole").Returns(customRole);
+        _roleManager.GetClaimsAsync(customRole).Returns(
+        [
+            new Claim(AppPermissions.ClaimType, AppPermissions.Users.View),
+            new Claim(AppPermissions.ClaimType, AppPermissions.Roles.Manage)
+        ]);
+
+        _userManager.IsInRoleAsync(target, "PowerRole").Returns(false);
+        _userManager.AddToRoleAsync(target, "PowerRole").Returns(IdentityResult.Success);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("PowerRole"));
 
         Assert.True(result.IsSuccess);
     }
