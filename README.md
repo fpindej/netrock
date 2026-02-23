@@ -90,13 +90,13 @@ That's it. Your entire stack is running:
 | **MinIO Console (S3 Storage)** | `http://localhost:<BASE_PORT + 12>` |
 | **Seq (Structured Logs)** | `http://localhost:<BASE_PORT + 8>` |
 
-Three test users are seeded in development:
+Three test users are seeded from `deploy/envs/local/seed.env`:
 
 | Role | Email | Password |
 |---|---|---|
-| SuperAdmin | `superadmin@test.com` | `SuperAdmin123` |
-| Admin | `admin@test.com` | `Admin123` |
-| User | `user@test.com` | `User123` |
+| SuperAdmin | `superadmin@test.com` | `SuperAdmin123!` |
+| Admin | `admin@test.com` | `AdminUser123!` |
+| User | `testuser@test.com` | `TestUser123!` |
 
 ### 3. Start Building
 

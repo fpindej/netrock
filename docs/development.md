@@ -6,7 +6,7 @@
 
 ### Frontend dev — tweak backend config without touching code
 
-Edit `deploy/envs/local.env`, restart Docker:
+Edit `deploy/envs/local/api.env`, restart Docker:
 
 ```bash
 # Longer JWT tokens, relaxed rate limit
@@ -21,7 +21,7 @@ RateLimiting__Global__PermitLimit=1000
 ### Backend dev — debug with breakpoints in Rider/VS
 
 1. Stop the API container: `./deploy/up.sh local stop api`
-2. Set `API_URL=http://host.docker.internal:5142` in `deploy/envs/local.env`
+2. Set `API_URL=http://host.docker.internal:5142` in `deploy/envs/local/compose.env`
 3. Restart frontend: `./deploy/up.sh local restart frontend`
 4. Launch API from your IDE — breakpoints work, frontend proxies to it
 
