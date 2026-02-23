@@ -215,7 +215,13 @@ internal sealed class UserService(
         }
 
         var storageKey = $"avatars/{userId.Value}.webp";
-        await fileStorageService.DeleteAsync(storageKey, ct);
+        var deleteResult = await fileStorageService.DeleteAsync(storageKey, ct);
+
+        if (!deleteResult.IsSuccess)
+        {
+            logger.LogWarning("Failed to delete avatar from storage for user {UserId}: {Error}",
+                userId.Value, deleteResult.Error);
+        }
 
         user.HasAvatar = false;
         await userManager.UpdateAsync(user);

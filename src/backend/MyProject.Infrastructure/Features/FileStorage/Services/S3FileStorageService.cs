@@ -73,6 +73,11 @@ internal sealed class S3FileStorageService(
         {
             return Result<FileDownloadOutput>.Failure("File not found.", ErrorType.NotFound);
         }
+        catch (AmazonS3Exception ex)
+        {
+            logger.LogError(ex, "Failed to download object '{Key}' from bucket '{Bucket}'", key, _bucketName);
+            return Result<FileDownloadOutput>.Failure("Failed to retrieve file from storage.");
+        }
     }
 
     /// <inheritdoc />
@@ -114,6 +119,11 @@ internal sealed class S3FileStorageService(
         }
         catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
+            return false;
+        }
+        catch (AmazonS3Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to check existence of '{Key}' in bucket '{Bucket}'", key, _bucketName);
             return false;
         }
     }

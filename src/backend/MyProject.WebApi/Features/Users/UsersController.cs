@@ -130,7 +130,7 @@ public class UsersController(IUserService userService, IAuditService auditServic
     /// <response code="404">If the user has no avatar</response>
     /// <response code="401">If the user is not authenticated</response>
     [HttpGet("{userId:guid}/avatar")]
-    [ResponseCache(Duration = 300)]
+    [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Client)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
