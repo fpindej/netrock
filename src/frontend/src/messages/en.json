@@ -458,5 +458,7 @@
 	"audit_action_adminCreateRole": "Role created",
 	"audit_action_adminUpdateRole": "Role updated",
 	"audit_action_adminDeleteRole": "Role deleted",
-	"audit_action_adminSetRolePermissions": "Permissions updated"
+	"audit_action_adminSetRolePermissions": "Permissions updated",
+	"audit_action_avatarUpload": "Avatar uploaded",
+	"audit_action_avatarRemove": "Avatar removed"
 }

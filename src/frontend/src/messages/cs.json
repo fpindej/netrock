@@ -458,5 +458,7 @@
 	"audit_action_adminCreateRole": "Role vytvořena",
 	"audit_action_adminUpdateRole": "Role aktualizována",
 	"audit_action_adminDeleteRole": "Role smazána",
-	"audit_action_adminSetRolePermissions": "Oprávnění aktualizována"
+	"audit_action_adminSetRolePermissions": "Oprávnění aktualizována",
+	"audit_action_avatarUpload": "Avatar nahrán",
+	"audit_action_avatarRemove": "Avatar odebrán"
 }

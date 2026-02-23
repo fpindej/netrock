@@ -15,10 +15,8 @@
 
 	let { user }: Props = $props();
 
-	// Avatar URL with cache-busting (re-derives when user object reference changes after invalidateAll)
-	const avatarUrl = $derived(
-		user?.hasAvatar && user?.id ? `/api/users/${user.id}/avatar?v=${Date.now()}` : null
-	);
+	// Avatar URL — stable until user object changes via invalidateAll
+	const avatarUrl = $derived(user?.hasAvatar && user?.id ? `/api/users/${user.id}/avatar` : null);
 
 	function getInitials(name: string) {
 		return name

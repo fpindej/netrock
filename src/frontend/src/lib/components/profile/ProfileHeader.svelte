@@ -11,6 +11,7 @@
 	let { user }: Props = $props();
 
 	let avatarDialogOpen = $state(false);
+	let avatarVersion = $state(Date.now());
 
 	// Computed display name
 	const displayName = $derived.by(() => {
@@ -22,10 +23,17 @@
 		return user?.username ?? m.common_user();
 	});
 
-	// Avatar URL with cache-busting (re-derives when user object reference changes after invalidateAll)
+	// Avatar URL with cache-busting (version bumps after upload/remove via invalidateAll)
 	const avatarUrl = $derived(
-		user?.hasAvatar && user?.id ? `/api/users/${user.id}/avatar?v=${Date.now()}` : null
+		user?.hasAvatar && user?.id ? `/api/users/${user.id}/avatar?v=${avatarVersion}` : null
 	);
+
+	// Bump version when the dialog closes (avatar may have changed)
+	$effect(() => {
+		if (!avatarDialogOpen) {
+			avatarVersion = Date.now();
+		}
+	});
 
 	// Computed initials for avatar
 	const initials = $derived.by(() => {

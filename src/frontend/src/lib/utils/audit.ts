@@ -50,6 +50,10 @@ export function getAuditActionLabel(action: string | undefined): string {
 			return m.audit_action_adminDeleteRole();
 		case 'AdminSetRolePermissions':
 			return m.audit_action_adminSetRolePermissions();
+		case 'AvatarUpload':
+			return m.audit_action_avatarUpload();
+		case 'AvatarRemove':
+			return m.audit_action_avatarRemove();
 		default:
 			return action ?? '-';
 	}
@@ -78,6 +82,8 @@ export function getAuditActionVariant(action: string | undefined): TimelineVaria
 		case 'AdminCreateRole':
 		case 'AdminUpdateRole':
 		case 'AdminSetRolePermissions':
+		case 'AvatarUpload':
+		case 'AvatarRemove':
 			return 'warning';
 		default:
 			return 'default';

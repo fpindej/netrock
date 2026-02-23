@@ -1,5 +1,6 @@
 using Amazon.S3;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
 using MyProject.Infrastructure.Caching.Options;
 using MyProject.Infrastructure.Features.FileStorage.Options;
 
@@ -116,16 +117,18 @@ internal static class HealthCheckExtensions
     }
 
     /// <summary>
-    /// Health check that verifies connectivity to S3-compatible storage by listing buckets.
+    /// Health check that verifies connectivity to S3-compatible storage.
+    /// Uses HeadBucket which only requires <c>s3:HeadBucket</c> permission on the configured bucket,
+    /// unlike ListBuckets which requires the global <c>s3:ListAllMyBuckets</c> permission.
     /// </summary>
-    private sealed class S3HealthCheck(IAmazonS3 s3Client) : IHealthCheck
+    private sealed class S3HealthCheck(IAmazonS3 s3Client, IOptions<FileStorageOptions> options) : IHealthCheck
     {
         public async Task<HealthCheckResult> CheckHealthAsync(
             HealthCheckContext context, CancellationToken cancellationToken = default)
         {
             try
             {
-                await s3Client.ListBucketsAsync(cancellationToken);
+                await s3Client.EnsureBucketExistsAsync(options.Value.BucketName);
                 return HealthCheckResult.Healthy();
             }
             catch (Exception ex)

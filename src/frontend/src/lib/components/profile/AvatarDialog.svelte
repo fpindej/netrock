@@ -46,6 +46,23 @@
 		};
 	});
 
+	async function extractErrorMessage(response: Response): Promise<string> {
+		try {
+			const contentType = response.headers.get('content-type') ?? '';
+			if (
+				contentType.includes('application/json') ||
+				contentType.includes('application/problem+json')
+			) {
+				const data = await response.json();
+				return data?.detail || data?.title || '';
+			}
+		} catch {
+			// Non-parseable response — fall through
+		}
+		if (response.status === 413) return m.profile_avatar_fileTooLarge();
+		return '';
+	}
+
 	function validateFile(file: File): string | null {
 		if (file.size > MAX_SIZE) return m.profile_avatar_fileTooLarge();
 		if (!ALLOWED_TYPES.includes(file.type)) return m.profile_avatar_unsupportedFormat();
@@ -103,12 +120,14 @@
 			});
 
 			if (response.ok) {
+				selectedFile = null;
+				previewUrl = null;
+				if (fileInput) fileInput.value = '';
 				toast.success(m.profile_avatar_updateSuccess());
 				open = false;
 				await invalidateAll();
 			} else {
-				const errorData = await response.json().catch(() => null);
-				const msg = errorData?.detail || '';
+				const msg = await extractErrorMessage(response);
 				toast.error(m.profile_avatar_updateError(), msg ? { description: msg } : undefined);
 			}
 		} catch {
@@ -131,8 +150,7 @@
 				open = false;
 				await invalidateAll();
 			} else {
-				const errorData = await response.json().catch(() => null);
-				const msg = errorData?.detail || '';
+				const msg = await extractErrorMessage(response);
 				toast.error(m.profile_avatar_removeError(), msg ? { description: msg } : undefined);
 			}
 		} catch {

@@ -428,6 +428,7 @@ public class UserServiceTests : IDisposable
         Assert.False(user.HasAvatar);
         await _fileStorageService.Received(1).DeleteAsync(
             $"avatars/{_userId}.webp", Arg.Any<CancellationToken>());
+        await _userManager.Received(1).UpdateAsync(user);
         await _cacheService.Received().RemoveAsync(CacheKeys.User(_userId));
         await _auditService.Received(1).LogAsync(
             AuditActions.AvatarRemove, userId: _userId,
@@ -461,6 +462,20 @@ public class UserServiceTests : IDisposable
 
         Assert.True(result.IsSuccess);
         Assert.False(user.HasAvatar);
+        await _userManager.Received(1).UpdateAsync(user);
+    }
+
+    [Fact]
+    public async Task RemoveAvatar_UserNotFound_ReturnsFailure()
+    {
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns((ApplicationUser?)null);
+
+        var result = await _sut.RemoveAvatarAsync(CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        await _fileStorageService.DidNotReceive()
+            .DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -504,6 +519,19 @@ public class UserServiceTests : IDisposable
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorType.NotFound, result.ErrorType);
+    }
+
+    [Fact]
+    public async Task GetAvatar_StorageFailure_ReturnsFailure()
+    {
+        var user = new ApplicationUser { Id = _userId, UserName = "test@example.com", HasAvatar = true };
+        _userManager.FindByIdAsync(_userId.ToString()).Returns(user);
+        _fileStorageService.DownloadAsync($"avatars/{_userId}.webp", Arg.Any<CancellationToken>())
+            .Returns(Result<FileDownloadOutput>.Failure("Storage error"));
+
+        var result = await _sut.GetAvatarAsync(_userId, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
     }
 
     #endregion
