@@ -34,7 +34,8 @@ public interface IAdminService
 
     /// <summary>
     /// Assigns a role to a user. The caller must have a strictly higher role rank than the target user,
-    /// and can only assign roles below their own rank.
+    /// and can only assign roles below their own rank. For custom roles (rank 0), the caller must also
+    /// hold every permission the target role grants — preventing indirect privilege escalation.
     /// </summary>
     /// <param name="callerUserId">The ID of the admin performing the action.</param>
     /// <param name="userId">The target user ID.</param>

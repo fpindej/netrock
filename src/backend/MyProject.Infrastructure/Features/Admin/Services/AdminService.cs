@@ -122,6 +122,15 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.RoleAssignAboveRank);
         }
 
+        if (AppRoles.GetRoleRank(input.Role) == 0)
+        {
+            var escalationResult = await EnforceRolePermissionEscalationAsync(input.Role, callerRoles);
+            if (!escalationResult.IsSuccess)
+            {
+                return escalationResult;
+            }
+        }
+
         if (await userManager.IsInRoleAsync(user, input.Role))
         {
             return Result.Failure($"User already has the '{input.Role}' role.");
@@ -635,6 +644,56 @@ internal class AdminService(
                 return Result.Failure(
                     $"Cannot delete this user — they are the last user with the '{role}' role.");
             }
+        }
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Verifies that the caller holds every permission granted by the target custom role.
+    /// SuperAdmin callers are exempt (implicit all permissions).
+    /// Roles with no permissions are allowed unconditionally.
+    /// </summary>
+    private async Task<Result> EnforceRolePermissionEscalationAsync(string roleName, IList<string> callerRoles)
+    {
+        var targetRole = await roleManager.FindByNameAsync(roleName);
+        if (targetRole is null)
+        {
+            return Result.Success();
+        }
+
+        var targetClaims = await roleManager.GetClaimsAsync(targetRole);
+        var targetPermissions = targetClaims
+            .Where(c => c.Type == AppPermissions.ClaimType)
+            .Select(c => c.Value)
+            .ToList();
+
+        if (targetPermissions.Count == 0)
+        {
+            return Result.Success();
+        }
+
+        if (callerRoles.Contains(AppRoles.SuperAdmin))
+        {
+            return Result.Success();
+        }
+
+        var callerPermissions = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var callerRoleName in callerRoles)
+        {
+            var callerRole = await roleManager.FindByNameAsync(callerRoleName);
+            if (callerRole is null) continue;
+
+            var claims = await roleManager.GetClaimsAsync(callerRole);
+            foreach (var claim in claims.Where(c => c.Type == AppPermissions.ClaimType))
+            {
+                callerPermissions.Add(claim.Value);
+            }
+        }
+
+        if (!targetPermissions.All(callerPermissions.Contains))
+        {
+            return Result.Failure(ErrorMessages.Admin.RoleAssignEscalation, ErrorType.Forbidden);
         }
 
         return Result.Success();

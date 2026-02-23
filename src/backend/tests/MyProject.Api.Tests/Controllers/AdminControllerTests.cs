@@ -335,6 +335,23 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
+    public async Task AssignRole_CustomRoleEscalation_Returns403()
+    {
+        var userId = Guid.NewGuid();
+        _factory.AdminService.AssignRoleAsync(
+                Arg.Any<Guid>(), userId, Arg.Any<AssignRoleInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.Admin.RoleAssignEscalation, ErrorType.Forbidden));
+
+        var response = await _client.SendAsync(
+            Post($"/api/v1/admin/users/{userId}/roles",
+                TestAuth.WithPermissions(AppPermissions.Users.AssignRoles),
+                JsonContent.Create(new { Role = "PrivilegedRole" })));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 403, ErrorMessages.Admin.RoleAssignEscalation);
+    }
+
+    [Fact]
     public async Task AssignRole_EmailNotVerified_Returns400()
     {
         var userId = Guid.NewGuid();
