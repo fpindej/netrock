@@ -7,7 +7,7 @@
 #  Containers are hardened: read-only root, no new privileges, all caps dropped.
 #
 #  1. Copy and fill in the env template:
-#     cp deploy/envs/production.env.example deploy/envs/production.env
+#     cp -r deploy/envs/production-example deploy/envs/production
 #
 #  2. Start the stack:
 #     ./deploy/up.sh production up -d
@@ -36,7 +36,9 @@ services:
   api:
     image: ${API_IMAGE}
     # Paths are relative to --project-directory (repo root), set by up.sh
-    env_file: deploy/envs/production.env
+    env_file:
+      - deploy/envs/production/api.env
+      - deploy/envs/production/seed.env
     environment:
       ASPNETCORE_ENVIRONMENT: Production
     ports:

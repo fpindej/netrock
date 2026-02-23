@@ -18,7 +18,9 @@ services:
       dockerfile: MyProject.WebApi/Dockerfile
       args:
         STRIP_DEV_CONFIG: "false"
-    env_file: deploy/envs/local.env
+    env_file:
+      - deploy/envs/local/api.env
+      - deploy/envs/local/seed.env
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       Serilog__WriteTo__0__Name: Seq

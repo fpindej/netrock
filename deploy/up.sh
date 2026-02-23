@@ -49,7 +49,8 @@ shift
 # Resolve files
 # ─────────────────────────────────────────────────────────────────────────────
 OVERLAY="$SCRIPT_DIR/docker-compose.${ENV_NAME}.yml"
-ENV_FILE="$SCRIPT_DIR/envs/${ENV_NAME}.env"
+ENV_DIR="$SCRIPT_DIR/envs/${ENV_NAME}"
+COMPOSE_ENV="$ENV_DIR/compose.env"
 
 if [[ ! -f "$OVERLAY" ]]; then
     echo "Error: Unknown environment '$ENV_NAME'"
@@ -62,16 +63,21 @@ if [[ ! -f "$OVERLAY" ]]; then
     exit 1
 fi
 
-if [[ ! -f "$ENV_FILE" ]]; then
-    echo "Error: Environment file not found: $ENV_FILE"
+if [[ ! -d "$ENV_DIR" ]]; then
+    echo "Error: Environment directory not found: $ENV_DIR"
     echo ""
-    EXAMPLE="${SCRIPT_DIR}/envs/${ENV_NAME}.env.example"
-    if [[ -f "$EXAMPLE" ]]; then
+    EXAMPLE="${SCRIPT_DIR}/envs/${ENV_NAME}-example"
+    if [[ -d "$EXAMPLE" ]]; then
         echo "Create it from the example:"
-        echo "  cp $EXAMPLE $ENV_FILE"
+        echo "  cp -r $EXAMPLE $ENV_DIR"
     else
-        echo "Ensure the environment file exists at: $ENV_FILE"
+        echo "Ensure the environment directory exists at: $ENV_DIR"
     fi
+    exit 1
+fi
+
+if [[ ! -f "$COMPOSE_ENV" ]]; then
+    echo "Error: compose.env not found in $ENV_DIR"
     exit 1
 fi
 
@@ -82,5 +88,5 @@ exec docker compose \
     --project-directory "$PROJECT_ROOT" \
     -f "$SCRIPT_DIR/docker-compose.yml" \
     -f "$OVERLAY" \
-    --env-file "$ENV_FILE" \
+    --env-file "$COMPOSE_ENV" \
     "$@"
