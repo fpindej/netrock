@@ -253,98 +253,90 @@ public class CacheServiceTests : IDisposable
     [Fact]
     public async Task GetAsync_WhenCircuitOpen_ReturnsDefaultWithoutHittingCache()
     {
-        var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
-        using var sp = fixture.ServiceProvider;
-        var (sut, distributedCache, _) = (fixture.Sut, fixture.Cache, fixture.Logger);
+        using var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
 
-        distributedCache
+        fixture.Cache
             .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns<byte[]?>(_ => throw new InvalidOperationException("Redis down"));
 
         // Trip the circuit breaker (2 failures to meet threshold)
-        await sut.GetAsync<string>("key1");
-        await sut.GetAsync<string>("key2");
+        await fixture.Sut.GetAsync<string>("key1");
+        await fixture.Sut.GetAsync<string>("key2");
 
         // Clear received calls so we can assert the next call doesn't hit the cache
-        distributedCache.ClearReceivedCalls();
+        fixture.Cache.ClearReceivedCalls();
 
         // Circuit is now open — this should return default without hitting IDistributedCache
-        var result = await sut.GetAsync<string>("key3");
+        var result = await fixture.Sut.GetAsync<string>("key3");
 
         Assert.Null(result);
-        await distributedCache.DidNotReceive().GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await fixture.Cache.DidNotReceive().GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task SetAsync_WhenCircuitOpen_SkipsWithoutHittingCache()
     {
-        var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
-        using var sp = fixture.ServiceProvider;
-        var (sut, distributedCache, _) = (fixture.Sut, fixture.Cache, fixture.Logger);
+        using var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
 
-        distributedCache
+        fixture.Cache
             .SetAsync(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>(), Arg.Any<CancellationToken>())
             .Returns(_ => throw new InvalidOperationException("Redis down"));
 
         // Trip the circuit
-        await sut.SetAsync("key1", "value");
-        await sut.SetAsync("key2", "value");
+        await fixture.Sut.SetAsync("key1", "value");
+        await fixture.Sut.SetAsync("key2", "value");
 
-        distributedCache.ClearReceivedCalls();
+        fixture.Cache.ClearReceivedCalls();
 
         // Circuit is now open
-        var exception = await Record.ExceptionAsync(() => sut.SetAsync("key3", "value"));
+        var exception = await Record.ExceptionAsync(() => fixture.Sut.SetAsync("key3", "value"));
 
         Assert.Null(exception);
-        await distributedCache.DidNotReceive().SetAsync(
+        await fixture.Cache.DidNotReceive().SetAsync(
             Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task RemoveAsync_WhenCircuitOpen_SkipsWithoutHittingCache()
     {
-        var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
-        using var sp = fixture.ServiceProvider;
-        var (sut, distributedCache, _) = (fixture.Sut, fixture.Cache, fixture.Logger);
+        using var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
 
-        distributedCache
+        fixture.Cache
             .RemoveAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(_ => throw new InvalidOperationException("Redis down"));
 
         // Trip the circuit
-        await sut.RemoveAsync("key1");
-        await sut.RemoveAsync("key2");
+        await fixture.Sut.RemoveAsync("key1");
+        await fixture.Sut.RemoveAsync("key2");
 
-        distributedCache.ClearReceivedCalls();
+        fixture.Cache.ClearReceivedCalls();
 
         // Circuit is now open
-        var exception = await Record.ExceptionAsync(() => sut.RemoveAsync("key3"));
+        var exception = await Record.ExceptionAsync(() => fixture.Sut.RemoveAsync("key3"));
 
         Assert.Null(exception);
-        await distributedCache.DidNotReceive().RemoveAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await fixture.Cache.DidNotReceive().RemoveAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetAsync_WhenCircuitOpen_DoesNotLogWarning()
     {
-        var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
-        using var sp = fixture.ServiceProvider;
-        var (sut, distributedCache, logger) = (fixture.Sut, fixture.Cache, fixture.Logger);
+        using var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
 
-        distributedCache
+        fixture.Cache
             .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns<byte[]?>(_ => throw new InvalidOperationException("Redis down"));
 
         // Trip the circuit
-        await sut.GetAsync<string>("key1");
-        await sut.GetAsync<string>("key2");
+        await fixture.Sut.GetAsync<string>("key1");
+        await fixture.Sut.GetAsync<string>("key2");
 
-        logger.ClearReceivedCalls();
+        fixture.Logger.ClearReceivedCalls();
 
         // Circuit is open — should not log per-operation warning
-        await sut.GetAsync<string>("key3");
+        await fixture.Sut.GetAsync<string>("key3");
 
-        logger.DidNotReceive().Log(
+        fixture.Logger.DidNotReceive().Log(
             LogLevel.Warning,
             Arg.Any<EventId>(),
             Arg.Any<object>(),
@@ -357,34 +349,57 @@ public class CacheServiceTests : IDisposable
     {
         var timeProvider = new FakeTimeProvider();
         var breakDuration = TimeSpan.FromSeconds(5);
-        var fixture = CreateCircuitBreakerSut(
+        using var fixture = CreateCircuitBreakerSut(
             failureThreshold: 2,
             breakDuration: breakDuration,
             timeProvider: timeProvider);
-        using var sp = fixture.ServiceProvider;
-        var (sut, distributedCache, _) = (fixture.Sut, fixture.Cache, fixture.Logger);
 
-        distributedCache
+        fixture.Cache
             .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns<byte[]?>(_ => throw new InvalidOperationException("Redis down"));
 
         // Trip the circuit
-        await sut.GetAsync<string>("key1");
-        await sut.GetAsync<string>("key2");
+        await fixture.Sut.GetAsync<string>("key1");
+        await fixture.Sut.GetAsync<string>("key2");
 
         // Advance time past break duration to allow half-open probe
         timeProvider.Advance(breakDuration + TimeSpan.FromMilliseconds(100));
 
         // Redis is back — return a real value for the probe
         var json = System.Text.Json.JsonSerializer.Serialize("recovered-value");
-        distributedCache
+        fixture.Cache
             .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(System.Text.Encoding.UTF8.GetBytes(json));
 
         // Half-open probe succeeds → circuit closes → normal operation
-        var result = await sut.GetAsync<string>("probe-key");
+        var result = await fixture.Sut.GetAsync<string>("probe-key");
 
         Assert.Equal("recovered-value", result);
+    }
+
+    [Fact]
+    public async Task GetOrSetAsync_WhenCircuitOpen_FallsThroughToFactory()
+    {
+        using var fixture = CreateCircuitBreakerSut(failureThreshold: 2);
+
+        // Both Get and Set will fail against Redis
+        fixture.Cache
+            .GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns<byte[]?>(_ => throw new InvalidOperationException("Redis down"));
+        fixture.Cache
+            .SetAsync(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>(), Arg.Any<CancellationToken>())
+            .Returns(_ => throw new InvalidOperationException("Redis down"));
+
+        // Trip the circuit via GetAsync failures
+        await fixture.Sut.GetAsync<string>("trip1");
+        await fixture.Sut.GetAsync<string>("trip2");
+
+        // Circuit is open — GetOrSetAsync should fall through to factory
+        var result = await fixture.Sut.GetOrSetAsync(
+            "key",
+            _ => Task.FromResult("factory-value"));
+
+        Assert.Equal("factory-value", result);
     }
 
     #endregion
@@ -399,7 +414,7 @@ public class CacheServiceTests : IDisposable
         return (sp, sp.GetRequiredService<ResiliencePipelineProvider<string>>());
     }
 
-    private static (CacheService Sut, IDistributedCache Cache, ILogger<CacheService> Logger, ServiceProvider ServiceProvider) CreateCircuitBreakerSut(
+    private static CircuitBreakerFixture CreateCircuitBreakerSut(
         int failureThreshold = 2,
         TimeSpan? breakDuration = null,
         TimeSpan? samplingDuration = null,
@@ -435,7 +450,19 @@ public class CacheServiceTests : IDisposable
         var provider = sp.GetRequiredService<ResiliencePipelineProvider<string>>();
 
         var sut = new CacheService(distributedCache, options, provider, logger);
-        return (sut, distributedCache, logger, sp);
+        return new CircuitBreakerFixture(sut, distributedCache, logger, sp);
+    }
+
+    /// <summary>
+    /// Encapsulates circuit breaker test dependencies and disposes the service provider.
+    /// </summary>
+    private sealed record CircuitBreakerFixture(
+        CacheService Sut,
+        IDistributedCache Cache,
+        ILogger<CacheService> Logger,
+        ServiceProvider ServiceProvider) : IDisposable
+    {
+        public void Dispose() => ServiceProvider.Dispose();
     }
 
     #endregion

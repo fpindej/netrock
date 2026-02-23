@@ -67,7 +67,7 @@ public static class ServiceCollectionExtensions
         services.AddResiliencePipeline(CachePipelineKey, (builder, context) =>
         {
             var loggerFactory = context.ServiceProvider.GetRequiredService<ILoggerFactory>();
-            var logger = loggerFactory.CreateLogger("MyProject.Infrastructure.Caching.CircuitBreaker");
+            var logger = loggerFactory.CreateLogger(typeof(CacheService).FullName + ".CircuitBreaker");
 
             builder.AddCircuitBreaker(new CircuitBreakerStrategyOptions
             {
