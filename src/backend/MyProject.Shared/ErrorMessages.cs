@@ -115,6 +115,17 @@ public static class ErrorMessages
     }
 
     /// <summary>
+    /// Avatar upload and processing error messages.
+    /// </summary>
+    public static class Avatar
+    {
+        public const string FileTooLarge = "The file exceeds the maximum allowed size of 5 MB.";
+        public const string UnsupportedFormat = "Unsupported image format. Allowed formats: JPEG, PNG, WebP, GIF.";
+        public const string ProcessingFailed = "Failed to process the avatar image.";
+        public const string NotFound = "Avatar not found.";
+    }
+
+    /// <summary>
     /// Generic entity operation error messages (repository layer).
     /// </summary>
     public static class Entity
