@@ -230,7 +230,7 @@ const response = await fetch('/api/endpoint', { method: 'PUT', body: formData })
 
 ### CSP (svelte.config.js)
 
-Nonce-based `script-src`. `style-src: unsafe-inline` required for Svelte transitions. `img-src: self https: data:` for Vite-inlined assets. Cloudflare Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com`.
+Nonce-based `script-src`. `style-src: unsafe-inline` required for Svelte transitions. `img-src: self https: data: blob:` — `data:` for Vite-inlined assets, `blob:` for `URL.createObjectURL()` previews (avatar upload). Cloudflare Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com`.
 
 ### CSRF
 

@@ -55,6 +55,7 @@ internal static class HealthCheckExtensions
         {
             healthChecks.AddCheck<S3HealthCheck>(
                 "S3",
+                failureStatus: HealthStatus.Degraded,
                 timeout: TimeSpan.FromSeconds(5),
                 tags: [ReadyTag]);
         }
