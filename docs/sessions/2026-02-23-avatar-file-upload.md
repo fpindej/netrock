@@ -114,6 +114,23 @@ sequenceDiagram
     A-->>U: 200 OK (UserResponse)
 ```
 
+## Post-Review Fixes
+
+Code review identified and fixed:
+
+| Issue | Severity | Fix |
+|-------|----------|-----|
+| `UserService` not `sealed` | P0 | Added `sealed` keyword |
+| `_bucketEnsured` thread-safety race | P0 | `SemaphoreSlim` double-check lock pattern |
+| Null-forgiving `!` in FileStorage DI | P0 | Replaced with `?? throw InvalidOperationException` |
+| `GetAvatar_NotFound` test asserted 400 | P0 | Fixed mock to pass `ErrorType.NotFound`, assert 404 |
+| `UploadAsync`/`DeleteAsync` unhandled S3 exceptions | P1 | Wrapped in try-catch, return `Result.Failure` |
+| `PutObjectRequest.InputStream` stream leak | P1 | Added `AutoCloseStream = true` |
+| Resized `SKBitmap` not disposed after encoding | P1 | Dispose in finally when different from source |
+| Avatar deletion error swallowed in `DeleteAccountAsync` | P1 | Log warning (best-effort, don't block deletion) |
+| Missing `FileStorage__Region` in docker-compose | P2 | Added env passthrough with empty default |
+| Production env example unclear for external S3 | P2 | Clarified credential docs |
+
 ## Follow-Up Items
 
 - [ ] Regenerate `v1.d.ts` from running API server (manual edits applied as interim)
