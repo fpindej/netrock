@@ -131,9 +131,16 @@ Code review identified and fixed:
 | Missing `FileStorage__Region` in docker-compose | P2 | Added env passthrough with empty default |
 | Production env example unclear for external S3 | P2 | Clarified credential docs |
 
+## Additional Fixes
+
+| Commit | Change |
+|--------|--------|
+| `fix(openapi)` | Removed `<param name="cancellationToken">` XML docs from UsersController and AdminController — they leaked "A cancellation token" into the OpenAPI spec request body descriptions |
+| `chore(types)` | Regenerated `v1.d.ts` from live API (replaces hand-edited stubs with proper generated types) |
+
 ## Follow-Up Items
 
-- [ ] Regenerate `v1.d.ts` from running API server (manual edits applied as interim)
+- [ ] Restore init scripts (`init.sh`, `init.ps1`) — accidentally deleted in c2761f1 (stacked PR)
 - [ ] Add avatar display in admin user detail page
 - [ ] Consider pre-signed URL approach for CDN/edge caching at scale
 - [ ] Add bucket lifecycle policies for orphaned files cleanup
