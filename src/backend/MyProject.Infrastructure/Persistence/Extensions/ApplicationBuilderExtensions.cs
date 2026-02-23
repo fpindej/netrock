@@ -134,8 +134,7 @@ public static class ApplicationBuilderExtensions
             // Resolve the exact role name (case-insensitive match → canonical casing).
             var role = AppRoles.All.First(r => string.Equals(r, entry.Role, StringComparison.OrdinalIgnoreCase));
 
-            await SeedUserAsync(userManager, entry.Email, entry.Password, role);
-            Log.Information("Seed: ensured user {Email} with role {Role}", entry.Email, role);
+            await SeedUserAsync(userManager, entry.Email, entry.Password, role, i);
         }
     }
 
@@ -143,15 +142,26 @@ public static class ApplicationBuilderExtensions
         UserManager<ApplicationUser> userManager,
         string email,
         string password,
-        string role)
+        string role,
+        int index)
     {
         if (await userManager.FindByNameAsync(email) is not null)
         {
+            Log.Debug("Seed:Users[{Index}] {Email} already exists — skipping", index, email);
             return;
         }
 
         var user = new ApplicationUser { UserName = email, Email = email, EmailConfirmed = true };
-        await userManager.CreateAsync(user, password);
+        var result = await userManager.CreateAsync(user, password);
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            Log.Error("Seed:Users[{Index}] failed to create {Email}: {Errors}", index, email, errors);
+            return;
+        }
+
         await userManager.AddToRoleAsync(user, role);
+        Log.Information("Seed: created user {Email} with role {Role}", email, role);
     }
 }

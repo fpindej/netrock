@@ -14,6 +14,7 @@ Replaced the hardcoded `SeedUsers.cs` constants and `IsDevelopment()` gate with 
 | `feat(seed): replace hardcoded dev users with configuration-driven seeding` | New `SeedOptions` + `SeedUserEntry` classes, rewrote `ApplicationBuilderExtensions` to read `Seed:Users` config section, deleted `SeedUsers.cs` |
 | `refactor(deploy): restructure env files into concern-scoped folders` | Split flat env files into `deploy/envs/{env}/{compose,api,seed}.env`, updated `up.sh`/`up.ps1`, compose overlays, `.gitignore` |
 | `docs: update env file references for folder-based structure` | Updated AGENTS.md, FILEMAP.md, SKILLS.md, README.md, before-you-ship.md, development.md |
+| `fix(seed): check CreateAsync result and reduce log noise` | Check `IdentityResult` from `CreateAsync`, log error on failure, differentiate created vs already-exists log levels |
 
 | File | Change | Reason |
 |------|--------|--------|
@@ -84,8 +85,11 @@ flowchart TD
     K --> L{Valid entry?<br/>Email + Password + Role}
     L -->|Invalid| M[Log Warning, Skip]
     L -->|Valid| N{User exists?}
-    N -->|Yes| O[Skip — idempotent]
-    N -->|No| P[Create User + Assign Role]
+    N -->|Yes| O[Log Debug, Skip]
+    N -->|No| P[CreateAsync]
+    P --> Q{Succeeded?}
+    Q -->|No| R[Log Error, Skip]
+    Q -->|Yes| S[Assign Role + Log Info]
     M --> K
     O --> K
     P --> K
