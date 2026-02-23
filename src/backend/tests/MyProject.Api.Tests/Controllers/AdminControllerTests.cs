@@ -24,17 +24,33 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
 
     public void Dispose() => _client.Dispose();
 
-    private HttpRequestMessage Get(string url, string auth) =>
-        new(HttpMethod.Get, url) { Headers = { { "Authorization", auth } } };
+    private static HttpRequestMessage Get(string url, string auth)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.TryAddWithoutValidation("Authorization", auth);
+        return request;
+    }
 
-    private HttpRequestMessage Post(string url, string auth, HttpContent? content = null) =>
-        new(HttpMethod.Post, url) { Headers = { { "Authorization", auth } }, Content = content };
+    private static HttpRequestMessage Post(string url, string auth, HttpContent? content = null)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+        request.Headers.TryAddWithoutValidation("Authorization", auth);
+        return request;
+    }
 
-    private HttpRequestMessage Put(string url, string auth, HttpContent? content = null) =>
-        new(HttpMethod.Put, url) { Headers = { { "Authorization", auth } }, Content = content };
+    private static HttpRequestMessage Put(string url, string auth, HttpContent? content = null)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Put, url) { Content = content };
+        request.Headers.TryAddWithoutValidation("Authorization", auth);
+        return request;
+    }
 
-    private HttpRequestMessage Delete(string url, string auth) =>
-        new(HttpMethod.Delete, url) { Headers = { { "Authorization", auth } } };
+    private static HttpRequestMessage Delete(string url, string auth)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Delete, url);
+        request.Headers.TryAddWithoutValidation("Authorization", auth);
+        return request;
+    }
 
     private static async Task AssertProblemDetailsAsync(
         HttpResponseMessage response, int expectedStatus, string? expectedDetail = null)
@@ -118,7 +134,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
                 ["User"], true, true, null, 0, false)));
 
         var response = await _client.SendAsync(
-            Get($"/api/v1/admin/users/{userId}", TestAuth.WithPermissions(AppPermissions.Users.View)));
+            Get($"/api/v1/admin/users/{userId}", TestAuth.WithPermissions(AppPermissions.Users.View, AppPermissions.Users.ViewPii)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<AdminUserResponse>();

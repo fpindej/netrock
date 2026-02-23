@@ -105,4 +105,40 @@ internal static class AdminMapper
         Category = output.Category,
         Permissions = output.Permissions
     };
+
+    /// <summary>
+    /// Returns a copy of the response with email, username, and phone number masked.
+    /// </summary>
+    public static AdminUserResponse WithMaskedPii(this AdminUserResponse response) => new()
+    {
+        Id = response.Id,
+        Username = PiiMasker.MaskEmail(response.Username),
+        Email = PiiMasker.MaskEmail(response.Email),
+        FirstName = response.FirstName,
+        LastName = response.LastName,
+        PhoneNumber = PiiMasker.MaskPhone(response.PhoneNumber),
+        Bio = response.Bio,
+        HasAvatar = response.HasAvatar,
+        Roles = response.Roles,
+        EmailConfirmed = response.EmailConfirmed,
+        LockoutEnabled = response.LockoutEnabled,
+        LockoutEnd = response.LockoutEnd,
+        AccessFailedCount = response.AccessFailedCount,
+        IsLockedOut = response.IsLockedOut
+    };
+
+    /// <summary>
+    /// Returns a copy of the list response with PII masked for all users except the caller.
+    /// </summary>
+    /// <param name="response">The paginated user list.</param>
+    /// <param name="callerUserId">The current user's ID — their own entry is never masked.</param>
+    public static ListUsersResponse WithMaskedPii(this ListUsersResponse response, Guid callerUserId) => new()
+    {
+        Items = response.Items
+            .Select(u => u.Id == callerUserId ? u : u.WithMaskedPii())
+            .ToList(),
+        TotalCount = response.TotalCount,
+        PageNumber = response.PageNumber,
+        PageSize = response.PageSize
+    };
 }

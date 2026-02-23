@@ -8,6 +8,7 @@ import type { User } from '$lib/types';
 export const Permissions = {
 	Users: {
 		View: 'users.view',
+		ViewPii: 'users.view_pii',
 		Manage: 'users.manage',
 		AssignRoles: 'users.assign_roles'
 	},

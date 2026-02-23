@@ -48,7 +48,14 @@ public class AdminController(IAdminService adminService, IRoleManagementService 
         var result = await adminService.GetUsersAsync(
             request.PageNumber, request.PageSize, request.Search, cancellationToken);
 
-        return Ok(result.ToResponse());
+        var response = result.ToResponse();
+
+        if (!userContext.HasPermission(AppPermissions.Users.ViewPii))
+        {
+            response = response.WithMaskedPii(userContext.AuthenticatedUserId);
+        }
+
+        return Ok(response);
     }
 
     /// <summary>
@@ -75,7 +82,14 @@ public class AdminController(IAdminService adminService, IRoleManagementService 
             return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
-        return Ok(result.Value.ToResponse());
+        var response = result.Value.ToResponse();
+
+        if (id != userContext.AuthenticatedUserId && !userContext.HasPermission(AppPermissions.Users.ViewPii))
+        {
+            response = response.WithMaskedPii();
+        }
+
+        return Ok(response);
     }
 
     /// <summary>
