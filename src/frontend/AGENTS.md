@@ -97,7 +97,7 @@ if (response.ok) {
 }
 ```
 
-**Every rate-limited button must show countdown** during cooldown:
+**Rate-limited buttons should show countdown** during cooldown to give users clear feedback:
 
 ```svelte
 <Button disabled={isLoading || cooldown.active}>
@@ -111,7 +111,7 @@ if (response.ok) {
 
 ### Props
 
-Always `interface Props` + destructure from `$props()`:
+Use `interface Props` + destructure from `$props()` — this separates the type definition from the runtime call and makes props easier to document:
 
 ```svelte
 <script lang="ts">
@@ -140,7 +140,7 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 
 ### Logical Properties Only
 
-| Physical (never use)       | Logical (always use)      |
+| Physical (avoid — breaks RTL) | Logical (preferred)       |
 | -------------------------- | ------------------------- |
 | `ml-*` / `mr-*`            | `ms-*` / `me-*`           |
 | `pl-*` / `pr-*`            | `ps-*` / `pe-*`           |
@@ -157,9 +157,9 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 - `min-w-0` on flex children with text, `shrink-0` on icons/badges
 - **Content grids: `xl:grid-cols-2`** not `lg:` — sidebar takes ~250px
 - **No `max-w-*` on page content** — cards fill their container
-- Scale padding: `p-4 sm:p-6 lg:p-8` — never large flat padding
-- Dialog grids: always `grid-cols-1` base with responsive breakpoint
-- Min font: `text-xs` (12px) — never smaller
+- Scale padding with breakpoints (`p-4 sm:p-6 lg:p-8`) — flat large padding wastes space on mobile
+- Dialog grids: start with `grid-cols-1` base and add responsive breakpoints — dialogs are narrow on mobile
+- Min font: `text-xs` (12px) — going smaller hurts readability, especially on mobile
 - Animations: always `motion-safe:` prefix
 
 ### Theming
@@ -198,7 +198,7 @@ Add to both `en.json` and `cs.json`. Use: `import * as m from '$lib/paraglide/me
 
 ## State
 
-`.svelte.ts` files in `$lib/state/` only. Never mix reactive state with pure utilities.
+`.svelte.ts` files in `$lib/state/` only. Keep reactive state separate from pure utility functions — mixing them causes unexpected reactivity side effects in imports.
 
 | File                  | Exports                                                       |
 | --------------------- | ------------------------------------------------------------- |

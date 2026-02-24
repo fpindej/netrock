@@ -33,8 +33,8 @@ src/backend/
 
 ### Key Rules
 
-- **Nullability**: `string.Empty` for required, `string?` for optional. Never `null!`.
-- **Collections**: Return `IReadOnlyList<T>` by default. Never `List<T>` or `T[]` on public interfaces.
+- **Nullability**: `string.Empty` for required, `string?` for optional. Avoid `null!` — prefer fixing the design so nullability is expressed in the type system.
+- **Collections**: Prefer `IReadOnlyList<T>` on public interfaces — it communicates that callers shouldn't modify the collection. Avoid exposing `List<T>` or `T[]` directly.
 - **Time**: Always `TimeProvider` (injected). Registered as `TimeProvider.System` singleton.
 - **XML docs**: `/// <summary>` on all public and internal API surface.
 - **NuGet**: Versions in `Directory.Packages.props` only, versionless `<PackageReference>` in `.csproj`.
@@ -55,7 +55,7 @@ Rules:
 `AuditEvent` is append-only, does NOT extend `BaseEntity`. No FK on `UserId` (users are hard-deleted). Fire-and-forget logging — failures never break operations.
 
 ```csharp
-// Use AuditActions constants — never raw strings
+// Prefer AuditActions constants over raw strings for consistency and refactorability
 await auditService.LogAsync(AuditActions.AdminAssignRole, userId: callerId,
     targetEntityType: "User", targetEntityId: targetId,
     metadata: JsonSerializer.Serialize(new { role = input.Role }), ct: cancellationToken);
@@ -85,7 +85,7 @@ dotnet ef migrations add {Name} \
 // Success
 return Result<Guid>.Success(entity.Id);
 
-// Static message — always use ErrorMessages constant
+// Static message — prefer ErrorMessages constants for consistency and reuse
 return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
 
 // Runtime values go in server-side logs, never in client responses
@@ -125,11 +125,11 @@ WebApi response DTOs: classes with `init` properties and `[UsedImplicitly]` from
 
 - Authenticated endpoints extend `ApiController` (`[Authorize]`, route `api/v1/[controller]`)
 - Public endpoints use `ControllerBase` directly (route `api/[controller]`)
-- Always: `/// <summary>`, `[ProducesResponseType]` per status code, `CancellationToken` as last param
+- Include `/// <summary>`, `[ProducesResponseType]` per status code, and `CancellationToken` as last param for complete OpenAPI docs and graceful cancellation
 - Never `/// <param name="cancellationToken">` — it leaks into OAS `requestBody.description`
 - File uploads: `[FromForm]` with `IFormFile`, `[Consumes("multipart/form-data")]`, `[RequestSizeLimit(bytes)]`
-- Error responses: always `ProblemFactory.Create()` — never `NotFound()`, `BadRequest()`, `StatusCode(int, object)`, or anonymous objects
-- Success responses: `Ok(response)`, `Created(string.Empty, response)` — never `CreatedAtAction`
+- Error responses: use `ProblemFactory.Create()` to ensure consistent RFC 9457 ProblemDetails format — avoid `NotFound()`, `BadRequest()`, or anonymous objects which produce inconsistent shapes
+- Success responses: `Ok(response)`, `Created(string.Empty, response)` — `CreatedAtAction` is avoided since the Location header isn't used by the SvelteKit frontend
 - `[ProducesResponseType]` without `typeof(...)` on error codes (400, 401, 403, 404, 429) — ASP.NET auto-types as ProblemDetails
 
 ## Validation
@@ -146,7 +146,7 @@ FluentValidation auto-discovered from WebApi assembly. Co-locate validators with
 
 ## Error Messages
 
-- All client-facing messages: `const string` in `ErrorMessages.cs` nested classes — always referenced by constant
+- Client-facing messages are centralized as `const string` in `ErrorMessages.cs` nested classes — reference constants rather than inline strings for consistency and single-source-of-truth
 - Runtime values (role names, user IDs, framework errors): log server-side via `ILogger`, never in `Result.Failure()`
 - Identity errors: log `.Description` server-side, return a static `ErrorMessages` constant to the client
 - Exception: password validation errors (registration, change, reset) are forwarded as-is — they describe password policy, not internals
@@ -174,7 +174,7 @@ Permission changes on a role → invalidate refresh tokens + rotate security sta
 
 `IBaseEntityRepository<T>` provides CRUD with automatic soft-delete filtering (global query filter). Open generic registration covers basic entities.
 
-Custom repositories: extend `IBaseEntityRepository<T>` in Application, implement in Infrastructure with `BaseEntityRepository<T>`. Return materialized objects only — never `IQueryable`.
+Custom repositories: extend `IBaseEntityRepository<T>` in Application, implement in Infrastructure with `BaseEntityRepository<T>`. Avoid exposing `IQueryable` across layer boundaries — it couples consumers to the EF Core query provider and makes testing harder.
 
 Pagination: `Paginate(int pageNumber, int pageSize)` extension on `IQueryable<T>` returns `IQueryable<T>` (applies `Skip`/`Take`). Use in custom repository methods for list endpoints.
 

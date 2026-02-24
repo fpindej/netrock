@@ -804,7 +804,7 @@ Open the page and check at these widths: **320px**, **375px**, **768px**, **1024
 | Touch targets | Interactive elements ≥ 40px (`h-10`), primary actions ≥ 44px (`h-11`) |
 | Font sizes | Minimum `text-xs` (12px) — never `text-[10px]` or smaller |
 | Responsive padding | Scale with breakpoints (`p-4 sm:p-6 lg:p-8`) — no flat large padding |
-| Grid in dialogs | Always `grid-cols-1` base with responsive breakpoint for multi-column |
+| Grid in dialogs | Start with `grid-cols-1` base, add responsive breakpoints for multi-column |
 | Sidebar-aware grids | Use `xl:grid-cols-2` for content grids — not `lg:` (sidebar takes ~250px) |
 | Full-height layouts | `h-dvh` not `h-screen` (accounts for mobile browser chrome) |
 | Flex overflow | `min-w-0` on flex children with text, `truncate`/`overflow-hidden` where needed |
@@ -825,7 +825,7 @@ Open the page and check at these widths: **320px**, **375px**, **768px**, **1024
 
 - Colors: Use CSS variables from `src/frontend/src/styles/themes.css` via Tailwind tokens in `tailwind.css`
 - shadcn components: Check [ui.shadcn.com](https://ui.shadcn.com) before building custom UI
-- Class merging: Always use `cn()` from `$lib/utils` for conditional classes
+- Class merging: Use `cn()` from `$lib/utils` for conditional classes — it handles Tailwind class conflicts correctly
 - Animations: Define in `src/frontend/src/styles/animations.css`, use `motion-safe:` prefix
 
 **5. Adding a theme variable:**
@@ -954,7 +954,7 @@ When modifying existing code (not creating new), follow these rules:
 
 ### Safe Strategies
 
-1. **Additive only** — add new fields/endpoints, never remove or rename existing ones
+1. **Prefer additive changes** — add new fields/endpoints rather than removing or renaming existing ones, which break consumers
 2. **Same-PR migration** — if a breaking change is needed, update all consumers (including frontend types) in the same PR
 3. **V2 endpoint** — for significant endpoint changes, create a new versioned endpoint alongside the old one:
    - New route: `api/v2/{feature}/{action}`
