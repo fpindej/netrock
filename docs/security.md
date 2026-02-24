@@ -38,3 +38,7 @@ NETrock is built **security-first**. Every decision defaults to the most restric
 - **Soft delete** — nothing is ever truly gone, every mutation tracked with who/when audit fields
 - **Audit trail** — automatic `CreatedAt/By`, `UpdatedAt/By`, `DeletedAt/By` on every entity via EF Core interceptor
 - **Dev config stripping** — `appsettings.Development.json` and `appsettings.Testing.json` excluded from production Docker images
+
+## Reporting a Vulnerability
+
+Found a security issue? Please report it privately — see [SECURITY.md](../SECURITY.md) for the full disclosure policy.
