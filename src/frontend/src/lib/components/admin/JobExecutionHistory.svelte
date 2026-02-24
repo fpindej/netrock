@@ -3,65 +3,19 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { History } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
-
-	interface Execution {
-		jobId?: string;
-		status?: string;
-		startedAt?: string | null;
-		duration?: string | null;
-		error?: string | null;
-	}
+	import type { JobExecution } from '$lib/types';
+	import {
+		formatJobDate,
+		formatJobDuration,
+		getJobStatusLabel,
+		getJobStatusVariant
+	} from '$lib/utils/jobs';
 
 	interface Props {
-		executions: Execution[];
+		executions: JobExecution[];
 	}
 
 	let { executions }: Props = $props();
-
-	function formatDate(date: string | null | undefined): string {
-		if (!date) return '-';
-		return new Date(date).toLocaleString();
-	}
-
-	function formatDuration(duration: string | null | undefined): string {
-		if (!duration) return '-';
-		const match = duration.match(/(\d+):(\d+):(\d+)/);
-		if (!match) return duration;
-		const hours = parseInt(match[1]);
-		const minutes = parseInt(match[2]);
-		const seconds = parseInt(match[3]);
-		if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
-		if (minutes > 0) return `${minutes}m ${seconds}s`;
-		return `${seconds}s`;
-	}
-
-	function getStatusVariant(
-		status: string | undefined
-	): 'default' | 'secondary' | 'destructive' | 'outline' {
-		switch (status) {
-			case 'Succeeded':
-				return 'default';
-			case 'Failed':
-				return 'destructive';
-			case 'Processing':
-				return 'secondary';
-			default:
-				return 'outline';
-		}
-	}
-
-	function getStatusLabel(status: string | undefined): string {
-		switch (status) {
-			case 'Succeeded':
-				return m.admin_jobs_status_succeeded();
-			case 'Failed':
-				return m.admin_jobs_status_failed();
-			case 'Processing':
-				return m.admin_jobs_status_running();
-			default:
-				return status ?? m.admin_jobs_status_idle();
-		}
-	}
 </script>
 
 <Card.Root>
@@ -83,15 +37,15 @@
 					<div class="space-y-1 p-4">
 						<div class="flex items-center justify-between">
 							<span class="text-xs text-muted-foreground">
-								{formatDate(execution.startedAt)}
+								{formatJobDate(execution.startedAt)}
 							</span>
-							<Badge variant={getStatusVariant(execution.status)}>
-								{getStatusLabel(execution.status)}
+							<Badge variant={getJobStatusVariant(execution.status)}>
+								{getJobStatusLabel(execution.status)}
 							</Badge>
 						</div>
 						{#if execution.duration}
 							<p class="text-xs text-muted-foreground">
-								{m.admin_jobDetail_col_duration()}: {formatDuration(execution.duration)}
+								{m.admin_jobDetail_col_duration()}: {formatJobDuration(execution.duration)}
 							</p>
 						{/if}
 						{#if execution.error}
@@ -132,14 +86,14 @@
 						{#each executions as execution (execution.jobId)}
 							<tr class="border-b">
 								<td class="px-4 py-3 text-muted-foreground">
-									{formatDate(execution.startedAt)}
+									{formatJobDate(execution.startedAt)}
 								</td>
 								<td class="px-4 py-3 text-muted-foreground tabular-nums">
-									{formatDuration(execution.duration)}
+									{formatJobDuration(execution.duration)}
 								</td>
 								<td class="px-4 py-3">
-									<Badge variant={getStatusVariant(execution.status)}>
-										{getStatusLabel(execution.status)}
+									<Badge variant={getJobStatusVariant(execution.status)}>
+										{getJobStatusLabel(execution.status)}
 									</Badge>
 								</td>
 								<td class="max-w-xs truncate px-4 py-3 text-muted-foreground">
