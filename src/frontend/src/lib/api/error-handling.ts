@@ -148,17 +148,6 @@ export function isFetchErrorWithCode(error: unknown, code: string): boolean {
 }
 
 /**
- * Extracts the error code from a fetch error's cause, if present.
- *
- * @returns The error code string, or undefined if not a fetch error with cause
- */
-export function getFetchErrorCode(error: unknown): string | undefined {
-	if (typeof error !== 'object' || error === null) return undefined;
-	const cause = (error as { cause?: FetchErrorCause }).cause;
-	return cause?.code;
-}
-
-/**
  * Returns true when the response is a 429 Too Many Requests.
  */
 export function isRateLimited(response: Response): boolean {
