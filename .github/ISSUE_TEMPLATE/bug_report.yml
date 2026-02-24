@@ -50,7 +50,7 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Your environment details.
+      description: Your environment details. This helps us reproduce the issue.
       placeholder: |
         - OS: macOS 15.2 / Ubuntu 24.04 / Windows 11
         - .NET SDK: 10.0.x
