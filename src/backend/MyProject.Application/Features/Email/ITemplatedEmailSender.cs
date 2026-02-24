@@ -11,7 +11,7 @@ public interface ITemplatedEmailSender
     /// Both rendering and delivery failures are logged but never propagated.
     /// </summary>
     /// <typeparam name="TModel">The template model type.</typeparam>
-    /// <param name="templateName">The template name (e.g. "verify-email") — without file extension.</param>
+    /// <param name="templateName">The template name from <see cref="EmailTemplateNames"/> — without file extension.</param>
     /// <param name="model">The model instance to bind into the template context.</param>
     /// <param name="to">The recipient email address.</param>
     /// <param name="cancellationToken">A cancellation token.</param>

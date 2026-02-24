@@ -314,7 +314,7 @@ internal class AuthenticationService(
         var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}";
 
         var model = new ResetPasswordModel(resetUrl, _emailTokenOptions.Lifetime.ToHumanReadable());
-        await templatedEmailSender.SendSafeAsync("reset-password", model, email, cancellationToken);
+        await templatedEmailSender.SendSafeAsync(EmailTemplateNames.ResetPassword, model, email, cancellationToken);
 
         await auditService.LogAsync(AuditActions.PasswordResetRequest, userId: user.Id, ct: cancellationToken);
 
@@ -490,7 +490,7 @@ internal class AuthenticationService(
         var verifyUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/verify-email?token={opaqueToken}";
 
         var model = new VerifyEmailModel(verifyUrl);
-        await templatedEmailSender.SendSafeAsync("verify-email", model, user.Email, cancellationToken);
+        await templatedEmailSender.SendSafeAsync(EmailTemplateNames.VerifyEmail, model, user.Email, cancellationToken);
     }
 
     /// <summary>

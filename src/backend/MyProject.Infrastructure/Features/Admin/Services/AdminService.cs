@@ -474,7 +474,7 @@ internal class AdminService(
         var resetUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}";
 
         var model = new AdminResetPasswordModel(resetUrl, _emailTokenOptions.Lifetime.ToHumanReadable());
-        await templatedEmailSender.SendSafeAsync("admin-reset-password", model, email, cancellationToken);
+        await templatedEmailSender.SendSafeAsync(EmailTemplateNames.AdminResetPassword, model, email, cancellationToken);
 
         logger.LogInformation("Password reset email sent for user '{UserId}' by admin '{CallerUserId}'",
             userId, callerUserId);
@@ -527,7 +527,7 @@ internal class AdminService(
         var setPasswordUrl = $"{_emailOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={opaqueToken}&invited=1";
 
         var invitationModel = new InvitationModel(setPasswordUrl, _emailTokenOptions.Lifetime.ToHumanReadable());
-        await templatedEmailSender.SendSafeAsync("invitation", invitationModel, input.Email, cancellationToken);
+        await templatedEmailSender.SendSafeAsync(EmailTemplateNames.Invitation, invitationModel, input.Email, cancellationToken);
 
         logger.LogInformation("User '{UserId}' created via admin invitation for email '{Email}' by admin '{CallerUserId}'",
             user.Id, input.Email, callerUserId);
