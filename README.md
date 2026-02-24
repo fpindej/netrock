@@ -51,7 +51,7 @@ Every project starts the same way: authentication, role management, rate limitin
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- [Node.js 22+](https://nodejs.org/)
+- [Node.js 22+](https://nodejs.org/) (run `corepack enable` for pnpm)
 - [Git](https://git-scm.com/)
 
 ### 1. Clone & Initialize
@@ -112,7 +112,7 @@ Add your domain entities, services, and pages — the architecture guides you. S
 | [`AGENTS.md`](AGENTS.md) | Full developer guide — security, git discipline, error handling, local dev |
 | [`src/backend/AGENTS.md`](src/backend/AGENTS.md) | Backend conventions — entities, Result pattern, EF Core, controllers, testing |
 | [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md) | Frontend conventions — routing, API client, components, styling, i18n |
-| [`SKILLS.md`](SKILLS.md) | Step-by-step recipes for 25+ common operations |
+| [`SKILLS.md`](SKILLS.md) | Step-by-step recipes for 35+ common operations |
 | [`FILEMAP.md`](FILEMAP.md) | Change impact tables — "when you change X, also update Y" |
 
 Deep dives: **[Features](docs/features.md)** · **[Security](docs/security.md)** · **[Architecture](docs/architecture.md)** · **[Development](docs/development.md)** · **[Before You Ship](docs/before-you-ship.md)** · **[Troubleshooting](docs/troubleshooting.md)**

@@ -68,7 +68,7 @@ These are non-negotiable. PRs that don't follow them will be requested to change
 - XML docs (`/// <summary>`) on all public and internal API surface
 - `System.Text.Json` only — never `Newtonsoft.Json`
 - NuGet versions in `Directory.Packages.props` only — never in `.csproj` files
-- All tests must pass — no skipped tests, no `[Fact(Skip = ...)]`
+- All tests must pass
 
 ### Frontend (SvelteKit)
 
