@@ -11,6 +11,9 @@ importers:
       '@internationalized/date':
         specifier: ^3.11.0
         version: 3.11.0
+      '@lucide/svelte':
+        specifier: ^0.575.0
+        version: 0.575.0(svelte@5.53.3)
       bits-ui:
         specifier: ^2.16.2
         version: 2.16.2(@internationalized/date@3.11.0)(@sveltejs/kit@2.53.0(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.53.3)(vite@7.3.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.31.1)))(svelte@5.53.3)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.31.1)))(svelte@5.53.3)
@@ -42,9 +45,6 @@ importers:
       '@inlang/paraglide-js':
         specifier: ^2.12.0
         version: 2.12.0
-      '@lucide/svelte':
-        specifier: ^0.575.0
-        version: 0.575.0(svelte@5.53.3)
       '@sveltejs/adapter-node':
         specifier: ^5.5.3
         version: 5.5.3(@sveltejs/kit@2.53.0(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.53.3)(vite@7.3.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.31.1)))(svelte@5.53.3)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.31.1)))

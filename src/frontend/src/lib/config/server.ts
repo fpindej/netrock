@@ -10,3 +10,10 @@ export const SERVER_CONFIG = {
 			.map((o) => o.trim())
 			.filter(Boolean) ?? []
 };
+
+/** Validate API_URL is a well-formed URL at startup. */
+try {
+	new URL(SERVER_CONFIG.API_URL);
+} catch {
+	throw new Error(`Invalid API_URL: ${SERVER_CONFIG.API_URL}`);
+}

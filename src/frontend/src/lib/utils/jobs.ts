@@ -56,7 +56,7 @@ export function getJobStatusLabel(status: string | null | undefined, isPaused?: 
 export function formatJobDuration(duration: string | null | undefined): string {
 	if (!duration) return '-';
 	const match = duration.match(/(\d+):(\d+):(\d+)/);
-	if (!match) return duration;
+	if (!match?.[1] || !match[2] || !match[3]) return duration;
 	const hours = parseInt(match[1]);
 	const minutes = parseInt(match[2]);
 	const seconds = parseInt(match[3]);

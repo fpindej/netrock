@@ -41,7 +41,8 @@
 	}: Props = $props();
 
 	// Parse the initial value to extract country and national number
-	let selectedCountry = $state<CountryCode>(COUNTRY_CODES[0]);
+	// COUNTRY_CODES is a constant non-empty array, so index 0 always exists
+	let selectedCountry = $state<CountryCode>(COUNTRY_CODES[0] ?? { code: 'cz', dialCode: '+420' });
 	let nationalNumber = $state('');
 
 	// Track the last value we produced internally so we can distinguish
