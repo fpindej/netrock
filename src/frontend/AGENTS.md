@@ -97,7 +97,7 @@ if (response.ok) {
 }
 ```
 
-**Every rate-limited button must show countdown** during cooldown:
+**Rate-limited buttons should show countdown** during cooldown to give users clear feedback:
 
 ```svelte
 <Button disabled={isLoading || cooldown.active}>
@@ -111,7 +111,7 @@ if (response.ok) {
 
 ### Props
 
-Always `interface Props` + destructure from `$props()`:
+Use `interface Props` + destructure from `$props()` — this separates the type definition from the runtime call and makes props easier to document:
 
 ```svelte
 <script lang="ts">
@@ -140,14 +140,14 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 
 ### Logical Properties Only
 
-| Physical (never use)       | Logical (always use)      |
-| -------------------------- | ------------------------- |
-| `ml-*` / `mr-*`            | `ms-*` / `me-*`           |
-| `pl-*` / `pr-*`            | `ps-*` / `pe-*`           |
-| `left-*` / `right-*`       | `start-*` / `end-*`       |
-| `text-left` / `text-right` | `text-start` / `text-end` |
-| `border-l` / `border-r`    | `border-s` / `border-e`   |
-| `space-x-*` on flex/grid   | `gap-*` (preferred)       |
+| Physical (avoid — breaks RTL) | Logical (preferred)       |
+| ----------------------------- | ------------------------- |
+| `ml-*` / `mr-*`               | `ms-*` / `me-*`           |
+| `pl-*` / `pr-*`               | `ps-*` / `pe-*`           |
+| `left-*` / `right-*`          | `start-*` / `end-*`       |
+| `text-left` / `text-right`    | `text-start` / `text-end` |
+| `border-l` / `border-r`       | `border-s` / `border-e`   |
+| `space-x-*` on flex/grid      | `gap-*` (preferred)       |
 
 ### Responsive Design (Mobile-First)
 
@@ -157,9 +157,9 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 - `min-w-0` on flex children with text, `shrink-0` on icons/badges
 - **Content grids: `xl:grid-cols-2`** not `lg:` — sidebar takes ~250px
 - **No `max-w-*` on page content** — cards fill their container
-- Scale padding: `p-4 sm:p-6 lg:p-8` — never large flat padding
-- Dialog grids: always `grid-cols-1` base with responsive breakpoint
-- Min font: `text-xs` (12px) — never smaller
+- Scale padding with breakpoints (`p-4 sm:p-6 lg:p-8`) — flat large padding wastes space on mobile
+- Dialog grids: start with `grid-cols-1` base and add responsive breakpoints — dialogs are narrow on mobile
+- Min font: `text-xs` (12px) — going smaller hurts readability, especially on mobile
 - Animations: always `motion-safe:` prefix
 
 ### Theming
@@ -170,10 +170,11 @@ CSS variables in `themes.css` (`:root` + `.dark`), mapped in `tailwind.css` (`@t
 
 ```
 hooks.server.ts → +layout.server.ts (root: getUser) → (app)/+layout.server.ts (503 if backend down, redirect if no user)
-                                                      → (public)/login (redirect if user exists)
+                                                      → (public)/+layout.server.ts (503 if backend down)
+                                                          → login/+page.server.ts (redirect if user exists)
 ```
 
-Root layout fetches user **once** via `getUser()` which returns `GetUserResult` — distinguishes "not authenticated" (null user, no error) from "backend unavailable" (null user, error set). The `(app)` layout throws 503 when backend is down instead of incorrectly redirecting to login. Child layouts use `parent()` — never re-fetch.
+Root layout fetches user **once** via `getUser()` which returns `GetUserResult` — distinguishes "not authenticated" (null user, no error) from "backend unavailable" (null user, error set). Both `(app)` and `(public)` layouts throw 503 when backend is down instead of incorrectly redirecting to login. Child layouts use `parent()` — never re-fetch.
 
 ### Permission Guards
 
@@ -197,7 +198,7 @@ Add to both `en.json` and `cs.json`. Use: `import * as m from '$lib/paraglide/me
 
 ## State
 
-`.svelte.ts` files in `$lib/state/` only. Never mix reactive state with pure utilities.
+`.svelte.ts` files in `$lib/state/` only. Keep reactive state separate from pure utility functions — mixing them causes unexpected reactivity side effects in imports.
 
 | File                  | Exports                                                       |
 | --------------------- | ------------------------------------------------------------- |

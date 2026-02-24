@@ -20,7 +20,7 @@
 | **Account Management** | Registration with CAPTCHA, login/logout, remember me, email verification, password reset, profile updates, account deletion |
 | **Admin Panel API** | User CRUD with search and pagination, custom role management with permission editor, role assignment with hierarchy enforcement |
 | **Background Jobs** | Hangfire with PostgreSQL persistence — recurring jobs via `IRecurringJobDefinition`, fire-and-forget, admin UI with trigger/pause/resume/restore, persistent pause state |
-| **Email** | Pluggable email service (NoOp for dev — swap in your SMTP/SendGrid/etc.), templated emails for verification and password reset |
+| **Email** | Pluggable email service (NoOp for dev — swap in your SMTP/SendGrid/etc.), Fluid (Liquid) template engine with base layout, templated emails for verification, password reset, admin-initiated reset, and invitation |
 | **File Storage** | S3-compatible blob storage via generic `IFileStorageService` — MinIO locally, any S3 provider in production (AWS S3, Cloudflare R2, DigitalOcean Spaces, Backblaze B2). Avatar upload with SkiaSharp image processing (resize, WebP compression) |
 | **Health Checks** | `/health` (all), `/health/ready` (DB + Redis + S3), `/health/live` (liveness) — Docker healthcheck integration |
 | **Search** | User lookup with search and pagination in admin panel, PostgreSQL trigram similarity function pre-registered for custom use |

@@ -212,8 +212,9 @@ dotnet ef database update \
    ```csharp
    public const string MyPolicy = "my-policy";
    ```
-2. Add a configuration class to `src/backend/MyProject.WebApi/Options/RateLimitingOptions.cs` (extend `FixedWindowPolicyOptions`):
+2. Add a nested configuration class inside `RateLimitingOptions` in `src/backend/MyProject.WebApi/Options/RateLimitingOptions.cs` (extend `FixedWindowPolicyOptions`):
    ```csharp
+   // Inside RateLimitingOptions class:
    public sealed class MyPolicyLimitOptions : FixedWindowPolicyOptions
    {
        public MyPolicyLimitOptions()
@@ -224,7 +225,7 @@ dotnet ef database update \
        }
    }
    ```
-3. Add the property to `RateLimitingOptions`:
+3. Add the property to `RateLimitingOptions` (same file):
    ```csharp
    [Required]
    [ValidateObjectMembers]
@@ -344,12 +345,12 @@ using Microsoft.Extensions.Logging;
 namespace MyProject.Infrastructure.Features.Jobs;
 
 internal sealed class WelcomeEmailJob(
-    IEmailService emailService,
+    ITemplatedEmailSender templatedEmailSender,
     ILogger<WelcomeEmailJob> logger)
 {
     public async Task ExecuteAsync(string userId, string email)
     {
-        await emailService.SendWelcomeAsync(email);
+        await templatedEmailSender.SendSafeAsync("welcome", new WelcomeModel(email), email, default);
         logger.LogInformation("Sent welcome email to user '{UserId}'", userId);
     }
 }
@@ -445,7 +446,7 @@ FileStorage__Region=<region>
 
 If you don't need file uploads:
 
-1. **Docker:** Remove `storage` service from `docker-compose.yml`, `local.yml`, `production.yml`
+1. **Docker:** Remove `storage` service from `docker-compose.yml`, `docker-compose.local.yml`, `docker-compose.production.yml`
 2. **Backend:** Remove `Application/Features/FileStorage/`, `Application/Features/Avatar/`, `Infrastructure/Features/FileStorage/`, `Infrastructure/Features/Avatar/`
 3. **Entity:** Remove `HasAvatar` from `ApplicationUser`
 4. **Endpoints:** Remove avatar endpoints from `UsersController`, `UploadAvatar/` DTOs
@@ -777,7 +778,7 @@ cd src/frontend && pnpm dlx shadcn-svelte@latest add {component-name}
 Generates in `src/frontend/src/lib/components/ui/{component}/`. After adding:
 
 1. Convert any physical CSS to logical (`ml-*` → `ms-*`, etc.)
-2. Available: alert, avatar, badge, button, card, checkbox, dialog, dropdown-menu, input, label, phone-input, select, separator, sheet, sonner, textarea, tooltip
+2. Available: alert, avatar, badge, button, card, checkbox, dialog, dropdown-menu, input, label, phone-input, select, separator, sheet, sonner, textarea, timeline, tooltip
 3. Browse full catalog: [ui.shadcn.com](https://ui.shadcn.com)
 
 ### Add a Package
@@ -803,7 +804,7 @@ Open the page and check at these widths: **320px**, **375px**, **768px**, **1024
 | Touch targets | Interactive elements ≥ 40px (`h-10`), primary actions ≥ 44px (`h-11`) |
 | Font sizes | Minimum `text-xs` (12px) — never `text-[10px]` or smaller |
 | Responsive padding | Scale with breakpoints (`p-4 sm:p-6 lg:p-8`) — no flat large padding |
-| Grid in dialogs | Always `grid-cols-1` base with responsive breakpoint for multi-column |
+| Grid in dialogs | Start with `grid-cols-1` base, add responsive breakpoints for multi-column |
 | Sidebar-aware grids | Use `xl:grid-cols-2` for content grids — not `lg:` (sidebar takes ~250px) |
 | Full-height layouts | `h-dvh` not `h-screen` (accounts for mobile browser chrome) |
 | Flex overflow | `min-w-0` on flex children with text, `truncate`/`overflow-hidden` where needed |
@@ -824,7 +825,7 @@ Open the page and check at these widths: **320px**, **375px**, **768px**, **1024
 
 - Colors: Use CSS variables from `src/frontend/src/styles/themes.css` via Tailwind tokens in `tailwind.css`
 - shadcn components: Check [ui.shadcn.com](https://ui.shadcn.com) before building custom UI
-- Class merging: Always use `cn()` from `$lib/utils` for conditional classes
+- Class merging: Use `cn()` from `$lib/utils` for conditional classes — it handles Tailwind class conflicts correctly
 - Animations: Define in `src/frontend/src/styles/animations.css`, use `motion-safe:` prefix
 
 **5. Adding a theme variable:**
@@ -864,7 +865,7 @@ cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run
 1. Steps 1–2 above
 2. Add `ARG` + `ENV` to `src/frontend/Dockerfile` (before `pnpm run build`)
 3. Add `--build-arg` to `deploy/build.sh`, `deploy/build.ps1`, and `.github/workflows/docker.yml`
-4. Add to `deploy/docker-compose.yml` (or appropriate overlay) `x-frontend-environment` anchor with dev default
+4. Add to the `frontend` service `environment` block in `deploy/docker-compose.yml` (or the appropriate overlay)
 5. Import in components: `import { PUBLIC_VAR } from '$env/static/public';`
 
 > **Note:** For secrets or keys that differ per environment (like Turnstile site keys), prefer runtime configuration via `$env/dynamic/private` with SSR layout data instead of build-time `PUBLIC_*` args. This avoids rebuilding images per environment.
@@ -920,7 +921,7 @@ When adding a new frontend (React Native, Swift, etc.) or other project area tha
        run:
          working-directory: src/mobile
      steps:
-       - uses: actions/checkout@v4
+       - uses: actions/checkout@v6
        # ... setup + build + lint + test steps
    ```
 5. Add the new job to the gate job's `needs`:
@@ -953,7 +954,7 @@ When modifying existing code (not creating new), follow these rules:
 
 ### Safe Strategies
 
-1. **Additive only** — add new fields/endpoints, never remove or rename existing ones
+1. **Prefer additive changes** — add new fields/endpoints rather than removing or renaming existing ones, which break consumers
 2. **Same-PR migration** — if a breaking change is needed, update all consumers (including frontend types) in the same PR
 3. **V2 endpoint** — for significant endpoint changes, create a new versioned endpoint alongside the old one:
    - New route: `api/v2/{feature}/{action}`

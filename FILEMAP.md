@@ -60,6 +60,14 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Avatar endpoints** (`PUT/DELETE/GET`) | `UploadAvatarRequest`, `UploadAvatarRequestValidator`, `UserMapper`, frontend `AvatarDialog.svelte` |
 | **`AuditActions.cs`** (add action constant) | Service that logs it, frontend `$lib/utils/audit.ts` (label, color, icon), i18n keys in `en.json`/`cs.json` |
 | **`AuditEvent` entity** (change fields) | `AuditEventConfiguration`, `AuditService`, Application DTOs (`AuditEventOutput`), WebApi DTOs, `AuditMapper`, frontend types |
+| **`ICacheService`** (Application — change caching contract) | `CacheService`, `NoOpCacheService`, `UserCacheInvalidationInterceptor`, all services using `ICacheService` (`AdminService`, `AuthenticationService`, `UserService`, `RoleManagementService`), `CustomWebApplicationFactory` mock |
+| **`CacheKeys.cs`** (Application — rename/remove key) | All services referencing the changed key, `UserCacheInvalidationInterceptor` |
+| **`CachingOptions`** (Infrastructure — change config shape) | `appsettings.json`, `appsettings.Development.json`, `deploy/envs/local/api.env`, `deploy/envs/production-example/api.env` |
+| **`ICookieService`** (Application — change cookie contract) | `CookieService`, `AuthenticationService`, `UserService` |
+| **`CookieNames`** (Application — rename/remove cookie name) | `AuthController`, `AuthenticationService`, `UserService` |
+| **`IUserService`** (Application/Identity — change user service contract) | `UserService`, `UsersController`, `CustomWebApplicationFactory` mock |
+| **`IUserContext`** (Application/Identity — change context contract) | `UserContext`, `AuthenticationService`, `UserService`, `AuditingInterceptor`, `UsersController`, `AdminController` |
+| **`EmailTemplateNames.cs`** (Application — add/rename template name) | Services constructing `SendSafeAsync()` calls, matching `.liquid` template files |
 | **Test fixture** (change shared helper) | All tests using that fixture |
 | **`AppRoles.cs`** (add role) | Role seeding picks up automatically; consider what permissions to seed for the new role; `RoleManagementService` checks `AppRoles.All` for system role collisions |
 | **`AppPermissions.cs`** (add permission) | Seed in `ApplicationBuilderExtensions.SeedRolePermissionsAsync()`, add `[RequirePermission]` to endpoints, update frontend `$lib/utils/permissions.ts` |
@@ -152,7 +160,12 @@ src/backend/MyProject.{Layer}/
   Application:     Features/{Feature}/I{Feature}Service.cs
                    Features/{Feature}/Dtos/{Operation}Input.cs, {Entity}Output.cs
                    Features/{Feature}/Persistence/I{Feature}Repository.cs
+                   Features/Email/EmailTemplateNames.cs
+                   Identity/IUserService.cs, IUserContext.cs
                    Identity/Constants/AppRoles.cs, AppPermissions.cs
+                   Caching/ICacheService.cs, Constants/CacheKeys.cs
+                   Cookies/ICookieService.cs, Constants/CookieNames.cs
+                   Persistence/IBaseEntityRepository.cs
   Infrastructure:  Features/{Feature}/Services/{Feature}Service.cs
                    Features/{Feature}/Configurations/{Entity}Configuration.cs
                    Features/{Feature}/Extensions/ServiceCollectionExtensions.cs
@@ -213,6 +226,7 @@ src/backend/MyProject.Application/Features/Email/
   IEmailTemplateRenderer.cs                         Rendering interface (Render<TModel>)
   ITemplatedEmailSender.cs                          Safe render+send interface (SendSafeAsync)
   Models/EmailTemplateModels.cs                     Model records (one per template)
+  EmailTemplateNames.cs                             Template name constants (kebab-case)
   IEmailService.cs                                  Sending interface
   EmailMessage.cs                                   Message envelope DTO
 src/backend/MyProject.Infrastructure/Features/Email/
@@ -258,6 +272,8 @@ src/backend/tests/
 | `src/backend/MyProject.Shared/ErrorMessages.cs` | All static error strings |
 | `src/backend/MyProject.Application/Identity/Constants/AppRoles.cs` | Role definitions |
 | `src/backend/MyProject.Application/Identity/Constants/AppPermissions.cs` | Permission definitions (reflection-discovered) |
+| `src/backend/MyProject.Application/Caching/Constants/CacheKeys.cs` | Cache key constants (used across services) |
+| `src/backend/MyProject.Application/Features/Email/EmailTemplateNames.cs` | Email template name constants |
 | `src/frontend/src/lib/utils/permissions.ts` | Frontend permission constants + helpers |
 | `src/backend/MyProject.WebApi/Shared/RateLimitPolicies.cs` | Rate limit policy name constants |
 | `src/backend/Directory.Packages.props` | NuGet versions (never in .csproj) |
