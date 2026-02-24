@@ -170,10 +170,11 @@ CSS variables in `themes.css` (`:root` + `.dark`), mapped in `tailwind.css` (`@t
 
 ```
 hooks.server.ts → +layout.server.ts (root: getUser) → (app)/+layout.server.ts (503 if backend down, redirect if no user)
-                                                      → (public)/login (redirect if user exists)
+                                                      → (public)/+layout.server.ts (503 if backend down)
+                                                          → login/+page.server.ts (redirect if user exists)
 ```
 
-Root layout fetches user **once** via `getUser()` which returns `GetUserResult` — distinguishes "not authenticated" (null user, no error) from "backend unavailable" (null user, error set). The `(app)` layout throws 503 when backend is down instead of incorrectly redirecting to login. Child layouts use `parent()` — never re-fetch.
+Root layout fetches user **once** via `getUser()` which returns `GetUserResult` — distinguishes "not authenticated" (null user, no error) from "backend unavailable" (null user, error set). Both `(app)` and `(public)` layouts throw 503 when backend is down instead of incorrectly redirecting to login. Child layouts use `parent()` — never re-fetch.
 
 ### Permission Guards
 
