@@ -41,7 +41,7 @@ src/backend/
 
 ## Entity Definition
 
-All new entities must extend `BaseEntity` (provides `Id`, `CreatedAt/By`, `UpdatedAt/By`, `IsDeleted`, `DeletedAt/By` — all set by `AuditingInterceptor` automatically) and use `BaseEntityRepository<T>` for data access.
+New entities should extend `BaseEntity` (provides `Id`, `CreatedAt/By`, `UpdatedAt/By`, `IsDeleted`, `DeletedAt/By` — all set by `AuditingInterceptor` automatically) and use `BaseEntityRepository<T>` for data access. Aggregate roots can layer on top of `BaseEntity`.
 
 Rules:
 - Private setters, enforce invariants through methods
