@@ -48,7 +48,12 @@
 	<div class="h-px w-full bg-border"></div>
 
 	{#if data.adminUser && data.user}
-		<UserDetailCards user={data.adminUser} roles={data.roles ?? []} currentUser={data.user} />
+		<UserDetailCards
+			user={data.adminUser}
+			roles={data.roles ?? []}
+			currentUser={data.user}
+			rolesLoadFailed={data.rolesLoadFailed}
+		/>
 	{/if}
 
 	{#if data.adminUser}

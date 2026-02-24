@@ -472,5 +472,8 @@
 	"serverError_failedToLoadRole": "Nepodařilo se načíst roli",
 	"serverError_failedToLoadPermissions": "Nepodařilo se načíst oprávnění",
 	"serverError_failedToLoadJobs": "Nepodařilo se načíst úlohy",
-	"serverError_failedToLoadJobDetails": "Nepodařilo se načíst detail úlohy"
+	"serverError_failedToLoadJobDetails": "Nepodařilo se načíst detail úlohy",
+
+	"admin_warning_rolesUnavailable": "Nepodařilo se načíst dostupné role. Přiřazování rolí je dočasně nedostupné.",
+	"admin_warning_permissionsUnavailable": "Nepodařilo se načíst oprávnění. Úprava oprávnění je dočasně nedostupná."
 }

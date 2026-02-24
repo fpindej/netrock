@@ -472,5 +472,8 @@
 	"serverError_failedToLoadRole": "Failed to load role",
 	"serverError_failedToLoadPermissions": "Failed to load permissions",
 	"serverError_failedToLoadJobs": "Failed to load jobs",
-	"serverError_failedToLoadJobDetails": "Failed to load job details"
+	"serverError_failedToLoadJobDetails": "Failed to load job details",
+
+	"admin_warning_rolesUnavailable": "Could not load available roles. Role assignment is temporarily unavailable.",
+	"admin_warning_permissionsUnavailable": "Could not load permissions. Permission editing is temporarily unavailable."
 }

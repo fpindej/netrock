@@ -69,6 +69,7 @@
 		bind:selectedPermissions
 		{canEditPermissions}
 		{cooldown}
+		permissionsLoadFailed={data.permissionsLoadFailed}
 	/>
 
 	{#if canDelete}
