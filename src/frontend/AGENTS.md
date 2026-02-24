@@ -13,12 +13,12 @@ src/
 │   │   ├── layout/                # Header, Sidebar, SidebarNav, UserNav, ThemeToggle, LanguageSelector, ShortcutsHelp
 │   │   ├── profile/               # ProfileForm, ProfileHeader, AvatarDialog, AccountDetails, InfoItem
 │   │   ├── settings/              # ChangePasswordForm, DeleteAccountDialog, ActivityLog
-│   │   ├── admin/                 # UserTable, RoleCardGrid, UserManagementCard, AuditTrailCard, ...
+│   │   ├── admin/                 # UserTable, UserDetailCards, UserManagementCard, RoleManagement, AccountActions, RoleCardGrid, RoleDetailsCard, RolePermissionsSection, RoleDeleteSection, JobTable, JobInfoCard, JobActionsCard, JobExecutionHistory, AuditTrailCard, ...
 │   │   └── common/                # StatusIndicator, WorkInProgress
 │   ├── config/                    # i18n.ts (client-safe), server.ts (server-only — never export from barrel)
 │   ├── state/                     # .svelte.ts files only (cooldown, health, shake, theme, sidebar, shortcuts)
 │   ├── types/index.ts             # Type aliases from API schemas
-│   └── utils/                     # ui.ts (cn()), permissions.ts, audit.ts, platform.ts, roles.ts
+│   └── utils/                     # ui.ts (cn()), permissions.ts, audit.ts, platform.ts, roles.ts, jobs.ts
 ├── routes/
 │   ├── (app)/                     # Authenticated (redirect guard)
 │   │   └── admin/                 # Permission-guarded per page
@@ -188,6 +188,10 @@ import { hasPermission, hasAnyPermission, Permissions } from '$lib/utils';
 let canManage = $derived(hasPermission(data.user, Permissions.Users.Manage));
 ```
 
+### Graceful Degradation for Secondary Fetches
+
+When a page loads multiple API resources in parallel: primary entity failure throws (hard error), but secondary data failures (roles list, permissions list) return empty arrays with a `*LoadFailed` flag. Components must consume the flag and show an `Alert` warning so users understand why functionality is unavailable. See `users/[id]/+page.server.ts` for the pattern.
+
 ## i18n
 
 Keys: `{domain}_{feature}_{element}` (e.g., `auth_login_title`, `profile_personalInfo_firstName`).
@@ -298,6 +302,10 @@ vi.mock('$app/state', () => ({
 - **Per-file override:** add `// @vitest-environment jsdom` at the top of files that need DOM (component tests). This avoids making every test pay jsdom startup cost.
 - **When to add `@testing-library/svelte`:** install it when writing the first Svelte component test, not before. It provides `render()`, `fireEvent()`, and DOM queries for `.svelte` files.
 
+### Shared Test Utilities (`src/test-utils.ts`)
+
+For route-level (server load function) tests, import `MOCK_USER`, `createMockLoadEvent`, and `createMockCookies` from `src/test-utils.ts` instead of duplicating mock setup.
+
 ### Conventions
 
 - **Co-locate tests with source:** `foo.ts` → `foo.test.ts` in the same directory
@@ -314,6 +322,11 @@ pnpm run test              # all tests (CI mode)
 pnpm run test:watch        # watch mode
 pnpm run test -- -t "name" # filter by test name
 ```
+
+## TypeScript Strictness
+
+- **`noUncheckedIndexedAccess: true`** — array/object index access returns `T | undefined`. Guard with `if`, optional chaining, or nullish coalescing before using indexed values.
+- **`@typescript-eslint/no-explicit-any: 'error'`** — `any` is a lint error. Use `unknown`, generics, or proper interfaces.
 
 ## Don'ts
 

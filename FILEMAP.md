@@ -108,6 +108,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`hooks.server.ts`** | All server responses (security headers, locale) |
 | **`svelte.config.js`** (CSP) | Test that scripts/styles/images still load; Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com` |
 | **`app.html`** | FOUC prevention, nonce attribute, theme init |
+| **`UserManagementCard.svelte`** | Thin shell — delegates to `RoleManagement.svelte` and `AccountActions.svelte` |
 | **Component barrel `index.ts`** | All imports from that feature folder |
 | **i18n keys** (rename/remove in `en.json`) | Same key in `cs.json`, all `m.{key}()` usages |
 | **i18n keys** (add) | Add to both `en.json` and `cs.json` |
@@ -122,6 +123,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`.npmrc`** (pnpm settings) | `Dockerfile`, `Dockerfile.local` (both COPY it), CI `--frozen-lockfile` behavior |
 | **`package.json`** (scripts) | CI/CD references, CLAUDE.md pre-commit checks |
 | **`src/test-setup.ts`** | All test files (provides global `$app/*` mocks; changes here affect every test) |
+| **`src/test-utils.ts`** (shared test utilities) | All route-level test files that import `MOCK_USER`, `createMockLoadEvent`, `createMockCookies` |
+| **`$lib/utils/jobs.ts`** (job formatting) | `JobTable.svelte`, `JobInfoCard.svelte`, `JobExecutionHistory.svelte` |
 | **`vite.config.ts`** (`test` block) | vitest test runner config (include patterns, environment, setupFiles) |
 
 ### Cross-Stack Changes
@@ -190,7 +193,7 @@ src/frontend/src/
   lib/components/ui/{component}/  (shadcn — generated)
   lib/state/        {feature}.svelte.ts
   lib/types/        index.ts (type aliases)
-  lib/utils/        ui.ts (cn()), permissions.ts, audit.ts, platform.ts, roles.ts
+  lib/utils/        ui.ts (cn()), permissions.ts, audit.ts, platform.ts, roles.ts, jobs.ts
   messages/         en.json, cs.json
   routes/(app)/     {feature}/+page.svelte, +page.server.ts
   routes/(public)/  login/+page.svelte
