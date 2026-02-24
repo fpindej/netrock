@@ -63,9 +63,9 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`ICacheService`** (Application — change caching contract) | `CacheService`, `NoOpCacheService`, `UserCacheInvalidationInterceptor`, all services using `ICacheService` (`AdminService`, `AuthenticationService`, `UserService`, `RoleManagementService`), `CustomWebApplicationFactory` mock |
 | **`CacheKeys.cs`** (Application — rename/remove key) | All services referencing the changed key, `UserCacheInvalidationInterceptor` |
 | **`CachingOptions`** (Infrastructure — change config shape) | `appsettings.json`, `appsettings.Development.json`, `deploy/envs/local/api.env`, `deploy/envs/production-example/api.env` |
-| **`ICookieService`/`CookieNames`** (Application — change cookie contract) | `CookieService`, `AuthController`, `AuthenticationService` |
+| **`ICookieService`/`CookieNames`** (Application — change cookie contract) | `CookieService`, `AuthController`, `AuthenticationService`, `UserService` |
 | **`IUserService`** (Application/Identity — change user service contract) | `UserService`, `UsersController`, `CustomWebApplicationFactory` mock |
-| **`IUserContext`** (Application/Identity — change context contract) | `UserContext`, services using `IUserContext`, `CustomWebApplicationFactory` mock |
+| **`IUserContext`** (Application/Identity — change context contract) | `UserContext`, services using `IUserContext` |
 | **`EmailTemplateNames.cs`** (Application — add/rename template name) | Services constructing `SendSafeAsync()` calls, matching `.liquid` template files |
 | **Test fixture** (change shared helper) | All tests using that fixture |
 | **`AppRoles.cs`** (add role) | Role seeding picks up automatically; consider what permissions to seed for the new role; `RoleManagementService` checks `AppRoles.All` for system role collisions |
@@ -163,7 +163,7 @@ src/backend/MyProject.{Layer}/
                    Identity/IUserService.cs, IUserContext.cs
                    Identity/Constants/AppRoles.cs, AppPermissions.cs
                    Caching/ICacheService.cs, Constants/CacheKeys.cs
-                   Cookies/ICookieService.cs, CookieNames.cs
+                   Cookies/ICookieService.cs, Constants/CookieNames.cs
                    Persistence/IBaseEntityRepository.cs
   Infrastructure:  Features/{Feature}/Services/{Feature}Service.cs
                    Features/{Feature}/Configurations/{Entity}Configuration.cs

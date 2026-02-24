@@ -31,6 +31,7 @@ NETrock is built **security-first**. Every decision defaults to the most restric
 
 - **Rate limiting** — global + per-endpoint policies (registration has stricter limits), configurable per environment, with IP and user partitioning
 - **Input validation everywhere** — FluentValidation on backend (even if frontend already validates), Data Annotations flowing into OpenAPI spec
+
 ## Data Protection
 
 - **Soft delete** — nothing is ever truly gone, every mutation tracked with who/when audit fields
