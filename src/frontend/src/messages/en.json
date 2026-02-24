@@ -470,7 +470,7 @@
 	"serverError_failedToLoadUserDetails": "Failed to load user details",
 	"serverError_failedToLoadRoles": "Failed to load roles",
 	"serverError_failedToLoadRole": "Failed to load role",
-	"serverError_failedToLoadPermissions": "Failed to load permissions",
+
 	"serverError_failedToLoadJobs": "Failed to load jobs",
 	"serverError_failedToLoadJobDetails": "Failed to load job details",
 

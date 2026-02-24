@@ -470,7 +470,7 @@
 	"serverError_failedToLoadUserDetails": "Nepodařilo se načíst detail uživatele",
 	"serverError_failedToLoadRoles": "Nepodařilo se načíst role",
 	"serverError_failedToLoadRole": "Nepodařilo se načíst roli",
-	"serverError_failedToLoadPermissions": "Nepodařilo se načíst oprávnění",
+
 	"serverError_failedToLoadJobs": "Nepodařilo se načíst úlohy",
 	"serverError_failedToLoadJobDetails": "Nepodařilo se načíst detail úlohy",
 
