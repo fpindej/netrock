@@ -3,6 +3,8 @@ export { default as UserDetailCards } from './UserDetailCards.svelte';
 export { default as RoleCardGrid } from './RoleCardGrid.svelte';
 export { default as Pagination } from './Pagination.svelte';
 export { default as AccountInfoCard } from './AccountInfoCard.svelte';
+export { default as RoleManagement } from './RoleManagement.svelte';
+export { default as AccountActions } from './AccountActions.svelte';
 export { default as UserManagementCard } from './UserManagementCard.svelte';
 export { default as CreateRoleDialog } from './CreateRoleDialog.svelte';
 export { default as CreateUserDialog } from './CreateUserDialog.svelte';

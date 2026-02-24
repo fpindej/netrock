@@ -32,12 +32,6 @@
 
 	const pageSize = 15;
 
-	function getBadgeVariant(
-		action: string | undefined
-	): 'default' | 'success' | 'destructive' | 'warning' | 'outline' {
-		return getAuditActionVariant(action);
-	}
-
 	async function loadEvents(page: number, append: boolean = false): Promise<void> {
 		if (append) {
 			loadingMore = true;
@@ -154,7 +148,7 @@
 			<div class="space-y-4">
 				<div class="flex items-center justify-between">
 					<span class="text-sm text-muted-foreground">{m.audit_detail_action()}</span>
-					<Badge variant={getBadgeVariant(selectedEvent.action)}>
+					<Badge variant={getAuditActionVariant(selectedEvent.action)}>
 						{getAuditActionLabel(selectedEvent.action)}
 					</Badge>
 				</div>
