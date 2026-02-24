@@ -10,7 +10,7 @@ NETrock works out of the box for local development, but there are things you nee
 
 - [ ] **Email service** — replace `NoOpEmailService` with a real provider (SMTP, SendGrid, Postmark, etc.). The NoOp service just logs emails to Seq. Configure via `Email__Smtp__*` env vars or swap the service registration in `ServiceCollectionExtensions.cs`
 - [ ] **CORS origins** — set `Cors__AllowedOrigins` to your production domain(s). The app **will refuse to start** if `AllowAllOrigins` is `true` outside of Development — this is intentional
-- [ ] **JWT secret** — the init script generates one, but verify it's set in production via `Authentication__Jwt__Key` (64+ chars, cryptographically random)
+- [ ] **JWT secret** — the init script generates one, but verify `JWT_SECRET_KEY` is set in production `compose.env` (minimum 32 chars, cryptographically random — the init script generates a 64-char key)
 - [ ] **Database** — point `ConnectionStrings__Database` to your production PostgreSQL instance
 - [ ] **CAPTCHA keys** — replace the Cloudflare Turnstile development keys with production keys (`Captcha__SecretKey` backend, `TURNSTILE_SITE_KEY` frontend — runtime-configurable via the `(public)` layout server load)
 - [ ] **Frontend URL in emails** — set `Email__FrontendBaseUrl` to your production domain so email verification and password reset links work
