@@ -1,8 +1,9 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
+	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import { RolePermissionEditor } from '$lib/components/admin';
-	import { Lock, Loader2, Save } from '@lucide/svelte';
+	import { Lock, Loader2, Save, TriangleAlert } from '@lucide/svelte';
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
@@ -16,6 +17,7 @@
 		selectedPermissions: string[];
 		canEditPermissions: boolean;
 		cooldown: Cooldown;
+		permissionsLoadFailed?: boolean;
 	}
 
 	let {
@@ -23,7 +25,8 @@
 		permissionGroups,
 		selectedPermissions = $bindable(),
 		canEditPermissions,
-		cooldown
+		cooldown,
+		permissionsLoadFailed = false
 	}: Props = $props();
 
 	let isSavingPermissions = $state(false);
@@ -54,6 +57,12 @@
 		<Card.Description>{m.admin_roles_permissionsDescription()}</Card.Description>
 	</Card.Header>
 	<Card.Content class="space-y-4">
+		{#if permissionsLoadFailed}
+			<Alert.Root>
+				<TriangleAlert class="h-4 w-4" />
+				<Alert.Description>{m.admin_warning_permissionsUnavailable()}</Alert.Description>
+			</Alert.Root>
+		{/if}
 		{#if !canEditPermissions}
 			<div
 				class="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground"

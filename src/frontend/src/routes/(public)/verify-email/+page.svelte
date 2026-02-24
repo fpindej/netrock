@@ -16,6 +16,14 @@
 	let status = $state<'verifying' | 'success' | 'error'>('verifying');
 	let errorMessage = $state('');
 
+	// Email verification is triggered client-side in onMount rather than as a
+	// SvelteKit form action because it is a one-shot state-changing mutation
+	// (POST) initiated by following a link. A form action would require the user
+	// to manually click "Verify" after landing on the page, which adds friction
+	// to a flow that should be instant. Doing it in onMount lets us fire the
+	// POST automatically on page load while still showing loading/success/error
+	// states — something a server load function cannot do since it must return
+	// before the page renders.
 	onMount(() => {
 		if (data.token) {
 			verify();

@@ -1,11 +1,12 @@
 import { error, redirect } from '@sveltejs/kit';
+import * as m from '$lib/paraglide/messages';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ parent }) => {
 	const { user, backendError, hadSession } = await parent();
 
 	if (backendError === 'backend_unavailable') {
-		throw error(503, 'Backend unavailable');
+		throw error(503, m.serverError_backendUnavailable());
 	}
 
 	if (!user) {

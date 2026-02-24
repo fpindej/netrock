@@ -8,9 +8,10 @@
 		user: AdminUser;
 		roles: AdminRole[];
 		currentUser: User;
+		rolesLoadFailed?: boolean;
 	}
 
-	let { user, roles, currentUser }: Props = $props();
+	let { user, roles, currentUser, rolesLoadFailed = false }: Props = $props();
 
 	const cooldown = createCooldown();
 
@@ -29,5 +30,13 @@
 
 <div class="grid gap-6 xl:grid-cols-2">
 	<AccountInfoCard {user} {canManage} {piiMasked} {cooldown} />
-	<UserManagementCard {user} {roles} {canManage} {canAssignRoles} {callerRank} {cooldown} />
+	<UserManagementCard
+		{user}
+		{roles}
+		{canManage}
+		{canAssignRoles}
+		{callerRank}
+		{cooldown}
+		{rolesLoadFailed}
+	/>
 </div>

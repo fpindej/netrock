@@ -463,5 +463,17 @@
 	"audit_action_adminDeleteRole": "Role smazána",
 	"audit_action_adminSetRolePermissions": "Oprávnění aktualizována",
 	"audit_action_avatarUpload": "Avatar nahrán",
-	"audit_action_avatarRemove": "Avatar odebrán"
+	"audit_action_avatarRemove": "Avatar odebrán",
+
+	"serverError_backendUnavailable": "Backend není dostupný",
+	"serverError_failedToLoadUsers": "Nepodařilo se načíst uživatele",
+	"serverError_failedToLoadUserDetails": "Nepodařilo se načíst detail uživatele",
+	"serverError_failedToLoadRoles": "Nepodařilo se načíst role",
+	"serverError_failedToLoadRole": "Nepodařilo se načíst roli",
+
+	"serverError_failedToLoadJobs": "Nepodařilo se načíst úlohy",
+	"serverError_failedToLoadJobDetails": "Nepodařilo se načíst detail úlohy",
+
+	"admin_warning_rolesUnavailable": "Nepodařilo se načíst dostupné role. Přiřazování rolí je dočasně nedostupné.",
+	"admin_warning_permissionsUnavailable": "Nepodařilo se načíst oprávnění. Úprava oprávnění je dočasně nedostupná."
 }
