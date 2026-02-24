@@ -115,7 +115,7 @@ Add your domain entities, services, and pages — the architecture guides you. S
 | [`SKILLS.md`](SKILLS.md) | Step-by-step recipes for 25+ common operations |
 | [`FILEMAP.md`](FILEMAP.md) | Change impact tables — "when you change X, also update Y" |
 
-Deep dives: **[Features](docs/features.md)** · **[Security](docs/security.md)** · **[Architecture](docs/architecture.md)** · **[Development](docs/development.md)** · **[Before You Ship](docs/before-you-ship.md)**
+Deep dives: **[Features](docs/features.md)** · **[Security](docs/security.md)** · **[Architecture](docs/architecture.md)** · **[Development](docs/development.md)** · **[Before You Ship](docs/before-you-ship.md)** · **[Troubleshooting](docs/troubleshooting.md)**
 
 ---
 
