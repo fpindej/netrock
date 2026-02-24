@@ -212,8 +212,9 @@ dotnet ef database update \
    ```csharp
    public const string MyPolicy = "my-policy";
    ```
-2. Add a configuration class to `src/backend/MyProject.WebApi/Options/RateLimitingOptions.cs` (extend `FixedWindowPolicyOptions`):
+2. Add a nested configuration class inside `RateLimitingOptions` in `src/backend/MyProject.WebApi/Options/RateLimitingOptions.cs` (extend `FixedWindowPolicyOptions`):
    ```csharp
+   // Inside RateLimitingOptions class:
    public sealed class MyPolicyLimitOptions : FixedWindowPolicyOptions
    {
        public MyPolicyLimitOptions()
@@ -224,7 +225,7 @@ dotnet ef database update \
        }
    }
    ```
-3. Add the property to `RateLimitingOptions`:
+3. Add the property to `RateLimitingOptions` (same file):
    ```csharp
    [Required]
    [ValidateObjectMembers]
@@ -344,12 +345,12 @@ using Microsoft.Extensions.Logging;
 namespace MyProject.Infrastructure.Features.Jobs;
 
 internal sealed class WelcomeEmailJob(
-    IEmailService emailService,
+    ITemplatedEmailSender templatedEmailSender,
     ILogger<WelcomeEmailJob> logger)
 {
     public async Task ExecuteAsync(string userId, string email)
     {
-        await emailService.SendWelcomeAsync(email);
+        await templatedEmailSender.SendSafeAsync("welcome", new WelcomeModel(email), email, default);
         logger.LogInformation("Sent welcome email to user '{UserId}'", userId);
     }
 }
@@ -445,7 +446,7 @@ FileStorage__Region=<region>
 
 If you don't need file uploads:
 
-1. **Docker:** Remove `storage` service from `docker-compose.yml`, `local.yml`, `production.yml`
+1. **Docker:** Remove `storage` service from `docker-compose.yml`, `docker-compose.local.yml`, `docker-compose.production.yml`
 2. **Backend:** Remove `Application/Features/FileStorage/`, `Application/Features/Avatar/`, `Infrastructure/Features/FileStorage/`, `Infrastructure/Features/Avatar/`
 3. **Entity:** Remove `HasAvatar` from `ApplicationUser`
 4. **Endpoints:** Remove avatar endpoints from `UsersController`, `UploadAvatar/` DTOs
@@ -777,7 +778,7 @@ cd src/frontend && pnpm dlx shadcn-svelte@latest add {component-name}
 Generates in `src/frontend/src/lib/components/ui/{component}/`. After adding:
 
 1. Convert any physical CSS to logical (`ml-*` → `ms-*`, etc.)
-2. Available: alert, avatar, badge, button, card, checkbox, dialog, dropdown-menu, input, label, phone-input, select, separator, sheet, sonner, textarea, tooltip
+2. Available: alert, avatar, badge, button, card, checkbox, dialog, dropdown-menu, input, label, phone-input, select, separator, sheet, sonner, textarea, timeline, tooltip
 3. Browse full catalog: [ui.shadcn.com](https://ui.shadcn.com)
 
 ### Add a Package
@@ -864,7 +865,7 @@ cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run
 1. Steps 1–2 above
 2. Add `ARG` + `ENV` to `src/frontend/Dockerfile` (before `pnpm run build`)
 3. Add `--build-arg` to `deploy/build.sh`, `deploy/build.ps1`, and `.github/workflows/docker.yml`
-4. Add to `deploy/docker-compose.yml` (or appropriate overlay) `x-frontend-environment` anchor with dev default
+4. Add to the `frontend` service `environment` block in `deploy/docker-compose.yml` (or the appropriate overlay)
 5. Import in components: `import { PUBLIC_VAR } from '$env/static/public';`
 
 > **Note:** For secrets or keys that differ per environment (like Turnstile site keys), prefer runtime configuration via `$env/dynamic/private` with SSR layout data instead of build-time `PUBLIC_*` args. This avoids rebuilding images per environment.
@@ -920,7 +921,7 @@ When adding a new frontend (React Native, Swift, etc.) or other project area tha
        run:
          working-directory: src/mobile
      steps:
-       - uses: actions/checkout@v4
+       - uses: actions/checkout@v6
        # ... setup + build + lint + test steps
    ```
 5. Add the new job to the gate job's `needs`:
