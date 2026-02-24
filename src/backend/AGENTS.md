@@ -41,7 +41,7 @@ src/backend/
 
 ## Entity Definition
 
-All entities extend `BaseEntity` (provides `Id`, `CreatedAt/By`, `UpdatedAt/By`, `IsDeleted`, `DeletedAt/By` — all set by `AuditingInterceptor` automatically).
+Domain entities extend `BaseEntity` (provides `Id`, `CreatedAt/By`, `UpdatedAt/By`, `IsDeleted`, `DeletedAt/By` — all set by `AuditingInterceptor` automatically). Infrastructure-only models (`RefreshToken`, `EmailToken`, `PausedJob`, `AuditEvent`) manage their own fields.
 
 Rules:
 - Private setters, enforce invariants through methods

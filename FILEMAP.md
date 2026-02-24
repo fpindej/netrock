@@ -63,9 +63,10 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`ICacheService`** (Application — change caching contract) | `CacheService`, `NoOpCacheService`, `UserCacheInvalidationInterceptor`, all services using `ICacheService` (`AdminService`, `AuthenticationService`, `UserService`, `RoleManagementService`), `CustomWebApplicationFactory` mock |
 | **`CacheKeys.cs`** (Application — rename/remove key) | All services referencing the changed key, `UserCacheInvalidationInterceptor` |
 | **`CachingOptions`** (Infrastructure — change config shape) | `appsettings.json`, `appsettings.Development.json`, `deploy/envs/local/api.env`, `deploy/envs/production-example/api.env` |
-| **`ICookieService`/`CookieNames`** (Application — change cookie contract) | `CookieService`, `AuthController`, `AuthenticationService`, `UserService` |
+| **`ICookieService`** (Application — change cookie contract) | `CookieService`, `AuthenticationService`, `UserService` |
+| **`CookieNames`** (Application — rename/remove cookie name) | `AuthController`, `AuthenticationService`, `UserService` |
 | **`IUserService`** (Application/Identity — change user service contract) | `UserService`, `UsersController`, `CustomWebApplicationFactory` mock |
-| **`IUserContext`** (Application/Identity — change context contract) | `UserContext`, services using `IUserContext` |
+| **`IUserContext`** (Application/Identity — change context contract) | `UserContext`, `AuthenticationService`, `UserService`, `AuditingInterceptor`, `UsersController`, `AdminController` |
 | **`EmailTemplateNames.cs`** (Application — add/rename template name) | Services constructing `SendSafeAsync()` calls, matching `.liquid` template files |
 | **Test fixture** (change shared helper) | All tests using that fixture |
 | **`AppRoles.cs`** (add role) | Role seeding picks up automatically; consider what permissions to seed for the new role; `RoleManagementService` checks `AppRoles.All` for system role collisions |

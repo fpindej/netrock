@@ -31,6 +31,9 @@ Comprehensive audit of every documentation file in the repository, cross-referen
 | `README.md` | Added pnpm prerequisite with corepack hint | Init script checks for pnpm and fails without it |
 | `README.md` | Updated SKILLS.md recipe count to 35+ | Was "25+" but 35 recipes actually exist |
 | `CONTRIBUTING.md` | Removed "no skipped tests" rule | 14 tests legitimately skipped for Testcontainers (#174) |
+| `src/backend/AGENTS.md` | Qualified "All entities extend BaseEntity" → "Domain entities" | RefreshToken, EmailToken, PausedJob, AuditEvent are Infrastructure models without BaseEntity |
+| `FILEMAP.md` | Split ICookieService/CookieNames into separate rows | AuthController uses CookieNames only (not ICookieService); CookieService doesn't use CookieNames |
+| `FILEMAP.md` | Expanded IUserContext consumers to explicit list | Was "services using IUserContext" — omitted controllers and AuditingInterceptor |
 
 ## Decisions & Reasoning
 
