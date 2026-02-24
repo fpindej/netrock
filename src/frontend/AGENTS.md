@@ -141,13 +141,13 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 ### Logical Properties Only
 
 | Physical (avoid — breaks RTL) | Logical (preferred)       |
-| -------------------------- | ------------------------- |
-| `ml-*` / `mr-*`            | `ms-*` / `me-*`           |
-| `pl-*` / `pr-*`            | `ps-*` / `pe-*`           |
-| `left-*` / `right-*`       | `start-*` / `end-*`       |
-| `text-left` / `text-right` | `text-start` / `text-end` |
-| `border-l` / `border-r`    | `border-s` / `border-e`   |
-| `space-x-*` on flex/grid   | `gap-*` (preferred)       |
+| ----------------------------- | ------------------------- |
+| `ml-*` / `mr-*`               | `ms-*` / `me-*`           |
+| `pl-*` / `pr-*`               | `ps-*` / `pe-*`           |
+| `left-*` / `right-*`          | `start-*` / `end-*`       |
+| `text-left` / `text-right`    | `text-start` / `text-end` |
+| `border-l` / `border-r`       | `border-s` / `border-e`   |
+| `space-x-*` on flex/grid      | `gap-*` (preferred)       |
 
 ### Responsive Design (Mobile-First)
 
