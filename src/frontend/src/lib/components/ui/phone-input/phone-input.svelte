@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
@@ -43,13 +44,26 @@
 	let selectedCountry = $state<CountryCode>(COUNTRY_CODES[0]);
 	let nationalNumber = $state('');
 
-	// Sync internal state when value prop changes externally
+	// Track the last value we produced internally so we can distinguish
+	// external prop changes from our own updateValue() writes.
+	let lastEmittedValue = '';
+
+	// Sync internal state only when value prop changes externally.
+	// Reading `value` subscribes to the prop; writing internal state inside
+	// `untrack` avoids creating a circular reactive dependency.
 	$effect(() => {
-		const parsed = parsePhoneNumber(value);
-		if (parsed.country) {
-			selectedCountry = parsed.country;
-		}
-		nationalNumber = parsed.nationalNumber;
+		const current = value;
+
+		untrack(() => {
+			if (current === lastEmittedValue) return;
+
+			const parsed = parsePhoneNumber(current);
+			if (parsed.country) {
+				selectedCountry = parsed.country;
+			}
+			nationalNumber = parsed.nationalNumber;
+			lastEmittedValue = current;
+		});
 	});
 
 	/**
@@ -90,6 +104,7 @@
 
 	function updateValue() {
 		value = formatPhoneNumber(selectedCountry.dialCode, nationalNumber);
+		lastEmittedValue = value;
 	}
 </script>
 
