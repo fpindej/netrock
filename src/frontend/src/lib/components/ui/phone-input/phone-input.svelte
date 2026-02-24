@@ -8,6 +8,7 @@
 	import { cn } from '$lib/utils';
 	import {
 		COUNTRY_CODES,
+		DEFAULT_COUNTRY,
 		parsePhoneNumber,
 		formatPhoneNumber,
 		type CountryCode
@@ -40,9 +41,7 @@
 		class: className
 	}: Props = $props();
 
-	// Parse the initial value to extract country and national number
-	// COUNTRY_CODES is a constant non-empty array, so index 0 always exists
-	let selectedCountry = $state<CountryCode>(COUNTRY_CODES[0] ?? { code: 'cz', dialCode: '+420' });
+	let selectedCountry = $state<CountryCode>(DEFAULT_COUNTRY);
 	let nationalNumber = $state('');
 
 	// Track the last value we produced internally so we can distinguish

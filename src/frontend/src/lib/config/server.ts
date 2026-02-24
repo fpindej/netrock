@@ -11,9 +11,11 @@ export const SERVER_CONFIG = {
 			.filter(Boolean) ?? []
 };
 
-/** Validate API_URL is a well-formed URL at startup. */
-try {
-	new URL(SERVER_CONFIG.API_URL);
-} catch {
-	throw new Error(`Invalid API_URL: ${SERVER_CONFIG.API_URL}`);
+/** Validate API_URL is a well-formed URL at startup (only when explicitly set). */
+if (env.API_URL) {
+	try {
+		new URL(SERVER_CONFIG.API_URL);
+	} catch {
+		throw new Error(`Invalid API_URL: "${SERVER_CONFIG.API_URL}" is not a valid URL`);
+	}
 }
