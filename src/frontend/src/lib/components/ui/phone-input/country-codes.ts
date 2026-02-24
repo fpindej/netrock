@@ -80,3 +80,6 @@ export function formatPhoneNumber(dialCode: string, nationalNumber: string): str
 	if (!cleanedNumber) return '';
 	return `${dialCode}${cleanedNumber}`;
 }
+
+/** Default country used when no phone number is provided. First entry in COUNTRY_CODES. */
+export const DEFAULT_COUNTRY = COUNTRY_CODES[0] as CountryCode;

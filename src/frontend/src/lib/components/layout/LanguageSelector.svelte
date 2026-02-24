@@ -8,10 +8,18 @@
 
 	type AvailableLanguageTag = (typeof locales)[number];
 
-	const languages = locales.map((code) => ({
+	interface LanguageEntry {
+		code: AvailableLanguageTag;
+		label: string;
+		flag: string;
+	}
+
+	const languages: LanguageEntry[] = locales.map((code: AvailableLanguageTag) => ({
 		code,
 		...LANGUAGE_METADATA[code]
 	}));
+
+	const fallbackFlag = LANGUAGE_METADATA[baseLocale as AvailableLanguageTag]?.flag ?? 'gb';
 </script>
 
 <DropdownMenu.Root>
@@ -19,7 +27,7 @@
 		{#snippet child({ props })}
 			<Button variant="ghost" size="icon" aria-label={m.common_language()} {...props}>
 				<span
-					class={`fi fi-${languages.find((l) => l.code === getLocale())?.flag ?? LANGUAGE_METADATA[baseLocale as AvailableLanguageTag].flag} rounded-sm`}
+					class={`fi fi-${languages.find((l: LanguageEntry) => l.code === getLocale())?.flag ?? fallbackFlag} rounded-sm`}
 				></span>
 			</Button>
 		{/snippet}
