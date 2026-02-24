@@ -15,45 +15,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { isHttpError, isRedirect } from '@sveltejs/kit';
 import { load } from './+layout.server';
+import { MOCK_USER, createMockLoadEvent } from '../../test-utils';
 
 type LoadEvent = Parameters<typeof load>[0];
-
-const MOCK_USER = {
-	id: '00000000-0000-0000-0000-000000000001',
-	username: 'test@example.com',
-	email: 'test@example.com',
-	firstName: 'Test',
-	lastName: 'User',
-	roles: ['User'],
-	permissions: [],
-	emailConfirmed: true
-};
-
-/** Stubs for all `ServerLoadEvent` properties the load function does NOT use. */
-const EVENT_DEFAULTS = {
-	cookies: {
-		get: vi.fn(),
-		getAll: vi.fn(() => []),
-		set: vi.fn(),
-		delete: vi.fn(),
-		serialize: vi.fn()
-	},
-	fetch: vi.fn() as typeof fetch,
-	getClientAddress: () => '127.0.0.1',
-	locals: { user: null, locale: 'en' },
-	params: {},
-	platform: undefined,
-	request: new Request('http://localhost'),
-	route: { id: '/(app)' },
-	setHeaders: vi.fn(),
-	url: new URL('http://localhost'),
-	isDataRequest: false,
-	isSubRequest: false,
-	isRemoteRequest: false,
-	tracing: { enabled: false, root: {}, current: {} },
-	depends: vi.fn(),
-	untrack: <T>(fn: () => T): T => fn()
-};
 
 /** Builds a complete mock SvelteKit load event for the (app) layout. */
 function mockLoadEvent(
@@ -65,10 +29,10 @@ function mockLoadEvent(
 ) {
 	const { user = null, backendError = null, hadSession = false } = overrides;
 
-	return {
-		...EVENT_DEFAULTS,
+	return createMockLoadEvent({
+		route: { id: '/(app)' },
 		parent: vi.fn().mockResolvedValue({ user, backendError, hadSession })
-	} as LoadEvent;
+	}) as LoadEvent;
 }
 
 /** Asserts that a load function throws a SvelteKit redirect. */
