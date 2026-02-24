@@ -7,6 +7,8 @@
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
 	import { createCooldown } from '$lib/state';
+	import { browserClient, getErrorMessage } from '$lib/api';
+	import { Upload } from '@lucide/svelte';
 
 	const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 	const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -50,23 +52,6 @@
 			}
 		};
 	});
-
-	async function extractErrorMessage(response: Response): Promise<string> {
-		try {
-			const contentType = response.headers.get('content-type') ?? '';
-			if (
-				contentType.includes('application/json') ||
-				contentType.includes('application/problem+json')
-			) {
-				const data = await response.json();
-				return data?.detail || data?.title || '';
-			}
-		} catch {
-			// Non-parseable response — fall through
-		}
-		if (response.status === 413) return m.profile_avatar_fileTooLarge();
-		return '';
-	}
 
 	function validateFile(file: File): string | null {
 		if (file.size > MAX_SIZE) return m.profile_avatar_fileTooLarge();
@@ -116,12 +101,15 @@
 		isLoading = true;
 
 		try {
-			const formData = new FormData();
-			formData.append('File', selectedFile);
-
-			const response = await fetch('/api/users/me/avatar', {
-				method: 'PUT',
-				body: formData
+			const file = selectedFile;
+			const { response, error } = await browserClient.PUT('/api/users/me/avatar', {
+				// @ts-expect-error openapi-fetch types IFormFile as string, but the runtime needs a Blob/File for multipart
+				body: { File: file },
+				bodySerializer() {
+					const fd = new FormData();
+					fd.append('File', file);
+					return fd;
+				}
 			});
 
 			if (response.ok) {
@@ -132,7 +120,7 @@
 				open = false;
 				await invalidateAll();
 			} else {
-				const msg = await extractErrorMessage(response);
+				const msg = getErrorMessage(error, '');
 				toast.error(m.profile_avatar_updateError(), msg ? { description: msg } : undefined);
 			}
 		} catch {
@@ -146,16 +134,14 @@
 		isLoading = true;
 
 		try {
-			const response = await fetch('/api/users/me/avatar', {
-				method: 'DELETE'
-			});
+			const { response, error } = await browserClient.DELETE('/api/users/me/avatar');
 
 			if (response.ok) {
 				toast.success(m.profile_avatar_removeSuccess());
 				open = false;
 				await invalidateAll();
 			} else {
-				const msg = await extractErrorMessage(response);
+				const msg = getErrorMessage(error, '');
 				toast.error(m.profile_avatar_removeError(), msg ? { description: msg } : undefined);
 			}
 		} catch {
@@ -205,22 +191,7 @@
 				ondragleave={handleDragLeave}
 				onclick={() => fileInput?.click()}
 			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					class="opacity-50"
-				>
-					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-					<polyline points="17 8 12 3 7 8" />
-					<line x1="12" x2="12" y1="3" y2="15" />
-				</svg>
+				<Upload class="opacity-50" size={24} />
 				{#if isDragOver}
 					<span>{m.profile_avatar_dropzoneActive()}</span>
 				{:else if selectedFile}
