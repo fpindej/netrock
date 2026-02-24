@@ -106,7 +106,7 @@ export function formatAuditDateFull(date: string | null | undefined): string {
 }
 
 export function getAuditDescription(
-	action: string | undefined,
+	_action: string | undefined,
 	metadata: string | null | undefined
 ): string | undefined {
 	if (!metadata) return undefined;
