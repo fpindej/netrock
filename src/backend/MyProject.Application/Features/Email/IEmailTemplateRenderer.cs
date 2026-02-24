@@ -9,7 +9,7 @@ public interface IEmailTemplateRenderer
     /// Renders the named email template with the given model.
     /// </summary>
     /// <typeparam name="TModel">The model type whose properties are exposed as template variables.</typeparam>
-    /// <param name="templateName">The template name (e.g. "verify-email") — without file extension.</param>
+    /// <param name="templateName">The template name from <see cref="EmailTemplateNames"/> — without file extension.</param>
     /// <param name="model">The model instance to bind into the template context.</param>
     /// <returns>A <see cref="RenderedEmail"/> containing subject, HTML body, and optional plain text body.</returns>
     RenderedEmail Render<TModel>(string templateName, TModel model) where TModel : class;
