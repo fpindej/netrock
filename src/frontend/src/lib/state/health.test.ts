@@ -21,6 +21,12 @@ describe('health state', () => {
 
 	beforeEach(() => {
 		vi.useFakeTimers();
+		// Re-stub document before each test — afterEach's unstubAllGlobals removes it.
+		vi.stubGlobal('document', {
+			visibilityState: 'visible',
+			addEventListener: vi.fn(),
+			removeEventListener: vi.fn()
+		});
 		healthState.online = false;
 		healthState.checked = false;
 	});
@@ -28,6 +34,7 @@ describe('health state', () => {
 	afterEach(() => {
 		cleanup?.();
 		vi.useRealTimers();
+		vi.unstubAllGlobals();
 	});
 
 	it('starts unchecked', () => {

@@ -7,6 +7,7 @@
  * sends Set-Cookie headers (e.g. clearing the token on failed refresh).
  */
 import { describe, expect, it, vi } from 'vitest';
+import { MOCK_USER, createMockLoadEvent, createMockCookies } from '../test-utils';
 
 vi.mock('$app/environment', () => ({ dev: false }));
 vi.mock('$lib/config/server', () => ({ SERVER_CONFIG: { API_URL: '' } }));
@@ -27,48 +28,12 @@ const { REFRESH_TOKEN_COOKIE } = await import('$lib/auth');
 
 type LoadEvent = Parameters<typeof load>[0];
 
-const MOCK_USER = {
-	id: '00000000-0000-0000-0000-000000000001',
-	username: 'test@example.com',
-	email: 'test@example.com',
-	firstName: 'Test',
-	lastName: 'User',
-	roles: ['User'],
-	permissions: [],
-	emailConfirmed: true
-};
-
-/** Stubs for ServerLoadEvent properties. */
-const EVENT_DEFAULTS = {
-	fetch: vi.fn() as typeof fetch,
-	getClientAddress: () => '127.0.0.1',
-	locals: { user: null, locale: 'en' },
-	params: {},
-	parent: vi.fn().mockResolvedValue({}),
-	platform: undefined,
-	request: new Request('http://localhost'),
-	route: { id: '/' },
-	setHeaders: vi.fn(),
-	isDataRequest: false,
-	isSubRequest: false,
-	isRemoteRequest: false,
-	tracing: { enabled: false, root: {}, current: {} },
-	depends: vi.fn(),
-	untrack: <T>(fn: () => T): T => fn()
-};
-
 function mockLoadEvent(cookieValue?: string) {
-	return {
-		...EVENT_DEFAULTS,
-		url: new URL('http://localhost'),
-		cookies: {
-			get: vi.fn((name: string) => (name === REFRESH_TOKEN_COOKIE ? cookieValue : undefined)),
-			getAll: vi.fn(() => []),
-			set: vi.fn(),
-			delete: vi.fn(),
-			serialize: vi.fn()
-		}
-	} as LoadEvent;
+	return createMockLoadEvent({
+		cookies: createMockCookies((name: string) =>
+			name === REFRESH_TOKEN_COOKIE ? cookieValue : undefined
+		)
+	}) as LoadEvent;
 }
 
 /** Narrows away the `void` branch of the load return type. */
