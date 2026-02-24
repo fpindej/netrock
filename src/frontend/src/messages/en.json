@@ -463,5 +463,14 @@
 	"audit_action_adminDeleteRole": "Role deleted",
 	"audit_action_adminSetRolePermissions": "Permissions updated",
 	"audit_action_avatarUpload": "Avatar uploaded",
-	"audit_action_avatarRemove": "Avatar removed"
+	"audit_action_avatarRemove": "Avatar removed",
+
+	"serverError_backendUnavailable": "Backend unavailable",
+	"serverError_failedToLoadUsers": "Failed to load users",
+	"serverError_failedToLoadUserDetails": "Failed to load user details",
+	"serverError_failedToLoadRoles": "Failed to load roles",
+	"serverError_failedToLoadRole": "Failed to load role",
+	"serverError_failedToLoadPermissions": "Failed to load permissions",
+	"serverError_failedToLoadJobs": "Failed to load jobs",
+	"serverError_failedToLoadJobDetails": "Failed to load job details"
 }

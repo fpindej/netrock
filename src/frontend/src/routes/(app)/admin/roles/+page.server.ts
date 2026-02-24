@@ -1,6 +1,7 @@
 import { createApiClient, getErrorMessage } from '$lib/api';
 import { error, redirect } from '@sveltejs/kit';
 import { hasPermission, Permissions } from '$lib/utils';
+import * as m from '$lib/paraglide/messages';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ fetch, url, parent }) => {
@@ -14,7 +15,7 @@ export const load: PageServerLoad = async ({ fetch, url, parent }) => {
 	const { data, response, error: apiError } = await client.GET('/api/v1/admin/roles');
 
 	if (!response.ok) {
-		throw error(response.status, getErrorMessage(apiError, 'Failed to load roles'));
+		throw error(response.status, getErrorMessage(apiError, m.serverError_failedToLoadRoles()));
 	}
 
 	return {
