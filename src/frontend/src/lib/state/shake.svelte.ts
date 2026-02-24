@@ -19,6 +19,7 @@ import { SvelteSet } from 'svelte/reactivity';
  */
 export function createShake(duration = 500) {
 	let isShaking = $state(false);
+	let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
 	return {
 		get active() {
@@ -28,8 +29,9 @@ export function createShake(duration = 500) {
 			return isShaking ? 'animate-shake' : '';
 		},
 		trigger() {
+			clearTimeout(timeoutId);
 			isShaking = true;
-			setTimeout(() => {
+			timeoutId = setTimeout(() => {
 				isShaking = false;
 			}, duration);
 		}
