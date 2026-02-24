@@ -13,4 +13,5 @@ export type PermissionGroup = components['schemas']['PermissionGroupResponse'];
 export type AuditEvent = components['schemas']['AuditEventResponse'];
 export type ListAuditEventsResponse = components['schemas']['ListAuditEventsResponse'];
 export type Job = components['schemas']['RecurringJobResponse'];
+export type JobDetail = components['schemas']['RecurringJobDetailResponse'];
 export type JobExecution = components['schemas']['JobExecutionResponse'];

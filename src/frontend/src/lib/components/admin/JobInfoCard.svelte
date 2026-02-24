@@ -4,11 +4,11 @@
 	import { Clock, Calendar, History, Code } from '@lucide/svelte';
 	import { InfoItem } from '$lib/components/profile';
 	import * as m from '$lib/paraglide/messages';
-	import type { Job } from '$lib/types';
+	import type { JobDetail } from '$lib/types';
 	import { formatJobDate, getJobStatusLabel } from '$lib/utils/jobs';
 
 	interface Props {
-		job: Job;
+		job: JobDetail;
 	}
 
 	let { job }: Props = $props();
