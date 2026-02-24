@@ -2,6 +2,10 @@
 
 Thanks for your interest in contributing! NETrock is a production-grade template, so we hold contributions to the same standard as the existing codebase.
 
+> **Security issues?** Please report them privately — see [SECURITY.md](SECURITY.md).
+>
+> All participants are expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Getting Started
 
 1. **Fork the repository** and clone your fork
@@ -40,7 +44,7 @@ dotnet build src/backend/MyProject.slnx
 dotnet test src/backend/MyProject.slnx -c Release
 
 # Frontend
-cd src/frontend && pnpm run format && pnpm run lint && pnpm run check
+cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check
 ```
 
 4. **Open a PR** against `master` with a clear description of what changed and why
