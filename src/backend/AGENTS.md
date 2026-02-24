@@ -9,7 +9,7 @@ src/backend/
 ├── MyProject.Application/         # Interfaces, DTOs, service contracts
 │   ├── Features/{Feature}/I{Feature}Service.cs
 │   ├── Features/{Feature}/Dtos/{Operation}Input.cs, {Entity}Output.cs
-│   ├── Features/{Feature}/Persistence/I{Feature}Repository.cs  (optional)
+│   ├── Identity/IUserService.cs, IUserContext.cs
 │   └── Identity/Constants/AppRoles.cs, AppPermissions.cs
 ├── MyProject.Infrastructure/      # Implementations (all internal)
 │   ├── Features/{Feature}/Services/, Configurations/, Extensions/
@@ -46,7 +46,7 @@ All entities extend `BaseEntity` (provides `Id`, `CreatedAt/By`, `UpdatedAt/By`,
 Rules:
 - Private setters, enforce invariants through methods
 - Protected parameterless ctor for EF Core
-- Public ctor generates `Id = Guid.NewGuid()`
+- Derived entity ctor sets `Id = Guid.NewGuid()` (via `protected init`)
 - Boolean naming: `Is*`/`Has*` in C#, prefix-free column names via `HasColumnName`
 - Soft delete via `entity.SoftDelete()` / `entity.Restore()` — never set `IsDeleted` directly
 
@@ -65,7 +65,7 @@ Always serialize metadata with `JsonSerializer.Serialize` — never string inter
 
 ## EF Core
 
-Configurations inherit `BaseEntityConfiguration<T>`, override `ConfigureEntity`. Mark `internal`. Auto-discovered via `ApplyConfigurationsFromAssembly()`.
+Configurations inherit `BaseEntityConfiguration<T>` (`public abstract`), override `ConfigureEntity`. Mark derived configurations `internal`. Auto-discovered via `ApplyConfigurationsFromAssembly()`.
 
 - Default `public` schema. Named schemas only for existing grouped features (e.g., `"auth"`).
 - `.HasComment()` on all enum columns documenting values.
@@ -96,8 +96,9 @@ return Result.Failure(ErrorMessages.Admin.DeleteFailed);
 | ErrorType | HTTP | When |
 |---|---|---|
 | *(omit — default)* | 400 | Validation / business rule failures |
-| `ErrorType.NotFound` | 404 | Entity not found |
 | `ErrorType.Unauthorized` | 401 | Auth / token failures |
+| `ErrorType.Forbidden` | 403 | Authenticated but insufficient privileges |
+| `ErrorType.NotFound` | 404 | Entity not found |
 
 Controller: `ProblemFactory.Create(result.Error, result.ErrorType)` for failures.
 
@@ -175,7 +176,7 @@ Permission changes on a role → invalidate refresh tokens + rotate security sta
 
 Custom repositories: extend `IBaseEntityRepository<T>` in Application, implement in Infrastructure with `BaseEntityRepository<T>`. Return materialized objects only — never `IQueryable`.
 
-Pagination: `Paginate(PaginatedRequest)` extension on `IQueryable<T>` returns `PaginatedResponse<T>`. Use in custom repository methods for list endpoints.
+Pagination: `Paginate(int pageNumber, int pageSize)` extension on `IQueryable<T>` returns `IQueryable<T>` (applies `Skip`/`Take`). Use in custom repository methods for list endpoints.
 
 ## Caching
 
