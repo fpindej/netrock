@@ -2,6 +2,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
 	import { Lock, Loader2, Save } from '@lucide/svelte';
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
@@ -77,9 +78,7 @@
 			</div>
 		{/if}
 		<div>
-			<label for="role-name" class="mb-1 block text-sm font-medium">
-				{m.admin_roles_name()}
-			</label>
+			<Label for="role-name">{m.admin_roles_name()}</Label>
 			<Input
 				id="role-name"
 				bind:value={name}
@@ -96,9 +95,7 @@
 			{/if}
 		</div>
 		<div>
-			<label for="role-desc" class="mb-1 block text-sm font-medium">
-				{m.admin_roles_descriptionLabel()}
-			</label>
+			<Label for="role-desc">{m.admin_roles_descriptionLabel()}</Label>
 			<Input
 				id="role-desc"
 				bind:value={description}

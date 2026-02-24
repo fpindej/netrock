@@ -13,7 +13,7 @@
 	import { StatusIndicator } from '$lib/components/common';
 	import * as m from '$lib/paraglide/messages';
 	import { fly, scale } from 'svelte/transition';
-	import { Check } from '@lucide/svelte';
+	import { Check, Loader2 } from '@lucide/svelte';
 	import { LoginBackground, RegisterDialog } from '$lib/components/auth';
 	import { toast } from '$lib/components/ui/sonner';
 
@@ -27,6 +27,7 @@
 	let email = $state('');
 	let password = $state('');
 	let rememberMe = $state(false);
+	let isLoading = $state(false);
 	let isSuccess = $state(false);
 	let isRedirecting = $state(false);
 	const shake = createShake();
@@ -46,6 +47,9 @@
 
 	async function login(e: Event) {
 		e.preventDefault();
+		if (isLoading || cooldown.active) return;
+
+		isLoading = true;
 
 		try {
 			const { response, error: apiError } = await browserClient.POST('/api/auth/login', {
@@ -83,6 +87,8 @@
 				description: m.auth_login_error()
 			});
 			shake.trigger();
+		} finally {
+			isLoading = false;
 		}
 	}
 </script>
@@ -132,6 +138,7 @@
 								bind:value={email}
 								class="bg-background/50"
 								aria-invalid={shake.active}
+								disabled={isLoading}
 							/>
 						</div>
 
@@ -153,20 +160,28 @@
 								bind:value={password}
 								class="bg-background/50"
 								aria-invalid={shake.active}
+								disabled={isLoading}
 							/>
 
 							<div class="flex items-center gap-2">
-								<Checkbox id="rememberMe" bind:checked={rememberMe} />
+								<Checkbox id="rememberMe" bind:checked={rememberMe} disabled={isLoading} />
 								<Label for="rememberMe" class="text-sm font-normal">
 									{m.auth_login_rememberMe()}
 								</Label>
 							</div>
 						</div>
 
-						<Button type="submit" class="w-full" disabled={!isApiOnline || cooldown.active}>
+						<Button
+							type="submit"
+							class="w-full"
+							disabled={!isApiOnline || isLoading || cooldown.active}
+						>
 							{#if cooldown.active}
 								{m.common_waitSeconds({ seconds: cooldown.remaining })}
 							{:else}
+								{#if isLoading}
+									<Loader2 class="me-2 h-4 w-4 animate-spin" />
+								{/if}
 								{isApiOnline ? m.auth_login_submit() : m.auth_login_apiOffline()}
 							{/if}
 						</Button>

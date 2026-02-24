@@ -23,13 +23,13 @@
 	const fieldShakes = createFieldShakes();
 	const cooldown = createCooldown();
 
-	$effect(() => {
-		if (open) {
+	function handleOpenChange(isOpen: boolean) {
+		if (isOpen) {
 			password = '';
 			fieldErrors = {};
 			generalError = '';
 		}
-	});
+	}
 
 	async function handleSubmit() {
 		fieldErrors = {};
@@ -68,7 +68,7 @@
 	}
 </script>
 
-<Dialog.Root bind:open>
+<Dialog.Root bind:open onOpenChange={handleOpenChange}>
 	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
 			<Dialog.Title>{m.settings_deleteAccount_dialogTitle()}</Dialog.Title>
