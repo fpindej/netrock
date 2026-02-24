@@ -5,10 +5,7 @@ import type { LayoutServerLoad } from './$types';
 export const load: LayoutServerLoad = async ({ parent }) => {
 	const { user } = await parent();
 
-	if (!user) {
-		throw redirect(303, '/login');
-	}
-
+	// Parent (app) layout guarantees user is non-null (redirects to /login otherwise).
 	const hasAdminAccess = hasAnyPermission(user, [
 		Permissions.Users.View,
 		Permissions.Roles.View,

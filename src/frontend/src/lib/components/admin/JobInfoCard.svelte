@@ -4,41 +4,17 @@
 	import { Clock, Calendar, History, Code } from '@lucide/svelte';
 	import { InfoItem } from '$lib/components/profile';
 	import * as m from '$lib/paraglide/messages';
-
-	interface Job {
-		cron?: string;
-		nextExecution?: string | null;
-		lastExecution?: string | null;
-		lastStatus?: string | null;
-		isPaused?: boolean;
-	}
+	import type { JobDetail } from '$lib/types';
+	import { formatJobDate, getJobStatusLabel } from '$lib/utils/jobs';
 
 	interface Props {
-		job: Job;
+		job: JobDetail;
 	}
 
 	let { job }: Props = $props();
 
 	function formatDate(date: string | null | undefined): string {
-		if (!date) return m.admin_jobs_never();
-		return new Date(date).toLocaleString();
-	}
-
-	function getStatusLabel(
-		status: string | null | undefined,
-		isPaused: boolean | undefined
-	): string {
-		if (isPaused) return m.admin_jobs_status_paused();
-		switch (status) {
-			case 'Succeeded':
-				return m.admin_jobs_status_succeeded();
-			case 'Failed':
-				return m.admin_jobs_status_failed();
-			case 'Processing':
-				return m.admin_jobs_status_running();
-			default:
-				return m.admin_jobs_status_idle();
-		}
+		return formatJobDate(date, m.admin_jobs_never());
 	}
 </script>
 
@@ -56,7 +32,7 @@
 			{#if job.isPaused}
 				<Badge variant="outline">{m.admin_jobs_status_paused()}</Badge>
 			{:else}
-				<Badge variant="default">{getStatusLabel(job.lastStatus, job.isPaused)}</Badge>
+				<Badge variant="default">{getJobStatusLabel(job.lastStatus, job.isPaused)}</Badge>
 			{/if}
 		</InfoItem>
 

@@ -21,6 +21,8 @@ export function setTheme(newTheme: Theme) {
 }
 
 export function toggleTheme() {
+	if (!browser) return;
+
 	const current = getTheme();
 	if (current === 'light') {
 		setTheme('dark');
@@ -54,9 +56,9 @@ export function initTheme() {
 	if (!browser) return;
 
 	try {
-		const savedTheme = localStorage.getItem('theme') as Theme | null;
-		if (savedTheme) {
-			theme = savedTheme;
+		const saved = localStorage.getItem('theme');
+		if (saved === 'light' || saved === 'dark' || saved === 'system') {
+			theme = saved;
 		}
 	} catch {
 		theme = 'system';

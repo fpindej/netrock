@@ -3,15 +3,8 @@
 	import { Clock } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import * as m from '$lib/paraglide/messages';
-
-	interface Job {
-		id?: string;
-		cron?: string;
-		nextExecution?: string | null;
-		lastExecution?: string | null;
-		lastStatus?: string | null;
-		isPaused?: boolean;
-	}
+	import type { Job } from '$lib/types';
+	import { formatJobDate, getJobStatusLabel, getJobStatusVariant } from '$lib/utils/jobs';
 
 	interface Props {
 		jobs: Job[];
@@ -20,42 +13,7 @@
 	let { jobs }: Props = $props();
 
 	function formatDate(date: string | null | undefined): string {
-		if (!date) return m.admin_jobs_never();
-		return new Date(date).toLocaleString();
-	}
-
-	function getStatusVariant(
-		status: string | null | undefined,
-		isPaused: boolean | undefined
-	): 'default' | 'secondary' | 'destructive' | 'outline' {
-		if (isPaused) return 'outline';
-		switch (status) {
-			case 'Succeeded':
-				return 'default';
-			case 'Failed':
-				return 'destructive';
-			case 'Processing':
-				return 'secondary';
-			default:
-				return 'outline';
-		}
-	}
-
-	function getStatusLabel(
-		status: string | null | undefined,
-		isPaused: boolean | undefined
-	): string {
-		if (isPaused) return m.admin_jobs_status_paused();
-		switch (status) {
-			case 'Succeeded':
-				return m.admin_jobs_status_succeeded();
-			case 'Failed':
-				return m.admin_jobs_status_failed();
-			case 'Processing':
-				return m.admin_jobs_status_running();
-			default:
-				return m.admin_jobs_status_idle();
-		}
+		return formatJobDate(date, m.admin_jobs_never());
 	}
 </script>
 
@@ -77,8 +35,8 @@
 			>
 				<div class="mb-2 flex items-center justify-between">
 					<span class="text-sm font-medium">{job.id}</span>
-					<Badge variant={getStatusVariant(job.lastStatus, job.isPaused)}>
-						{getStatusLabel(job.lastStatus, job.isPaused)}
+					<Badge variant={getJobStatusVariant(job.lastStatus, job.isPaused)}>
+						{getJobStatusLabel(job.lastStatus, job.isPaused)}
 					</Badge>
 				</div>
 				<div class="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
@@ -124,8 +82,8 @@
 						<td class="px-4 py-3 text-muted-foreground">{formatDate(job.lastExecution)}</td>
 						<td class="px-4 py-3 text-muted-foreground">{formatDate(job.nextExecution)}</td>
 						<td class="px-4 py-3 text-end">
-							<Badge variant={getStatusVariant(job.lastStatus, job.isPaused)}>
-								{getStatusLabel(job.lastStatus, job.isPaused)}
+							<Badge variant={getJobStatusVariant(job.lastStatus, job.isPaused)}>
+								{getJobStatusLabel(job.lastStatus, job.isPaused)}
 							</Badge>
 						</td>
 					</tr>
