@@ -5,7 +5,7 @@
 
 ## Summary
 
-Comprehensive audit of every documentation file in the repository, cross-referenced against actual source code. Fixed 14 factual inaccuracies, 7 stale descriptions, and filled key gaps in FILEMAP.md. Every claim in the documentation now matches the codebase.
+Comprehensive audit of every documentation file in the repository, cross-referenced against actual source code. Fixed 14 factual inaccuracies, 7 stale descriptions, and filled key gaps in FILEMAP.md. Every claim in the documentation now matches the codebase. Additionally softened prescriptive language across all AGENTS.md and SKILLS.md files so post-init project owners understand conventions and their rationale rather than receiving mandates.
 
 ## Changes Made
 
@@ -34,6 +34,11 @@ Comprehensive audit of every documentation file in the repository, cross-referen
 | `src/backend/AGENTS.md` | Qualified "All entities extend BaseEntity" → "Domain entities" | RefreshToken, EmailToken, PausedJob, AuditEvent are Infrastructure models without BaseEntity |
 | `FILEMAP.md` | Split ICookieService/CookieNames into separate rows | AuthController uses CookieNames only (not ICookieService); CookieService doesn't use CookieNames |
 | `FILEMAP.md` | Expanded IUserContext consumers to explicit list | Was "services using IUserContext" — omitted controllers and AuditingInterceptor |
+| `src/backend/AGENTS.md` | Softened BaseEntity from "must" to "should", noted aggregate roots | Convention, not a hard constraint — owner may choose differently |
+| `src/backend/AGENTS.md` | Softened 9 "never/always" conventions to "avoid/prefer" with rationale | e.g., `null!`, `IReadOnlyList<T>`, `ProblemFactory`, `IQueryable`, `ErrorMessages`, `CreatedAtAction` |
+| `src/frontend/AGENTS.md` | Softened 5 "never/always/must" conventions to "avoid/prefer" with rationale | e.g., Props pattern, logical CSS, rate-limit countdown, padding, reactive state |
+| `AGENTS.md` | Softened git workflow language | "without asking" is AI-specific; "never commit broken" → "avoid committing broken" |
+| `SKILLS.md` | Softened 3 conventions with rationale | Dialog grids, `cn()`, additive-only API changes |
 
 ## Decisions & Reasoning
 
@@ -54,6 +59,12 @@ Comprehensive audit of every documentation file in the repository, cross-referen
 - **Choice**: Fix the docs to reference `JWT_SECRET_KEY` (what users set in compose.env)
 - **Alternatives considered**: Renaming the compose env var to match the ASP.NET config key
 - **Reasoning**: The docker-compose.yml mapping from `JWT_SECRET_KEY` → `Authentication__Jwt__Key` is the standard pattern. Users interact with compose.env, so docs should reference what they see there.
+
+### Prescriptive language: soften vs. keep firm
+
+- **Choice**: Soften 21 convention-level directives; keep 15 hard constraints unchanged
+- **Alternatives considered**: Softening everything uniformly, keeping everything firm
+- **Reasoning**: After init, the project belongs to the new owner. Conventions should explain *why* (so the owner can make informed decisions) while hard constraints that prevent bugs, security vulnerabilities, or runtime failures should stay firm. Examples kept firm: `TimeProvider` (testability), `JsonSerializer.Serialize` for audit metadata (JSON injection), `motion-safe:` (accessibility), never export server config from barrel (leaks secrets).
 
 ## Follow-Up Items
 
