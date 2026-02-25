@@ -205,6 +205,11 @@
 	"profile_avatar_updateError": "Failed to update avatar",
 	"profile_avatar_removeSuccess": "Avatar removed successfully",
 	"profile_avatar_removeError": "Failed to remove avatar",
+	"profile_avatar_cropTitle": "Adjust Your Photo",
+	"profile_avatar_cropDescription": "Drag to reposition. Scroll or pinch to zoom.",
+	"profile_avatar_zoom": "Zoom",
+	"profile_avatar_back": "Back",
+	"profile_avatar_saveCrop": "Save Avatar",
 
 	"profile_account_title": "Account Details",
 	"profile_account_description": "Manage your account settings.",

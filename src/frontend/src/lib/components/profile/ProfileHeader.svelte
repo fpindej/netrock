@@ -1,8 +1,10 @@
 <script lang="ts">
 	import * as Avatar from '$lib/components/ui/avatar';
+	import { Button } from '$lib/components/ui/button';
 	import { AvatarDialog } from '$lib/components/profile';
 	import type { User } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
+	import { Camera } from '@lucide/svelte';
 
 	interface Props {
 		user: User | null | undefined;
@@ -50,7 +52,11 @@
 </script>
 
 <div class="flex flex-col items-center gap-4 sm:flex-row">
-	<div class="group relative h-24 w-24">
+	<button
+		type="button"
+		class="group relative h-24 w-24 cursor-pointer rounded-full"
+		onclick={() => (avatarDialogOpen = true)}
+	>
 		<!-- Subtle glow on hover -->
 		<div
 			class="absolute inset-0 rounded-full bg-primary/20 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100"
@@ -65,10 +71,24 @@
 				{initials}
 			</Avatar.Fallback>
 		</Avatar.Root>
-	</div>
+		<!-- Camera overlay on hover -->
+		<div
+			class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+		>
+			<Camera class="text-white" size={24} />
+		</div>
+	</button>
 	<div class="flex flex-col gap-1 text-center sm:text-start">
 		<h3 class="text-lg font-medium">{displayName}</h3>
 		<p class="text-sm text-muted-foreground">{user?.email ?? ''}</p>
+		<Button
+			variant="outline"
+			size="sm"
+			class="mt-2 w-full sm:w-auto"
+			onclick={() => (avatarDialogOpen = true)}
+		>
+			{m.profile_avatar_change()}
+		</Button>
 		<AvatarDialog
 			bind:open={avatarDialogOpen}
 			hasAvatar={user?.hasAvatar}
