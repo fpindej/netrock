@@ -1,10 +1,4 @@
-/** Pixel-crop area produced by svelte-easy-crop's `oncropcomplete` event. */
-export interface PixelCrop {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-}
+import type { CropArea } from 'svelte-easy-crop';
 
 /**
  * Extract the cropped region from an image and return a JPEG blob
@@ -12,7 +6,7 @@ export interface PixelCrop {
  */
 export async function getCroppedBlob(
 	imageSrc: string,
-	pixelCrop: PixelCrop,
+	pixelCrop: CropArea,
 	outputSize = 512
 ): Promise<Blob> {
 	const image = await loadImage(imageSrc);

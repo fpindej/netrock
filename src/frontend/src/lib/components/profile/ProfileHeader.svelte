@@ -54,7 +54,8 @@
 <div class="flex flex-col items-center gap-4 sm:flex-row">
 	<button
 		type="button"
-		class="group relative h-24 w-24 cursor-pointer rounded-full"
+		class="group relative h-24 w-24 cursor-pointer rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+		aria-label={m.profile_avatar_change()}
 		onclick={() => (avatarDialogOpen = true)}
 	>
 		<!-- Subtle glow on hover -->
