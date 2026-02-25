@@ -106,7 +106,7 @@
 {#if canManage}
 	<Separator class="mt-4" />
 
-	<div class="mt-4 flex flex-wrap items-center gap-2">
+	<div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
 		{#if user.isLockedOut}
 			<Button
 				variant="outline"

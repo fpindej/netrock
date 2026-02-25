@@ -78,11 +78,22 @@
 		box-shadow 0.3s ease;
 }
 
-.card-hover:hover {
-	transform: translateY(-2px);
-	box-shadow:
-		0 10px 25px -5px hsl(var(--primary) / 0.05),
-		0 8px 10px -6px hsl(var(--primary) / 0.05);
+@media (hover: hover) {
+	.card-hover:hover {
+		transform: translateY(-2px);
+		box-shadow:
+			0 10px 25px -5px hsl(var(--primary) / 0.05),
+			0 8px 10px -6px hsl(var(--primary) / 0.05);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.card-hover {
+		transition: none;
+	}
+	.card-hover:hover {
+		transform: none;
+	}
 }
 
 /* -----------------------------------------------------------------------------

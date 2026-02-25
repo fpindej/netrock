@@ -6,6 +6,7 @@
 
 <Sonner
 	class="toaster group"
+	position="top-right"
 	toastOptions={{
 		classes: {
 			toast:

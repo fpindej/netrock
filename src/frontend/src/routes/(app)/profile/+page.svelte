@@ -17,7 +17,7 @@
 		<p class="text-sm text-muted-foreground">{m.profile_description()}</p>
 	</div>
 	<div class="h-px w-full bg-border"></div>
-	<div class="grid gap-6 xl:grid-cols-2">
+	<div class="grid gap-6 lg:grid-cols-2">
 		<ProfileForm user={data.user} />
 		<AccountDetails user={data.user} />
 	</div>

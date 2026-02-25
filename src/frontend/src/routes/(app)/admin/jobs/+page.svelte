@@ -43,7 +43,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div class="flex items-center justify-between">
+	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h3 class="text-lg font-medium">{m.admin_jobs_title()}</h3>
 			<p class="text-sm text-muted-foreground">{m.admin_jobs_description()}</p>
@@ -52,7 +52,7 @@
 			<Dialog.Root bind:open={restoreDialogOpen}>
 				<Dialog.Trigger>
 					{#snippet child({ props })}
-						<Button variant="outline" size="sm" {...props}>
+						<Button variant="outline" size="default" {...props}>
 							<RefreshCw class="me-2 h-4 w-4" />
 							{m.admin_jobs_restore()}
 						</Button>

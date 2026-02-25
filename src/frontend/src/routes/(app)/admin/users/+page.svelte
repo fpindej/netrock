@@ -74,7 +74,7 @@
 				}}
 			/>
 		</div>
-		<div class="flex items-center gap-3">
+		<div class="flex items-center justify-between gap-3 sm:justify-end">
 			{#if data.users?.totalCount != null}
 				<p class="text-sm text-muted-foreground">
 					{m.admin_users_totalUsers({ count: data.users.totalCount })}
