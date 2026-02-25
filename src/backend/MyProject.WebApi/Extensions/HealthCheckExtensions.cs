@@ -120,19 +120,27 @@ internal static class HealthCheckExtensions
 
     /// <summary>
     /// Health check that verifies connectivity to S3-compatible storage.
-    /// Uses GetBucketLocation which is a lightweight read-only operation,
-    /// avoiding <c>EnsureBucketExistsAsync</c> which throws on MinIO when the bucket already exists.
+    /// Creates the bucket on first successful connection if it does not exist.
     /// </summary>
     private sealed class S3HealthCheck(IAmazonS3 s3Client, IOptions<FileStorageOptions> options) : IHealthCheck
     {
+        private bool _bucketEnsured;
+
         public async Task<HealthCheckResult> CheckHealthAsync(
             HealthCheckContext context, CancellationToken cancellationToken = default)
         {
             try
             {
-                await s3Client.GetBucketLocationAsync(
-                    new GetBucketLocationRequest { BucketName = options.Value.BucketName },
-                    cancellationToken);
+                if (!_bucketEnsured)
+                {
+                    await EnsureBucketAsync(cancellationToken);
+                }
+                else
+                {
+                    await s3Client.GetBucketLocationAsync(
+                        new GetBucketLocationRequest { BucketName = options.Value.BucketName },
+                        cancellationToken);
+                }
 
                 return HealthCheckResult.Healthy();
             }
@@ -142,6 +150,20 @@ internal static class HealthCheckExtensions
                     context.Registration.FailureStatus,
                     "S3 storage is unreachable.",
                     ex);
+            }
+        }
+
+        private async Task EnsureBucketAsync(CancellationToken ct)
+        {
+            try
+            {
+                await s3Client.PutBucketAsync(
+                    new PutBucketRequest { BucketName = options.Value.BucketName }, ct);
+                _bucketEnsured = true;
+            }
+            catch (AmazonS3Exception ex) when (ex.ErrorCode is "BucketAlreadyOwnedByYou" or "BucketAlreadyExists")
+            {
+                _bucketEnsured = true;
             }
         }
     }
