@@ -124,6 +124,7 @@ internal static class HealthCheckExtensions
     /// </summary>
     private sealed class S3HealthCheck(IAmazonS3 s3Client, IOptions<FileStorageOptions> options) : IHealthCheck
     {
+        private readonly SemaphoreSlim _bucketInitLock = new(1, 1);
         private bool _bucketEnsured;
 
         public async Task<HealthCheckResult> CheckHealthAsync(
@@ -153,10 +154,19 @@ internal static class HealthCheckExtensions
             }
         }
 
+        /// <summary>
+        /// Creates the bucket if it does not already exist (idempotent, thread-safe).
+        /// Uses double-check locking so only the first concurrent probe pays the S3 call cost.
+        /// </summary>
         private async Task EnsureBucketAsync(CancellationToken ct)
         {
+            if (_bucketEnsured) return;
+
+            await _bucketInitLock.WaitAsync(ct);
             try
             {
+                if (_bucketEnsured) return;
+
                 await s3Client.PutBucketAsync(
                     new PutBucketRequest { BucketName = options.Value.BucketName }, ct);
                 _bucketEnsured = true;
@@ -164,6 +174,10 @@ internal static class HealthCheckExtensions
             catch (AmazonS3Exception ex) when (ex.ErrorCode is "BucketAlreadyOwnedByYou" or "BucketAlreadyExists")
             {
                 _bucketEnsured = true;
+            }
+            finally
+            {
+                _bucketInitLock.Release();
             }
         }
     }

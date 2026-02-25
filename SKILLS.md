@@ -452,7 +452,7 @@ If you don't need file uploads:
 4. **Endpoints:** Remove avatar endpoints from `UsersController`, `UploadAvatar/` DTOs
 5. **DTOs:** Remove `HasAvatar` from `UserOutput`, `AdminUserOutput`, `UserResponse`, `AdminUserResponse`, mappers
 6. **DI:** Remove `AddFileStorageServices()` and `AddAvatarServices()` from `Program.cs`
-7. **NuGet:** Remove `AWSSDK.S3`, `SkiaSharp`, `SkiaSharp.NativeAssets.Linux` from `Directory.Packages.props`
+7. **NuGet:** Remove `AWSSDK.S3`, `SkiaSharp`, `SkiaSharp.NativeAssets.Linux.NoDependencies` from `Directory.Packages.props`
 8. **Frontend:** Remove `AvatarDialog.svelte`, update `ProfileHeader.svelte` and `UserNav.svelte` to remove avatar image
 9. **Config:** Remove `FileStorage` section from all `appsettings*.json` and env files
 10. **Health check:** Remove S3 health check from `HealthCheckExtensions.cs`
