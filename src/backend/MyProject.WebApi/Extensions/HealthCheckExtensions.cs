@@ -120,19 +120,31 @@ internal static class HealthCheckExtensions
 
     /// <summary>
     /// Health check that verifies connectivity to S3-compatible storage.
-    /// Uses GetBucketLocation which is a lightweight read-only operation,
-    /// avoiding <c>EnsureBucketExistsAsync</c> which throws on MinIO when the bucket already exists.
+    /// Creates the bucket on first successful connection if it does not exist.
     /// </summary>
-    private sealed class S3HealthCheck(IAmazonS3 s3Client, IOptions<FileStorageOptions> options) : IHealthCheck
+    private sealed class S3HealthCheck(
+        IAmazonS3 s3Client,
+        IOptions<FileStorageOptions> options,
+        ILogger<S3HealthCheck> logger) : IHealthCheck
     {
+        private readonly SemaphoreSlim _bucketInitLock = new(1, 1);
+        private bool _bucketEnsured;
+
         public async Task<HealthCheckResult> CheckHealthAsync(
             HealthCheckContext context, CancellationToken cancellationToken = default)
         {
             try
             {
-                await s3Client.GetBucketLocationAsync(
-                    new GetBucketLocationRequest { BucketName = options.Value.BucketName },
-                    cancellationToken);
+                if (!_bucketEnsured)
+                {
+                    await EnsureBucketAsync(cancellationToken);
+                }
+                else
+                {
+                    await s3Client.GetBucketLocationAsync(
+                        new GetBucketLocationRequest { BucketName = options.Value.BucketName },
+                        cancellationToken);
+                }
 
                 return HealthCheckResult.Healthy();
             }
@@ -142,6 +154,40 @@ internal static class HealthCheckExtensions
                     context.Registration.FailureStatus,
                     "S3 storage is unreachable.",
                     ex);
+            }
+        }
+
+        /// <summary>
+        /// Creates the bucket if it does not already exist (idempotent, thread-safe).
+        /// Uses double-check locking so only the first concurrent probe pays the S3 call cost.
+        /// </summary>
+        private async Task EnsureBucketAsync(CancellationToken ct)
+        {
+            if (_bucketEnsured) return;
+
+            await _bucketInitLock.WaitAsync(ct);
+            try
+            {
+                if (_bucketEnsured) return;
+
+                await s3Client.PutBucketAsync(
+                    new PutBucketRequest { BucketName = options.Value.BucketName }, ct);
+                _bucketEnsured = true;
+                logger.LogDebug("Bucket '{Bucket}' is ready", options.Value.BucketName);
+            }
+            catch (AmazonS3Exception ex) when (ex.ErrorCode is "BucketAlreadyOwnedByYou" or "BucketAlreadyExists")
+            {
+                _bucketEnsured = true;
+                logger.LogDebug("Bucket '{Bucket}' already exists", options.Value.BucketName);
+            }
+            catch (AmazonS3Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to ensure bucket '{Bucket}' exists", options.Value.BucketName);
+                throw;
+            }
+            finally
+            {
+                _bucketInitLock.Release();
             }
         }
     }
