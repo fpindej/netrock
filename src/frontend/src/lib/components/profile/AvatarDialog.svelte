@@ -1,17 +1,15 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import Cropper from 'svelte-easy-crop';
 	import type { CropArea } from 'svelte-easy-crop';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import { Button } from '$lib/components/ui/button';
 	import * as m from '$lib/paraglide/messages';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
 	import { createCooldown } from '$lib/state';
 	import { browserClient, getErrorMessage } from '$lib/api';
 	import { getCroppedBlob } from '$lib/utils';
-	import { Upload } from '@lucide/svelte';
+	import AvatarSelectStep from './AvatarSelectStep.svelte';
+	import AvatarCropStep from './AvatarCropStep.svelte';
 
 	const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 	const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -21,11 +19,12 @@
 	interface Props {
 		open: boolean;
 		hasAvatar: boolean | undefined;
+		avatarUrl: string | null;
 		displayName: string;
 		initials: string;
 	}
 
-	let { open = $bindable(), hasAvatar, displayName, initials }: Props = $props();
+	let { open = $bindable(), hasAvatar, avatarUrl, displayName, initials }: Props = $props();
 
 	let step: Step = $state('select');
 	let previewUrl: string | null = $state(null);
@@ -33,8 +32,6 @@
 	let isLoading = $state(false);
 	let isDragOver = $state(false);
 	const cooldown = createCooldown();
-
-	let fileInput: HTMLInputElement | undefined = $state();
 
 	// Crop state
 	let crop = $state({ x: 0, y: 0 });
@@ -91,30 +88,6 @@
 		step = 'crop';
 	}
 
-	function handleInputChange(e: Event) {
-		const input = e.currentTarget as HTMLInputElement;
-		const file = input.files?.[0];
-		if (file) handleFileSelect(file);
-		// Reset so re-selecting the same file triggers change
-		if (input) input.value = '';
-	}
-
-	function handleDrop(e: DragEvent) {
-		e.preventDefault();
-		isDragOver = false;
-		const file = e.dataTransfer?.files[0];
-		if (file) handleFileSelect(file);
-	}
-
-	function handleDragOver(e: DragEvent) {
-		e.preventDefault();
-		isDragOver = true;
-	}
-
-	function handleDragLeave() {
-		isDragOver = false;
-	}
-
 	function handleBack() {
 		step = 'select';
 		crop = { x: 0, y: 0 };
@@ -141,7 +114,6 @@
 
 			if (response.ok) {
 				previewUrl = null;
-				if (fileInput) fileInput.value = '';
 				toast.success(m.profile_avatar_updateSuccess());
 				open = false;
 				await invalidateAll();
@@ -181,132 +153,32 @@
 <Dialog.Root bind:open>
 	<Dialog.Content class="sm:max-w-md">
 		{#if step === 'select'}
-			<Dialog.Header>
-				<Dialog.Title>{m.profile_avatar_dialogTitle()}</Dialog.Title>
-				<Dialog.Description>
-					{m.profile_avatar_dialogDescription()}
-				</Dialog.Description>
-			</Dialog.Header>
-			<div class="grid gap-4 py-4">
-				<!-- Current avatar preview -->
-				<div class="flex justify-center">
-					<Avatar.Root class="h-24 w-24">
-						{#if previewUrl}
-							<Avatar.Image src={previewUrl} alt={displayName} />
-						{/if}
-						<Avatar.Fallback class="text-lg">
-							{initials}
-						</Avatar.Fallback>
-					</Avatar.Root>
-				</div>
-
-				<!-- Dropzone -->
-				<button
-					type="button"
-					class="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-sm transition-colors {isDragOver
-						? 'border-primary bg-primary/5 text-primary'
-						: 'border-muted-foreground/25 text-muted-foreground hover:border-primary/50 hover:text-foreground'}"
-					ondrop={handleDrop}
-					ondragover={handleDragOver}
-					ondragleave={handleDragLeave}
-					onclick={() => fileInput?.click()}
-				>
-					<Upload class="opacity-50" size={24} />
-					{#if isDragOver}
-						<span>{m.profile_avatar_dropzoneActive()}</span>
-					{:else}
-						<span>{m.profile_avatar_dropzone()}</span>
-					{/if}
-				</button>
-
-				<input
-					bind:this={fileInput}
-					type="file"
-					accept="image/jpeg,image/png,image/webp,image/gif"
-					class="hidden"
-					onchange={handleInputChange}
-				/>
-
-				{#if fileError}
-					<p class="text-xs text-destructive">{fileError}</p>
-				{/if}
-			</div>
-			<Dialog.Footer class="flex-col gap-2 sm:flex-row sm:justify-between">
-				<div>
-					{#if hasAvatar}
-						<Button
-							variant="destructive"
-							onclick={handleRemove}
-							disabled={isLoading || cooldown.active}
-						>
-							{cooldown.active
-								? m.common_waitSeconds({ seconds: cooldown.remaining })
-								: m.profile_avatar_remove()}
-						</Button>
-					{/if}
-				</div>
-				<Dialog.Close>
-					{#snippet child({ props })}
-						<Button {...props} variant="outline">
-							{m.common_cancel()}
-						</Button>
-					{/snippet}
-				</Dialog.Close>
-			</Dialog.Footer>
-		{:else}
-			<!-- Crop step -->
-			<Dialog.Header>
-				<Dialog.Title>{m.profile_avatar_cropTitle()}</Dialog.Title>
-				<Dialog.Description>
-					{m.profile_avatar_cropDescription()}
-				</Dialog.Description>
-			</Dialog.Header>
-			<div class="grid gap-4 py-4">
-				<!-- Cropper container -->
-				<div class="relative mx-auto aspect-square w-full max-w-[300px] overflow-hidden rounded-lg">
-					{#if previewUrl}
-						<Cropper
-							image={previewUrl}
-							bind:crop
-							bind:zoom
-							aspect={1}
-							cropShape="round"
-							showGrid={false}
-							oncropcomplete={(e) => (pixelCrop = e.pixels)}
-						/>
-					{/if}
-				</div>
-
-				<!-- Zoom slider -->
-				<div class="flex items-center gap-3 px-2">
-					<label for="zoom-slider" class="text-sm whitespace-nowrap text-muted-foreground">
-						{m.profile_avatar_zoom()}
-					</label>
-					<input
-						id="zoom-slider"
-						type="range"
-						min="1"
-						max="3"
-						step="0.01"
-						bind:value={zoom}
-						class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary"
-					/>
-				</div>
-			</div>
-			<Dialog.Footer class="flex-col gap-2 sm:flex-row sm:justify-between">
-				<Button variant="outline" onclick={handleBack} disabled={isLoading}>
-					{m.profile_avatar_back()}
-				</Button>
-				<Button onclick={handleUpload} disabled={isLoading || !pixelCrop || cooldown.active}>
-					{#if isLoading}
-						{m.profile_avatar_uploading()}
-					{:else if cooldown.active}
-						{m.common_waitSeconds({ seconds: cooldown.remaining })}
-					{:else}
-						{m.profile_avatar_saveCrop()}
-					{/if}
-				</Button>
-			</Dialog.Footer>
+			<AvatarSelectStep
+				{avatarUrl}
+				{displayName}
+				{initials}
+				{hasAvatar}
+				{isLoading}
+				bind:isDragOver
+				{fileError}
+				cooldownActive={cooldown.active}
+				cooldownRemaining={cooldown.remaining}
+				onfileselect={handleFileSelect}
+				onremove={handleRemove}
+			/>
+		{:else if previewUrl}
+			<AvatarCropStep
+				{previewUrl}
+				bind:crop
+				bind:zoom
+				{isLoading}
+				cooldownActive={cooldown.active}
+				cooldownRemaining={cooldown.remaining}
+				{pixelCrop}
+				oncropcomplete={(pixels) => (pixelCrop = pixels)}
+				onback={handleBack}
+				onupload={handleUpload}
+			/>
 		{/if}
 	</Dialog.Content>
 </Dialog.Root>

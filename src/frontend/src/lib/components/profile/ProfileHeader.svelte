@@ -93,6 +93,7 @@
 		<AvatarDialog
 			bind:open={avatarDialogOpen}
 			hasAvatar={user?.hasAvatar}
+			{avatarUrl}
 			{displayName}
 			{initials}
 		/>
