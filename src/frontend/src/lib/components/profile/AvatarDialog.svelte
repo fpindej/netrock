@@ -30,7 +30,6 @@
 	let previewUrl: string | null = $state(null);
 	let fileError = $state('');
 	let isLoading = $state(false);
-	let isDragOver = $state(false);
 	const cooldown = createCooldown();
 
 	// Crop state
@@ -90,6 +89,8 @@
 
 	function handleBack() {
 		step = 'select';
+		if (previewUrl) URL.revokeObjectURL(previewUrl);
+		previewUrl = null;
 		crop = { x: 0, y: 0 };
 		zoom = 1;
 		pixelCrop = null;
@@ -159,7 +160,6 @@
 				{initials}
 				{hasAvatar}
 				{isLoading}
-				bind:isDragOver
 				{fileError}
 				cooldownActive={cooldown.active}
 				cooldownRemaining={cooldown.remaining}

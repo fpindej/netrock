@@ -11,7 +11,6 @@
 		initials: string;
 		hasAvatar: boolean | undefined;
 		isLoading: boolean;
-		isDragOver: boolean;
 		fileError: string;
 		cooldownActive: boolean;
 		cooldownRemaining: number;
@@ -25,13 +24,14 @@
 		initials,
 		hasAvatar,
 		isLoading,
-		isDragOver = $bindable(),
 		fileError,
 		cooldownActive,
 		cooldownRemaining,
 		onfileselect,
 		onremove
 	}: Props = $props();
+
+	let isDragOver = $state(false);
 
 	let fileInput: HTMLInputElement | undefined = $state();
 
