@@ -122,7 +122,10 @@ internal static class HealthCheckExtensions
     /// Health check that verifies connectivity to S3-compatible storage.
     /// Creates the bucket on first successful connection if it does not exist.
     /// </summary>
-    private sealed class S3HealthCheck(IAmazonS3 s3Client, IOptions<FileStorageOptions> options) : IHealthCheck
+    private sealed class S3HealthCheck(
+        IAmazonS3 s3Client,
+        IOptions<FileStorageOptions> options,
+        ILogger<S3HealthCheck> logger) : IHealthCheck
     {
         private readonly SemaphoreSlim _bucketInitLock = new(1, 1);
         private bool _bucketEnsured;
@@ -170,10 +173,17 @@ internal static class HealthCheckExtensions
                 await s3Client.PutBucketAsync(
                     new PutBucketRequest { BucketName = options.Value.BucketName }, ct);
                 _bucketEnsured = true;
+                logger.LogDebug("Bucket '{Bucket}' is ready", options.Value.BucketName);
             }
             catch (AmazonS3Exception ex) when (ex.ErrorCode is "BucketAlreadyOwnedByYou" or "BucketAlreadyExists")
             {
                 _bucketEnsured = true;
+                logger.LogDebug("Bucket '{Bucket}' already exists", options.Value.BucketName);
+            }
+            catch (AmazonS3Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to ensure bucket '{Bucket}' exists", options.Value.BucketName);
+                throw;
             }
             finally
             {
