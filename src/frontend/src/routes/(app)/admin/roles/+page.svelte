@@ -18,7 +18,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div class="flex items-center justify-between">
+	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h3 class="text-lg font-medium">{m.admin_roles_title()}</h3>
 			<p class="text-sm text-muted-foreground">{m.admin_roles_description()}</p>

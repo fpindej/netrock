@@ -121,11 +121,11 @@
 							}
 						}}
 					>
-						<td class="px-4 py-3 font-medium">
-							<span class="truncate">{displayName(user)}</span>
+						<td class="max-w-48 px-4 py-3 font-medium">
+							<span class="block truncate">{displayName(user)}</span>
 						</td>
-						<td class="px-4 py-3 text-muted-foreground">
-							<span class="truncate" class:italic={piiMasked}>{user.email}</span>
+						<td class="max-w-56 px-4 py-3 text-muted-foreground">
+							<span class="block truncate" class:italic={piiMasked}>{user.email}</span>
 						</td>
 						<td class="px-4 py-3">
 							<div class="flex flex-wrap gap-1">

@@ -15,7 +15,9 @@
 	let open = $state(false);
 </script>
 
-<header class="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 md:hidden">
+<header
+	class="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 pt-[env(safe-area-inset-top,0px)] md:hidden"
+>
 	<Sheet.Root bind:open>
 		<Sheet.Trigger>
 			{#snippet child({ props })}

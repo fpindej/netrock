@@ -155,8 +155,8 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 - Touch targets ≥ 40px (`h-10`), primary actions ≥ 44px (`h-11`)
 - `h-dvh` not `h-screen` for full-height layouts
 - `min-w-0` on flex children with text, `shrink-0` on icons/badges
-- **Content grids: `xl:grid-cols-2`** not `lg:` — sidebar takes ~250px
-- **No `max-w-*` on page content** — cards fill their container
+- **Content grids: `lg:grid-cols-2`** — the `max-w-7xl` constraint ensures sufficient column width even with the sidebar
+- **Page content max-width: `max-w-7xl mx-auto`** — prevents ultra-wide layouts; applied in the `(app)/+layout.svelte` wrapper
 - Scale padding with breakpoints (`p-4 sm:p-6 lg:p-8`) — flat large padding wastes space on mobile
 - Dialog grids: start with `grid-cols-1` base and add responsive breakpoints — dialogs are narrow on mobile
 - Min font: `text-xs` (12px) — going smaller hurts readability, especially on mobile
@@ -336,8 +336,8 @@ pnpm run test -- -t "name" # filter by test name
 - Physical CSS (`ml-`, `mr-`, `pl-`, `pr-`, `border-l`, `border-r`)
 - `space-x-*` on flex/grid — use `gap-*`
 - `h-screen` — use `h-dvh`
-- `lg:grid-cols-2` for content — use `xl:grid-cols-2`
-- `max-w-*` on page content — cards fill container
+- `xl:grid-cols-2` for content — use `lg:grid-cols-2` (max-w-7xl ensures sufficient width)
+- Unconstrained page content — always use `max-w-7xl mx-auto` wrapper
 - `null!`, `as` casts when narrowing works
 - Import server config from barrel (`$lib/config`)
 - Hand-edit `v1.d.ts`

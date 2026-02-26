@@ -35,7 +35,7 @@
 	<div class="h-px w-full bg-border"></div>
 
 	{#if data.job}
-		<div class="grid gap-6 xl:grid-cols-2">
+		<div class="grid gap-6 lg:grid-cols-2">
 			<JobInfoCard job={data.job} />
 			{#if canManageJobs}
 				<JobActionsCard jobId={data.job.id ?? ''} isPaused={data.job.isPaused ?? false} />

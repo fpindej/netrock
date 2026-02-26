@@ -40,10 +40,12 @@
 		{#if !data.user.emailConfirmed}
 			<EmailVerificationBanner />
 		{/if}
-		<main class="flex flex-1 flex-col gap-4 overflow-y-auto p-4 lg:gap-6 lg:p-6">
+		<main
+			class="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4 pb-[max(4rem,calc(env(safe-area-inset-bottom,0px)+2rem))] lg:gap-6 lg:p-6 lg:pb-[max(4rem,calc(env(safe-area-inset-bottom,0px)+2rem))]"
+		>
 			{#key page.url.pathname}
 				<div
-					class="motion-safe:duration-300 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4"
+					class="mx-auto w-full max-w-7xl motion-safe:duration-300 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4"
 				>
 					{@render children()}
 				</div>
