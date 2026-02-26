@@ -205,6 +205,11 @@
 	"profile_avatar_updateError": "Nepodařilo se aktualizovat avatar",
 	"profile_avatar_removeSuccess": "Avatar byl úspěšně odebrán",
 	"profile_avatar_removeError": "Nepodařilo se odebrat avatar",
+	"profile_avatar_cropTitle": "Upravte svou fotku",
+	"profile_avatar_cropDescription": "Přetáhněte pro změnu pozice. Pro přiblížení použijte kolečko myši nebo gesto sevření.",
+	"profile_avatar_zoom": "Přiblížení",
+	"profile_avatar_back": "Zpět",
+	"profile_avatar_saveCrop": "Uložit avatar",
 
 	"profile_account_title": "Detaily účtu",
 	"profile_account_description": "Správa nastavení účtu.",
