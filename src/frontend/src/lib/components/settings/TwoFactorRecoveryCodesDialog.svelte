@@ -150,7 +150,7 @@
 			</form>
 		{:else}
 			<div class="space-y-4 py-4">
-				<div class="grid grid-cols-2 gap-2">
+				<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
 					{#each recoveryCodes as recoveryCode (recoveryCode)}
 						<code class="rounded-md bg-muted px-3 py-2 text-center font-mono text-sm">
 							{recoveryCode}

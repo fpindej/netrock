@@ -147,7 +147,7 @@
 					<div class="space-y-3">
 						<p class="text-sm text-muted-foreground">{m.settings_twoFactor_scanQr()}</p>
 						<div class="flex justify-center rounded-lg bg-white p-4">
-							<img src={qrDataUrl} alt="QR Code" class="h-64 w-64" />
+							<img src={qrDataUrl} alt="QR Code" class="h-48 w-48 sm:h-64 sm:w-64" />
 						</div>
 					</div>
 
@@ -202,7 +202,7 @@
 			</div>
 		{:else}
 			<div class="space-y-4 py-4">
-				<div class="grid grid-cols-2 gap-2">
+				<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
 					{#each recoveryCodes as recoveryCode (recoveryCode)}
 						<code class="rounded-md bg-muted px-3 py-2 text-center font-mono text-sm">
 							{recoveryCode}
