@@ -48,7 +48,10 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     {
         _factory.AuthenticationService.Login(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
-            .Returns(Result<AuthenticationOutput>.Success(new AuthenticationOutput("access", "refresh")));
+            .Returns(Result<LoginOutput>.Success(new LoginOutput(
+                Tokens: new AuthenticationOutput("access", "refresh"),
+                ChallengeToken: null,
+                RequiresTwoFactor: false)));
 
         var response = await _client.SendAsync(
             Post("/api/auth/login", JsonContent.Create(new { Username = "test@example.com", Password = "Password1!" })));
@@ -65,7 +68,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     {
         _factory.AuthenticationService.Login(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
-            .Returns(Result<AuthenticationOutput>.Failure(
+            .Returns(Result<LoginOutput>.Failure(
                 ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized));
 
         var response = await _client.SendAsync(

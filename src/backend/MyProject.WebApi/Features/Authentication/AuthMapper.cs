@@ -35,6 +35,25 @@ internal static class AuthMapper
         };
 
     /// <summary>
+    /// Maps a <see cref="LoginOutput"/> to an <see cref="AuthenticationResponse"/>.
+    /// When 2FA is required, tokens are empty and challenge fields are populated.
+    /// </summary>
+    /// <param name="output">The login output from the application layer.</param>
+    /// <param name="useCookies">Whether cookies were requested (passed through for 2FA completion).</param>
+    public static AuthenticationResponse ToResponse(this LoginOutput output, bool useCookies) =>
+        output.RequiresTwoFactor
+            ? new AuthenticationResponse
+            {
+                RequiresTwoFactor = true,
+                ChallengeToken = output.ChallengeToken
+            }
+            : new AuthenticationResponse
+            {
+                AccessToken = output.Tokens!.AccessToken,
+                RefreshToken = output.Tokens!.RefreshToken
+            };
+
+    /// <summary>
     /// Maps a <see cref="ChangePasswordRequest"/> to a <see cref="ChangePasswordInput"/>.
     /// </summary>
     public static ChangePasswordInput ToChangePasswordInput(this ChangePasswordRequest request) =>

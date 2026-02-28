@@ -25,15 +25,9 @@ namespace MyProject.WebApi.Features.Authentication;
 public class AuthController(IAuthenticationService authenticationService, ICaptchaService captchaService) : ControllerBase
 {
     /// <summary>
-    /// Authenticates a user and returns JWT tokens.
+    /// Authenticates a user and returns JWT tokens, or a 2FA challenge if two-factor is enabled.
     /// Tokens are always returned in the response body. When useCookies is true, tokens are also set as HttpOnly cookies.
     /// </summary>
-    /// <param name="request">The login credentials</param>
-    /// <param name="useCookies">When true, sets tokens in HttpOnly cookies for web clients. Defaults to false (stateless).</param>
-    /// <returns>Authentication response containing access and refresh tokens</returns>
-    /// <response code="200">Returns authentication tokens (optionally also set in HttpOnly cookies)</response>
-    /// <response code="400">If the credentials are improperly formatted</response>
-    /// <response code="401">If the credentials are invalid</response>
     [HttpPost("login")]
     [EnableRateLimiting(RateLimitPolicies.Auth)]
     [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
@@ -52,7 +46,7 @@ public class AuthController(IAuthenticationService authenticationService, ICaptc
             return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
-        return Ok(result.Value.ToResponse());
+        return Ok(result.Value.ToResponse(useCookies));
     }
 
     /// <summary>

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -42,12 +43,14 @@ internal class AuthenticationService(
     ILogger<AuthenticationService> logger,
     MyProjectDbContext dbContext) : IAuthenticationService
 {
+    private static readonly TimeSpan ChallengeTokenLifetime = TimeSpan.FromMinutes(5);
+
     private readonly AuthenticationOptions.JwtOptions _jwtOptions = authenticationOptions.Value.Jwt;
     private readonly AuthenticationOptions.EmailTokenOptions _emailTokenOptions = authenticationOptions.Value.EmailToken;
     private readonly EmailOptions _emailOptions = emailOptions.Value;
 
     /// <inheritdoc />
-    public async Task<Result<AuthenticationOutput>> Login(string username, string password, bool useCookies = false, bool rememberMe = false, CancellationToken cancellationToken = default)
+    public async Task<Result<LoginOutput>> Login(string username, string password, bool useCookies = false, bool rememberMe = false, CancellationToken cancellationToken = default)
     {
         var user = await userManager.FindByNameAsync(username);
 
@@ -56,59 +59,123 @@ internal class AuthenticationService(
             await auditService.LogAsync(AuditActions.LoginFailure,
                 metadata: JsonSerializer.Serialize(new { attemptedEmail = username }),
                 ct: cancellationToken);
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized);
+            return Result<LoginOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized);
         }
 
         var signInResult = await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
         if (signInResult.IsLockedOut)
         {
             await auditService.LogAsync(AuditActions.LoginFailure, userId: user.Id, ct: cancellationToken);
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginAccountLocked, ErrorType.Unauthorized);
+            return Result<LoginOutput>.Failure(ErrorMessages.Auth.LoginAccountLocked, ErrorType.Unauthorized);
         }
 
         if (!signInResult.Succeeded)
         {
             await auditService.LogAsync(AuditActions.LoginFailure, userId: user.Id, ct: cancellationToken);
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized);
+            return Result<LoginOutput>.Failure(ErrorMessages.Auth.LoginInvalidCredentials, ErrorType.Unauthorized);
         }
 
-        var accessToken = await tokenProvider.GenerateAccessToken(user);
-        var refreshTokenString = tokenProvider.GenerateRefreshToken();
-        var utcNow = timeProvider.GetUtcNow();
-
-        var refreshLifetime = rememberMe
-            ? _jwtOptions.RefreshToken.PersistentLifetime
-            : _jwtOptions.RefreshToken.SessionLifetime;
-
-        var refreshTokenEntity = new RefreshToken
+        if (user.TwoFactorEnabled)
         {
-            Id = Guid.NewGuid(),
-            Token = HashHelper.Sha256(refreshTokenString),
-            UserId = user.Id,
-            CreatedAt = utcNow.UtcDateTime,
-            ExpiredAt = utcNow.UtcDateTime.Add(refreshLifetime),
-            IsUsed = false,
-            IsInvalidated = false,
-            IsPersistent = rememberMe
-        };
+            var challengeToken = GenerateChallengeToken();
+            var utcNow = timeProvider.GetUtcNow().UtcDateTime;
 
-        dbContext.RefreshTokens.Add(refreshTokenEntity);
-        await dbContext.SaveChangesAsync(cancellationToken);
+            var challenge = new TwoFactorChallenge
+            {
+                Id = Guid.NewGuid(),
+                Token = HashHelper.Sha256(challengeToken),
+                UserId = user.Id,
+                CreatedAt = utcNow,
+                ExpiresAt = utcNow.Add(ChallengeTokenLifetime),
+                IsUsed = false,
+                IsRememberMe = rememberMe
+            };
 
-        if (useCookies)
-        {
-            SetAuthCookies(accessToken, refreshTokenString, rememberMe, utcNow,
-                utcNow.Add(refreshLifetime));
+            dbContext.TwoFactorChallenges.Add(challenge);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return Result<LoginOutput>.Success(new LoginOutput(
+                Tokens: null,
+                ChallengeToken: challengeToken,
+                RequiresTwoFactor: true));
         }
 
-        var output = new AuthenticationOutput(
-            AccessToken: accessToken,
-            RefreshToken: refreshTokenString
-        );
-
+        var tokens = await GenerateTokensAsync(user, useCookies, rememberMe, cancellationToken);
         await auditService.LogAsync(AuditActions.LoginSuccess, userId: user.Id, ct: cancellationToken);
 
-        return Result<AuthenticationOutput>.Success(output);
+        return Result<LoginOutput>.Success(new LoginOutput(
+            Tokens: tokens,
+            ChallengeToken: null,
+            RequiresTwoFactor: false));
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<AuthenticationOutput>> CompleteTwoFactorLoginAsync(
+        string challengeToken, string code, bool useCookies, CancellationToken cancellationToken = default)
+    {
+        var challenge = await ResolveChallengeAsync(challengeToken, cancellationToken);
+        if (challenge is null)
+        {
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.TwoFactor.ChallengeNotFound, ErrorType.Unauthorized);
+        }
+
+        var user = await userManager.FindByIdAsync(challenge.UserId.ToString());
+        if (user is null)
+        {
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.UserNotFound, ErrorType.Unauthorized);
+        }
+
+        var isValid = await userManager.VerifyTwoFactorTokenAsync(
+            user, TokenOptions.DefaultAuthenticatorProvider, code);
+
+        if (!isValid)
+        {
+            await auditService.LogAsync(AuditActions.TwoFactorLoginFailure, userId: user.Id, ct: cancellationToken);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.TwoFactor.InvalidCode, ErrorType.Unauthorized);
+        }
+
+        challenge.IsUsed = true;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var tokens = await GenerateTokensAsync(user, useCookies, challenge.IsRememberMe, cancellationToken);
+
+        await auditService.LogAsync(AuditActions.TwoFactorLoginSuccess, userId: user.Id, ct: cancellationToken);
+
+        return Result<AuthenticationOutput>.Success(tokens);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<AuthenticationOutput>> CompleteTwoFactorRecoveryLoginAsync(
+        string challengeToken, string recoveryCode, bool useCookies, CancellationToken cancellationToken = default)
+    {
+        var challenge = await ResolveChallengeAsync(challengeToken, cancellationToken);
+        if (challenge is null)
+        {
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.TwoFactor.ChallengeNotFound, ErrorType.Unauthorized);
+        }
+
+        var user = await userManager.FindByIdAsync(challenge.UserId.ToString());
+        if (user is null)
+        {
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.UserNotFound, ErrorType.Unauthorized);
+        }
+
+        var redeemResult = await userManager.RedeemTwoFactorRecoveryCodeAsync(user, recoveryCode);
+        if (!redeemResult.Succeeded)
+        {
+            await auditService.LogAsync(AuditActions.TwoFactorLoginFailure, userId: user.Id, ct: cancellationToken);
+            return Result<AuthenticationOutput>.Failure(ErrorMessages.TwoFactor.RecoveryCodeInvalid, ErrorType.Unauthorized);
+        }
+
+        challenge.IsUsed = true;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var tokens = await GenerateTokensAsync(user, useCookies, challenge.IsRememberMe, cancellationToken);
+
+        await auditService.LogAsync(AuditActions.TwoFactorRecoveryCodeUsed, userId: user.Id, ct: cancellationToken);
+        await auditService.LogAsync(AuditActions.TwoFactorLoginSuccess, userId: user.Id, ct: cancellationToken);
+
+        return Result<AuthenticationOutput>.Success(tokens);
     }
 
     /// <inheritdoc />
@@ -432,6 +499,80 @@ internal class AuthenticationService(
         await auditService.LogAsync(AuditActions.ResendVerificationEmail, userId: userId.Value, ct: cancellationToken);
 
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Generates access and refresh tokens for the user, stores the refresh token, and optionally sets cookies.
+    /// </summary>
+    private async Task<AuthenticationOutput> GenerateTokensAsync(
+        ApplicationUser user, bool useCookies, bool rememberMe, CancellationToken cancellationToken)
+    {
+        var accessToken = await tokenProvider.GenerateAccessToken(user);
+        var refreshTokenString = tokenProvider.GenerateRefreshToken();
+        var utcNow = timeProvider.GetUtcNow();
+
+        var refreshLifetime = rememberMe
+            ? _jwtOptions.RefreshToken.PersistentLifetime
+            : _jwtOptions.RefreshToken.SessionLifetime;
+
+        var refreshTokenEntity = new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            Token = HashHelper.Sha256(refreshTokenString),
+            UserId = user.Id,
+            CreatedAt = utcNow.UtcDateTime,
+            ExpiredAt = utcNow.UtcDateTime.Add(refreshLifetime),
+            IsUsed = false,
+            IsInvalidated = false,
+            IsPersistent = rememberMe
+        };
+
+        dbContext.RefreshTokens.Add(refreshTokenEntity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (useCookies)
+        {
+            SetAuthCookies(accessToken, refreshTokenString, rememberMe, utcNow,
+                utcNow.Add(refreshLifetime));
+        }
+
+        return new AuthenticationOutput(AccessToken: accessToken, RefreshToken: refreshTokenString);
+    }
+
+    /// <summary>
+    /// Resolves a 2FA challenge token from plaintext, validating it is not expired or used.
+    /// </summary>
+    private async Task<TwoFactorChallenge?> ResolveChallengeAsync(string plainToken, CancellationToken cancellationToken)
+    {
+        var hashedToken = HashHelper.Sha256(plainToken);
+        var challenge = await dbContext.TwoFactorChallenges
+            .FirstOrDefaultAsync(c => c.Token == hashedToken, cancellationToken);
+
+        if (challenge is null)
+        {
+            return null;
+        }
+
+        if (challenge.IsUsed)
+        {
+            return null;
+        }
+
+        if (challenge.ExpiresAt < timeProvider.GetUtcNow().UtcDateTime)
+        {
+            return null;
+        }
+
+        return challenge;
+    }
+
+    /// <summary>
+    /// Generates a cryptographically random challenge token as a base64 string.
+    /// </summary>
+    private static string GenerateChallengeToken()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(32);
+        return Convert.ToBase64String(bytes);
     }
 
     /// <summary>
