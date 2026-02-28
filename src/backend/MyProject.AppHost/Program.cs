@@ -17,6 +17,7 @@ var minioConsolePort = frontendPort + 6;
 // can mount existing volumes without credential mismatch.
 
 var pgPassword = builder.AddParameter("postgres-password", secret: true);
+var storagePassword = builder.AddParameter("storage-password", secret: true);
 
 var db = builder.AddPostgres("postgres", password: pgPassword)
     .WithEndpoint("tcp", e => e.Port = postgresPort)
@@ -24,7 +25,7 @@ var db = builder.AddPostgres("postgres", password: pgPassword)
     .WithPgAdmin(pgAdmin => pgAdmin.WithEndpoint("http", e => e.Port = pgAdminPort))
     .AddDatabase("Database");
 
-var storage = builder.AddMinioContainer("storage")
+var storage = builder.AddMinioContainer("storage", rootPassword: storagePassword)
     .WithEndpoint("http", e => e.Port = minioPort)
     .WithEndpoint("console", e => e.Port = minioConsolePort)
     .WithDataVolume("{INIT_PROJECT_SLUG}-storage-data");
@@ -43,8 +44,8 @@ var api = builder.AddProject<Projects.MyProject_WebApi>("api")
     .WaitFor(db)
     .WaitFor(storage)
     .WithEnvironment("FileStorage__Endpoint", storage.GetEndpoint("http"))
-    .WithEnvironment("FileStorage__AccessKey", "minioadmin")
-    .WithEnvironment("FileStorage__SecretKey", "minioadmin")
+    .WithEnvironment("FileStorage__AccessKey", storage.Resource.RootUser)
+    .WithEnvironment("FileStorage__SecretKey", storage.Resource.PasswordParameter)
     .WithEnvironment("FileStorage__BucketName", "{INIT_PROJECT_SLUG}-files")
     .WithEnvironment("FileStorage__UseSSL", "false");
 
