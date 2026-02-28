@@ -536,7 +536,7 @@ dotnet test src/backend/tests/MyProject.Component.Tests -c Release --filter "Ful
 dotnet test src/backend/tests/MyProject.Unit.Tests -c Release --filter "ResultTests.Success_ReturnsIsSuccessTrue"
 ```
 
-No external dependencies (Docker, PostgreSQL, Redis) needed — all tests run in-process.
+No external dependencies (Docker, PostgreSQL) needed — all tests run in-process.
 
 ### Add a Unit Test
 
@@ -570,7 +570,7 @@ For service business logic with mocked dependencies.
    {
        private readonly MyProjectDbContext _dbContext = TestDbContextFactory.Create();
        private readonly IOrderRepository _orderRepo = Substitute.For<IOrderRepository>();
-       private readonly ICacheService _cache = Substitute.For<ICacheService>();
+       private readonly HybridCache _cache = Substitute.For<HybridCache>();
        // ... create service instance with mocks
    }
    ```

@@ -10,7 +10,6 @@ Clean Architecture. Fully tested. Fully dockerized. API-first — use the includ
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-Svelte_5-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)](https://redis.io/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/5rHquRptSh)
@@ -34,11 +33,11 @@ Every project starts the same way: authentication, role management, rate limitin
 
 ## What You Get
 
-**Backend** — JWT auth with token rotation and reuse detection, permission-based authorization with role hierarchy, rate limiting, Redis caching with auto-invalidation, PostgreSQL with soft delete and audit trails, S3-compatible file storage (MinIO locally, any S3 provider in production), Hangfire background jobs, OpenAPI docs, health checks, Result pattern with ProblemDetails everywhere. [See full details →](docs/features.md#backend--net-10--c-13)
+**Backend** — JWT auth with token rotation and reuse detection, permission-based authorization with role hierarchy, rate limiting, in-process caching with auto-invalidation, PostgreSQL with soft delete and audit trails, S3-compatible file storage (MinIO locally, any S3 provider in production), Hangfire background jobs, OpenAPI docs, health checks, Result pattern with ProblemDetails everywhere. [See full details →](docs/features.md#backend--net-10--c-13)
 
 **Frontend** — Svelte 5 runes, type-safe API client generated from OpenAPI, automatic token refresh, Tailwind CSS 4 with shadcn-svelte, BFF proxy with CSRF protection, i18n, security headers, permission guards, dark mode, admin panel with user/role/job management. [See full details →](docs/features.md#frontend--sveltekit--svelte-5)
 
-**Infrastructure** — Single `./deploy/up.sh local` for 6 services (including MinIO for S3 storage), init script for project bootstrapping, build script with multi-registry support, GitHub Actions CI with smart path filtering, Dependabot. [See full details →](docs/features.md#infrastructure--devops)
+**Infrastructure** — Single `./deploy/up.sh local` for 5 services (including MinIO for S3 storage), init script for project bootstrapping, build script with multi-registry support, GitHub Actions CI with smart path filtering, Dependabot. [See full details →](docs/features.md#infrastructure--devops)
 
 **Security** — Security-first design with HttpOnly JWT cookies, refresh token rotation with reuse detection, security stamp propagation, CSP with nonces, CORS startup guard, rate limiting, and input validation everywhere. [See full details →](docs/security.md)
 

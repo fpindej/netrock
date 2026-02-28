@@ -49,10 +49,6 @@ services:
       - "${STORAGE_PORT:-{INIT_STORAGE_PORT}}:9000"
       - "${STORAGE_CONSOLE_PORT:-{INIT_STORAGE_CONSOLE_PORT}}:9001"
 
-  redis:
-    ports:
-      - "${REDIS_PORT:-{INIT_REDIS_PORT}}:6379"
-
   db:
     ports:
       - "${DB_PORT:-{INIT_DB_PORT}}:5432"

@@ -10,7 +10,6 @@ Frontend (SvelteKit :5173)
     ▼
 Backend API (.NET :8080)
     ├── PostgreSQL (:5432)
-    ├── Redis (:6379)
     ├── Hangfire (PostgreSQL-backed)
     └── Seq (:80)
 ```
@@ -19,7 +18,7 @@ Backend API (.NET :8080)
 |---|---|---|
 | **Framework** | .NET 10 / C# 13 | SvelteKit / Svelte 5 (Runes) |
 | **Data** | PostgreSQL + EF Core | openapi-typescript (generated types) |
-| **Cache** | Redis (IDistributedCache) | — |
+| **Cache** | HybridCache (L1 in-process) | — |
 | **Auth** | JWT in HttpOnly cookies + permission claims | Cookie-based (automatic via proxy) |
 | **Authorization** | `[RequirePermission]` + role hierarchy | `hasPermission()` utilities |
 | **Validation** | FluentValidation + Data Annotations | TypeScript strict mode |
@@ -40,7 +39,7 @@ All layers reference Shared (Result, ErrorType, ErrorMessages)
 | **Shared** | `Result`/`Result<T>`, `ErrorType`, `ErrorMessages`, `PhoneNumberHelper`. Zero deps. |
 | **Domain** | Entities (`BaseEntity`). Zero deps. |
 | **Application** | Interfaces, DTOs (Input/Output), service contracts. |
-| **Infrastructure** | EF Core, Identity, Redis, service implementations. All `internal`. |
+| **Infrastructure** | EF Core, Identity, HybridCache, service implementations. All `internal`. |
 | **WebApi** | Controllers, middleware, validation, request/response DTOs. Entry point. |
 | **HealthProbe** | Minimal console app used as Docker health check binary (`/health/live`). |
 
@@ -115,7 +114,7 @@ Error messages flow: Backend `ErrorMessages.*` → `Result.Failure()` → `Probl
 
 | File | Purpose |
 |---|---|
-| `deploy/envs/local/compose.env` | Docker Compose interpolation vars (DB, Redis, MinIO, JWT, ports) |
+| `deploy/envs/local/compose.env` | Docker Compose interpolation vars (DB, MinIO, JWT, ports) |
 | `deploy/envs/local/api.env` | ASP.NET config overrides (auth, caching, CORS, logging, email) |
 | `deploy/envs/local/seed.env` | Seed user definitions (seeded on startup) |
 | `deploy/envs/production-example/` | Production template — `cp -r` to `deploy/envs/production/` |

@@ -3,7 +3,7 @@
 # ══════════════════════════════════════════════════════════════════════════════
 #
 #  Uses pre-built images from a container registry. No dev tools, no source
-#  mounts, no host port exposure for DB/Redis (internal only).
+#  mounts, no host port exposure for DB (internal only).
 #  Containers are hardened: read-only root, no new privileges, all caps dropped.
 #
 #  1. Copy and fill in the env template:
@@ -74,15 +74,6 @@ services:
         limits:
           cpus: "0.5"
           memory: 512M
-
-  redis:
-    <<: *hardened
-    read_only: false
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256M
 
   db:
     <<: *hardened

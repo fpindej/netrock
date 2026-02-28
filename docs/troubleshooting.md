@@ -105,7 +105,6 @@ pwsh -ExecutionPolicy Bypass -File init.ps1
 | +0 | Frontend |
 | +2 | API |
 | +4 | PostgreSQL |
-| +6 | Redis |
 | +8 | Seq |
 | +10 | MinIO |
 | +12 | MinIO Console |
@@ -264,9 +263,9 @@ dotnet build src/backend/MyProject.slnx
 
 ### Tests fail with "connection refused"
 
-**Cause:** No Docker containers are needed for tests. Both component tests and API integration tests use EF Core's InMemory database provider — each test gets a fresh GUID-named database. Redis and Hangfire are disabled via `appsettings.Testing.json`.
+**Cause:** No Docker containers are needed for tests. Both component tests and API integration tests use EF Core's InMemory database provider — each test gets a fresh GUID-named database. Caching and Hangfire are disabled via `appsettings.Testing.json`.
 
-If you see "connection refused," something is incorrectly trying to reach PostgreSQL or Redis — usually a misconfigured test fixture or a service that was not replaced by the test infrastructure.
+If you see "connection refused," something is incorrectly trying to reach PostgreSQL — usually a misconfigured test fixture or a service that was not replaced by the test infrastructure.
 
 **Fix:** Verify you're running the correct test project and that `CustomWebApplicationFactory` (API tests) or `TestDbContextFactory` (component tests) is properly configured.
 
@@ -501,7 +500,7 @@ Then edit `deploy/envs/production/compose.env` with your actual values.
 
 **Cause:** The production overlay applies `read_only: true` to all service containers for security hardening. Services that write to unexpected paths will crash with permission errors.
 
-Only `/tmp` is writable by default. The API service also gets `/home/app` as a writable tmpfs mount (.NET needs it for data-protection keys and diagnostics). Stateful services (`db`, `redis`, `storage`) override `read_only` back to `false`.
+Only `/tmp` is writable by default. The API service also gets `/home/app` as a writable tmpfs mount (.NET needs it for data-protection keys and diagnostics). Stateful services (`db`, `storage`) override `read_only` back to `false`.
 
 **Fix:** If a custom service needs to write to disk, either:
 
@@ -533,7 +532,7 @@ These variables must be set in `deploy/envs/production/compose.env` before the s
 | `JWT_SECRET_KEY` | Minimum 32 characters — generate with `openssl rand -base64 64` |
 | `ORIGIN` | Public URL for SvelteKit CSRF (e.g., `https://your-domain.com`) |
 
-Recommended: also set `REDIS_PASSWORD`. See `deploy/envs/production-example/compose.env` for the full list with descriptions.
+See `deploy/envs/production-example/compose.env` for the full list with descriptions.
 
 ---
 
@@ -566,7 +565,7 @@ Tear down all containers and volumes, then rebuild:
 ./deploy/up.sh local up -d --build
 ```
 
-The `-v` flag removes named volumes (database data, Redis data, MinIO storage, Seq logs). Seeded users will be recreated on next startup.
+The `-v` flag removes named volumes (database data, MinIO storage, Seq logs). Seeded users will be recreated on next startup.
 
 ### What's the difference between `up.sh` and `up.ps1`?
 

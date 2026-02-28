@@ -3,7 +3,7 @@
 NETrock — .NET 10 API (Clean Architecture) + SvelteKit frontend (Svelte 5), fully dockerized.
 
 ```
-Frontend (SvelteKit :5173) → /api/* proxy → Backend API (.NET :8080) → PostgreSQL / Redis / Seq
+Frontend (SvelteKit :5173) → /api/* proxy → Backend API (.NET :8080) → PostgreSQL / Seq
 Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 ```
 

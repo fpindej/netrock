@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.Extensions.Options;
 
 namespace MyProject.Infrastructure.Caching.Options;
 
 /// <summary>
 /// Root caching configuration options.
-/// Contains both Redis and InMemory cache configurations.
+/// When enabled, registers <see cref="Microsoft.Extensions.Caching.Hybrid.HybridCache"/>
+/// with an L1 in-process memory cache. When disabled, a no-op implementation is used.
 /// </summary>
 public sealed class CachingOptions : IValidatableObject
 {
@@ -13,38 +13,15 @@ public sealed class CachingOptions : IValidatableObject
 
     /// <summary>
     /// Gets or sets a value indicating whether caching is enabled.
-    /// When <c>false</c>, a no-op cache implementation is registered and no
-    /// Redis or in-memory provider is required.
+    /// When <c>false</c>, a no-op cache implementation is registered.
     /// </summary>
     public bool Enabled { get; init; } = true;
 
     /// <summary>
     /// Gets or sets the default cache entry expiration.
     /// Used when no explicit expiration is provided.
-    /// Applies to both Redis and InMemory caching.
     /// </summary>
     public TimeSpan DefaultExpiration { get; init; } = TimeSpan.FromMinutes(10);
-
-    /// <summary>
-    /// Gets or sets the Redis cache configuration.
-    /// When Redis.Enabled is true, Redis will be used as the distributed cache.
-    /// </summary>
-    [ValidateObjectMembers]
-    public RedisOptions Redis { get; init; } = new();
-
-    /// <summary>
-    /// Gets or sets the in-memory cache configuration.
-    /// Used as fallback when Redis is disabled.
-    /// </summary>
-    [ValidateObjectMembers]
-    public InMemoryOptions InMemory { get; init; } = new();
-
-    /// <summary>
-    /// Gets or sets the circuit breaker configuration.
-    /// Controls how quickly cache operations are short-circuited during sustained outages.
-    /// </summary>
-    [ValidateObjectMembers]
-    public CircuitBreakerOptions CircuitBreaker { get; init; } = new();
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -53,245 +30,6 @@ public sealed class CachingOptions : IValidatableObject
             yield return new ValidationResult(
                 "DefaultExpiration must be greater than zero.",
                 [nameof(DefaultExpiration)]);
-        }
-    }
-
-    /// <summary>
-    /// Configuration options for Redis distributed cache.
-    /// Validated only when Enabled is true.
-    /// </summary>
-    public sealed class RedisOptions : IValidatableObject
-    {
-        /// <summary>
-        /// Gets or sets a value indicating whether Redis caching is enabled.
-        /// When false, falls back to in-memory distributed cache.
-        /// </summary>
-        public bool Enabled { get; init; }
-
-        /// <summary>
-        /// Gets or sets the Redis connection string (host:port format).
-        /// Required when Enabled is true.
-        /// Example: "localhost:6379" or "redis-server.example.com:6380"
-        /// </summary>
-        public string ConnectionString { get; init; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the Redis authentication password.
-        /// Required for production environments.
-        /// </summary>
-        public string? Password { get; init; }
-
-        /// <summary>
-        /// Gets or sets whether SSL/TLS should be used for the Redis connection.
-        /// Should be true for production, especially cloud-hosted Redis.
-        /// </summary>
-        public bool UseSsl { get; init; }
-
-        /// <summary>
-        /// Gets or sets the default Redis database number (0-15).
-        /// </summary>
-        public int DefaultDatabase { get; init; }
-
-        /// <summary>
-        /// Gets or sets the instance name prefix for cache keys.
-        /// Helps namespace keys when multiple apps share Redis.
-        /// </summary>
-        public string InstanceName { get; init; } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets the connection timeout in milliseconds.
-        /// </summary>
-        public int ConnectTimeoutMs { get; init; } = 5000;
-
-        /// <summary>
-        /// Gets or sets the synchronous operation timeout in milliseconds.
-        /// </summary>
-        public int SyncTimeoutMs { get; init; } = 5000;
-
-        /// <summary>
-        /// Gets or sets the asynchronous operation timeout in milliseconds.
-        /// </summary>
-        public int AsyncTimeoutMs { get; init; } = 5000;
-
-        /// <summary>
-        /// Gets or sets whether to abort connection if initial connect fails.
-        /// Set to false for production to allow retry in background.
-        /// </summary>
-        public bool AbortOnConnectFail { get; init; } = true;
-
-        /// <summary>
-        /// Gets or sets the number of times to retry connection.
-        /// </summary>
-        public int ConnectRetry { get; init; } = 3;
-
-        /// <summary>
-        /// Gets or sets the keepalive interval in seconds.
-        /// Sends periodic pings to keep connection alive.
-        /// </summary>
-        public int KeepAliveSeconds { get; init; } = 60;
-
-        /// <summary>
-        /// Validates Redis options. Skips validation when Redis is disabled.
-        /// </summary>
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (!Enabled)
-            {
-                yield break;
-            }
-
-            if (string.IsNullOrWhiteSpace(ConnectionString))
-            {
-                yield return new ValidationResult(
-                    "ConnectionString is required when Redis is enabled.",
-                    [nameof(ConnectionString)]);
-            }
-
-            if (DefaultDatabase is < 0 or > 15)
-            {
-                yield return new ValidationResult(
-                    "DefaultDatabase must be between 0 and 15.",
-                    [nameof(DefaultDatabase)]);
-            }
-
-            if (ConnectTimeoutMs <= 0)
-            {
-                yield return new ValidationResult(
-                    "ConnectTimeoutMs must be greater than 0.",
-                    [nameof(ConnectTimeoutMs)]);
-            }
-
-            if (SyncTimeoutMs <= 0)
-            {
-                yield return new ValidationResult(
-                    "SyncTimeoutMs must be greater than 0.",
-                    [nameof(SyncTimeoutMs)]);
-            }
-
-            if (AsyncTimeoutMs <= 0)
-            {
-                yield return new ValidationResult(
-                    "AsyncTimeoutMs must be greater than 0.",
-                    [nameof(AsyncTimeoutMs)]);
-            }
-
-            if (ConnectRetry < 0)
-            {
-                yield return new ValidationResult(
-                    "ConnectRetry must be non-negative.",
-                    [nameof(ConnectRetry)]);
-            }
-
-            if (KeepAliveSeconds <= 0)
-            {
-                yield return new ValidationResult(
-                    "KeepAliveSeconds must be greater than 0.",
-                    [nameof(KeepAliveSeconds)]);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Configuration options for the cache circuit breaker.
-    /// When the failure threshold is reached within the sampling window,
-    /// the circuit opens and all cache operations return defaults immediately
-    /// without attempting a connection, eliminating latency and log spam.
-    /// </summary>
-    public sealed class CircuitBreakerOptions : IValidatableObject
-    {
-        /// <summary>
-        /// Gets or sets the minimum number of actions in the sampling window
-        /// before the circuit breaker evaluates whether to open.
-        /// </summary>
-        [Range(1, 100)]
-        public int FailureThreshold { get; init; } = 5;
-
-        /// <summary>
-        /// Gets or sets how long the circuit stays open before allowing a probe request.
-        /// </summary>
-        public TimeSpan BreakDuration { get; init; } = TimeSpan.FromSeconds(30);
-
-        /// <summary>
-        /// Gets or sets the rolling window for counting failures.
-        /// </summary>
-        public TimeSpan SamplingDuration { get; init; } = TimeSpan.FromSeconds(30);
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (BreakDuration <= TimeSpan.Zero)
-            {
-                yield return new ValidationResult(
-                    "BreakDuration must be greater than zero.",
-                    [nameof(BreakDuration)]);
-            }
-
-            if (SamplingDuration <= TimeSpan.Zero)
-            {
-                yield return new ValidationResult(
-                    "SamplingDuration must be greater than zero.",
-                    [nameof(SamplingDuration)]);
-            }
-            else if (SamplingDuration < BreakDuration)
-            {
-                yield return new ValidationResult(
-                    "SamplingDuration must be greater than or equal to BreakDuration.",
-                    [nameof(SamplingDuration), nameof(BreakDuration)]);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Configuration options for in-memory distributed cache.
-    /// Used when Redis is disabled.
-    /// </summary>
-    public sealed class InMemoryOptions : IValidatableObject
-    {
-        /// <summary>
-        /// Gets or sets the size limit for in-memory cache entries.
-        /// Each cached item should specify a size; this limits total size.
-        /// Required when Redis is disabled. Set to null for no limit (not recommended for production).
-        /// </summary>
-        public int? SizeLimit { get; init; } = 1024;
-
-        /// <summary>
-        /// Gets or sets the minimum length of time between successive scans for expired items.
-        /// </summary>
-        public TimeSpan ExpirationScanFrequency { get; init; } = TimeSpan.FromMinutes(1);
-
-        /// <summary>
-        /// Gets or sets the maximum percentage of the cache that can be compacted during a compaction operation.
-        /// Value should be between 0 and 1 (e.g., 0.05 = 5%).
-        /// </summary>
-        public double CompactionPercentage { get; init; } = 0.05;
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (SizeLimit is null)
-            {
-                yield return new ValidationResult(
-                    "SizeLimit is required. Set a positive integer value.",
-                    [nameof(SizeLimit)]);
-            }
-            else if (SizeLimit <= 0)
-            {
-                yield return new ValidationResult(
-                    "SizeLimit must be greater than 0.",
-                    [nameof(SizeLimit)]);
-            }
-
-            if (ExpirationScanFrequency <= TimeSpan.Zero)
-            {
-                yield return new ValidationResult(
-                    "ExpirationScanFrequency must be greater than zero.",
-                    [nameof(ExpirationScanFrequency)]);
-            }
-
-            if (CompactionPercentage is <= 0 or > 1)
-            {
-                yield return new ValidationResult(
-                    "CompactionPercentage must be between 0 (exclusive) and 1 (inclusive).",
-                    [nameof(CompactionPercentage)]);
-            }
         }
     }
 }

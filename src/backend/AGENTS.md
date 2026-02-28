@@ -180,7 +180,7 @@ Pagination: `Paginate(int pageNumber, int pageSize)` extension on `IQueryable<T>
 
 ## Caching
 
-`ICacheService` wraps `IDistributedCache` (Redis). Keys defined in `CacheKeys` constants. `UserCacheInvalidationInterceptor` auto-clears user cache on entity changes.
+`HybridCache` (.NET built-in) provides L1 in-process caching with stampede protection. Keys defined in `CacheKeys` constants. `UserCacheInvalidationInterceptor` auto-clears user cache on entity changes. `NoOpHybridCache` is registered when caching is disabled.
 
 ## File Storage
 

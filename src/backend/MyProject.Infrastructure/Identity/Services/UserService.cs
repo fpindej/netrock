@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
@@ -20,13 +20,13 @@ using MyProject.Shared;
 namespace MyProject.Infrastructure.Identity.Services;
 
 /// <summary>
-/// Identity-backed implementation of <see cref="IUserService"/> with Redis caching.
+/// Identity-backed implementation of <see cref="IUserService"/> with HybridCache caching.
 /// </summary>
 internal sealed class UserService(
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,
     IUserContext userContext,
-    ICacheService cacheService,
+    HybridCache hybridCache,
     MyProjectDbContext dbContext,
     ICookieService cookieService,
     IAuditService auditService,
@@ -34,8 +34,10 @@ internal sealed class UserService(
     IImageProcessingService imageProcessingService,
     ILogger<UserService> logger) : IUserService
 {
-    private static readonly CacheEntryOptions UserCacheOptions =
-        CacheEntryOptions.AbsoluteExpireIn(TimeSpan.FromMinutes(1));
+    private static readonly HybridCacheEntryOptions UserCacheOptions = new()
+    {
+        Expiration = TimeSpan.FromMinutes(1)
+    };
 
     /// <inheritdoc />
     public async Task<Result<UserOutput>> GetCurrentUserAsync(CancellationToken cancellationToken = default)
@@ -48,40 +50,39 @@ internal sealed class UserService(
         }
 
         var cacheKey = CacheKeys.User(userId.Value);
-        var cachedUser = await cacheService.GetAsync<UserOutput>(cacheKey);
 
-        if (cachedUser is not null)
-        {
-            return Result<UserOutput>.Success(cachedUser);
-        }
+        var output = await hybridCache.GetOrCreateAsync<UserOutput?>(
+            cacheKey,
+            async ct =>
+            {
+                var user = await userManager.FindByIdAsync(userId.Value.ToString());
 
-        var user = await userManager.FindByIdAsync(userId.Value.ToString());
+                if (user is null)
+                {
+                    return null;
+                }
 
-        if (user is null)
-        {
-            return Result<UserOutput>.Failure(ErrorMessages.User.NotFound);
-        }
+                var roles = await userManager.GetRolesAsync(user);
+                var permissions = await GetPermissionsForRolesAsync(roles);
 
-        var roles = await userManager.GetRolesAsync(user);
-        var permissions = await GetPermissionsForRolesAsync(roles);
+                return new UserOutput(
+                    Id: user.Id,
+                    UserName: user.UserName!,
+                    FirstName: user.FirstName,
+                    LastName: user.LastName,
+                    PhoneNumber: user.PhoneNumber,
+                    Bio: user.Bio,
+                    HasAvatar: user.HasAvatar,
+                    Roles: roles,
+                    Permissions: permissions,
+                    IsEmailConfirmed: user.EmailConfirmed);
+            },
+            UserCacheOptions,
+            cancellationToken: cancellationToken);
 
-        var output = new UserOutput(
-            Id: user.Id,
-            UserName: user.UserName!,
-            FirstName: user.FirstName,
-            LastName: user.LastName,
-            PhoneNumber: user.PhoneNumber,
-            Bio: user.Bio,
-            HasAvatar: user.HasAvatar,
-            Roles: roles,
-            Permissions: permissions,
-            IsEmailConfirmed: user.EmailConfirmed);
-
-        // NOTE: UserOutput (including roles and permissions) is cached to improve performance.
-        // Role or permission changes may take up to this duration to be reflected.
-        await cacheService.SetAsync(cacheKey, output, UserCacheOptions);
-
-        return Result<UserOutput>.Success(output);
+        return output is not null
+            ? Result<UserOutput>.Success(output)
+            : Result<UserOutput>.Failure(ErrorMessages.User.NotFound);
     }
 
     /// <inheritdoc />
@@ -135,7 +136,7 @@ internal sealed class UserService(
 
         // Invalidate cache after update
         var cacheKey = CacheKeys.User(userId.Value);
-        await cacheService.RemoveAsync(cacheKey);
+        await hybridCache.RemoveAsync(cacheKey, cancellationToken);
 
         var roles = await userManager.GetRolesAsync(user);
         var permissions = await GetPermissionsForRolesAsync(roles);
@@ -350,7 +351,7 @@ internal sealed class UserService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await userManager.UpdateSecurityStampAsync(user);
-        await cacheService.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
+        await hybridCache.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
     }
 
     private void ClearAuthCookies()
@@ -362,7 +363,7 @@ internal sealed class UserService(
     private async Task InvalidateUserCache(Guid userId)
     {
         var cacheKey = CacheKeys.User(userId);
-        await cacheService.RemoveAsync(cacheKey);
+        await hybridCache.RemoveAsync(cacheKey);
     }
 
     private async Task DeleteUser(ApplicationUser user)

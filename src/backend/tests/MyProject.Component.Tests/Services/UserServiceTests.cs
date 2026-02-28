@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using MyProject.Application.Caching;
 using MyProject.Application.Caching.Constants;
+using MyProject.Infrastructure.Caching.Services;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Audit;
@@ -26,7 +27,7 @@ public class UserServiceTests : IDisposable
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly IUserContext _userContext;
-    private readonly ICacheService _cacheService;
+    private readonly HybridCache _hybridCache;
     private readonly ICookieService _cookieService;
     private readonly IAuditService _auditService;
     private readonly IFileStorageService _fileStorageService;
@@ -41,7 +42,7 @@ public class UserServiceTests : IDisposable
         _userManager = IdentityMockHelpers.CreateMockUserManager();
         _roleManager = IdentityMockHelpers.CreateMockRoleManager();
         _userContext = Substitute.For<IUserContext>();
-        _cacheService = Substitute.For<ICacheService>();
+        _hybridCache = Substitute.ForPartsOf<NoOpHybridCache>();
         _cookieService = Substitute.For<ICookieService>();
         _auditService = Substitute.For<IAuditService>();
         _fileStorageService = Substitute.For<IFileStorageService>();
@@ -49,7 +50,7 @@ public class UserServiceTests : IDisposable
         _dbContext = TestDbContextFactory.Create();
 
         _sut = new UserService(
-            _userManager, _roleManager, _userContext, _cacheService, _dbContext, _cookieService,
+            _userManager, _roleManager, _userContext, _hybridCache, _dbContext, _cookieService,
             _auditService, _fileStorageService, _imageProcessingService,
             Substitute.For<ILogger<UserService>>());
     }
@@ -297,7 +298,7 @@ public class UserServiceTests : IDisposable
         _cookieService.Received(1).DeleteCookie(CookieNames.RefreshToken);
 
         // Verify cache was invalidated
-        await _cacheService.Received(1).RemoveAsync(CacheKeys.User(_userId));
+        await _hybridCache.Received(1).RemoveAsync(CacheKeys.User(_userId));
     }
 
     #endregion
@@ -353,7 +354,7 @@ public class UserServiceTests : IDisposable
         Assert.True(user.HasAvatar);
         await _fileStorageService.Received(1).UploadAsync(
             $"avatars/{_userId}.webp", Arg.Any<byte[]>(), "image/webp", Arg.Any<CancellationToken>());
-        await _cacheService.Received().RemoveAsync(CacheKeys.User(_userId));
+        await _hybridCache.Received().RemoveAsync(CacheKeys.User(_userId));
         await _auditService.Received(1).LogAsync(
             AuditActions.AvatarUpload, userId: _userId,
             targetEntityType: Arg.Any<string?>(), targetEntityId: Arg.Any<Guid?>(),
@@ -471,7 +472,7 @@ public class UserServiceTests : IDisposable
         await _fileStorageService.Received(1).DeleteAsync(
             $"avatars/{_userId}.webp", Arg.Any<CancellationToken>());
         await _userManager.Received(1).UpdateAsync(user);
-        await _cacheService.Received().RemoveAsync(CacheKeys.User(_userId));
+        await _hybridCache.Received().RemoveAsync(CacheKeys.User(_userId));
         await _auditService.Received(1).LogAsync(
             AuditActions.AvatarRemove, userId: _userId,
             targetEntityType: Arg.Any<string?>(), targetEntityId: Arg.Any<Guid?>(),

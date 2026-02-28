@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using MyProject.Application.Caching;
+using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication;
@@ -141,7 +141,7 @@ public static class ServiceCollectionExtensions
 
     /// <summary>
     /// Validates the security stamp claim in the JWT token against the current stamp in the database.
-    /// Uses distributed caching (5 minute TTL) to avoid a database hit on every request.
+    /// Uses HybridCache (5 minute TTL) to avoid a database hit on every request.
     /// If the stamp has changed (password change, role update, session revocation), the token is rejected.
     /// </summary>
     private static async Task ValidateSecurityStampAsync(TokenValidatedContext context, string securityStampClaimType)
@@ -161,19 +161,20 @@ public static class ServiceCollectionExtensions
             return;
         }
 
-        var cacheService = context.HttpContext.RequestServices.GetRequiredService<ICacheService>();
+        var hybridCache = context.HttpContext.RequestServices.GetRequiredService<HybridCache>();
         var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
 
-        var cacheOptions = CacheEntryOptions.AbsoluteExpireIn(TimeSpan.FromMinutes(5));
+        var cacheOptions = new HybridCacheEntryOptions { Expiration = TimeSpan.FromMinutes(5) };
 
-        var currentStampHash = await cacheService.GetOrSetAsync(
+        var currentStampHash = await hybridCache.GetOrCreateAsync(
             CacheKeys.SecurityStamp(userId),
             async ct =>
             {
                 var user = await userManager.FindByIdAsync(userId.ToString());
                 return user?.SecurityStamp is not null ? HashHelper.Sha256(user.SecurityStamp) : string.Empty;
             },
-            cacheOptions);
+            cacheOptions,
+            cancellationToken: context.HttpContext.RequestAborted);
 
         if (string.IsNullOrEmpty(currentStampHash))
         {

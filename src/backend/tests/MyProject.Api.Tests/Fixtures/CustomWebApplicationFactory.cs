@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using MyProject.Application.Caching;
+using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Captcha;
@@ -29,14 +29,14 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     public IRoleManagementService RoleManagementService { get; } = Substitute.For<IRoleManagementService>();
     public IJobManagementService JobManagementService { get; } = Substitute.For<IJobManagementService>();
     public IEmailService EmailService { get; } = Substitute.For<IEmailService>();
-    public ICacheService CacheService { get; } = Substitute.For<ICacheService>();
+    public HybridCache HybridCache { get; } = Substitute.For<HybridCache>();
     public ICaptchaService CaptchaService { get; } = Substitute.For<ICaptchaService>();
     public IAuditService AuditService { get; } = Substitute.For<IAuditService>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // Use Testing environment — loads appsettings.Testing.json which disables
-        // Redis, Hangfire, and provides a dummy DB connection string.
+        // Hangfire, and provides a dummy DB connection string.
         // Also avoids EF migrations and dev user seeding (non-Development).
         builder.UseEnvironment("Testing");
 
@@ -91,8 +91,8 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IEmailService>();
             services.AddSingleton(EmailService);
 
-            services.RemoveAll<ICacheService>();
-            services.AddSingleton(CacheService);
+            services.RemoveAll<HybridCache>();
+            services.AddSingleton(HybridCache);
 
             services.RemoveAll<ICaptchaService>();
             services.AddSingleton(CaptchaService);
@@ -131,7 +131,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         RoleManagementService.ClearSubstitute(ClearOptions.All);
         JobManagementService.ClearSubstitute(ClearOptions.All);
         EmailService.ClearSubstitute(ClearOptions.All);
-        CacheService.ClearSubstitute(ClearOptions.All);
+        HybridCache.ClearSubstitute(ClearOptions.All);
         CaptchaService.ClearSubstitute(ClearOptions.All);
         AuditService.ClearSubstitute(ClearOptions.All);
     }

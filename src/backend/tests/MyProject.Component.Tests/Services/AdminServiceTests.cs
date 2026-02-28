@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
-using MyProject.Application.Caching;
+using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Email;
@@ -25,7 +25,7 @@ public class AdminServiceTests : IDisposable
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
-    private readonly ICacheService _cacheService;
+    private readonly HybridCache _hybridCache;
     private readonly ITemplatedEmailSender _templatedEmailSender;
     private readonly IAuditService _auditService;
     private readonly FakeTimeProvider _timeProvider;
@@ -39,7 +39,7 @@ public class AdminServiceTests : IDisposable
     {
         _userManager = IdentityMockHelpers.CreateMockUserManager();
         _roleManager = IdentityMockHelpers.CreateMockRoleManager();
-        _cacheService = Substitute.For<ICacheService>();
+        _hybridCache = Substitute.For<HybridCache>();
         _templatedEmailSender = Substitute.For<ITemplatedEmailSender>();
         _timeProvider = new FakeTimeProvider(new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero));
         _dbContext = TestDbContextFactory.Create();
@@ -60,7 +60,7 @@ public class AdminServiceTests : IDisposable
         var fileStorageService = Substitute.For<IFileStorageService>();
 
         _sut = new AdminService(
-            _userManager, _roleManager, _dbContext, _cacheService, _timeProvider,
+            _userManager, _roleManager, _dbContext, _hybridCache, _timeProvider,
             _templatedEmailSender, emailTokenService, _auditService,
             fileStorageService, authOptions, emailOptions, logger);
     }

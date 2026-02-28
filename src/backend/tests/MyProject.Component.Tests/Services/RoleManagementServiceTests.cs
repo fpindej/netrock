@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using MyProject.Application.Caching;
+using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Features.Admin.Dtos;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Identity.Constants;
@@ -16,7 +16,7 @@ public class RoleManagementServiceTests : IDisposable
 {
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly ICacheService _cacheService;
+    private readonly HybridCache _hybridCache;
     private readonly IAuditService _auditService;
     private readonly MyProjectDbContext _dbContext;
     private readonly RoleManagementService _sut;
@@ -25,13 +25,13 @@ public class RoleManagementServiceTests : IDisposable
     {
         _roleManager = IdentityMockHelpers.CreateMockRoleManager();
         _userManager = IdentityMockHelpers.CreateMockUserManager();
-        _cacheService = Substitute.For<ICacheService>();
+        _hybridCache = Substitute.For<HybridCache>();
         _dbContext = TestDbContextFactory.Create();
         _auditService = Substitute.For<IAuditService>();
         var logger = Substitute.For<ILogger<RoleManagementService>>();
 
         _sut = new RoleManagementService(
-            _roleManager, _userManager, _dbContext, _cacheService, _auditService, logger);
+            _roleManager, _userManager, _dbContext, _hybridCache, _auditService, logger);
     }
 
     public void Dispose()
