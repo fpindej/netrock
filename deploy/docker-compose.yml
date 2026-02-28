@@ -18,8 +18,6 @@ services:
       - backend
     environment:
       ConnectionStrings__Database: Host=db;Port=5432;Database=${POSTGRES_DB:-{INIT_PROJECT_SLUG}};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-      Caching__Redis__ConnectionString: redis:6379
-      Caching__Redis__Password: ${REDIS_PASSWORD}
       Authentication__Jwt__Key: ${JWT_SECRET_KEY}
       FileStorage__Endpoint: ${FileStorage__Endpoint:-http://storage:9000}
       FileStorage__AccessKey: ${MINIO_ROOT_USER}
@@ -57,30 +55,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
-
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    networks:
-      - backend
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-    volumes:
-      - redis_data:/data
-    # Password is passed as an env var and written to a temp config at startup.
-    # Process listing shows only "redis-server /tmp/redis.conf" — no secret leak.
-    command:
-      - sh
-      - -c
-      - |
-        printf 'requirepass %s\nappendonly yes\n' "$$REDIS_PASSWORD" > /tmp/redis.conf
-        exec redis-server /tmp/redis.conf
-    healthcheck:
-      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 5s
 
   db:
     image: postgres:15-alpine
@@ -122,7 +96,6 @@ services:
 
 volumes:
   db_data:
-  redis_data:
   storage_data:
 
 networks:
