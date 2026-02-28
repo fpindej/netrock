@@ -76,4 +76,9 @@ public class AdminUserResponse
     /// Whether the user is currently locked out.
     /// </summary>
     public bool IsLockedOut { [UsedImplicitly] get; [UsedImplicitly] init; }
+
+    /// <summary>
+    /// Whether the user has two-factor authentication enabled.
+    /// </summary>
+    public bool TwoFactorEnabled { [UsedImplicitly] get; [UsedImplicitly] init; }
 }

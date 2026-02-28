@@ -16,6 +16,7 @@ namespace MyProject.Application.Features.Admin.Dtos;
 /// <param name="LockoutEnd">When the lockout ends, or <c>null</c> if the user is not locked out.</param>
 /// <param name="AccessFailedCount">The number of consecutive failed login attempts.</param>
 /// <param name="IsLockedOut">Whether the user is currently locked out (computed by the service using <see cref="TimeProvider"/>).</param>
+/// <param name="IsTwoFactorEnabled">Whether the user has two-factor authentication enabled.</param>
 public record AdminUserOutput(
     Guid Id,
     string UserName,
@@ -29,7 +30,8 @@ public record AdminUserOutput(
     bool LockoutEnabled,
     DateTimeOffset? LockoutEnd,
     int AccessFailedCount,
-    bool IsLockedOut
+    bool IsLockedOut,
+    bool IsTwoFactorEnabled
 )
 {
     /// <summary>

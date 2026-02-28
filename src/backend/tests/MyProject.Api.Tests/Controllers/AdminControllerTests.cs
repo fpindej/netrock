@@ -131,7 +131,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         _factory.AdminService.GetUserByIdAsync(userId, Arg.Any<CancellationToken>())
             .Returns(Result<AdminUserOutput>.Success(new AdminUserOutput(
                 userId, "user@test.com", "John", "Doe", null, null, false,
-                ["User"], true, true, null, 0, false)));
+                ["User"], true, true, null, 0, false, false)));
 
         var response = await _client.SendAsync(
             Get($"/api/v1/admin/users/{userId}", TestAuth.WithPermissions(AppPermissions.Users.View, AppPermissions.Users.ViewPii)));
@@ -179,8 +179,8 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         _factory.AdminService.GetUsersAsync(1, 10, null, Arg.Any<CancellationToken>())
             .Returns(new AdminUserListOutput(
             [
-                new AdminUserOutput(callerId, "caller@test.com", "Alice", "A", "+420111222333", null, false, ["User"], true, true, null, 0, false),
-                new AdminUserOutput(otherId, "other@test.com", "Bob", "B", "+420999888777", null, false, ["User"], true, true, null, 0, false)
+                new AdminUserOutput(callerId, "caller@test.com", "Alice", "A", "+420111222333", null, false, ["User"], true, true, null, 0, false, false),
+                new AdminUserOutput(otherId, "other@test.com", "Bob", "B", "+420999888777", null, false, ["User"], true, true, null, 0, false, false)
             ], 2, 1, 10));
 
         var response = await _client.SendAsync(
@@ -208,7 +208,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         _factory.AdminService.GetUserByIdAsync(otherId, Arg.Any<CancellationToken>())
             .Returns(Result<AdminUserOutput>.Success(new AdminUserOutput(
                 otherId, "other@test.com", "Bob", "B", "+420999888777", null, false,
-                ["User"], true, true, null, 0, false)));
+                ["User"], true, true, null, 0, false, false)));
 
         var response = await _client.SendAsync(
             Get($"/api/v1/admin/users/{otherId}", TestAuth.WithPermissions(AppPermissions.Users.View)));
@@ -232,7 +232,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         _factory.AdminService.GetUserByIdAsync(callerId, Arg.Any<CancellationToken>())
             .Returns(Result<AdminUserOutput>.Success(new AdminUserOutput(
                 callerId, "caller@test.com", "Alice", "A", "+420111222333", null, false,
-                ["User"], true, true, null, 0, false)));
+                ["User"], true, true, null, 0, false, false)));
 
         var response = await _client.SendAsync(
             Get($"/api/v1/admin/users/{callerId}", TestAuth.WithPermissions(AppPermissions.Users.View)));
@@ -252,7 +252,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         _factory.AdminService.GetUsersAsync(1, 10, null, Arg.Any<CancellationToken>())
             .Returns(new AdminUserListOutput(
             [
-                new AdminUserOutput(userId, "user@test.com", "John", "D", "+420123456789", null, false, ["User"], true, true, null, 0, false)
+                new AdminUserOutput(userId, "user@test.com", "John", "D", "+420123456789", null, false, ["User"], true, true, null, 0, false, false)
             ], 1, 1, 10));
 
         var response = await _client.SendAsync(
@@ -273,7 +273,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         _factory.AdminService.GetUserByIdAsync(userId, Arg.Any<CancellationToken>())
             .Returns(Result<AdminUserOutput>.Success(new AdminUserOutput(
                 userId, "user@test.com", "John", "D", "+420123456789", null, false,
-                ["User"], true, true, null, 0, false)));
+                ["User"], true, true, null, 0, false, false)));
 
         var response = await _client.SendAsync(
             Get($"/api/v1/admin/users/{userId}", TestAuth.SuperAdmin()));
