@@ -3,6 +3,7 @@ using MyProject.WebApi.Features.Authentication.Dtos.ChangePassword;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
 using MyProject.WebApi.Features.Authentication.Dtos.ResetPassword;
+using MyProject.WebApi.Features.Authentication.Dtos.TwoFactor;
 using MyProject.WebApi.Features.Authentication.Dtos.VerifyEmail;
 
 namespace MyProject.WebApi.Features.Authentication;
@@ -78,4 +79,23 @@ internal static class AuthMapper
         new(
             Token: request.Token
         );
+
+    /// <summary>
+    /// Maps a <see cref="TwoFactorSetupOutput"/> to a <see cref="TwoFactorSetupResponse"/>.
+    /// </summary>
+    public static TwoFactorSetupResponse ToResponse(this TwoFactorSetupOutput output) =>
+        new()
+        {
+            SharedKey = output.SharedKey,
+            AuthenticatorUri = output.AuthenticatorUri
+        };
+
+    /// <summary>
+    /// Maps a <see cref="TwoFactorVerifySetupOutput"/> to a <see cref="TwoFactorVerifySetupResponse"/>.
+    /// </summary>
+    public static TwoFactorVerifySetupResponse ToResponse(this TwoFactorVerifySetupOutput output) =>
+        new()
+        {
+            RecoveryCodes = output.RecoveryCodes
+        };
 }

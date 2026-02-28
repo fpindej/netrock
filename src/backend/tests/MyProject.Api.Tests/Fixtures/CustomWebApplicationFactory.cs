@@ -16,6 +16,7 @@ using MyProject.Application.Identity;
 using MyProject.Infrastructure.Persistence;
 using NSubstitute.ClearExtensions;
 using IAuthenticationService = MyProject.Application.Features.Authentication.IAuthenticationService;
+using ITwoFactorService = MyProject.Application.Features.Authentication.ITwoFactorService;
 
 namespace MyProject.Api.Tests.Fixtures;
 
@@ -32,6 +33,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     public HybridCache HybridCache { get; } = Substitute.For<HybridCache>();
     public ICaptchaService CaptchaService { get; } = Substitute.For<ICaptchaService>();
     public IAuditService AuditService { get; } = Substitute.For<IAuditService>();
+    public ITwoFactorService TwoFactorService { get; } = Substitute.For<ITwoFactorService>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -100,6 +102,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IAuditService>();
             services.AddSingleton(AuditService);
 
+            services.RemoveAll<ITwoFactorService>();
+            services.AddSingleton(TwoFactorService);
+
             // Override auth scheme — PostConfigure runs after the app's Configure,
             // ensuring the test scheme wins over the JWT Bearer defaults.
             services.PostConfigure<AuthenticationOptions>(options =>
@@ -134,5 +139,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         HybridCache.ClearSubstitute(ClearOptions.All);
         CaptchaService.ClearSubstitute(ClearOptions.All);
         AuditService.ClearSubstitute(ClearOptions.All);
+        TwoFactorService.ClearSubstitute(ClearOptions.All);
     }
 }
