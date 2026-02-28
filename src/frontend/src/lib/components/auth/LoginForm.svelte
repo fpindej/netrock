@@ -14,7 +14,7 @@
 	import * as m from '$lib/paraglide/messages';
 	import { fly, scale } from 'svelte/transition';
 	import { Check, Loader2 } from '@lucide/svelte';
-	import { LoginBackground, RegisterDialog } from '$lib/components/auth';
+	import { LoginBackground, RegisterDialog, TwoFactorStep } from '$lib/components/auth';
 	import { toast } from '$lib/components/ui/sonner';
 
 	interface Props {
@@ -34,6 +34,10 @@
 	const cooldown = createCooldown();
 	let isRegisterOpen = $state(false);
 
+	// 2FA challenge state
+	let challengeToken = $state('');
+	let requiresTwoFactor = $state(false);
+
 	const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 	// Assume online until the first health check completes — prevents a flash
@@ -45,6 +49,20 @@
 		password = '';
 	}
 
+	async function completeLogin() {
+		isSuccess = true;
+		await delay(1500);
+		isRedirecting = true;
+		await delay(500);
+		await invalidateAll();
+		await goto(resolve('/'));
+	}
+
+	function handleTwoFactorBack() {
+		requiresTwoFactor = false;
+		challengeToken = '';
+	}
+
 	async function login(e: Event) {
 		e.preventDefault();
 		if (isLoading || cooldown.active) return;
@@ -52,17 +70,21 @@
 		isLoading = true;
 
 		try {
-			const { response, error: apiError } = await browserClient.POST('/api/auth/login', {
+			const {
+				response,
+				data,
+				error: apiError
+			} = await browserClient.POST('/api/auth/login', {
 				body: { username: email, password, rememberMe }
 			});
 
-			if (response.ok) {
-				isSuccess = true;
-				await delay(1500);
-				isRedirecting = true;
-				await delay(500);
-				await invalidateAll();
-				await goto(resolve('/'));
+			if (response.ok && data) {
+				if (data.requiresTwoFactor && data.challengeToken) {
+					challengeToken = data.challengeToken;
+					requiresTwoFactor = true;
+				} else {
+					await completeLogin();
+				}
 			} else {
 				handleMutationError(response, apiError, {
 					cooldown,
@@ -110,7 +132,14 @@
 		<span class="hidden group-hover:inline">{apiUrl ?? 'API'}</span>
 	</div>
 
-	{#if !isSuccess}
+	{#if requiresTwoFactor && !isSuccess}
+		<TwoFactorStep
+			{challengeToken}
+			useCookies={true}
+			onSuccess={completeLogin}
+			onBack={handleTwoFactorBack}
+		/>
+	{:else if !isSuccess}
 		<div
 			class="sm:mx-auto sm:w-full sm:max-w-md"
 			in:fly={{ y: 20, duration: 600, delay: 100 }}

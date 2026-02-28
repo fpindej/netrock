@@ -82,6 +82,18 @@
 	"auth_login_signUp": "Zaregistrovat se",
 	"auth_login_forgotPassword": "Zapomenuté heslo?",
 
+	"auth_twoFactor_title": "Dvoufaktorové ověření",
+	"auth_twoFactor_description": "Zadejte 6místný kód z vaší autentizační aplikace.",
+	"auth_twoFactor_recoveryDescription": "Zadejte jeden z vašich obnovovacích kódů pro přihlášení.",
+	"auth_twoFactor_codeLabel": "Ověřovací kód",
+	"auth_twoFactor_codePlaceholder": "000000",
+	"auth_twoFactor_submit": "Ověřit",
+	"auth_twoFactor_useRecoveryCode": "Použít obnovovací kód",
+	"auth_twoFactor_backToCode": "Zpět na ověřovací kód",
+	"auth_twoFactor_invalidCode": "Neplatný kód. Zkuste to prosím znovu.",
+	"auth_twoFactor_recoveryCodeLabel": "Obnovovací kód",
+	"auth_twoFactor_recoveryCodePlaceholder": "Zadejte obnovovací kód",
+
 	"auth_sessionExpired_title": "Relace vypršela",
 	"auth_sessionExpired_description": "Byli jste odhlášeni. Přihlaste se prosím znovu.",
 

@@ -82,6 +82,18 @@
 	"auth_login_signUp": "Sign up",
 	"auth_login_forgotPassword": "Forgot password?",
 
+	"auth_twoFactor_title": "Two-Factor Authentication",
+	"auth_twoFactor_description": "Enter the 6-digit code from your authenticator app.",
+	"auth_twoFactor_recoveryDescription": "Enter one of your recovery codes to sign in.",
+	"auth_twoFactor_codeLabel": "Authentication code",
+	"auth_twoFactor_codePlaceholder": "000000",
+	"auth_twoFactor_submit": "Verify",
+	"auth_twoFactor_useRecoveryCode": "Use a recovery code instead",
+	"auth_twoFactor_backToCode": "Back to authentication code",
+	"auth_twoFactor_invalidCode": "Invalid code. Please try again.",
+	"auth_twoFactor_recoveryCodeLabel": "Recovery code",
+	"auth_twoFactor_recoveryCodePlaceholder": "Enter recovery code",
+
 	"auth_sessionExpired_title": "Session expired",
 	"auth_sessionExpired_description": "You've been logged out. Please sign in again.",
 
