@@ -535,4 +535,301 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     }
 
     #endregion
+
+    #region Login_TwoFactor
+
+    [Fact]
+    public async Task Login_TwoFactorRequired_Returns200WithChallengeToken()
+    {
+        _factory.AuthenticationService.Login(
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns(Result<LoginOutput>.Success(new LoginOutput(
+                Tokens: null,
+                ChallengeToken: "challenge-token-123",
+                RequiresTwoFactor: true)));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/login", JsonContent.Create(new { Username = "test@example.com", Password = "Password1!" })));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AuthTokensResponse>();
+        Assert.NotNull(body);
+        Assert.True(body.RequiresTwoFactor);
+        Assert.Equal("challenge-token-123", body.ChallengeToken);
+        Assert.Empty(body.AccessToken);
+        Assert.Empty(body.RefreshToken);
+    }
+
+    #endregion
+
+    #region TwoFactorLogin
+
+    [Fact]
+    public async Task TwoFactorLogin_ValidCode_Returns200()
+    {
+        _factory.AuthenticationService.CompleteTwoFactorLoginAsync(
+                "challenge-token", "123456", false, Arg.Any<CancellationToken>())
+            .Returns(Result<AuthenticationOutput>.Success(new AuthenticationOutput("access", "refresh")));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/login/2fa", JsonContent.Create(new { ChallengeToken = "challenge-token", Code = "123456" })));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AuthTokensResponse>();
+        Assert.NotNull(body);
+        Assert.NotEmpty(body.AccessToken);
+        Assert.NotEmpty(body.RefreshToken);
+    }
+
+    [Fact]
+    public async Task TwoFactorLogin_InvalidCode_Returns401()
+    {
+        _factory.AuthenticationService.CompleteTwoFactorLoginAsync(
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns(Result<AuthenticationOutput>.Failure(
+                ErrorMessages.TwoFactor.InvalidCode, ErrorType.Unauthorized));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/login/2fa", JsonContent.Create(new { ChallengeToken = "challenge-token", Code = "000000" })));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 401, ErrorMessages.TwoFactor.InvalidCode);
+    }
+
+    [Fact]
+    public async Task TwoFactorLogin_MissingCode_Returns400()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/login/2fa", JsonContent.Create(new { ChallengeToken = "challenge-token", Code = "" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TwoFactorLogin_MissingChallengeToken_Returns400()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/login/2fa", JsonContent.Create(new { ChallengeToken = "", Code = "123456" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    #endregion
+
+    #region TwoFactorRecoveryLogin
+
+    [Fact]
+    public async Task TwoFactorRecoveryLogin_ValidCode_Returns200()
+    {
+        _factory.AuthenticationService.CompleteTwoFactorRecoveryLoginAsync(
+                "challenge-token", "RECOV-12345", false, Arg.Any<CancellationToken>())
+            .Returns(Result<AuthenticationOutput>.Success(new AuthenticationOutput("access", "refresh")));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/login/2fa/recovery", JsonContent.Create(new { ChallengeToken = "challenge-token", RecoveryCode = "RECOV-12345" })));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<AuthTokensResponse>();
+        Assert.NotNull(body);
+        Assert.NotEmpty(body.AccessToken);
+        Assert.NotEmpty(body.RefreshToken);
+    }
+
+    [Fact]
+    public async Task TwoFactorRecoveryLogin_InvalidCode_Returns401()
+    {
+        _factory.AuthenticationService.CompleteTwoFactorRecoveryLoginAsync(
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns(Result<AuthenticationOutput>.Failure(
+                ErrorMessages.TwoFactor.RecoveryCodeInvalid, ErrorType.Unauthorized));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/login/2fa/recovery", JsonContent.Create(new { ChallengeToken = "challenge-token", RecoveryCode = "BAD-CODE" })));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 401, ErrorMessages.TwoFactor.RecoveryCodeInvalid);
+    }
+
+    [Fact]
+    public async Task TwoFactorRecoveryLogin_MissingRecoveryCode_Returns400()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/login/2fa/recovery", JsonContent.Create(new { ChallengeToken = "challenge-token", RecoveryCode = "" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    #endregion
+
+    #region TwoFactorSetup
+
+    [Fact]
+    public async Task TwoFactorSetup_Authenticated_Returns200()
+    {
+        _factory.TwoFactorService.SetupAsync(Arg.Any<CancellationToken>())
+            .Returns(Result<TwoFactorSetupOutput>.Success(
+                new TwoFactorSetupOutput("SHARED-KEY", "otpauth://totp/app:user?secret=SHARED-KEY")));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/2fa/setup", auth: TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<TwoFactorSetupContract>();
+        Assert.NotNull(body);
+        Assert.Equal("SHARED-KEY", body.SharedKey);
+        Assert.Equal("otpauth://totp/app:user?secret=SHARED-KEY", body.AuthenticatorUri);
+    }
+
+    [Fact]
+    public async Task TwoFactorSetup_Unauthenticated_Returns401()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/2fa/setup"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
+    }
+
+    #endregion
+
+    #region TwoFactorVerifySetup
+
+    [Fact]
+    public async Task TwoFactorVerifySetup_ValidCode_Returns200()
+    {
+        _factory.TwoFactorService.VerifySetupAsync("123456", Arg.Any<CancellationToken>())
+            .Returns(Result<TwoFactorVerifySetupOutput>.Success(
+                new TwoFactorVerifySetupOutput(["CODE1", "CODE2", "CODE3"])));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/2fa/verify-setup",
+                JsonContent.Create(new { Code = "123456" }),
+                TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<TwoFactorVerifySetupContract>();
+        Assert.NotNull(body);
+        Assert.Equal(3, body.RecoveryCodes.Count);
+    }
+
+    [Fact]
+    public async Task TwoFactorVerifySetup_InvalidCode_Returns400()
+    {
+        _factory.TwoFactorService.VerifySetupAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result<TwoFactorVerifySetupOutput>.Failure(
+                ErrorMessages.TwoFactor.VerificationFailed));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/2fa/verify-setup",
+                JsonContent.Create(new { Code = "000000" }),
+                TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.TwoFactor.VerificationFailed);
+    }
+
+    [Fact]
+    public async Task TwoFactorVerifySetup_Unauthenticated_Returns401()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/2fa/verify-setup",
+                JsonContent.Create(new { Code = "123456" })));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
+    }
+
+    #endregion
+
+    #region TwoFactorDisable
+
+    [Fact]
+    public async Task TwoFactorDisable_ValidPassword_Returns204()
+    {
+        _factory.TwoFactorService.DisableAsync("Password1!", Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/2fa/disable",
+                JsonContent.Create(new { Password = "Password1!" }),
+                TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TwoFactorDisable_Unauthenticated_Returns401()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/2fa/disable",
+                JsonContent.Create(new { Password = "Password1!" })));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
+    }
+
+    [Fact]
+    public async Task TwoFactorDisable_ServiceFailure_Returns400()
+    {
+        _factory.TwoFactorService.DisableAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.TwoFactor.NotEnabled));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/2fa/disable",
+                JsonContent.Create(new { Password = "Password1!" }),
+                TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.TwoFactor.NotEnabled);
+    }
+
+    #endregion
+
+    #region TwoFactorRegenerateCodes
+
+    [Fact]
+    public async Task TwoFactorRegenerateCodes_ValidPassword_Returns200()
+    {
+        _factory.TwoFactorService.RegenerateRecoveryCodesAsync("Password1!", Arg.Any<CancellationToken>())
+            .Returns(Result<TwoFactorVerifySetupOutput>.Success(
+                new TwoFactorVerifySetupOutput(["NEW1", "NEW2", "NEW3"])));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/2fa/recovery-codes",
+                JsonContent.Create(new { Password = "Password1!" }),
+                TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<TwoFactorVerifySetupContract>();
+        Assert.NotNull(body);
+        Assert.Equal(3, body.RecoveryCodes.Count);
+    }
+
+    [Fact]
+    public async Task TwoFactorRegenerateCodes_Unauthenticated_Returns401()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/auth/2fa/recovery-codes",
+                JsonContent.Create(new { Password = "Password1!" })));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
+    }
+
+    [Fact]
+    public async Task TwoFactorRegenerateCodes_ServiceFailure_Returns400()
+    {
+        _factory.TwoFactorService.RegenerateRecoveryCodesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result<TwoFactorVerifySetupOutput>.Failure(ErrorMessages.TwoFactor.NotEnabled));
+
+        var response = await _client.SendAsync(
+            Post("/api/auth/2fa/recovery-codes",
+                JsonContent.Create(new { Password = "Password1!" }),
+                TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, ErrorMessages.TwoFactor.NotEnabled);
+    }
+
+    #endregion
 }
