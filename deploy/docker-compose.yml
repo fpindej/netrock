@@ -5,8 +5,9 @@
 #  Shared service definitions, dependencies, health checks, and networks.
 #  Never used standalone — always combined with an environment overlay:
 #
-#    ./deploy/up.sh local up -d --build     (uses docker-compose.local.yml)
 #    ./deploy/up.sh production up -d        (uses docker-compose.production.yml)
+#
+#  Local development uses Aspire (see MyProject.AppHost).
 #
 # ══════════════════════════════════════════════════════════════════════════════
 

@@ -7,19 +7,19 @@
     for a given environment profile.
 
 .PARAMETER Environment
-    The environment to launch (e.g., local, production)
+    The environment to launch (e.g., production)
 
 .PARAMETER ComposeArgs
     Additional arguments passed to docker compose
 
 .EXAMPLE
-    .\deploy\up.ps1 local up -d --build
-
-.EXAMPLE
     .\deploy\up.ps1 production up -d
 
 .EXAMPLE
-    .\deploy\up.ps1 local logs -f api
+    .\deploy\up.ps1 production logs -f api
+
+.NOTES
+    Local development uses Aspire (see MyProject.AppHost).
 #>
 
 param(

@@ -16,7 +16,7 @@
 | **Database** | PostgreSQL + EF Core with soft delete, full audit trail (created/updated/deleted by + at), global query filters |
 | **API Documentation** | OpenAPI spec + Scalar UI, with custom transformers for enums, nullable types, numeric schemas, and camelCase query params |
 | **Error Handling** | Result pattern for business logic, `ProblemDetails` ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)) everywhere, structured error messages |
-| **Logging** | Serilog → Seq with structured request logging and correlation |
+| **Logging** | Serilog → OpenTelemetry with structured request logging, correlation, and Aspire Dashboard |
 | **Account Management** | Registration with CAPTCHA, login/logout, remember me, email verification, password reset, profile updates, account deletion |
 | **Admin Panel API** | User CRUD with search and pagination, custom role management with permission editor, role assignment with hierarchy enforcement |
 | **Background Jobs** | Hangfire with PostgreSQL persistence — recurring jobs via `IRecurringJobDefinition`, fire-and-forget, admin UI with trigger/pause/resume/restore, persistent pause state |
@@ -50,8 +50,9 @@
 
 | Feature | Implementation |
 |---|---|
-| **Fully Dockerized** | One `docker compose up` for 5 services — API, frontend (hot-reload), DB, Seq, MinIO (S3 storage) |
-| **Init Script** | Interactive project bootstrapping — renames solution, configures ports, generates secrets, creates migration, starts Docker |
+| **Aspire Local Dev** | One `dotnet run` for the full stack — API, frontend (hot-reload), PostgreSQL, MinIO (S3 storage), OpenTelemetry Dashboard |
+| **Production Docker** | Docker Compose with production overlay — hardened containers, resource limits, network segmentation |
+| **Init Script** | Interactive project bootstrapping — renames solution, configures ports, creates migration, launches Aspire |
 | **Deploy Script** | Multi-registry support (Docker Hub, GHCR, ACR, ECR, DigitalOcean), semantic versioning, platform selection |
 | **CI Pipeline** | GitHub Actions with smart path filtering — backend-only PRs skip frontend checks and vice versa |
 | **Docker Validation** | CI validates image builds on Dockerfile/dependency changes, with layer caching |

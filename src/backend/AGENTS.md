@@ -14,6 +14,8 @@ src/backend/
 ├── MyProject.Infrastructure/      # Implementations (all internal)
 │   ├── Features/{Feature}/Services/, Configurations/, Extensions/
 │   └── Persistence/MyProjectDbContext.cs
+├── MyProject.ServiceDefaults/     # Aspire shared: OTEL, service discovery, resilience
+├── MyProject.AppHost/             # Aspire orchestrator (local dev only)
 └── MyProject.WebApi/              # Entry point
     ├── Features/{Feature}/{Feature}Controller.cs, {Feature}Mapper.cs
     ├── Features/{Feature}/Dtos/{Operation}/{Operation}Request.cs + Validator
@@ -263,3 +265,51 @@ Response contracts: frozen records in `Contracts/ResponseContracts.cs` — deser
 `HostingOptions` controls `ForceHttps` (default true — required behind TLS proxy) and `ReverseProxy` trust (trusted networks/proxies for `X-Forwarded-For`).
 
 Docker local: `172.16.0.0/12` pre-configured. Set `XFF_DEPTH=1` on frontend container.
+
+## Aspire (Local Development Orchestration)
+
+**Two new projects** support .NET Aspire for local development:
+
+### ServiceDefaults (`MyProject.ServiceDefaults`)
+
+Shared Aspire project (`IsAspireSharedProject=true`) providing:
+- **OpenTelemetry**: metrics (ASP.NET Core, HTTP, Runtime), tracing (ASP.NET Core, HTTP with health-check filtering, EF Core), OTLP export
+- **Service discovery**: automatic for `HttpClient` instances
+- **HTTP resilience**: standard resilience handler on all `HttpClient` instances
+
+Called via `builder.AddServiceDefaults()` in `Program.cs`. Degrades gracefully when not running under Aspire — OTLP export only activates when `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
+
+Health check endpoint mapping is **not** included — the application's existing `MapHealthCheckEndpoints()` handles `/health`, `/health/ready`, and `/health/live`.
+
+### AppHost (`MyProject.AppHost`)
+
+Aspire orchestrator for local development. Launches all infrastructure as containers:
+
+| Resource | Aspire method | Connection mapping |
+|---|---|---|
+| PostgreSQL + PgAdmin | `AddPostgres().WithPgAdmin().AddDatabase("Database")` | Auto → `ConnectionStrings:Database` |
+| MinIO | `AddMinioContainer("storage").WithDataVolume()` | Via `WithEnvironment("FileStorage__*", ...)` |
+| API | `AddProject<Projects.MyProject_WebApi>("api")` | References all above, port pinned by init |
+| Frontend | `AddViteApp("frontend", ...).WithPnpm()` | Port pinned by init |
+
+**Run**: `dotnet run --project src/backend/MyProject.AppHost`
+
+### Aspire vs Docker Compose
+
+| | Aspire (AppHost) | Docker Compose |
+|---|---|---|
+| Purpose | Local development | Production deployment |
+| Dashboard | Built-in (OTEL traces, logs, metrics) | N/A (stdout logs, external collector) |
+| Config | `WithEnvironment` in `Program.cs` | env files in `deploy/envs/` |
+| Frontend | Hot reload via Vite dev server | Built static bundle |
+
+### Logging: Serilog → OpenTelemetry
+
+Serilog bridges to OpenTelemetry via the ServiceDefaults `AddOpenTelemetry()` logger provider. With `writeToProviders: true`, Serilog forwards logs to all registered `ILoggerProvider` instances including the OTEL one — no separate Serilog OTEL sink needed. When `OTEL_EXPORTER_OTLP_ENDPOINT` is set (by Aspire or production infrastructure), logs flow to the OTLP collector. The console sink always remains active.
+
+### Adding a new infrastructure dependency to AppHost
+
+1. Add hosting package to `Directory.Packages.props` and `MyProject.AppHost.csproj`
+2. Add resource in `MyProject.AppHost/Program.cs` (e.g., `builder.AddRabbitMQ("rabbitmq")`)
+3. Wire to API via `.WithReference()` or `.WithEnvironment()` depending on connection format
+4. Add `.WaitFor()` if the API needs the resource at startup

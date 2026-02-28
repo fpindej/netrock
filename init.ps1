@@ -5,7 +5,7 @@
 .DESCRIPTION
     Initializes a new project from the Web API template by:
     - Renaming the project from MyProject to your chosen name
-    - Configuring ports for Docker services
+    - Configuring ports for services
     - Optionally creating initial database migration
     - Optionally committing changes to git
 
@@ -13,9 +13,9 @@
     The new project name (e.g., MyAwesomeApi). Must start with uppercase letter.
 
 .PARAMETER Port
-    Base port for Docker services. Default is 13000.
-    Frontend: PORT, API: PORT+2, Database: PORT+4, Seq: PORT+8,
-    Storage: PORT+10, Storage Console: PORT+12
+    Base port for services. Default is 13000.
+    Frontend: PORT, API: PORT+2
+    (Infrastructure ports are managed automatically by Aspire)
 
 .PARAMETER Yes
     Accept all defaults without prompting (non-interactive mode).
@@ -26,8 +26,8 @@
 .PARAMETER NoCommit
     Skip git commits.
 
-.PARAMETER NoDocker
-    Skip starting docker compose after setup.
+.PARAMETER NoAspire
+    Don't launch Aspire after setup.
 
 .EXAMPLE
     .\init.ps1
@@ -38,8 +38,8 @@
     # Non-interactive mode with custom name and port
 
 .EXAMPLE
-    .\init.ps1 -Name "TodoApp" -Yes -NoDocker
-    # Non-interactive, don't start docker after setup
+    .\init.ps1 -Name "TodoApp" -Yes
+    # Non-interactive with defaults
 #>
 
 param (
@@ -54,7 +54,7 @@ param (
 
     [switch]$NoMigration,
     [switch]$NoCommit,
-    [switch]$NoDocker
+    [switch]$NoAspire
 )
 
 $ErrorActionPreference = "Stop"
@@ -185,8 +185,8 @@ function Test-ProjectName {
 function Test-Port {
     param([int]$PortNumber)
 
-    if ($PortNumber -lt 1024 -or $PortNumber -gt 65530) {
-        Write-ErrorMessage "Port must be between 1024 and 65530"
+    if ($PortNumber -lt 1024 -or $PortNumber -gt 65529) {
+        Write-ErrorMessage "Port must be between 1024 and 65529"
         return $false
     }
 
@@ -331,10 +331,6 @@ while ($true) {
 # Calculate derived ports
 $FrontendPort = $Port
 $ApiPort = $Port + 2
-$DbPort = $Port + 4
-$SeqPort = $Port + 8
-$StoragePort = $Port + 10
-$StorageConsolePort = $Port + 12
 
 # Show port allocation
 Write-Host ""
@@ -342,10 +338,6 @@ Write-Host "  Port allocation" -ForegroundColor White
 Write-Host "  -------------------------------------"
 Write-Host "  Frontend:     " -NoNewline; Write-Host $FrontendPort -ForegroundColor Cyan
 Write-Host "  API:          " -NoNewline; Write-Host $ApiPort -ForegroundColor Cyan
-Write-Host "  Database:     " -NoNewline; Write-Host $DbPort -ForegroundColor Cyan
-Write-Host "  Seq:          " -NoNewline; Write-Host $SeqPort -ForegroundColor Cyan
-Write-Host "  Storage:      " -NoNewline; Write-Host $StoragePort -ForegroundColor Cyan
-Write-Host "  Storage UI:   " -NoNewline; Write-Host $StorageConsolePort -ForegroundColor Cyan
 
 $ProjectSlug = ConvertTo-KebabCase $Name
 
@@ -368,16 +360,16 @@ if (-not $NoCommit) {
     $checklistMap += "commit"
 }
 
-if (-not $NoDocker) {
-    $checklistOptions += "Start docker compose after setup"
-    $checklistDefaults += $false
-    $checklistMap += "docker"
+if (-not $NoAspire) {
+    $checklistOptions += "Launch Aspire after setup"
+    $checklistDefaults += $true
+    $checklistMap += "aspire"
 }
 
 # Initialize from CLI flags
 $CreateMigration = -not $NoMigration
 $DoCommit = -not $NoCommit
-$StartDocker = $false
+$StartAspire = -not $NoAspire
 
 # Only show checklist if there are options to configure
 if ($checklistOptions.Count -gt 0) {
@@ -387,7 +379,7 @@ if ($checklistOptions.Count -gt 0) {
         switch ($checklistMap[$i]) {
             "migration" { $CreateMigration = $results[$i] }
             "commit" { $DoCommit = $results[$i] }
-            "docker" { $StartDocker = $results[$i] }
+            "aspire" { $StartAspire = $results[$i] }
         }
     }
 }
@@ -407,10 +399,6 @@ Write-Host "  Ports" -ForegroundColor White
 Write-Host "  -------------------------------------"
 Write-Host "  Frontend:         " -NoNewline; Write-Host $FrontendPort -ForegroundColor Cyan
 Write-Host "  API:              " -NoNewline; Write-Host $ApiPort -ForegroundColor Cyan
-Write-Host "  Database:         " -NoNewline; Write-Host $DbPort -ForegroundColor Cyan
-Write-Host "  Seq:              " -NoNewline; Write-Host $SeqPort -ForegroundColor Cyan
-Write-Host "  Storage:          " -NoNewline; Write-Host $StoragePort -ForegroundColor Cyan
-Write-Host "  Storage UI:       " -NoNewline; Write-Host $StorageConsolePort -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Options" -ForegroundColor White
 Write-Host "  -------------------------------------"
@@ -418,8 +406,8 @@ Write-Host "  Create migration: " -NoNewline
 if ($CreateMigration) { Write-Host "Yes" -ForegroundColor Green } else { Write-Host "No" -ForegroundColor DarkGray }
 Write-Host "  Git commits:      " -NoNewline
 if ($DoCommit) { Write-Host "Yes" -ForegroundColor Green } else { Write-Host "No" -ForegroundColor DarkGray }
-Write-Host "  Start docker:     " -NoNewline
-if ($StartDocker) { Write-Host "Yes" -ForegroundColor Green } else { Write-Host "No" -ForegroundColor DarkGray }
+Write-Host "  Launch Aspire:    " -NoNewline
+if ($StartAspire) { Write-Host "Yes" -ForegroundColor Green } else { Write-Host "No" -ForegroundColor DarkGray }
 Write-Host ""
 
 $proceed = Read-YesNo "Proceed with initialization?" $true
@@ -448,7 +436,7 @@ if (Test-Path $frontendEnvExample) {
     Write-SubStep "Created frontend .env.local from .env.example"
 }
 
-# Generate random JWT secret for local development
+# Generate random JWT secret
 $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
 $jwtBytes = New-Object byte[] 48
 $rng.GetBytes($jwtBytes)
@@ -471,13 +459,9 @@ foreach ($file in $files) {
         $content = [System.IO.File]::ReadAllText($file.FullName)
         $originalContent = $content
 
-        if ($content -match "\{INIT_FRONTEND_PORT\}|\{INIT_API_PORT\}|\{INIT_DB_PORT\}|\{INIT_SEQ_PORT\}|\{INIT_STORAGE_PORT\}|\{INIT_STORAGE_CONSOLE_PORT\}|\{INIT_PROJECT_SLUG\}|\{INIT_JWT_SECRET\}") {
+        if ($content -match "\{INIT_FRONTEND_PORT\}|\{INIT_API_PORT\}|\{INIT_PROJECT_SLUG\}|\{INIT_JWT_SECRET\}") {
             $content = $content -replace "\{INIT_FRONTEND_PORT\}", $FrontendPort
             $content = $content -replace "\{INIT_API_PORT\}", $ApiPort
-            $content = $content -replace "\{INIT_DB_PORT\}", $DbPort
-            $content = $content -replace "\{INIT_SEQ_PORT\}", $SeqPort
-            $content = $content -replace "\{INIT_STORAGE_PORT\}", $StoragePort
-            $content = $content -replace "\{INIT_STORAGE_CONSOLE_PORT\}", $StorageConsolePort
             $content = $content -replace "\{INIT_PROJECT_SLUG\}", $ProjectSlug
             $content = $content -replace "\{INIT_JWT_SECRET\}", $JwtSecret
 
@@ -498,7 +482,7 @@ if ($DoCommit) {
     Write-Step "Committing port configuration..."
     $ErrorActionPreference = "Continue"
     $null = git add . 2>&1
-    $null = git commit -m "chore: configure project (slug: $ProjectSlug, ports: $FrontendPort/$ApiPort/$DbPort/$SeqPort)" 2>&1
+    $null = git commit -m "chore: configure project (slug: $ProjectSlug, ports: $FrontendPort/$ApiPort)" 2>&1
     $ErrorActionPreference = "Stop"
     Write-Success "Port configuration committed"
 }
@@ -700,52 +684,40 @@ $startArgs = @{
 if ($env:OS -eq 'Windows_NT') { $startArgs.WindowStyle = "Hidden" }
 Start-Process @startArgs
 
-# Step 6: Start Docker
-if ($StartDocker) {
-    Write-Step "Starting Docker containers..."
-    $ErrorActionPreference = "Continue"
-    & "$ScriptDir\deploy\up.ps1" local up -d --build
-    if ($LASTEXITCODE -ne 0) {
-        Write-WarnMsg "Docker failed to start. Is Docker running?"
-        Write-Info "You can start containers manually later with:"
-        Write-Host "  .\deploy\up.ps1 local up -d --build" -ForegroundColor DarkGray
-    }
-    else {
-        Write-Success "Docker containers started"
-    }
-    $ErrorActionPreference = "Stop"
-}
-
 # -----------------------------------------------------------------------------
 # Complete!
 # -----------------------------------------------------------------------------
 Write-Header "Setup Complete!"
 
-Write-Host ""
-Write-Host "  Your project is ready!" -ForegroundColor White
-Write-Host ""
-Write-Host "  Quick Start" -ForegroundColor White
-Write-Host "  -------------------------------------"
-Write-Host "  # Start the development environment" -ForegroundColor DarkGray
-Write-Host "  .\deploy\up.ps1 local up -d --build"
-Write-Host ""
-Write-Host "  # Or run the API directly" -ForegroundColor DarkGray
-Write-Host "  cd src\backend\$NewName.WebApi"
-Write-Host "  dotnet run"
-Write-Host ""
-Write-Host "  URLs" -ForegroundColor White
-Write-Host "  -------------------------------------"
-Write-Host "  Frontend:    " -NoNewline; Write-Host "http://localhost:$FrontendPort" -ForegroundColor Cyan
-Write-Host "  API Docs:    " -NoNewline; Write-Host "http://localhost:$ApiPort/scalar" -ForegroundColor Cyan
-Write-Host "  Hangfire:    " -NoNewline; Write-Host "http://localhost:$ApiPort/hangfire" -ForegroundColor Cyan
-Write-Host "  Seq (logs):  " -NoNewline; Write-Host "http://localhost:$SeqPort" -ForegroundColor Cyan
-Write-Host "  MinIO:       " -NoNewline; Write-Host "http://localhost:$StorageConsolePort" -ForegroundColor Cyan
-Write-Host ""
 $elapsed = [math]::Round(((Get-Date) - $startTime).TotalSeconds)
-Write-Host "  Completed in ${elapsed}s" -ForegroundColor DarkGray
-Write-Host ""
-Write-Host "  Happy coding!" -ForegroundColor DarkGray
-Write-Host ""
+
+if ($StartAspire) {
+    Write-Host ""
+    Write-Host "  Your project is ready!" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  Completed in ${elapsed}s" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Step "Launching Aspire..."
+    Write-Info "The Aspire Dashboard URL will appear below. Press Ctrl+C to stop."
+    Write-Host ""
+    & dotnet run --project "src\backend\$NewName.AppHost"
+}
+else {
+    Write-Host ""
+    Write-Host "  Your project is ready!" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  Quick Start" -ForegroundColor White
+    Write-Host "  -------------------------------------"
+    Write-Host "  dotnet run --project src\backend\$NewName.AppHost"
+    Write-Host ""
+    Write-Host "  The Aspire Dashboard URL appears in the console." -ForegroundColor DarkGray
+    Write-Host "  All service URLs (API, pgAdmin, MinIO) are visible in the Dashboard." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  Completed in ${elapsed}s" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  Happy coding!" -ForegroundColor DarkGray
+    Write-Host ""
+}
 
 }
 finally {

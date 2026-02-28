@@ -2,28 +2,23 @@
 
 > Back to [README](../README.md)
 
-## Developer Workflows
+## Local Development (Aspire)
 
-### Frontend dev — tweak backend config without touching code
-
-Edit `deploy/envs/local/api.env`, restart Docker:
+Aspire is the sole local development workflow. It starts all infrastructure (PostgreSQL, MinIO) as containers and launches the API and frontend dev server.
 
 ```bash
-# Longer JWT tokens, relaxed rate limit
-Authentication__Jwt__AccessTokenLifetime=05:00:00
-RateLimiting__Global__PermitLimit=1000
+dotnet run --project src/backend/MyProject.AppHost
 ```
 
-```bash
-./deploy/up.sh local up -d
-```
+The Aspire Dashboard URL appears in the console. All service URLs (API docs, pgAdmin, MinIO) are linked from the Dashboard.
 
-### Backend dev — debug with breakpoints in Rider/VS
+### Debugging with breakpoints in Rider/VS
 
-1. Stop the API container: `./deploy/up.sh local stop api`
-2. Set `API_URL=http://host.docker.internal:5142` in `deploy/envs/local/compose.env`
-3. Restart frontend: `./deploy/up.sh local restart frontend`
-4. Launch API from your IDE — breakpoints work, frontend proxies to it
+Launch the AppHost project from your IDE. The API runs in-process with full debugger support. Infrastructure containers are still managed by Aspire.
+
+### Configuration
+
+Behavioral config (log levels, rate limits, JWT lifetimes, CORS, seed users) lives in `appsettings.Development.json`. Infrastructure connection strings are injected by Aspire via environment variables — no manual config needed.
 
 ---
 
@@ -40,7 +35,19 @@ Migrations auto-apply on startup in Development.
 
 ---
 
-## Deployment
+## Production Deployment
+
+Docker Compose is used for production only. Aspire is not involved.
+
+```bash
+./deploy/up.sh production up -d
+```
+
+See [Before You Ship](before-you-ship.md) for the full production checklist.
+
+---
+
+## Build & Push
 
 Build and push Docker images with semantic versioning:
 

@@ -3,7 +3,7 @@
 NETrock — .NET 10 API (Clean Architecture) + SvelteKit frontend (Svelte 5), fully dockerized.
 
 ```
-Frontend (SvelteKit :5173) → /api/* proxy → Backend API (.NET :8080) → PostgreSQL / Seq
+Frontend (SvelteKit :5173) → /api/* proxy → Backend API (.NET :8080) → PostgreSQL / MinIO
 Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 ```
 
@@ -45,6 +45,9 @@ dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.sln
 
 # Frontend (run when src/frontend/ changed)
 cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check
+
+# Aspire (run to verify local orchestration — requires Docker)
+dotnet run --project src/backend/MyProject.AppHost
 ```
 
 ## Autonomous Behaviors

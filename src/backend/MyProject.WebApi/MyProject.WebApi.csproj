@@ -28,7 +28,7 @@
     </ItemGroup>
 
     <!-- Exclude non-production appsettings from publish output.
-         Pass /p:StripDevConfig=false to keep them (used by docker-compose.local). -->
+         Pass /p:StripDevConfig=false to keep them in the published output. -->
     <ItemGroup Condition="'$(StripDevConfig)' != 'false'">
         <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
         <Content Update="appsettings.Testing.json" CopyToPublishDirectory="Never" />

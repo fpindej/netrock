@@ -11,10 +11,10 @@
 #    ./deploy/up.sh <environment> [docker compose args...]
 #
 #  Examples:
-#    ./deploy/up.sh local up -d --build      # Start local dev
-#    ./deploy/up.sh local down                # Stop local
-#    ./deploy/up.sh local logs -f api         # Follow API logs
 #    ./deploy/up.sh production up -d          # Start production stack
+#    ./deploy/up.sh production logs -f api    # Follow API logs
+#
+#  Note: Local development uses Aspire (see MyProject.AppHost).
 #
 #══════════════════════════════════════════════════════════════════════════════
 
@@ -36,9 +36,10 @@ if [[ $# -lt 1 ]]; then
     done
     echo ""
     echo "Examples:"
-    echo "  $0 local up -d --build"
     echo "  $0 production up -d"
-    echo "  $0 local logs -f api"
+    echo "  $0 production logs -f api"
+    echo ""
+    echo "Note: Local development uses Aspire (see MyProject.AppHost)."
     exit 1
 fi
 
