@@ -43,9 +43,8 @@ internal class AuthenticationService(
     ILogger<AuthenticationService> logger,
     MyProjectDbContext dbContext) : IAuthenticationService
 {
-    private static readonly TimeSpan ChallengeTokenLifetime = TimeSpan.FromMinutes(5);
-
     private readonly AuthenticationOptions.JwtOptions _jwtOptions = authenticationOptions.Value.Jwt;
+    private readonly AuthenticationOptions.TwoFactorOptions _twoFactorOptions = authenticationOptions.Value.TwoFactor;
     private readonly AuthenticationOptions.EmailTokenOptions _emailTokenOptions = authenticationOptions.Value.EmailToken;
     private readonly EmailOptions _emailOptions = emailOptions.Value;
 
@@ -86,7 +85,7 @@ internal class AuthenticationService(
                 Token = HashHelper.Sha256(challengeToken),
                 UserId = user.Id,
                 CreatedAt = utcNow,
-                ExpiresAt = utcNow.Add(ChallengeTokenLifetime),
+                ExpiresAt = utcNow.Add(_twoFactorOptions.ChallengeLifetime),
                 IsUsed = false,
                 IsRememberMe = rememberMe
             };
@@ -130,6 +129,8 @@ internal class AuthenticationService(
 
         if (!isValid)
         {
+            challenge.FailedAttempts++;
+            await dbContext.SaveChangesAsync(cancellationToken);
             await auditService.LogAsync(AuditActions.TwoFactorLoginFailure, userId: user.Id, ct: cancellationToken);
             return Result<AuthenticationOutput>.Failure(ErrorMessages.TwoFactor.InvalidCode, ErrorType.Unauthorized);
         }
@@ -163,6 +164,8 @@ internal class AuthenticationService(
         var redeemResult = await userManager.RedeemTwoFactorRecoveryCodeAsync(user, recoveryCode);
         if (!redeemResult.Succeeded)
         {
+            challenge.FailedAttempts++;
+            await dbContext.SaveChangesAsync(cancellationToken);
             await auditService.LogAsync(AuditActions.TwoFactorLoginFailure, userId: user.Id, ct: cancellationToken);
             return Result<AuthenticationOutput>.Failure(ErrorMessages.TwoFactor.RecoveryCodeInvalid, ErrorType.Unauthorized);
         }
@@ -540,7 +543,8 @@ internal class AuthenticationService(
     }
 
     /// <summary>
-    /// Resolves a 2FA challenge token from plaintext, validating it is not expired or used.
+    /// Resolves a 2FA challenge token from plaintext, validating it is not expired, used, or locked.
+    /// Returns <c>null</c> if the challenge is invalid for any reason.
     /// </summary>
     private async Task<TwoFactorChallenge?> ResolveChallengeAsync(string plainToken, CancellationToken cancellationToken)
     {
@@ -548,17 +552,17 @@ internal class AuthenticationService(
         var challenge = await dbContext.TwoFactorChallenges
             .FirstOrDefaultAsync(c => c.Token == hashedToken, cancellationToken);
 
-        if (challenge is null)
-        {
-            return null;
-        }
-
-        if (challenge.IsUsed)
+        if (challenge is null || challenge.IsUsed)
         {
             return null;
         }
 
         if (challenge.ExpiresAt < timeProvider.GetUtcNow().UtcDateTime)
+        {
+            return null;
+        }
+
+        if (challenge.FailedAttempts >= _twoFactorOptions.MaxChallengeAttempts)
         {
             return null;
         }

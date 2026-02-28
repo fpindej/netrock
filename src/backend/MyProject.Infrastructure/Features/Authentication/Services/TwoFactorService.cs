@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity;
 using MyProject.Infrastructure.Features.Authentication.Models;
+using MyProject.Infrastructure.Features.Authentication.Options;
 using MyProject.Shared;
 
 namespace MyProject.Infrastructure.Features.Authentication.Services;
@@ -16,9 +18,11 @@ internal class TwoFactorService(
     UserManager<ApplicationUser> userManager,
     IUserContext userContext,
     IAuditService auditService,
+    IOptions<AuthenticationOptions> authenticationOptions,
     ILogger<TwoFactorService> logger) : ITwoFactorService
 {
     private const int RecoveryCodeCount = 10;
+    private readonly AuthenticationOptions.TwoFactorOptions _twoFactorOptions = authenticationOptions.Value.TwoFactor;
 
     /// <inheritdoc />
     public async Task<Result<TwoFactorSetupOutput>> SetupAsync(CancellationToken ct)
@@ -44,7 +48,7 @@ internal class TwoFactorService(
         }
 
         var email = user.Email ?? user.UserName ?? "user";
-        var uri = GenerateOtpAuthUri(email, key);
+        var uri = GenerateOtpAuthUri(_twoFactorOptions.Issuer, email, key);
 
         return Result<TwoFactorSetupOutput>.Success(new TwoFactorSetupOutput(key, uri));
     }
@@ -164,9 +168,8 @@ internal class TwoFactorService(
     /// <summary>
     /// Generates an otpauth:// URI for QR code scanning by authenticator apps.
     /// </summary>
-    private static string GenerateOtpAuthUri(string email, string key)
+    private static string GenerateOtpAuthUri(string issuer, string email, string key)
     {
-        const string issuer = "MyProject";
         return $"otpauth://totp/{Uri.EscapeDataString(issuer)}:{Uri.EscapeDataString(email)}?secret={key}&issuer={Uri.EscapeDataString(issuer)}&digits=6";
     }
 }

@@ -5,18 +5,23 @@ using MyProject.Infrastructure.Features.Authentication.Models;
 namespace MyProject.Infrastructure.Features.Authentication.Configurations;
 
 /// <summary>
-/// EF Core configuration for <see cref="TwoFactorChallenge"/>.
+/// EF Core configuration for the <see cref="TwoFactorChallenge"/> entity in the <c>auth</c> schema.
 /// </summary>
 internal class TwoFactorChallengeConfiguration : IEntityTypeConfiguration<TwoFactorChallenge>
 {
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<TwoFactorChallenge> builder)
     {
+        builder.ToTable("TwoFactorChallenges", "auth");
+
         builder.HasKey(t => t.Id);
 
         builder.Property(t => t.Token)
             .IsRequired()
             .HasMaxLength(128);
+
+        builder.Property(t => t.UserId)
+            .IsRequired();
 
         builder.Property(t => t.CreatedAt)
             .IsRequired();
@@ -31,6 +36,10 @@ internal class TwoFactorChallengeConfiguration : IEntityTypeConfiguration<TwoFac
         builder.Property(t => t.IsRememberMe)
             .IsRequired()
             .HasColumnName("RememberMe");
+
+        builder.Property(t => t.FailedAttempts)
+            .IsRequired()
+            .HasDefaultValue(0);
 
         builder.HasOne(t => t.User)
             .WithMany()
