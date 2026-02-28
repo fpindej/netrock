@@ -18,7 +18,7 @@ internal class TwoFactorChallengeConfiguration : IEntityTypeConfiguration<TwoFac
 
         builder.Property(t => t.Token)
             .IsRequired()
-            .HasMaxLength(128);
+            .HasMaxLength(64);
 
         builder.Property(t => t.UserId)
             .IsRequired();
@@ -50,5 +50,7 @@ internal class TwoFactorChallengeConfiguration : IEntityTypeConfiguration<TwoFac
             .IsUnique();
 
         builder.HasIndex(t => t.ExpiresAt);
+
+        builder.HasIndex(t => t.UserId);
     }
 }

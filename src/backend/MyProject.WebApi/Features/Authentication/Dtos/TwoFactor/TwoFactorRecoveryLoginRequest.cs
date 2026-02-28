@@ -12,6 +12,7 @@ public class TwoFactorRecoveryLoginRequest
     /// The opaque challenge token received from the initial login response.
     /// </summary>
     [Required]
+    [MaxLength(100)]
     public string ChallengeToken { get; [UsedImplicitly] init; } = string.Empty;
 
     /// <summary>

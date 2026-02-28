@@ -24,7 +24,7 @@ internal sealed class ExpiredTwoFactorChallengeCleanupJob(
     /// Grace period before deleting expired challenges. Avoids a race condition where a challenge
     /// expires at the exact moment a user submits their TOTP code.
     /// </summary>
-    private static readonly TimeSpan ExpirationGracePeriod = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan ExpirationGracePeriod = TimeSpan.FromHours(1);
 
     /// <inheritdoc />
     public async Task ExecuteAsync()

@@ -112,12 +112,13 @@ internal class AuthenticationService(
     public async Task<Result<AuthenticationOutput>> CompleteTwoFactorLoginAsync(
         string challengeToken, string code, bool useCookies, CancellationToken cancellationToken = default)
     {
-        var challenge = await ResolveChallengeAsync(challengeToken, cancellationToken);
-        if (challenge is null)
+        var challengeResult = await ResolveChallengeAsync(challengeToken, cancellationToken);
+        if (!challengeResult.IsSuccess)
         {
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.TwoFactor.ChallengeNotFound, ErrorType.Unauthorized);
+            return Result<AuthenticationOutput>.Failure(challengeResult.Error ?? ErrorMessages.TwoFactor.ChallengeNotFound, challengeResult.ErrorType ?? ErrorType.Unauthorized);
         }
 
+        var challenge = challengeResult.Value;
         var user = await userManager.FindByIdAsync(challenge.UserId.ToString());
         if (user is null)
         {
@@ -149,12 +150,13 @@ internal class AuthenticationService(
     public async Task<Result<AuthenticationOutput>> CompleteTwoFactorRecoveryLoginAsync(
         string challengeToken, string recoveryCode, bool useCookies, CancellationToken cancellationToken = default)
     {
-        var challenge = await ResolveChallengeAsync(challengeToken, cancellationToken);
-        if (challenge is null)
+        var challengeResult = await ResolveChallengeAsync(challengeToken, cancellationToken);
+        if (!challengeResult.IsSuccess)
         {
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.TwoFactor.ChallengeNotFound, ErrorType.Unauthorized);
+            return Result<AuthenticationOutput>.Failure(challengeResult.Error ?? ErrorMessages.TwoFactor.ChallengeNotFound, challengeResult.ErrorType ?? ErrorType.Unauthorized);
         }
 
+        var challenge = challengeResult.Value;
         var user = await userManager.FindByIdAsync(challenge.UserId.ToString());
         if (user is null)
         {
@@ -544,9 +546,9 @@ internal class AuthenticationService(
 
     /// <summary>
     /// Resolves a 2FA challenge token from plaintext, validating it is not expired, used, or locked.
-    /// Returns <c>null</c> if the challenge is invalid for any reason.
+    /// Returns a distinct error for each rejection reason.
     /// </summary>
-    private async Task<TwoFactorChallenge?> ResolveChallengeAsync(string plainToken, CancellationToken cancellationToken)
+    private async Task<Result<TwoFactorChallenge>> ResolveChallengeAsync(string plainToken, CancellationToken cancellationToken)
     {
         var hashedToken = HashHelper.Sha256(plainToken);
         var challenge = await dbContext.TwoFactorChallenges
@@ -554,20 +556,21 @@ internal class AuthenticationService(
 
         if (challenge is null || challenge.IsUsed)
         {
-            return null;
+            return Result<TwoFactorChallenge>.Failure(ErrorMessages.TwoFactor.ChallengeNotFound, ErrorType.Unauthorized);
         }
 
         if (challenge.ExpiresAt < timeProvider.GetUtcNow().UtcDateTime)
         {
-            return null;
+            return Result<TwoFactorChallenge>.Failure(ErrorMessages.TwoFactor.ChallengeNotFound, ErrorType.Unauthorized);
         }
 
         if (challenge.FailedAttempts >= _twoFactorOptions.MaxChallengeAttempts)
         {
-            return null;
+            await auditService.LogAsync(AuditActions.TwoFactorLoginFailure, userId: challenge.UserId, ct: cancellationToken);
+            return Result<TwoFactorChallenge>.Failure(ErrorMessages.TwoFactor.ChallengeLocked, ErrorType.Unauthorized);
         }
 
-        return challenge;
+        return Result<TwoFactorChallenge>.Success(challenge);
     }
 
     /// <summary>

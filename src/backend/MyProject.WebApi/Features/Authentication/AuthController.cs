@@ -50,7 +50,7 @@ public class AuthController(
             return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
-        return Ok(result.Value.ToResponse(useCookies));
+        return Ok(result.Value.ToResponse());
     }
 
     /// <summary>

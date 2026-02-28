@@ -13,7 +13,8 @@ public class TwoFactorLoginRequestValidator : AbstractValidator<TwoFactorLoginRe
     public TwoFactorLoginRequestValidator()
     {
         RuleFor(x => x.ChallengeToken)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(100);
 
         RuleFor(x => x.Code)
             .NotEmpty()

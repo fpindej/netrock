@@ -38,6 +38,8 @@ internal class TwoFactorService(
             return Result<TwoFactorSetupOutput>.Failure(ErrorMessages.TwoFactor.AlreadyEnabled);
         }
 
+        // Intentionally reset on every setup call — ensures each setup attempt uses a fresh key,
+        // preventing partial-setup attacks where a previous key was exposed but not yet confirmed.
         await userManager.ResetAuthenticatorKeyAsync(user);
         var key = await userManager.GetAuthenticatorKeyAsync(user);
 
