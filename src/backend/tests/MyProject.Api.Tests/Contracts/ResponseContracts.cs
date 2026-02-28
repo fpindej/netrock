@@ -1,13 +1,15 @@
 namespace MyProject.Api.Tests.Contracts;
 
 // Auth
-internal record AuthTokensResponse(string AccessToken, string RefreshToken);
+internal record AuthTokensResponse(string AccessToken, string RefreshToken, bool RequiresTwoFactor, string? ChallengeToken);
+internal record TwoFactorSetupContract(string SharedKey, string AuthenticatorUri);
+internal record TwoFactorVerifySetupContract(List<string> RecoveryCodes);
 internal record RegisterUserResponse(Guid Id);
 
 // Users
 internal record UserMeResponse(Guid Id, string Username, string Email, string? FirstName, string? LastName,
     string? PhoneNumber, string? Bio, bool HasAvatar, List<string> Roles, List<string> Permissions,
-    bool EmailConfirmed);
+    bool EmailConfirmed, bool TwoFactorEnabled);
 
 // Admin - Users
 internal record AdminUserResponse(Guid Id, string Username, string Email, string? FirstName, string? LastName,
