@@ -36,6 +36,7 @@
 
     <ItemGroup>
         <ProjectReference Include="../MyProject.Infrastructure/MyProject.Infrastructure.csproj" />
+        <ProjectReference Include="../MyProject.ServiceDefaults/MyProject.ServiceDefaults.csproj" />
     </ItemGroup>
 
     <ItemGroup>

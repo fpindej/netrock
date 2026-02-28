@@ -36,6 +36,9 @@ try
         LoggerConfigurationExtensions.SetupLogger(context.Configuration, loggerConfiguration);
     }, true);
 
+    Log.Debug("Adding Aspire service defaults (OpenTelemetry, service discovery, resilience)");
+    builder.AddServiceDefaults();
+
     try
     {
         Log.Debug("Adding TimeProvider");

@@ -42,7 +42,9 @@ public static class LoggerConfigurationExtensions
 
     /// <summary>
     /// Configures the full Serilog logger using application configuration.
-    /// Additional sinks (e.g., Seq) are configured via appsettings.json WriteTo section.
+    /// Console output is always active. OTLP log export is handled by
+    /// <c>ServiceDefaults.AddOpenTelemetry()</c> via <c>writeToProviders: true</c>
+    /// in the Serilog host integration — no separate Serilog OTEL sink needed.
     /// </summary>
     /// <param name="configuration">The application configuration.</param>
     /// <param name="loggerConfiguration">The logger configuration to set up.</param>

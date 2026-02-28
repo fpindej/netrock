@@ -15,6 +15,7 @@
   <Project Path="MyProject.Infrastructure/MyProject.Infrastructure.csproj" />
   <Project Path="MyProject.Shared/MyProject.Shared.csproj" />
   <Project Path="MyProject.WebApi/MyProject.WebApi.csproj" />
+  <Project Path="MyProject.ServiceDefaults/MyProject.ServiceDefaults.csproj" />
   <Folder Name="/deploy/">
     <Project Path="HealthProbe/HealthProbe.csproj" />
   </Folder>

@@ -16,6 +16,7 @@ COPY ["MyProject.Shared/MyProject.Shared.csproj", "MyProject.Shared/"]
 COPY ["MyProject.Domain/MyProject.Domain.csproj", "MyProject.Domain/"]
 COPY ["MyProject.Application/MyProject.Application.csproj", "MyProject.Application/"]
 COPY ["MyProject.Infrastructure/MyProject.Infrastructure.csproj", "MyProject.Infrastructure/"]
+COPY ["MyProject.ServiceDefaults/MyProject.ServiceDefaults.csproj", "MyProject.ServiceDefaults/"]
 COPY ["MyProject.WebApi/MyProject.WebApi.csproj", "MyProject.WebApi/"]
 COPY ["HealthProbe/HealthProbe.csproj", "HealthProbe/"]
 
@@ -34,7 +35,7 @@ RUN dotnet build "MyProject.WebApi.csproj" -c Release
 FROM build AS publish
 
 # StripDevConfig controls whether appsettings.Development/Testing.json are excluded.
-# Default: true (production). docker-compose.local overrides to false for local dev.
+# Default: true (production). Pass STRIP_DEV_CONFIG=false as a build arg to keep them.
 ARG STRIP_DEV_CONFIG=true
 
 RUN dotnet publish "MyProject.WebApi.csproj" -c Release -o /app/publish \
