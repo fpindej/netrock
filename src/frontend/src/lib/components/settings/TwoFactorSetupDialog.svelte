@@ -30,8 +30,8 @@
 	let codesCopied = $state(false);
 	const cooldown = createCooldown();
 
-	async function handleOpenChange(isOpen: boolean) {
-		if (isOpen) {
+	$effect(() => {
+		if (open) {
 			step = 'qr';
 			code = '';
 			sharedKey = '';
@@ -40,9 +40,9 @@
 			recoveryCodes = [];
 			keyCopied = false;
 			codesCopied = false;
-			await fetchSetup();
+			fetchSetup();
 		}
-	}
+	});
 
 	async function fetchSetup() {
 		isLoading = true;
@@ -130,7 +130,7 @@
 	}
 </script>
 
-<Dialog.Root bind:open onOpenChange={handleOpenChange}>
+<Dialog.Root bind:open>
 	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
 			<Dialog.Title>

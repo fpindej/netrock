@@ -23,13 +23,13 @@
 	const fieldShakes = createFieldShakes();
 	const cooldown = createCooldown();
 
-	function handleOpenChange(isOpen: boolean) {
-		if (isOpen) {
+	$effect(() => {
+		if (open) {
 			password = '';
 			fieldErrors = {};
 			generalError = '';
 		}
-	}
+	});
 
 	async function handleSubmit() {
 		fieldErrors = {};
@@ -67,7 +67,7 @@
 	}
 </script>
 
-<Dialog.Root bind:open onOpenChange={handleOpenChange}>
+<Dialog.Root bind:open>
 	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
 			<Dialog.Title>{m.settings_twoFactor_disableTitle()}</Dialog.Title>
