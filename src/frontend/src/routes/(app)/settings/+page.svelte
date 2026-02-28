@@ -1,9 +1,18 @@
 <script lang="ts">
-	import { ChangePasswordForm, DeleteAccountDialog, ActivityLog } from '$lib/components/settings';
+	import {
+		ChangePasswordForm,
+		DeleteAccountDialog,
+		ActivityLog,
+		TwoFactorCard
+	} from '$lib/components/settings';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as m from '$lib/paraglide/messages';
+	import type { PageData } from './$types';
 
+	let { data }: { data: PageData } = $props();
+
+	let twoFactorEnabled = $state(data.user.twoFactorEnabled ?? false);
 	let deleteDialogOpen = $state(false);
 </script>
 
@@ -20,6 +29,8 @@
 	<div class="h-px w-full bg-border"></div>
 	<div class="space-y-8">
 		<ChangePasswordForm />
+
+		<TwoFactorCard bind:twoFactorEnabled />
 
 		<ActivityLog />
 

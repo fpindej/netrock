@@ -54,6 +54,18 @@ export function getAuditActionLabel(action: string | undefined): string {
 			return m.audit_action_avatarUpload();
 		case 'AvatarRemove':
 			return m.audit_action_avatarRemove();
+		case 'TwoFactorEnabled':
+			return m.audit_action_twoFactorEnabled();
+		case 'TwoFactorDisabled':
+			return m.audit_action_twoFactorDisabled();
+		case 'TwoFactorLoginSuccess':
+			return m.audit_action_twoFactorLoginSuccess();
+		case 'TwoFactorLoginFailure':
+			return m.audit_action_twoFactorLoginFailure();
+		case 'TwoFactorRecoveryCodesRegenerated':
+			return m.audit_action_twoFactorRecoveryCodesRegenerated();
+		case 'TwoFactorRecoveryCodeUsed':
+			return m.audit_action_twoFactorRecoveryCodeUsed();
 		default:
 			return action ?? '-';
 	}
@@ -67,12 +79,16 @@ export function getAuditActionVariant(action: string | undefined): TimelineVaria
 		case 'Register':
 		case 'EmailVerification':
 		case 'AdminUnlockUser':
+		case 'TwoFactorEnabled':
+		case 'TwoFactorLoginSuccess':
 			return 'success';
 		case 'LoginFailure':
 		case 'AccountDeletion':
 		case 'AdminDeleteUser':
 		case 'AdminDeleteRole':
 		case 'AdminLockUser':
+		case 'TwoFactorLoginFailure':
+		case 'TwoFactorDisabled':
 			return 'destructive';
 		case 'AdminCreateUser':
 		case 'AdminVerifyEmail':
@@ -84,6 +100,8 @@ export function getAuditActionVariant(action: string | undefined): TimelineVaria
 		case 'AdminSetRolePermissions':
 		case 'AvatarUpload':
 		case 'AvatarRemove':
+		case 'TwoFactorRecoveryCodesRegenerated':
+		case 'TwoFactorRecoveryCodeUsed':
 			return 'warning';
 		default:
 			return 'default';

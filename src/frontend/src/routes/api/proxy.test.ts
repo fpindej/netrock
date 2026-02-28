@@ -501,6 +501,26 @@ describe('API proxy — URL construction and cookie auth paths', () => {
 		expect(targetUrl.searchParams.get('useCookies')).toBe('true');
 	});
 
+	it('appends useCookies=true for auth/login/2fa path', async () => {
+		const event = mockProxyEvent({ path: 'auth/login/2fa' });
+
+		await fallback(event);
+
+		const targetUrl = new URL(getProxiedRequest(event).url);
+
+		expect(targetUrl.searchParams.get('useCookies')).toBe('true');
+	});
+
+	it('appends useCookies=true for auth/login/2fa/recovery path', async () => {
+		const event = mockProxyEvent({ path: 'auth/login/2fa/recovery' });
+
+		await fallback(event);
+
+		const targetUrl = new URL(getProxiedRequest(event).url);
+
+		expect(targetUrl.searchParams.get('useCookies')).toBe('true');
+	});
+
 	it('does not append useCookies for non-auth paths', async () => {
 		const event = mockProxyEvent({ path: 'users' });
 

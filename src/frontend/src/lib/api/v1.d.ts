@@ -353,27 +353,25 @@ export interface paths {
 		get?: never;
 		put?: never;
 		/**
-		 * Authenticates a user and returns JWT tokens.
+		 * Authenticates a user and returns JWT tokens, or a 2FA challenge if two-factor is enabled.
 		 *     Tokens are always returned in the response body. When useCookies is true, tokens are also set as HttpOnly cookies.
 		 */
 		post: {
 			parameters: {
 				query?: {
-					/** @description When true, sets tokens in HttpOnly cookies for web clients. Defaults to false (stateless). */
 					useCookies?: boolean;
 				};
 				header?: never;
 				path?: never;
 				cookie?: never;
 			};
-			/** @description The login credentials */
 			requestBody: {
 				content: {
 					'application/json': components['schemas']['LoginRequest'];
 				};
 			};
 			responses: {
-				/** @description Returns authentication tokens (optionally also set in HttpOnly cookies) */
+				/** @description OK */
 				200: {
 					headers: {
 						[name: string]: unknown;
@@ -382,7 +380,7 @@ export interface paths {
 						'application/json': components['schemas']['AuthenticationResponse'];
 					};
 				};
-				/** @description If the credentials are improperly formatted */
+				/** @description Bad Request */
 				400: {
 					headers: {
 						[name: string]: unknown;
@@ -391,7 +389,7 @@ export interface paths {
 						'application/json': components['schemas']['ProblemDetails'];
 					};
 				};
-				/** @description If the credentials are invalid */
+				/** @description Unauthorized */
 				401: {
 					headers: {
 						[name: string]: unknown;
@@ -879,6 +877,406 @@ export interface paths {
 					};
 				};
 				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/login/2fa': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Completes a two-factor login using a TOTP code from an authenticator app. */
+		post: {
+			parameters: {
+				query?: {
+					useCookies?: boolean;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['TwoFactorLoginRequest'];
+				};
+			};
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['AuthenticationResponse'];
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/login/2fa/recovery': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Completes a two-factor login using a one-time recovery code. */
+		post: {
+			parameters: {
+				query?: {
+					useCookies?: boolean;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['TwoFactorRecoveryLoginRequest'];
+				};
+			};
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['AuthenticationResponse'];
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/2fa/setup': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Generates an authenticator key and URI for setting up 2FA. */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['TwoFactorSetupResponse'];
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/2fa/verify-setup': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Verifies a TOTP code to complete 2FA setup and returns recovery codes. */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['TwoFactorVerifySetupRequest'];
+				};
+			};
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['TwoFactorVerifySetupResponse'];
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/2fa/disable': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Disables two-factor authentication for the current user. Requires password confirmation. */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['TwoFactorDisableRequest'];
+				};
+			};
+			responses: {
+				/** @description No Content */
+				204: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/2fa/recovery-codes': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Regenerates two-factor recovery codes. Requires password confirmation. */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['TwoFactorRegenerateCodesRequest'];
+				};
+			};
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['TwoFactorVerifySetupResponse'];
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Unauthorized */
 				401: {
 					headers: {
 						[name: string]: unknown;
@@ -2786,13 +3184,25 @@ export interface components {
 			/**
 			 * @description The JWT access token for Bearer authentication.
 			 *     Include this in the Authorization header as "Bearer {accessToken}" for subsequent API requests.
+			 *     Empty when bool AuthenticationResponse.RequiresTwoFactor is true.
 			 */
 			accessToken?: string;
 			/**
 			 * @description The refresh token for obtaining new access tokens.
 			 *     Use this with the /api/auth/refresh endpoint when the access token expires.
+			 *     Empty when bool AuthenticationResponse.RequiresTwoFactor is true.
 			 */
 			refreshToken?: string;
+			/**
+			 * @description Whether two-factor authentication is required to complete the login.
+			 *     When true, use the string? AuthenticationResponse.ChallengeToken with POST /api/auth/login/2fa.
+			 */
+			requiresTwoFactor?: boolean;
+			/**
+			 * @description The opaque challenge token for completing the 2FA login step.
+			 *     Null when bool AuthenticationResponse.RequiresTwoFactor is false.
+			 */
+			challengeToken?: null | string;
 		};
 		/** @description Represents a request to change the current user's password. */
 		ChangePasswordRequest: {
@@ -3054,6 +3464,47 @@ export interface components {
 			/** @description The full set of permission values to assign to the role. */
 			permissions: string[];
 		};
+		/** @description Request to disable two-factor authentication for the current user. */
+		TwoFactorDisableRequest: {
+			/** @description The user's current password for confirmation. */
+			password: string;
+		};
+		/** @description Request to complete a two-factor login with a TOTP code. */
+		TwoFactorLoginRequest: {
+			/** @description The opaque challenge token received from the initial login response. */
+			challengeToken: string;
+			/** @description The 6-digit TOTP code from the authenticator app. */
+			code: string;
+		};
+		/** @description Request to complete a two-factor login with a recovery code. */
+		TwoFactorRecoveryLoginRequest: {
+			/** @description The opaque challenge token received from the initial login response. */
+			challengeToken: string;
+			/** @description The one-time recovery code. */
+			recoveryCode: string;
+		};
+		/** @description Request to regenerate two-factor recovery codes. */
+		TwoFactorRegenerateCodesRequest: {
+			/** @description The user's current password for confirmation. */
+			password: string;
+		};
+		/** @description Response containing the shared key and authenticator URI for 2FA setup. */
+		TwoFactorSetupResponse: {
+			/** @description The base32-encoded shared secret for manual entry into an authenticator app. */
+			sharedKey?: string;
+			/** @description The otpauth:// URI for QR code scanning by authenticator apps. */
+			authenticatorUri?: string;
+		};
+		/** @description Request to verify a TOTP code and complete 2FA setup. */
+		TwoFactorVerifySetupRequest: {
+			/** @description The 6-digit TOTP code from the authenticator app. */
+			code: string;
+		};
+		/** @description Response containing recovery codes after enabling 2FA or regenerating codes. */
+		TwoFactorVerifySetupResponse: {
+			/** @description The one-time recovery codes. Each code can only be used once. Store them securely. */
+			recoveryCodes?: string[];
+		};
 		/** @description Request to update an existing role's name and/or description. */
 		UpdateRoleRequest: {
 			/** @description The new role name, or `null` to keep the current name. */
@@ -3099,6 +3550,8 @@ export interface components {
 			permissions?: string[];
 			/** @description Whether the user's email address has been confirmed. */
 			emailConfirmed?: boolean;
+			/** @description Whether the user has two-factor authentication enabled. */
+			twoFactorEnabled?: boolean;
 		};
 		/** @description Represents a request to verify an email address using an opaque email token. */
 		VerifyEmailRequest: {

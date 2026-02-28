@@ -8,7 +8,12 @@ import { isFetchErrorWithCode } from '$lib/api';
  * cookies — all other endpoints rely on the cookie being forwarded
  * automatically by the browser.
  */
-const COOKIE_AUTH_PATHS = ['auth/login', 'auth/refresh'];
+const COOKIE_AUTH_PATHS = [
+	'auth/login',
+	'auth/refresh',
+	'auth/login/2fa',
+	'auth/login/2fa/recovery'
+];
 
 /** HTTP methods that can mutate state and are vulnerable to CSRF */
 const UNSAFE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];

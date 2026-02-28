@@ -51,10 +51,12 @@
 	"dependencies": {
 		"@internationalized/date": "^3.11.0",
 		"@lucide/svelte": "^0.575.0",
+		"@types/qrcode": "^1.5.6",
 		"bits-ui": "^2.16.2",
 		"clsx": "^2.1.1",
 		"flag-icons": "^7.5.0",
 		"openapi-fetch": "^0.17.0",
+		"qrcode": "^1.5.4",
 		"svelte-easy-crop": "^5.0.0",
 		"svelte-sonner": "^1.0.7",
 		"tailwind-merge": "^3.5.0",

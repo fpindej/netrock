@@ -5,3 +5,4 @@ export { default as ForgotPasswordForm } from './ForgotPasswordForm.svelte';
 export { default as ResetPasswordForm } from './ResetPasswordForm.svelte';
 export { default as EmailVerificationBanner } from './EmailVerificationBanner.svelte';
 export { default as TurnstileWidget } from './TurnstileWidget.svelte';
+export { default as TwoFactorStep } from './TwoFactorStep.svelte';
