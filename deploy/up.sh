@@ -36,9 +36,10 @@ if [[ $# -lt 1 ]]; then
     done
     echo ""
     echo "Examples:"
-    echo "  $0 local up -d --build"
     echo "  $0 production up -d"
-    echo "  $0 local logs -f api"
+    echo "  $0 production logs -f api"
+    echo ""
+    echo "Note: Local development uses Aspire (see MyProject.AppHost)."
     exit 1
 fi
 
