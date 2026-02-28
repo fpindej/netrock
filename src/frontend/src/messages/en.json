@@ -206,6 +206,7 @@
 	"settings_twoFactor_recoveryCodesTitle": "Save Your Recovery Codes",
 	"settings_twoFactor_recoveryCodesDescription": "Store these codes in a safe place. Each code can only be used once. If you lose access to your authenticator app, you can use these codes to sign in.",
 	"settings_twoFactor_codesCopied": "Recovery codes copied to clipboard",
+	"settings_twoFactor_copyFailed": "Failed to copy to clipboard",
 	"settings_twoFactor_copyAll": "Copy All",
 	"settings_twoFactor_done": "Done",
 	"settings_twoFactor_disableTitle": "Disable Two-Factor Authentication",

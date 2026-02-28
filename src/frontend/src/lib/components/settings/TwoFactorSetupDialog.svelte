@@ -86,7 +86,7 @@
 			});
 
 			if (response.ok && data) {
-				recoveryCodes = (data.recoveryCodes as string[]) ?? [];
+				recoveryCodes = data.recoveryCodes ?? [];
 				step = 'recovery';
 				onEnabled();
 			} else {
@@ -108,17 +108,25 @@
 	}
 
 	async function copyKey() {
-		await navigator.clipboard.writeText(sharedKey);
-		keyCopied = true;
-		toast.success(m.settings_twoFactor_keyCopied());
-		setTimeout(() => (keyCopied = false), 2000);
+		try {
+			await navigator.clipboard.writeText(sharedKey);
+			keyCopied = true;
+			toast.success(m.settings_twoFactor_keyCopied());
+			setTimeout(() => (keyCopied = false), 2000);
+		} catch {
+			toast.error(m.settings_twoFactor_copyFailed());
+		}
 	}
 
 	async function copyCodes() {
-		await navigator.clipboard.writeText(recoveryCodes.join('\n'));
-		codesCopied = true;
-		toast.success(m.settings_twoFactor_codesCopied());
-		setTimeout(() => (codesCopied = false), 2000);
+		try {
+			await navigator.clipboard.writeText(recoveryCodes.join('\n'));
+			codesCopied = true;
+			toast.success(m.settings_twoFactor_codesCopied());
+			setTimeout(() => (codesCopied = false), 2000);
+		} catch {
+			toast.error(m.settings_twoFactor_copyFailed());
+		}
 	}
 </script>
 
@@ -147,7 +155,11 @@
 					<div class="space-y-3">
 						<p class="text-sm text-muted-foreground">{m.settings_twoFactor_scanQr()}</p>
 						<div class="flex justify-center rounded-lg bg-white p-4">
-							<img src={qrDataUrl} alt="QR Code" class="h-48 w-48 sm:h-64 sm:w-64" />
+							<img
+								src={qrDataUrl}
+								alt="Two-factor authentication setup QR code"
+								class="h-48 w-48 sm:h-64 sm:w-64"
+							/>
 						</div>
 					</div>
 
@@ -175,6 +187,7 @@
 								type="text"
 								inputmode="numeric"
 								autocomplete="one-time-code"
+								pattern="[0-9]{6}"
 								maxlength={6}
 								placeholder="000000"
 								required

@@ -10,15 +10,20 @@
 	import { Loader2, ArrowLeft } from '@lucide/svelte';
 	import { toast } from '$lib/components/ui/sonner';
 	import { fly } from 'svelte/transition';
+	import { onMount, tick } from 'svelte';
 
 	interface Props {
 		challengeToken: string;
-		useCookies: boolean;
 		onSuccess: () => Promise<void>;
 		onBack: () => void;
 	}
 
-	let { challengeToken, useCookies, onSuccess, onBack }: Props = $props();
+	let { challengeToken, onSuccess, onBack }: Props = $props();
+
+	onMount(async () => {
+		await tick();
+		document.getElementById('twoFactorCode')?.focus();
+	});
 
 	let code = $state('');
 	let recoveryCode = $state('');
@@ -34,8 +39,7 @@
 
 		try {
 			const { response, error: apiError } = await browserClient.POST('/api/auth/login/2fa', {
-				body: { challengeToken, code },
-				params: { query: { useCookies } }
+				body: { challengeToken, code }
 			});
 
 			if (response.ok) {
@@ -72,8 +76,7 @@
 			const { response, error: apiError } = await browserClient.POST(
 				'/api/auth/login/2fa/recovery',
 				{
-					body: { challengeToken, recoveryCode },
-					params: { query: { useCookies } }
+					body: { challengeToken, recoveryCode }
 				}
 			);
 
@@ -126,6 +129,7 @@
 							type="text"
 							inputmode="numeric"
 							autocomplete="one-time-code"
+							pattern="[0-9]{6}"
 							maxlength={6}
 							placeholder={m.auth_twoFactor_codePlaceholder()}
 							required

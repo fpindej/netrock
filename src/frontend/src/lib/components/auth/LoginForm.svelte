@@ -81,6 +81,7 @@
 			if (response.ok && data) {
 				if (data.requiresTwoFactor && data.challengeToken) {
 					challengeToken = data.challengeToken;
+					password = '';
 					requiresTwoFactor = true;
 				} else {
 					await completeLogin();
@@ -133,12 +134,7 @@
 	</div>
 
 	{#if requiresTwoFactor && !isSuccess}
-		<TwoFactorStep
-			{challengeToken}
-			useCookies={true}
-			onSuccess={completeLogin}
-			onBack={handleTwoFactorBack}
-		/>
+		<TwoFactorStep {challengeToken} onSuccess={completeLogin} onBack={handleTwoFactorBack} />
 	{:else if !isSuccess}
 		<div
 			class="sm:mx-auto sm:w-full sm:max-w-md"

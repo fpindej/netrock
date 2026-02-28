@@ -206,6 +206,7 @@
 	"settings_twoFactor_recoveryCodesTitle": "Uložte si obnovovací kódy",
 	"settings_twoFactor_recoveryCodesDescription": "Uložte tyto kódy na bezpečné místo. Každý kód lze použít pouze jednou. Pokud ztratíte přístup k autentizační aplikaci, můžete se přihlásit pomocí těchto kódů.",
 	"settings_twoFactor_codesCopied": "Obnovovací kódy zkopírovány do schránky",
+	"settings_twoFactor_copyFailed": "Nepodařilo se zkopírovat do schránky",
 	"settings_twoFactor_copyAll": "Kopírovat vše",
 	"settings_twoFactor_done": "Hotovo",
 	"settings_twoFactor_disableTitle": "Vypnout dvoufaktorové ověření",

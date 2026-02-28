@@ -7,7 +7,7 @@
 	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { createFieldShakes, createCooldown } from '$lib/state';
-	import { Copy, Check } from '@lucide/svelte';
+	import { Copy, Check, Loader2 } from '@lucide/svelte';
 
 	interface Props {
 		open: boolean;
@@ -53,7 +53,7 @@
 			});
 
 			if (response.ok && data) {
-				recoveryCodes = (data.recoveryCodes as string[]) ?? [];
+				recoveryCodes = data.recoveryCodes ?? [];
 				step = 'codes';
 			} else {
 				handleMutationError(response, apiError, {
@@ -77,10 +77,14 @@
 	}
 
 	async function copyCodes() {
-		await navigator.clipboard.writeText(recoveryCodes.join('\n'));
-		codesCopied = true;
-		toast.success(m.settings_twoFactor_codesCopied());
-		setTimeout(() => (codesCopied = false), 2000);
+		try {
+			await navigator.clipboard.writeText(recoveryCodes.join('\n'));
+			codesCopied = true;
+			toast.success(m.settings_twoFactor_codesCopied());
+			setTimeout(() => (codesCopied = false), 2000);
+		} catch {
+			toast.error(m.settings_twoFactor_copyFailed());
+		}
 	}
 </script>
 
@@ -142,9 +146,14 @@
 						{/snippet}
 					</Dialog.Close>
 					<Button type="submit" disabled={isLoading || !password || cooldown.active}>
-						{cooldown.active
-							? m.common_waitSeconds({ seconds: cooldown.remaining })
-							: m.settings_twoFactor_regenerateConfirm()}
+						{#if cooldown.active}
+							{m.common_waitSeconds({ seconds: cooldown.remaining })}
+						{:else}
+							{#if isLoading}
+								<Loader2 class="me-2 h-4 w-4 animate-spin" />
+							{/if}
+							{m.settings_twoFactor_regenerateConfirm()}
+						{/if}
 					</Button>
 				</Dialog.Footer>
 			</form>

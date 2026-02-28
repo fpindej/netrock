@@ -7,6 +7,7 @@
 	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { createFieldShakes, createCooldown } from '$lib/state';
+	import { Loader2 } from '@lucide/svelte';
 
 	interface Props {
 		open: boolean;
@@ -120,9 +121,14 @@
 					variant="destructive"
 					disabled={isLoading || !password || cooldown.active}
 				>
-					{cooldown.active
-						? m.common_waitSeconds({ seconds: cooldown.remaining })
-						: m.settings_twoFactor_disableConfirm()}
+					{#if cooldown.active}
+						{m.common_waitSeconds({ seconds: cooldown.remaining })}
+					{:else}
+						{#if isLoading}
+							<Loader2 class="me-2 h-4 w-4 animate-spin" />
+						{/if}
+						{m.settings_twoFactor_disableConfirm()}
+					{/if}
 				</Button>
 			</Dialog.Footer>
 		</form>
