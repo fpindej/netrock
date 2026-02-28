@@ -75,7 +75,8 @@ internal sealed class UserService(
                     HasAvatar: user.HasAvatar,
                     Roles: roles,
                     Permissions: permissions,
-                    IsEmailConfirmed: user.EmailConfirmed);
+                    IsEmailConfirmed: user.EmailConfirmed,
+                    IsTwoFactorEnabled: user.TwoFactorEnabled);
             },
             UserCacheOptions,
             cancellationToken: cancellationToken);
@@ -151,7 +152,8 @@ internal sealed class UserService(
             HasAvatar: user.HasAvatar,
             Roles: roles,
             Permissions: permissions,
-            IsEmailConfirmed: user.EmailConfirmed);
+            IsEmailConfirmed: user.EmailConfirmed,
+            IsTwoFactorEnabled: user.TwoFactorEnabled);
 
         await auditService.LogAsync(AuditActions.ProfileUpdate, userId: userId.Value, ct: cancellationToken);
 

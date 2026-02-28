@@ -13,6 +13,7 @@ namespace MyProject.Application.Features.Authentication.Dtos;
 /// <param name="Roles">The roles assigned to the user.</param>
 /// <param name="Permissions">The atomic permissions granted to the user through their roles.</param>
 /// <param name="IsEmailConfirmed">Whether the user's email address has been confirmed.</param>
+/// <param name="IsTwoFactorEnabled">Whether the user has two-factor authentication enabled.</param>
 public record UserOutput(
     Guid Id,
     string UserName,
@@ -23,7 +24,8 @@ public record UserOutput(
     bool HasAvatar,
     IEnumerable<string> Roles,
     IReadOnlyList<string> Permissions,
-    bool IsEmailConfirmed = false
+    bool IsEmailConfirmed = false,
+    bool IsTwoFactorEnabled = false
 )
 {
     /// <summary>

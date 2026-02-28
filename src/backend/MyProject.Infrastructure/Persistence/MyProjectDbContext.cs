@@ -30,6 +30,11 @@ internal class MyProjectDbContext(DbContextOptions<MyProjectDbContext> options)
     public DbSet<PausedJob> PausedJobs { get; set; }
 
     /// <summary>
+    /// Gets or sets the two-factor authentication challenge tokens for pending 2FA logins.
+    /// </summary>
+    public DbSet<TwoFactorChallenge> TwoFactorChallenges { get; set; }
+
+    /// <summary>
     /// Gets or sets the audit events table for the append-only audit log.
     /// </summary>
     public DbSet<AuditEvent> AuditEvents { get; set; }

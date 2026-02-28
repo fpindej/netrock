@@ -61,4 +61,9 @@ public class UserResponse
     /// Whether the user's email address has been confirmed.
     /// </summary>
     public bool EmailConfirmed { [UsedImplicitly] get; init; }
+
+    /// <summary>
+    /// Whether the user has two-factor authentication enabled.
+    /// </summary>
+    public bool TwoFactorEnabled { [UsedImplicitly] get; init; }
 }
