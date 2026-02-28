@@ -338,6 +338,7 @@
 	"admin_userDetail_phone": "Phone Number",
 	"admin_userDetail_emailConfirmed": "Email Confirmed",
 	"admin_userDetail_accessFailedCount": "Failed Login Attempts",
+	"admin_userDetail_twoFactorEnabled": "Two-Factor Auth",
 	"admin_userDetail_yes": "Yes",
 	"admin_userDetail_no": "No",
 	"admin_userDetail_notSet": "Not set",

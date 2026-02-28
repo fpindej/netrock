@@ -338,6 +338,7 @@
 	"admin_userDetail_phone": "Telefonní číslo",
 	"admin_userDetail_emailConfirmed": "E-mail ověřen",
 	"admin_userDetail_accessFailedCount": "Neúspěšné pokusy o přihlášení",
+	"admin_userDetail_twoFactorEnabled": "Dvoufaktorové ověření",
 	"admin_userDetail_yes": "Ano",
 	"admin_userDetail_no": "Ne",
 	"admin_userDetail_notSet": "Nenastaveno",

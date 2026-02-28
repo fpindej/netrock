@@ -8,6 +8,8 @@
 		Mail,
 		Phone,
 		Shield,
+		ShieldCheck,
+		ShieldOff,
 		CheckCircle,
 		XCircle,
 		AtSign,
@@ -134,6 +136,24 @@
 						</Button>
 					{/if}
 				</div>
+			{/if}
+		</InfoItem>
+
+		<InfoItem
+			icon={user.twoFactorEnabled ? ShieldCheck : ShieldOff}
+			label={m.admin_userDetail_twoFactorEnabled()}
+		>
+			{#if user.twoFactorEnabled}
+				<Badge
+					variant="outline"
+					class="border-success/30 bg-success/10 text-success dark:border-success/30 dark:bg-success/10 dark:text-success-foreground"
+				>
+					{m.admin_userDetail_yes()}
+				</Badge>
+			{:else}
+				<Badge variant="outline" class="text-muted-foreground">
+					{m.admin_userDetail_no()}
+				</Badge>
 			{/if}
 		</InfoItem>
 

@@ -3141,6 +3141,8 @@ export interface components {
 			accessFailedCount?: number;
 			/** @description Whether the user is currently locked out. */
 			isLockedOut?: boolean;
+			/** @description Whether the user has two-factor authentication enabled. */
+			twoFactorEnabled?: boolean;
 		};
 		/** @description Request to assign a role to a user. */
 		AssignRoleRequest: {
