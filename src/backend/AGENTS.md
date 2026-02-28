@@ -273,7 +273,7 @@ Docker local: `172.16.0.0/12` pre-configured. Set `XFF_DEPTH=1` on frontend cont
 ### ServiceDefaults (`MyProject.ServiceDefaults`)
 
 Shared Aspire project (`IsAspireSharedProject=true`) providing:
-- **OpenTelemetry**: metrics (ASP.NET Core, HTTP, Runtime), tracing (ASP.NET Core, HTTP with health-check filtering, EF Core with SQL text), OTLP export
+- **OpenTelemetry**: metrics (ASP.NET Core, HTTP, Runtime), tracing (ASP.NET Core, HTTP with health-check filtering, EF Core), OTLP export
 - **Service discovery**: automatic for `HttpClient` instances
 - **HTTP resilience**: standard resilience handler on all `HttpClient` instances
 
@@ -305,7 +305,7 @@ Aspire orchestrator for local development. Launches all infrastructure as contai
 
 ### Logging: Serilog → OpenTelemetry
 
-Serilog bridges to OpenTelemetry via `Serilog.Sinks.OpenTelemetry`. When `OTEL_EXPORTER_OTLP_ENDPOINT` is set (by Aspire or production infrastructure), logs flow to the OTLP collector. The console sink always remains active. The previous `Serilog.Sinks.Seq` has been removed.
+Serilog bridges to OpenTelemetry via the ServiceDefaults `AddOpenTelemetry()` logger provider. With `writeToProviders: true`, Serilog forwards logs to all registered `ILoggerProvider` instances including the OTEL one — no separate Serilog OTEL sink needed. When `OTEL_EXPORTER_OTLP_ENDPOINT` is set (by Aspire or production infrastructure), logs flow to the OTLP collector. The console sink always remains active.
 
 ### Adding a new infrastructure dependency to AppHost
 

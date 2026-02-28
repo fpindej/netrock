@@ -176,8 +176,8 @@ validate_port() {
         return 1
     fi
 
-    if [[ $port -lt 1024 || $port -gt 65530 ]]; then
-        print_error "Port must be between 1024 and 65530"
+    if [[ $port -lt 1024 || $port -gt 65529 ]]; then
+        print_error "Port must be between 1024 and 65529"
         return 1
     fi
 

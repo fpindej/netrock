@@ -288,7 +288,7 @@ src/backend/tests/
 | `deploy/docker-compose.yml` | Base service definitions (production only) |
 | `deploy/docker-compose.production.yml` | Production overlay |
 | `deploy/build.sh` / `deploy/build.ps1` | Build and push Docker images |
-| `deploy/up.sh` / `deploy/up.ps1` | Environment launcher (local/production) |
+| `deploy/up.sh` / `deploy/up.ps1` | Production environment launcher |
 | `deploy/config.json` | Deploy configuration (registries, versioning) |
 | `src/frontend/.env.test` | CI + test environment defaults (loaded by `ci.yml`) |
 | `src/backend/MyProject.WebApi/appsettings.Testing.json` | Test environment config (disables Hangfire, caching, CORS) |
