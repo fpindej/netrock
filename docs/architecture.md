@@ -13,10 +13,10 @@ Backend API (.NET :8080)
     │  Clean Architecture
     │  WebApi → Application ← Infrastructure → Domain (+Shared)
     │
-    ├── PostgreSQL (:5432)  — EF Core, soft delete, audit trails, Hangfire storage
-    ├── MinIO (:9000)       — S3-compatible blob storage (avatars, file uploads)
-    ├── Hangfire            — Recurring + fire-and-forget background jobs
-    └── Seq (:80)           — Structured log aggregation
+    ├── PostgreSQL           — EF Core, soft delete, audit trails, Hangfire storage
+    ├── MinIO                — S3-compatible blob storage (avatars, file uploads)
+    ├── Hangfire             — Recurring + fire-and-forget background jobs
+    └── OpenTelemetry ──────→ Aspire Dashboard (local) / OTLP endpoint (production)
 ```
 
 The backend follows Clean Architecture with **architecture tests** that enforce dependency direction at build time — Domain and Shared have zero dependencies, Application only references Domain and Shared, Infrastructure never references WebApi. Breaking these rules fails the build.

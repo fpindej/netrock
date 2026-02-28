@@ -12,7 +12,7 @@ export default defineConfig({
 	],
 	server: {
 		host: true,
-		port: 5173
+		port: Number(process.env.PORT) || 5173
 	},
 	test: {
 		include: ['src/**/*.test.ts'],

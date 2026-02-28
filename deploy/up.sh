@@ -11,10 +11,10 @@
 #    ./deploy/up.sh <environment> [docker compose args...]
 #
 #  Examples:
-#    ./deploy/up.sh local up -d --build      # Start local dev
-#    ./deploy/up.sh local down                # Stop local
-#    ./deploy/up.sh local logs -f api         # Follow API logs
 #    ./deploy/up.sh production up -d          # Start production stack
+#    ./deploy/up.sh production logs -f api    # Follow API logs
+#
+#  Note: Local development uses Aspire (see MyProject.AppHost).
 #
 #══════════════════════════════════════════════════════════════════════════════
 

@@ -8,9 +8,9 @@ NETrock works out of the box for local development, but there are things you nee
 
 ## Must Do
 
-- [ ] **Email service** — replace `NoOpEmailService` with a real provider (SMTP, SendGrid, Postmark, etc.). The NoOp service just logs emails to Seq. Configure via `Email__Smtp__*` env vars or swap the service registration in `ServiceCollectionExtensions.cs`
+- [ ] **Email service** — replace `NoOpEmailService` with a real provider (SMTP, SendGrid, Postmark, etc.). The NoOp service just logs emails to the console. Configure via `Email__Smtp__*` env vars or swap the service registration in `ServiceCollectionExtensions.cs`
 - [ ] **CORS origins** — set `Cors__AllowedOrigins` to your production domain(s). The app **will refuse to start** if `AllowAllOrigins` is `true` outside of Development — this is intentional
-- [ ] **JWT secret** — the init script generates one, but verify `JWT_SECRET_KEY` is set in production `compose.env` (minimum 32 chars, cryptographically random — the init script generates a 64-char key)
+- [ ] **JWT secret** — `appsettings.json` ships with a dev-only placeholder key. Set `JWT_SECRET_KEY` in production `compose.env` (minimum 32 chars, cryptographically random)
 - [ ] **Database** — point `ConnectionStrings__Database` to your production PostgreSQL instance
 - [ ] **CAPTCHA keys** — replace the Cloudflare Turnstile development keys with production keys (`Captcha__SecretKey` backend, `TURNSTILE_SITE_KEY` frontend — runtime-configurable via the `(public)` layout server load)
 - [ ] **Frontend URL in emails** — set `Email__FrontendBaseUrl` to your production domain so email verification and password reset links work
@@ -29,7 +29,7 @@ NETrock works out of the box for local development, but there are things you nee
   }
   ```
 - [ ] **Reverse proxy** — if behind nginx/load balancer, configure `Hosting__ReverseProxy__TrustedNetworks` and `TrustedProxies` so rate limiting uses real client IPs
-- [ ] **Logging** — replace Seq with your production logging solution or point Serilog at your provider. Adjust log levels (`Serilog__MinimumLevel__Default=Information`)
+- [ ] **Logging** — logs flow via OpenTelemetry. Set `OTEL_EXPORTER_OTLP_ENDPOINT` for your production collector (Grafana, Datadog, etc.). Locally, logs are visible in the Aspire Dashboard. Adjust log levels (`Serilog__MinimumLevel__Default=Information`)
 - [ ] **Rate limits** — review the production defaults in `appsettings.json` and adjust for your expected traffic
 - [ ] **Backups** — set up automated PostgreSQL backups. NETrock uses soft delete, but that doesn't replace real backups. Quick manual backup via compose:
   ```bash

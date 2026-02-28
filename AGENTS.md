@@ -9,16 +9,17 @@ Frontend (SvelteKit :5173)
     │  /api/* proxy (catches all, forwards cookies + headers)
     ▼
 Backend API (.NET :8080)
-    ├── PostgreSQL (:5432)
+    ├── PostgreSQL
     ├── Hangfire (PostgreSQL-backed)
-    └── Seq (:80)
+    ├── MinIO (S3-compatible file storage)
+    └── OpenTelemetry → Aspire Dashboard (local) / OTLP endpoint (production)
 ```
 
 | Layer | Backend | Frontend |
 |---|---|---|
 | **Framework** | .NET 10 / C# 13 | SvelteKit / Svelte 5 (Runes) |
 | **Data** | PostgreSQL + EF Core | openapi-typescript (generated types) |
-| **Cache** | HybridCache (L1 in-process) | — |
+| **Cache** | HybridCache (in-process L1) | — |
 | **Auth** | JWT in HttpOnly cookies + permission claims | Cookie-based (automatic via proxy) |
 | **Authorization** | `[RequirePermission]` + role hierarchy | `hasPermission()` utilities |
 | **Validation** | FluentValidation + Data Annotations | TypeScript strict mode |
@@ -107,19 +108,17 @@ Error messages flow: Backend `ErrorMessages.*` → `Result.Failure()` → `Probl
 ## Local Development
 
 ```bash
-./deploy/up.sh local up -d --build   # Start everything (env files are committed)
+dotnet run --project src/backend/MyProject.AppHost
 ```
 
-`deploy/envs/local/` is committed with working defaults. Edit files directly to tune settings.
+Aspire is the sole local development workflow. It starts all infrastructure as containers and launches the API and frontend dev server. The Aspire Dashboard URL appears in the console.
+
+Behavioral config (log levels, rate limits, JWT lifetimes, CORS, seed users) lives in `appsettings.Development.json`. Infrastructure connection strings are injected by Aspire via environment variables.
 
 | File | Purpose |
 |---|---|
-| `deploy/envs/local/compose.env` | Docker Compose interpolation vars (DB, MinIO, JWT, ports) |
-| `deploy/envs/local/api.env` | ASP.NET config overrides (auth, caching, CORS, logging, email) |
-| `deploy/envs/local/seed.env` | Seed user definitions (seeded on startup) |
+| `appsettings.json` | Base/production defaults (placeholder values) |
+| `appsettings.Development.json` | Dev overrides (generous JWT, debug logging, seed users, permissive rate limits) |
 | `deploy/envs/production-example/` | Production template — `cp -r` to `deploy/envs/production/` |
-| `deploy/docker-compose.yml` | Base service definitions |
-| `deploy/docker-compose.local.yml` | Local dev overlay |
+| `deploy/docker-compose.yml` | Base service definitions (production only) |
 | `deploy/docker-compose.production.yml` | Production overlay |
-| `appsettings.json` | Base/production defaults |
-| `appsettings.Development.json` | Dev defaults (generous JWT, debug logging) |

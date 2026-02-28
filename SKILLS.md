@@ -147,7 +147,7 @@ Step-by-step recipes for common operations. Each recipe lists exact paths, patte
        .ValidateDataAnnotations()
        .ValidateOnStart();
    ```
-5. Add env var to `deploy/envs/local/api.env` (and `deploy/envs/production-example/api.env`) if configurable at deploy time
+5. Add to `deploy/envs/production-example/api.env` if configurable at deploy time
 
 ### Run a Migration
 
@@ -446,7 +446,7 @@ FileStorage__Region=<region>
 
 If you don't need file uploads:
 
-1. **Docker:** Remove `storage` service from `docker-compose.yml`, `docker-compose.local.yml`, `docker-compose.production.yml`
+1. **Docker:** Remove `storage` service from `docker-compose.yml` and `docker-compose.production.yml`. Remove MinIO resource from `MyProject.AppHost/Program.cs`
 2. **Backend:** Remove `Application/Features/FileStorage/`, `Application/Features/Avatar/`, `Infrastructure/Features/FileStorage/`, `Infrastructure/Features/Avatar/`
 3. **Entity:** Remove `HasAvatar` from `ApplicationUser`
 4. **Endpoints:** Remove avatar endpoints from `UsersController`, `UploadAvatar/` DTOs
@@ -682,6 +682,34 @@ For testing FluentValidation rules without starting the test server. Uses Fluent
    ```
 3. Verify: `dotnet test src/backend/tests/MyProject.Api.Tests -c Release`
 
+### Add an Infrastructure Dependency to Aspire AppHost
+
+1. Add hosting package version to `src/backend/Directory.Packages.props`:
+   ```xml
+   <PackageVersion Include="Aspire.Hosting.{Resource}" Version="13.1.2" />
+   ```
+2. Add package reference to `src/backend/MyProject.AppHost/MyProject.AppHost.csproj`:
+   ```xml
+   <PackageReference Include="Aspire.Hosting.{Resource}" />
+   ```
+3. Add resource in `src/backend/MyProject.AppHost/Program.cs`:
+   ```csharp
+   var myResource = builder.AddRabbitMQ("rabbitmq");
+   ```
+4. Wire to the API project:
+   ```csharp
+   // If Aspire has a native connection string convention:
+   .WithReference(myResource)
+   // If custom config mapping needed:
+   .WithEnvironment("MySection__ConnectionString", myResource.GetEndpoint("tcp"))
+   ```
+5. Add startup dependency if the API needs the resource ready:
+   ```csharp
+   .WaitFor(myResource)
+   ```
+6. Also add the service to `deploy/docker-compose.yml` for production.
+7. Verify: `dotnet build src/backend/MyProject.slnx`
+
 ---
 
 ## Frontend Skills
@@ -848,10 +876,12 @@ cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run
 
 **Backend-consumed variable:**
 
-1. Add to `deploy/envs/local/api.env` with a working default value and comment (and `deploy/envs/production-example/api.env` with a placeholder). If the variable is consumed by Docker Compose interpolation (shared across services), use `compose.env` instead
-2. If it maps to an Options class: use `Section__Key` naming (e.g., `Authentication__Jwt__AccessTokenLifetime=01:40:00`)
-3. If it needs Docker wiring: add to `deploy/docker-compose.yml` (or the appropriate overlay) `environment` block with `${VAR}` interpolation, and place the variable in `compose.env`
-4. If it needs an Options class: follow [Add an Options Class](#add-an-options-class)
+1. Add to `appsettings.Development.json` if it needs a dev-specific value (Aspire injects infrastructure connection strings automatically — only add behavioral config here)
+2. Add to `deploy/envs/production-example/api.env` with a placeholder for production
+3. If it maps to an Options class: use `Section:Key` naming in appsettings (e.g., `Authentication:Jwt:AccessTokenLifetime`)
+4. If it needs Docker wiring for production: add to `deploy/docker-compose.yml` `environment` block with `${VAR}` interpolation, and place the variable in `compose.env`
+5. If it needs Aspire wiring: add `.WithEnvironment("Section__Key", value)` in `MyProject.AppHost/Program.cs`
+6. If it needs an Options class: follow [Add an Options Class](#add-an-options-class)
 
 **Frontend-consumed variable:**
 

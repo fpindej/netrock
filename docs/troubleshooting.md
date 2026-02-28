@@ -7,7 +7,7 @@
 - [Quick Diagnostics](#quick-diagnostics)
 - [Prerequisites & Versions](#prerequisites--versions)
 - [Init Script](#init-script)
-- [Docker & Compose](#docker--compose)
+- [Aspire (Local Development)](#aspire-local-development)
 - [Backend Development](#backend-development)
 - [Frontend Development](#frontend-development)
 - [Authentication & Authorization](#authentication--authorization)
@@ -20,18 +20,9 @@
 
 ## Quick Diagnostics
 
-Run these commands to quickly assess the state of your environment:
-
 ```bash
-# Are services running?
-./deploy/up.sh local ps                        # Linux / macOS
-.\deploy\up.ps1 local ps                       # Windows PowerShell
-
-# Recent logs from a specific service
-./deploy/up.sh local logs --tail 30 api
-
 # API health
-curl http://localhost:<API_PORT>/health/live
+curl http://localhost:8080/health/live
 
 # Toolchain versions
 dotnet --version
@@ -98,16 +89,14 @@ pwsh -ExecutionPolicy Bypass -File init.ps1
 
 ### Port conflict during init (`EADDRINUSE` / `address already in use`)
 
-**Cause:** The base port (default `13000`) or one of its offsets is already in use. The template allocates 7 ports from your base:
+**Cause:** The base port (default `13000`) or one of its offsets is already in use. The init script allocates 2 ports:
 
 | Offset | Service |
 |---|---|
 | +0 | Frontend |
 | +2 | API |
-| +4 | PostgreSQL |
-| +8 | Seq |
-| +10 | MinIO |
-| +12 | MinIO Console |
+
+Infrastructure ports (PostgreSQL, MinIO) are managed automatically by Aspire.
 
 **Fix:** Check what's using the port and pick a different base:
 
@@ -115,8 +104,6 @@ pwsh -ExecutionPolicy Bypass -File init.ps1
 lsof -i :13000           # macOS / Linux
 netstat -ano | findstr :13000   # Windows
 ```
-
-Choose a base port between 1024 and 65530 that leaves room for all offsets.
 
 ### `dotnet-ef` not found
 
@@ -130,121 +117,54 @@ dotnet tool restore
 
 This restores tools declared in `.config/dotnet-tools.json`, including `dotnet-ef`.
 
-### Init succeeds but Docker fails to start
-
-**Cause:** Missing prerequisites or Docker daemon not running.
-
-**Fix:** Verify all prerequisites:
-
-```bash
-git --version
-dotnet --version
-docker info          # Must succeed — if not, start Docker Desktop
-node --version
-pnpm --version       # If missing: corepack enable
-```
-
 ---
 
-## Docker & Compose
+## Aspire (Local Development)
 
-> `./deploy/up.sh` (Linux/macOS) and `.\deploy\up.ps1` (Windows) are thin wrappers around `docker compose`. All standard subcommands work: `up`, `down`, `logs`, `ps`, `restart`, `exec`, etc.
+### Docker is not running
 
-### Container keeps restarting / exiting with non-zero code
-
-**Cause:** A service is crashing on startup. Check the logs first — the error message tells you what to do next.
+**Cause:** Aspire uses Docker to run infrastructure containers (PostgreSQL, MinIO). Docker Desktop must be running.
 
 **Fix:**
 
 ```bash
-./deploy/up.sh local logs api
-./deploy/up.sh local logs frontend
+docker info    # Must succeed — if not, start Docker Desktop
 ```
 
-Common log patterns and what they mean:
+### Port already in use
 
-| Log pattern | Likely cause | See section |
-|---|---|---|
-| `Connection refused` / `could not connect to server` | Database not ready yet | [Database health check failing](#database-health-check-failing) |
-| `Value cannot be null` / `'JWT_SECRET_KEY'` | Missing environment variable | Check `deploy/envs/local/compose.env` |
-| `Address already in use` / `EADDRINUSE` | Port conflict | [Port already in use](#port-already-in-use-eaddrinuse) |
-| `no such file or directory` | Volume mount issue or missing config | Verify `docker-compose.local.yml` mounts |
-
-### Database health check failing (`pg_isready`)
-
-**Cause:** PostgreSQL can be slow to initialize, especially on first run. The health check has a `start_period` of 15s, retries every 5s, with 5 retries — it can take up to 40 seconds before the database is reported healthy.
-
-**Fix:** Wait 30–60 seconds on first startup. If it still fails:
-
-```bash
-./deploy/up.sh local logs db
-```
-
-Look for disk space issues, permission errors, or invalid `POSTGRES_USER` / `POSTGRES_PASSWORD` in `deploy/envs/local/compose.env`.
-
-### Frontend can't reach the API (`fetch failed` / `ECONNREFUSED`)
-
-**Cause:** The frontend connects to the API via Docker's internal network using `API_URL` (default: `http://api:8080`). The `api` service bridges both the `frontend` and `backend` networks; the `frontend` service is on the `frontend` network only.
-
-**Fix:**
-
-1. Verify the API is running and healthy:
-   ```bash
-   ./deploy/up.sh local ps
-   ```
-2. Check `API_URL` in `deploy/envs/local/compose.env` — it should be `http://api:8080` for Docker
-3. If running the API outside Docker (from your IDE), set `API_URL=http://host.docker.internal:5142` in `compose.env` and restart the frontend container. Port 5142 is the default from `launchSettings.json`. See [Development — Backend dev](development.md#backend-dev--debug-with-breakpoints-in-ridervs) for the full workflow.
-
-### Port already in use (`EADDRINUSE`)
-
-**Cause:** Another Docker stack or host service is bound to the same port.
+**Cause:** Another process (or another Aspire project) is bound to the same frontend or API port. Ports are configured during `init` (default base port: 13000).
 
 **Fix:**
 
 ```bash
 lsof -i :<port>              # macOS / Linux
-netstat -ano | findstr :<port>    # Windows
+netstat -ano | findstr :<port>   # Windows
 ```
 
-Either stop the conflicting process or change the port mapping in `deploy/envs/local/compose.env`.
+Kill the conflicting process, stop the other Aspire run, or re-init with a different base port.
 
-### `node_modules` volume is stale
+### Dashboard not showing traces
 
-**Cause:** The local Docker setup uses a named volume (`frontend_node_modules`) for `/app/node_modules` to prevent the host bind mount from overwriting container dependencies. After dependency changes in `package.json`, this volume can become outdated.
+**Cause:** The API must be running under Aspire for OTEL traces to flow. If you started the API standalone (e.g., `dotnet run` from WebApi), no `OTEL_EXPORTER_OTLP_ENDPOINT` is set, so traces aren't exported.
 
-**Fix:**
+**Fix:** Always start via the AppHost:
 
 ```bash
-./deploy/up.sh local down
-docker volume rm $(docker volume ls -q | grep frontend_node_modules)
-./deploy/up.sh local up -d --build
+dotnet run --project src/backend/MyProject.AppHost
 ```
+
+### Database connection fails under Aspire
+
+**Cause:** Aspire injects `ConnectionStrings:Database` via environment variables. If `appsettings.Development.json` has a stale `ConnectionStrings` section, it can override the Aspire-injected value.
+
+**Fix:** `appsettings.Development.json` should NOT contain a `ConnectionStrings` section. Connection strings are injected by Aspire for local dev and by environment variables for production.
 
 ### MinIO bucket not created
 
 **Cause:** The storage service didn't initialize properly, or the bucket name doesn't match configuration.
 
-**Fix:**
-
-1. Check storage health:
-   ```bash
-   ./deploy/up.sh local logs storage
-   ```
-2. Verify `FileStorage__BucketName` in `deploy/envs/local/compose.env` matches what the API expects
-3. Access the MinIO Console at `http://localhost:<BASE_PORT+12>` (default credentials: `minioadmin` / `minioadmin`)
-
-### Seq UI not loading
-
-**Cause:** Seq (structured log viewer) is only included in the local Docker overlay. It may still be starting, or the port mapping is wrong.
-
-**Fix:**
-
-1. Check that Seq is running:
-   ```bash
-   ./deploy/up.sh local ps
-   ```
-2. Access Seq at `http://localhost:<BASE_PORT+8>` (default: `http://localhost:13008`)
-3. If the container is not listed, verify that you're using the `local` environment — Seq is not included in the production overlay
+**Fix:** Access the MinIO Console from the Aspire Dashboard — look for the `storage` resource and click its endpoint link.
 
 ---
 
@@ -340,7 +260,7 @@ The remaining errors resolve during a full `pnpm run build`. These errors are sa
 
 **Fix:**
 
-1. Make sure the API is running (via Docker or locally)
+1. Make sure the API is running (via Aspire or locally)
 2. Run:
    ```bash
    cd src/frontend
@@ -355,7 +275,7 @@ This fetches `http://localhost:<API_PORT>/openapi/v1.json` and regenerates the t
 
 **Fix:**
 
-1. Start the API via Docker (`./deploy/up.sh local up -d`) or locally from your IDE
+1. Start the API via Aspire (`dotnet run --project src/backend/MyProject.AppHost`) or locally from your IDE
 2. Verify the API is responding:
    ```bash
    curl http://localhost:<API_PORT>/openapi/v1.json
@@ -373,24 +293,6 @@ cp src/frontend/.env.example src/frontend/.env.local
 ```
 
 Then edit `.env.local` to set the correct API port.
-
-### HMR not working in Docker
-
-**Cause:** The local Docker setup bind-mounts `./src/frontend` to `/app` for hot module replacement. If the mount isn't working, file changes won't trigger rebuilds.
-
-**Fix:**
-
-1. Verify the volume mount exists in `deploy/docker-compose.local.yml`:
-   ```yaml
-   volumes:
-     - ./src/frontend:/app
-     - frontend_node_modules:/app/node_modules
-   ```
-2. On macOS, ensure `src/frontend` is in Docker Desktop's file sharing settings
-3. Restart the frontend container:
-   ```bash
-   ./deploy/up.sh local restart frontend
-   ```
 
 ### Styles not applying (Tailwind / logical CSS)
 
@@ -447,7 +349,7 @@ English is the base locale. The path pattern is `./src/messages/{locale}.json` a
 
 **Cause:** Permissions are encoded in the JWT access token. After changing a user's role or permissions, the old token remains valid until it expires. The security stamp system detects role changes, but only when the token is refreshed.
 
-**Fix:** The user must log out and back in, or wait for the access token to expire and trigger a refresh. In development, access token lifetime is configurable via `Authentication__Jwt__AccessTokenLifetime` in `deploy/envs/local/api.env`. See [Security](security.md) for the full auth architecture.
+**Fix:** The user must log out and back in, or wait for the access token to expire and trigger a refresh. In development, access token lifetime is configurable via `Authentication:Jwt:AccessTokenLifetime` in `appsettings.Development.json`. See [Security](security.md) for the full auth architecture.
 
 ---
 
@@ -482,6 +384,8 @@ If your changes don't match these paths, the corresponding jobs won't run.
 ---
 
 ## Production Deployment
+
+Production uses Docker Compose (not Aspire).
 
 ### "Environment directory not found" (`deploy/envs/production/`)
 
@@ -540,7 +444,7 @@ See `deploy/envs/production-example/compose.env` for the full list with descript
 
 ### Which user should I log in as?
 
-Three users are seeded from `deploy/envs/local/seed.env`:
+Three users are seeded (configured in `appsettings.Development.json`):
 
 | Role | Email | Password |
 |---|---|---|
@@ -552,24 +456,21 @@ Use SuperAdmin for full access. The User role has the most restrictive permissio
 
 ### Where are the logs?
 
-- **Structured logs (Seq):** `http://localhost:<BASE_PORT+8>` (default: `http://localhost:13008`)
-- **Container logs:** `./deploy/up.sh local logs <service>` (e.g., `api`, `frontend`, `db`)
-- **Follow logs in real time:** `./deploy/up.sh local logs -f api`
+- **Aspire Dashboard:** Traces, logs, and metrics are all visible in the Aspire Dashboard (URL shown in console when starting the AppHost)
+- **Production:** Set `OTEL_EXPORTER_OTLP_ENDPOINT` to route logs to your collector (Grafana, Datadog, etc.)
 
 ### How do I reset everything?
 
-Tear down all containers and volumes, then rebuild:
+Stop the Aspire AppHost (Ctrl+C) — all containers stop and system resources are freed. Data persists in named Docker volumes (PostgreSQL and MinIO). To wipe everything and start fresh, remove the volumes:
 
 ```bash
-./deploy/up.sh local down -v
-./deploy/up.sh local up -d --build
+docker volume ls | grep <project-slug>
+docker volume rm <volume-name>
 ```
-
-The `-v` flag removes named volumes (database data, MinIO storage, Seq logs). Seeded users will be recreated on next startup.
 
 ### What's the difference between `up.sh` and `up.ps1`?
 
-They are functionally identical — `up.sh` is for Linux/macOS (Bash), `up.ps1` is for Windows (PowerShell). Both are thin wrappers around `docker compose` that resolve the environment-specific compose overlay and env files. Use whichever matches your shell.
+They are functionally identical — `up.sh` is for Linux/macOS (Bash), `up.ps1` is for Windows (PowerShell). Both are thin wrappers around `docker compose` that resolve the environment-specific compose overlay and env files. They are used for **production deployment only** — local development uses Aspire.
 
 ---
 

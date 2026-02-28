@@ -33,11 +33,11 @@ Every project starts the same way: authentication, role management, rate limitin
 
 ## What You Get
 
-**Backend** — JWT auth with token rotation and reuse detection, permission-based authorization with role hierarchy, rate limiting, in-process caching with auto-invalidation, PostgreSQL with soft delete and audit trails, S3-compatible file storage (MinIO locally, any S3 provider in production), Hangfire background jobs, OpenAPI docs, health checks, Result pattern with ProblemDetails everywhere. [See full details →](docs/features.md#backend--net-10--c-13)
+**Backend** — JWT auth with token rotation and reuse detection, permission-based authorization with role hierarchy, rate limiting, HybridCache with stampede protection, PostgreSQL with soft delete and audit trails, S3-compatible file storage (MinIO locally, any S3 provider in production), Hangfire background jobs, OpenAPI docs, health checks, Result pattern with ProblemDetails everywhere. [See full details →](docs/features.md#backend--net-10--c-13)
 
 **Frontend** — Svelte 5 runes, type-safe API client generated from OpenAPI, automatic token refresh, Tailwind CSS 4 with shadcn-svelte, BFF proxy with CSRF protection, i18n, security headers, permission guards, dark mode, admin panel with user/role/job management. [See full details →](docs/features.md#frontend--sveltekit--svelte-5)
 
-**Infrastructure** — Single `./deploy/up.sh local` for 5 services (including MinIO for S3 storage), init script for project bootstrapping, build script with multi-registry support, GitHub Actions CI with smart path filtering, Dependabot. [See full details →](docs/features.md#infrastructure--devops)
+**Infrastructure** — Aspire AppHost for local development (one command, full OTEL dashboard), Docker Compose for production deployment, init script for project bootstrapping, build script with multi-registry support, GitHub Actions CI with smart path filtering, Dependabot. [See full details →](docs/features.md#infrastructure--devops)
 
 **Security** — Security-first design with HttpOnly JWT cookies, refresh token rotation with reuse detection, security stamp propagation, CSP with nonces, CORS startup guard, rate limiting, and input validation everywhere. [See full details →](docs/security.md)
 
@@ -72,25 +72,22 @@ chmod +x init.sh
 .\init.ps1
 ```
 
-The init script will ask for your project name and base port, then rename everything, generate a JWT secret, and optionally create the initial migration and start Docker.
+The init script will ask for your project name and base port, then rename everything and optionally create the initial migration.
 
 ### 2. Launch Everything
 
 ```bash
-./deploy/up.sh local up -d --build
+dotnet run --project src/backend/MyProject.AppHost
 ```
 
-That's it. Your entire stack is running:
+That's it. Aspire starts all infrastructure (PostgreSQL, MinIO) as containers and launches the API and frontend dev server. The Aspire Dashboard URL appears in the console — all service URLs (API docs, pgAdmin, MinIO) are linked from the Dashboard.
 
 | Service | URL |
 |---|---|
-| **Frontend** | `http://localhost:<BASE_PORT>` |
-| **API Docs (Scalar)** | `http://localhost:<BASE_PORT + 2>/scalar/v1` |
-| **Hangfire Dashboard** | `http://localhost:<BASE_PORT + 2>/hangfire` |
-| **MinIO Console (S3 Storage)** | `http://localhost:<BASE_PORT + 12>` |
-| **Seq (Structured Logs)** | `http://localhost:<BASE_PORT + 8>` |
+| **Aspire Dashboard** | Shown in console output |
+| **Frontend** | `http://localhost:<BASE_PORT>` (default: `http://localhost:13000`) |
 
-Three test users are seeded from `deploy/envs/local/seed.env`:
+Three test users are seeded (configured in `appsettings.Development.json`):
 
 | Role | Email | Password |
 |---|---|---|

@@ -14,7 +14,7 @@
 #    --yes, -y      Accept all defaults, no prompts
 #    --no-migration Skip migration creation
 #    --no-commit    Skip git commits
-#    --no-docker    Skip starting docker
+#    --no-aspire    Don't launch Aspire after setup
 #    --help, -h     Show this help
 #
 #══════════════════════════════════════════════════════════════════════════════
@@ -119,20 +119,17 @@ show_help() {
     echo "  -y, --yes             Accept all defaults without prompting"
     echo "      --no-migration    Skip creating initial migration"
     echo "      --no-commit       Skip git commits"
-    echo "      --no-docker       Skip starting docker compose"
+    echo "      --no-aspire       Don't launch Aspire after setup"
     echo "  -h, --help            Show this help message"
     echo ""
     echo "Port allocation:"
     echo "  Frontend:   BASE_PORT      (e.g., 13000)"
     echo "  API:        BASE_PORT + 2  (e.g., 13002)"
-    echo "  Database:   BASE_PORT + 4  (e.g., 13004)"
-    echo "  Seq:        BASE_PORT + 8  (e.g., 13008)"
-    echo "  Storage:    BASE_PORT + 10 (e.g., 13010)"
-    echo "  Storage UI: BASE_PORT + 12 (e.g., 13012)"
+    echo "  (Infrastructure ports are managed automatically by Aspire)"
     echo ""
     echo "Examples:"
     echo "  ./init.sh --name MyApi --port 14000 --yes"
-    echo "  ./init.sh -n MyApi -y --no-docker"
+    echo "  ./init.sh -n MyApi -y"
 }
 
 check_prerequisites() {
@@ -265,7 +262,7 @@ BASE_PORT=13000
 YES_TO_ALL="false"
 CREATE_MIGRATION="ask"
 DO_COMMIT="ask"
-START_DOCKER="ask"
+START_ASPIRE="ask"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -289,8 +286,8 @@ while [[ $# -gt 0 ]]; do
             DO_COMMIT="n"
             shift
             ;;
-        --no-docker)
-            START_DOCKER="n"
+        --no-aspire)
+            START_ASPIRE="n"
             shift
             ;;
         -h|--help)
@@ -361,10 +358,6 @@ done
 # Calculate derived ports
 FRONTEND_PORT=$BASE_PORT
 API_PORT=$((BASE_PORT + 2))
-DB_PORT=$((BASE_PORT + 4))
-SEQ_PORT=$((BASE_PORT + 8))
-STORAGE_PORT=$((BASE_PORT + 10))
-STORAGE_CONSOLE_PORT=$((BASE_PORT + 12))
 
 # Show port allocation
 echo ""
@@ -372,10 +365,6 @@ echo -e "  ${BOLD}Port allocation${NC}"
 echo -e "  ─────────────────────────────────────"
 echo -e "  Frontend:     ${CYAN}$FRONTEND_PORT${NC}"
 echo -e "  API:          ${CYAN}$API_PORT${NC}"
-echo -e "  Database:     ${CYAN}$DB_PORT${NC}"
-echo -e "  Seq:          ${CYAN}$SEQ_PORT${NC}"
-echo -e "  Storage:      ${CYAN}$STORAGE_PORT${NC}"
-echo -e "  Storage UI:   ${CYAN}$STORAGE_CONSOLE_PORT${NC}"
 
 # Convert PascalCase to kebab-case (MyAwesomeApi -> my-awesome-api)
 to_kebab_case() {
@@ -403,10 +392,10 @@ if [[ "$DO_COMMIT" == "ask" ]]; then
     CHECKLIST_MAP+=("commit")
 fi
 
-if [[ "$START_DOCKER" == "ask" ]]; then
-    CHECKLIST_OPTIONS+=("Start docker compose after setup")
-    CHECKLIST_DEFAULTS+=(0)
-    CHECKLIST_MAP+=("docker")
+if [[ "$START_ASPIRE" == "ask" ]]; then
+    CHECKLIST_OPTIONS+=("Launch Aspire after setup")
+    CHECKLIST_DEFAULTS+=(1)
+    CHECKLIST_MAP+=("aspire")
 fi
 
 # Only show checklist if there are options to configure
@@ -422,8 +411,8 @@ if [[ ${#CHECKLIST_OPTIONS[@]} -gt 0 ]]; then
             commit)
                 [[ "${CHECKLIST_RESULTS[$i]}" == "1" ]] && DO_COMMIT="y" || DO_COMMIT="n"
                 ;;
-            docker)
-                [[ "${CHECKLIST_RESULTS[$i]}" == "1" ]] && START_DOCKER="y" || START_DOCKER="n"
+            aspire)
+                [[ "${CHECKLIST_RESULTS[$i]}" == "1" ]] && START_ASPIRE="y" || START_ASPIRE="n"
                 ;;
         esac
     done
@@ -432,7 +421,7 @@ fi
 # Apply defaults for any options set via CLI flags
 [[ "$CREATE_MIGRATION" == "ask" ]] && CREATE_MIGRATION="y"
 [[ "$DO_COMMIT" == "ask" ]] && DO_COMMIT="y"
-[[ "$START_DOCKER" == "ask" ]] && START_DOCKER="n"
+[[ "$START_ASPIRE" == "ask" ]] && START_ASPIRE="y"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Summary & Confirmation
@@ -449,16 +438,12 @@ echo -e "
   ─────────────────────────────────────
   Frontend:         ${CYAN}$FRONTEND_PORT${NC}
   API:              ${CYAN}$API_PORT${NC}
-  Database:         ${CYAN}$DB_PORT${NC}
-  Seq:              ${CYAN}$SEQ_PORT${NC}
-  Storage:          ${CYAN}$STORAGE_PORT${NC}
-  Storage UI:       ${CYAN}$STORAGE_CONSOLE_PORT${NC}
 
   ${BOLD}Options${NC}
   ─────────────────────────────────────
   Create migration: $([ "$CREATE_MIGRATION" == "y" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${DIM}No${NC}")
   Git commits:      $([ "$DO_COMMIT" == "y" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${DIM}No${NC}")
-  Start docker:     $([ "$START_DOCKER" == "y" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${DIM}No${NC}")
+  Launch Aspire:    $([ "$START_ASPIRE" == "y" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${DIM}No${NC}")
 "
 
 PROCEED=$(prompt_yn "Proceed with initialization?" "y")
@@ -493,32 +478,17 @@ if [ -f "src/frontend/.env.example" ]; then
     print_substep "Created frontend .env.local from .env.example"
 fi
 
-# Generate random JWT secret for local development
-JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n/+=' | cut -c1-64)
-
 print_substep "Replacing placeholders..."
 if [ "$OS" = "Darwin" ]; then
-    # macOS
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_SEQ_PORT}\|{INIT_STORAGE_PORT}\|{INIT_STORAGE_CONSOLE_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
-        -e "s/{INIT_DB_PORT}/$DB_PORT/g" \
-        -e "s/{INIT_SEQ_PORT}/$SEQ_PORT/g" \
-        -e "s/{INIT_STORAGE_PORT}/$STORAGE_PORT/g" \
-        -e "s/{INIT_STORAGE_CONSOLE_PORT}/$STORAGE_CONSOLE_PORT/g" \
-        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" \
-        -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" 2>/dev/null || true
+        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" 2>/dev/null || true
 else
-    # Linux
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_SEQ_PORT}\|{INIT_STORAGE_PORT}\|{INIT_STORAGE_CONSOLE_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
-        -e "s/{INIT_DB_PORT}/$DB_PORT/g" \
-        -e "s/{INIT_SEQ_PORT}/$SEQ_PORT/g" \
-        -e "s/{INIT_STORAGE_PORT}/$STORAGE_PORT/g" \
-        -e "s/{INIT_STORAGE_CONSOLE_PORT}/$STORAGE_CONSOLE_PORT/g" \
-        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" \
-        -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" 2>/dev/null || true
+        -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" 2>/dev/null || true
 fi
 
 print_success "Port configuration complete"
@@ -527,7 +497,7 @@ print_success "Port configuration complete"
 if [[ "$DO_COMMIT" == "y" ]]; then
     print_step "Committing port configuration..."
     git add . >/dev/null 2>&1
-    git commit -m "chore: configure project (slug: $PROJECT_SLUG, ports: $FRONTEND_PORT/$API_PORT/$DB_PORT/$SEQ_PORT)" >/dev/null 2>&1
+    git commit -m "chore: configure project (slug: $PROJECT_SLUG, ports: $FRONTEND_PORT/$API_PORT)" >/dev/null 2>&1
     print_success "Port configuration committed"
 fi
 
@@ -666,44 +636,34 @@ fi
 
 print_success "Init scripts removed"
 
-# Step 6: Start Docker
-if [[ "$START_DOCKER" == "y" ]]; then
-    print_step "Starting Docker containers..."
-    if ./deploy/up.sh local up -d --build; then
-        print_success "Docker containers started"
-    else
-        print_warning "Docker failed to start. Is Docker running?"
-        print_info "You can start containers manually later with:"
-        echo "  ./deploy/up.sh local up -d --build"
-    fi
-fi
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Complete!
 # ─────────────────────────────────────────────────────────────────────────────
 print_header "Setup Complete!"
 
-echo -e "
+if [[ "$START_ASPIRE" == "y" ]]; then
+    echo -e "
+  ${BOLD}Your project is ready!${NC}
+
+  ${DIM}Completed in $(($(date +%s) - START_TIME))s${NC}
+"
+    print_step "Launching Aspire..."
+    print_info "The Aspire Dashboard URL will appear below. Press Ctrl+C to stop."
+    echo ""
+    exec dotnet run --project "src/backend/$NEW_NAME.AppHost"
+else
+    echo -e "
   ${BOLD}Your project is ready!${NC}
 
   ${BOLD}Quick Start${NC}
   ─────────────────────────────────────
-  ${DIM}# Start the development environment${NC}
-  ./deploy/up.sh local up -d --build
+  dotnet run --project src/backend/$NEW_NAME.AppHost
 
-  ${DIM}# Or run the API directly${NC}
-  cd src/backend/$NEW_NAME.WebApi
-  dotnet run
-
-  ${BOLD}URLs${NC}
-  ─────────────────────────────────────
-  Frontend:    ${CYAN}http://localhost:$FRONTEND_PORT${NC}
-  API Docs:    ${CYAN}http://localhost:$API_PORT/scalar${NC}
-  Hangfire:    ${CYAN}http://localhost:$API_PORT/hangfire${NC}
-  Seq (logs):  ${CYAN}http://localhost:$SEQ_PORT${NC}
-  MinIO:       ${CYAN}http://localhost:$STORAGE_CONSOLE_PORT${NC}
+  The Aspire Dashboard URL appears in the console.
+  All service URLs (API, pgAdmin, MinIO) are visible in the Dashboard.
 
   ${DIM}Completed in $(($(date +%s) - START_TIME))s${NC}
 
   ${DIM}Happy coding!${NC}
 "
+fi

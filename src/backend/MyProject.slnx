@@ -1,7 +1,6 @@
 <Solution>
   <Folder Name="/solution items/">
     <File Path="../../deploy/docker-compose.yml" />
-    <File Path="../../deploy/docker-compose.local.yml" />
     <File Path="../../deploy/docker-compose.production.yml" />
     <File Path="../../.config/dotnet-tools.json" />
     <File Path="../../global.json" />
@@ -16,6 +15,7 @@
   <Project Path="MyProject.Shared/MyProject.Shared.csproj" />
   <Project Path="MyProject.WebApi/MyProject.WebApi.csproj" />
   <Project Path="MyProject.ServiceDefaults/MyProject.ServiceDefaults.csproj" />
+  <Project Path="MyProject.AppHost/MyProject.AppHost.csproj" />
   <Folder Name="/deploy/">
     <Project Path="HealthProbe/HealthProbe.csproj" />
   </Folder>
