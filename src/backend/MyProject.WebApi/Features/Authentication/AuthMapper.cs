@@ -3,6 +3,7 @@ using MyProject.WebApi.Features.Authentication.Dtos.ChangePassword;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
 using MyProject.WebApi.Features.Authentication.Dtos.ResetPassword;
+using MyProject.WebApi.Features.Authentication.Dtos.TwoFactor;
 using MyProject.WebApi.Features.Authentication.Dtos.VerifyEmail;
 
 namespace MyProject.WebApi.Features.Authentication;
@@ -35,6 +36,23 @@ internal static class AuthMapper
         };
 
     /// <summary>
+    /// Maps a <see cref="LoginOutput"/> to an <see cref="AuthenticationResponse"/>.
+    /// When 2FA is required, tokens are empty and challenge fields are populated.
+    /// </summary>
+    public static AuthenticationResponse ToResponse(this LoginOutput output) =>
+        output.Tokens is { } tokens
+            ? new AuthenticationResponse
+            {
+                AccessToken = tokens.AccessToken,
+                RefreshToken = tokens.RefreshToken
+            }
+            : new AuthenticationResponse
+            {
+                RequiresTwoFactor = true,
+                ChallengeToken = output.ChallengeToken
+            };
+
+    /// <summary>
     /// Maps a <see cref="ChangePasswordRequest"/> to a <see cref="ChangePasswordInput"/>.
     /// </summary>
     public static ChangePasswordInput ToChangePasswordInput(this ChangePasswordRequest request) =>
@@ -59,4 +77,23 @@ internal static class AuthMapper
         new(
             Token: request.Token
         );
+
+    /// <summary>
+    /// Maps a <see cref="TwoFactorSetupOutput"/> to a <see cref="TwoFactorSetupResponse"/>.
+    /// </summary>
+    public static TwoFactorSetupResponse ToResponse(this TwoFactorSetupOutput output) =>
+        new()
+        {
+            SharedKey = output.SharedKey,
+            AuthenticatorUri = output.AuthenticatorUri
+        };
+
+    /// <summary>
+    /// Maps a <see cref="TwoFactorVerifySetupOutput"/> to a <see cref="TwoFactorVerifySetupResponse"/>.
+    /// </summary>
+    public static TwoFactorVerifySetupResponse ToResponse(this TwoFactorVerifySetupOutput output) =>
+        new()
+        {
+            RecoveryCodes = output.RecoveryCodes
+        };
 }

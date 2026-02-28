@@ -23,6 +23,7 @@ internal static class UserMapper
         HasAvatar = user.HasAvatar,
         Roles = user.Roles,
         Permissions = user.Permissions,
-        EmailConfirmed = user.IsEmailConfirmed
+        EmailConfirmed = user.IsEmailConfirmed,
+        TwoFactorEnabled = user.IsTwoFactorEnabled
     };
 }

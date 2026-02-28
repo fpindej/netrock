@@ -30,6 +30,12 @@ public sealed class AuthenticationOptions
     public EmailTokenOptions EmailToken { get; init; } = new();
 
     /// <summary>
+    /// Gets or sets the two-factor authentication configuration.
+    /// </summary>
+    [ValidateObjectMembers]
+    public TwoFactorOptions TwoFactor { get; init; } = new();
+
+    /// <summary>
     /// Configuration options for JWT token generation and validation.
     /// </summary>
     public sealed class JwtOptions : IValidatableObject
@@ -154,6 +160,44 @@ public sealed class AuthenticationOptions
                         $"SessionLifetime ({SessionLifetime}) must not exceed PersistentLifetime ({PersistentLifetime}).",
                         [nameof(SessionLifetime)]);
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Configuration options for two-factor authentication.
+    /// </summary>
+    public sealed class TwoFactorOptions : IValidatableObject
+    {
+        /// <summary>
+        /// Gets or sets the lifetime of a two-factor challenge token.
+        /// Defaults to 5 minutes. Valid range: 1 minute – 15 minutes.
+        /// </summary>
+        public TimeSpan ChallengeLifetime { get; [UsedImplicitly] init; } = TimeSpan.FromMinutes(5);
+
+        /// <summary>
+        /// Gets or sets the issuer name displayed in authenticator apps.
+        /// Appears as the account label prefix in TOTP applications.
+        /// </summary>
+        [Required]
+        public string Issuer { get; init; } = "MyProject";
+
+        /// <summary>
+        /// Gets or sets the maximum number of failed verification attempts per challenge.
+        /// After this limit, the challenge is locked and the user must log in again.
+        /// Defaults to 5.
+        /// </summary>
+        [Range(1, 20)]
+        public int MaxChallengeAttempts { get; [UsedImplicitly] init; } = 5;
+
+        /// <inheritdoc />
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (ChallengeLifetime < TimeSpan.FromMinutes(1) || ChallengeLifetime > TimeSpan.FromMinutes(15))
+            {
+                yield return new ValidationResult(
+                    $"ChallengeLifetime must be between 1 minute and 15 minutes, but was {ChallengeLifetime}.",
+                    [nameof(ChallengeLifetime)]);
             }
         }
     }

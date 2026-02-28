@@ -124,8 +124,10 @@ public class AuthenticationServiceTests : IDisposable
         var result = await _sut.Login("test@example.com", "password123");
 
         Assert.True(result.IsSuccess);
-        Assert.Equal("access-token", result.Value.AccessToken);
-        Assert.Equal("refresh-token", result.Value.RefreshToken);
+        Assert.False(result.Value.RequiresTwoFactor);
+        Assert.NotNull(result.Value.Tokens);
+        Assert.Equal("access-token", result.Value.Tokens.AccessToken);
+        Assert.Equal("refresh-token", result.Value.Tokens.RefreshToken);
         await _auditService.Received(1).LogAsync(
             AuditActions.LoginSuccess,
             userId: user.Id,

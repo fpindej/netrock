@@ -39,6 +39,22 @@ public static class ErrorMessages
     }
 
     /// <summary>
+    /// Two-factor authentication error messages.
+    /// </summary>
+    public static class TwoFactor
+    {
+        public const string SetupFailed = "Failed to set up two-factor authentication.";
+        public const string VerificationFailed = "The verification code is invalid. Please try again.";
+        public const string AlreadyEnabled = "Two-factor authentication is already enabled.";
+        public const string NotEnabled = "Two-factor authentication is not enabled.";
+        public const string DisableFailed = "Failed to disable two-factor authentication.";
+        public const string ChallengeNotFound = "Two-factor challenge not found or expired.";
+        public const string ChallengeLocked = "Too many failed attempts. Please log in again.";
+        public const string RecoveryCodeInvalid = "The recovery code is invalid.";
+        public const string InvalidCode = "The two-factor code is invalid.";
+    }
+
+    /// <summary>
     /// User self-service error messages.
     /// </summary>
     public static class User

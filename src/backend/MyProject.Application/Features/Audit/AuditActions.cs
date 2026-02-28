@@ -79,4 +79,22 @@ public static class AuditActions
 
     /// <summary>User removed their avatar image.</summary>
     public const string AvatarRemove = "AvatarRemove";
+
+    /// <summary>User enabled two-factor authentication.</summary>
+    public const string TwoFactorEnabled = "TwoFactorEnabled";
+
+    /// <summary>User disabled two-factor authentication.</summary>
+    public const string TwoFactorDisabled = "TwoFactorDisabled";
+
+    /// <summary>Successful two-factor login.</summary>
+    public const string TwoFactorLoginSuccess = "TwoFactorLoginSuccess";
+
+    /// <summary>Failed two-factor login attempt.</summary>
+    public const string TwoFactorLoginFailure = "TwoFactorLoginFailure";
+
+    /// <summary>User regenerated their two-factor recovery codes.</summary>
+    public const string TwoFactorRecoveryCodesRegenerated = "TwoFactorRecoveryCodesRegenerated";
+
+    /// <summary>User used a recovery code to log in.</summary>
+    public const string TwoFactorRecoveryCodeUsed = "TwoFactorRecoveryCodeUsed";
 }
