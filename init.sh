@@ -126,7 +126,6 @@ show_help() {
     echo "  Frontend:   BASE_PORT      (e.g., 13000)"
     echo "  API:        BASE_PORT + 2  (e.g., 13002)"
     echo "  Database:   BASE_PORT + 4  (e.g., 13004)"
-    echo "  Redis:      BASE_PORT + 6  (e.g., 13006)"
     echo "  Seq:        BASE_PORT + 8  (e.g., 13008)"
     echo "  Storage:    BASE_PORT + 10 (e.g., 13010)"
     echo "  Storage UI: BASE_PORT + 12 (e.g., 13012)"
@@ -363,7 +362,6 @@ done
 FRONTEND_PORT=$BASE_PORT
 API_PORT=$((BASE_PORT + 2))
 DB_PORT=$((BASE_PORT + 4))
-REDIS_PORT=$((BASE_PORT + 6))
 SEQ_PORT=$((BASE_PORT + 8))
 STORAGE_PORT=$((BASE_PORT + 10))
 STORAGE_CONSOLE_PORT=$((BASE_PORT + 12))
@@ -375,7 +373,6 @@ echo -e "  ───────────────────────
 echo -e "  Frontend:     ${CYAN}$FRONTEND_PORT${NC}"
 echo -e "  API:          ${CYAN}$API_PORT${NC}"
 echo -e "  Database:     ${CYAN}$DB_PORT${NC}"
-echo -e "  Redis:        ${CYAN}$REDIS_PORT${NC}"
 echo -e "  Seq:          ${CYAN}$SEQ_PORT${NC}"
 echo -e "  Storage:      ${CYAN}$STORAGE_PORT${NC}"
 echo -e "  Storage UI:   ${CYAN}$STORAGE_CONSOLE_PORT${NC}"
@@ -453,7 +450,6 @@ echo -e "
   Frontend:         ${CYAN}$FRONTEND_PORT${NC}
   API:              ${CYAN}$API_PORT${NC}
   Database:         ${CYAN}$DB_PORT${NC}
-  Redis:            ${CYAN}$REDIS_PORT${NC}
   Seq:              ${CYAN}$SEQ_PORT${NC}
   Storage:          ${CYAN}$STORAGE_PORT${NC}
   Storage UI:       ${CYAN}$STORAGE_CONSOLE_PORT${NC}
@@ -503,11 +499,10 @@ JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n/+=' | cut -c1-64)
 print_substep "Replacing placeholders..."
 if [ "$OS" = "Darwin" ]; then
     # macOS
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_REDIS_PORT}\|{INIT_SEQ_PORT}\|{INIT_STORAGE_PORT}\|{INIT_STORAGE_CONSOLE_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_SEQ_PORT}\|{INIT_STORAGE_PORT}\|{INIT_STORAGE_CONSOLE_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
         -e "s/{INIT_DB_PORT}/$DB_PORT/g" \
-        -e "s/{INIT_REDIS_PORT}/$REDIS_PORT/g" \
         -e "s/{INIT_SEQ_PORT}/$SEQ_PORT/g" \
         -e "s/{INIT_STORAGE_PORT}/$STORAGE_PORT/g" \
         -e "s/{INIT_STORAGE_CONSOLE_PORT}/$STORAGE_CONSOLE_PORT/g" \
@@ -515,11 +510,10 @@ if [ "$OS" = "Darwin" ]; then
         -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" 2>/dev/null || true
 else
     # Linux
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_REDIS_PORT}\|{INIT_SEQ_PORT}\|{INIT_STORAGE_PORT}\|{INIT_STORAGE_CONSOLE_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_DB_PORT}\|{INIT_SEQ_PORT}\|{INIT_STORAGE_PORT}\|{INIT_STORAGE_CONSOLE_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
         -e "s/{INIT_DB_PORT}/$DB_PORT/g" \
-        -e "s/{INIT_REDIS_PORT}/$REDIS_PORT/g" \
         -e "s/{INIT_SEQ_PORT}/$SEQ_PORT/g" \
         -e "s/{INIT_STORAGE_PORT}/$STORAGE_PORT/g" \
         -e "s/{INIT_STORAGE_CONSOLE_PORT}/$STORAGE_CONSOLE_PORT/g" \
@@ -533,7 +527,7 @@ print_success "Port configuration complete"
 if [[ "$DO_COMMIT" == "y" ]]; then
     print_step "Committing port configuration..."
     git add . >/dev/null 2>&1
-    git commit -m "chore: configure project (slug: $PROJECT_SLUG, ports: $FRONTEND_PORT/$API_PORT/$DB_PORT/$REDIS_PORT/$SEQ_PORT)" >/dev/null 2>&1
+    git commit -m "chore: configure project (slug: $PROJECT_SLUG, ports: $FRONTEND_PORT/$API_PORT/$DB_PORT/$SEQ_PORT)" >/dev/null 2>&1
     print_success "Port configuration committed"
 fi
 

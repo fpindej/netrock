@@ -14,7 +14,6 @@ Backend API (.NET :8080)
     │  WebApi → Application ← Infrastructure → Domain (+Shared)
     │
     ├── PostgreSQL (:5432)  — EF Core, soft delete, audit trails, Hangfire storage
-    ├── Redis (:6379)       — Distributed cache, security stamp lookup
     ├── MinIO (:9000)       — S3-compatible blob storage (avatars, file uploads)
     ├── Hangfire            — Recurring + fire-and-forget background jobs
     └── Seq (:80)           — Structured log aggregation
@@ -35,7 +34,7 @@ NETrock is thoroughly tested across 4 test projects, covering every layer of the
 | **API Tests** | Full HTTP pipeline (status codes, auth gates, ProblemDetails shape), all validators, response contract testing, permission enforcement, rate limiting |
 | **Architecture Tests** | Layer dependency direction, naming conventions, access modifiers |
 
-All tests run in-process — no Docker, PostgreSQL, or Redis required:
+All tests run in-process — no Docker or PostgreSQL required:
 
 ```bash
 dotnet test src/backend/MyProject.slnx -c Release
@@ -51,7 +50,7 @@ src/
 │   ├── YourProject.Shared/           # Result pattern, error types, cross-cutting utilities
 │   ├── YourProject.Domain/           # Entities with audit fields and soft delete
 │   ├── YourProject.Application/      # Interfaces, DTOs, service contracts, permissions
-│   ├── YourProject.Infrastructure/   # EF Core, Identity, Redis, Hangfire, S3 storage, email, implementations
+│   ├── YourProject.Infrastructure/   # EF Core, Identity, HybridCache, Hangfire, S3 storage, email, implementations
 │   ├── YourProject.WebApi/           # Controllers, middleware, validation, authorization
 │   └── tests/
 │       ├── YourProject.Unit.Tests/        # Pure logic tests (Result, entities, roles, permissions)

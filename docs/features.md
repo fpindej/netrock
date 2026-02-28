@@ -12,7 +12,7 @@
 | **Role Hierarchy** | SuperAdmin > Admin > User — privilege escalation prevention, self-protection rules, system role guards |
 | **Rate Limiting** | Global + per-endpoint policies (registration, auth, sensitive operations, admin mutations), configurable fixed-window with IP and user partitioning |
 | **Validation** | FluentValidation + Data Annotations, flowing constraints into OpenAPI spec and generated TypeScript types |
-| **Caching** | Redis (distributed) with auto-invalidation via EF Core interceptor, cache-aside pattern, key management |
+| **Caching** | HybridCache (in-process L1) with auto-invalidation via EF Core interceptor, stampede protection, key management |
 | **Database** | PostgreSQL + EF Core with soft delete, full audit trail (created/updated/deleted by + at), global query filters |
 | **API Documentation** | OpenAPI spec + Scalar UI, with custom transformers for enums, nullable types, numeric schemas, and camelCase query params |
 | **Error Handling** | Result pattern for business logic, `ProblemDetails` ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)) everywhere, structured error messages |
@@ -22,7 +22,7 @@
 | **Background Jobs** | Hangfire with PostgreSQL persistence — recurring jobs via `IRecurringJobDefinition`, fire-and-forget, admin UI with trigger/pause/resume/restore, persistent pause state |
 | **Email** | Pluggable email service (NoOp for dev — swap in your SMTP/SendGrid/etc.), Fluid (Liquid) template engine with base layout, templated emails for verification, password reset, admin-initiated reset, and invitation |
 | **File Storage** | S3-compatible blob storage via generic `IFileStorageService` — MinIO locally, any S3 provider in production (AWS S3, Cloudflare R2, DigitalOcean Spaces, Backblaze B2). Avatar upload with SkiaSharp image processing (resize, WebP compression) |
-| **Health Checks** | `/health` (all), `/health/ready` (DB + Redis + S3), `/health/live` (liveness) — Docker healthcheck integration |
+| **Health Checks** | `/health` (all), `/health/ready` (DB + S3), `/health/live` (liveness) — Docker healthcheck integration |
 | **Search** | User lookup with search and pagination in admin panel, PostgreSQL trigram similarity function pre-registered for custom use |
 | **Testing** | 4 test projects — unit, component (mocked services), API integration (WebApplicationFactory), architecture enforcement |
 
@@ -50,7 +50,7 @@
 
 | Feature | Implementation |
 |---|---|
-| **Fully Dockerized** | One `docker compose up` for 6 services — API, frontend (hot-reload), DB, Redis, Seq, MinIO (S3 storage) |
+| **Fully Dockerized** | One `docker compose up` for 5 services — API, frontend (hot-reload), DB, Seq, MinIO (S3 storage) |
 | **Init Script** | Interactive project bootstrapping — renames solution, configures ports, generates secrets, creates migration, starts Docker |
 | **Deploy Script** | Multi-registry support (Docker Hub, GHCR, ACR, ECR, DigitalOcean), semantic versioning, platform selection |
 | **CI Pipeline** | GitHub Actions with smart path filtering — backend-only PRs skip frontend checks and vice versa |

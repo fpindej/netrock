@@ -8,7 +8,7 @@ NETrock is built **security-first**. Every decision defaults to the most restric
 
 - **JWT in HttpOnly cookies** — tokens never touch JavaScript, immune to XSS theft
 - **Refresh token rotation** — single-use tokens with automatic family revocation on reuse detection (stolen token → all sessions invalidated)
-- **Security stamp validation** — permission changes propagate to active sessions via SHA-256 hashed stamps in JWT claims, cached in Redis for performance
+- **Security stamp validation** — permission changes propagate to active sessions via SHA-256 hashed stamps in JWT claims, cached in-process for performance
 - **Soft refresh** — role/permission changes invalidate access tokens but preserve refresh tokens, so users silently re-authenticate instead of getting force-logged-out
 - **Remember me** — persistent refresh tokens with configurable expiry, non-persistent sessions cleared on browser close
 
