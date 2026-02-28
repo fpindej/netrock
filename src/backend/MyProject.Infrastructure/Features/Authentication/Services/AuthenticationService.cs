@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MyProject.Application.Caching;
+using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
@@ -33,7 +33,7 @@ internal class AuthenticationService(
     TimeProvider timeProvider,
     ICookieService cookieService,
     IUserContext userContext,
-    ICacheService cacheService,
+    HybridCache hybridCache,
     ITemplatedEmailSender templatedEmailSender,
     EmailTokenService emailTokenService,
     IAuditService auditService,
@@ -470,7 +470,7 @@ internal class AuthenticationService(
         if (user != null)
         {
             await userManager.UpdateSecurityStampAsync(user);
-            await cacheService.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
+            await hybridCache.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
         }
     }
 

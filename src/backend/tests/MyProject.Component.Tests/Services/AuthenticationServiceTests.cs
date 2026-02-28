@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
-using MyProject.Application.Caching;
+using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
@@ -31,7 +31,7 @@ public class AuthenticationServiceTests : IDisposable
     private readonly FakeTimeProvider _timeProvider;
     private readonly ICookieService _cookieService;
     private readonly IUserContext _userContext;
-    private readonly ICacheService _cacheService;
+    private readonly HybridCache _hybridCache;
     private readonly ITemplatedEmailSender _templatedEmailSender;
     private readonly IAuditService _auditService;
     private readonly MyProjectDbContext _dbContext;
@@ -45,7 +45,7 @@ public class AuthenticationServiceTests : IDisposable
         _timeProvider = new FakeTimeProvider(new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero));
         _cookieService = Substitute.For<ICookieService>();
         _userContext = Substitute.For<IUserContext>();
-        _cacheService = Substitute.For<ICacheService>();
+        _hybridCache = Substitute.For<HybridCache>();
         _templatedEmailSender = Substitute.For<ITemplatedEmailSender>();
         _dbContext = TestDbContextFactory.Create();
 
@@ -82,7 +82,7 @@ public class AuthenticationServiceTests : IDisposable
             _timeProvider,
             _cookieService,
             _userContext,
-            _cacheService,
+            _hybridCache,
             _templatedEmailSender,
             emailTokenService,
             _auditService,
@@ -693,7 +693,7 @@ public class AuthenticationServiceTests : IDisposable
         await _sut.RefreshTokenAsync("reused-token");
 
         await _userManager.Received(1).UpdateSecurityStampAsync(user);
-        await _cacheService.Received(1).RemoveAsync(
+        await _hybridCache.Received(1).RemoveAsync(
             CacheKeys.SecurityStamp(userId), Arg.Any<CancellationToken>());
     }
 
@@ -888,7 +888,7 @@ public class AuthenticationServiceTests : IDisposable
         await _sut.Logout();
 
         await _userManager.Received(1).UpdateSecurityStampAsync(user);
-        await _cacheService.Received(1).RemoveAsync(
+        await _hybridCache.Received(1).RemoveAsync(
             CacheKeys.SecurityStamp(userId), Arg.Any<CancellationToken>());
     }
 

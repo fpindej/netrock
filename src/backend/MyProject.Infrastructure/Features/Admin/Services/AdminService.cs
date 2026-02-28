@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MyProject.Application.Caching;
+using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Admin.Dtos;
@@ -39,7 +39,7 @@ internal class AdminService(
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,
     MyProjectDbContext dbContext,
-    ICacheService cacheService,
+    HybridCache hybridCache,
     TimeProvider timeProvider,
     ITemplatedEmailSender templatedEmailSender,
     EmailTokenService emailTokenService,
@@ -670,7 +670,7 @@ internal class AdminService(
         CancellationToken cancellationToken)
     {
         await userManager.UpdateSecurityStampAsync(user);
-        await cacheService.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
+        await hybridCache.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
     }
 
     /// <summary>
@@ -695,7 +695,7 @@ internal class AdminService(
         }
 
         await userManager.UpdateSecurityStampAsync(user);
-        await cacheService.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
+        await hybridCache.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
     }
 
     private async Task<IList<string>> GetUserRolesAsync(Guid userId)
@@ -778,7 +778,7 @@ internal class AdminService(
 
     private async Task InvalidateUserCacheAsync(Guid userId)
     {
-        await cacheService.RemoveAsync(CacheKeys.User(userId));
+        await hybridCache.RemoveAsync(CacheKeys.User(userId));
     }
 
     /// <summary>

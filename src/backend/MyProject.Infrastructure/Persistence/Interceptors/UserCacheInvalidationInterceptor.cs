@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using MyProject.Application.Caching;
+using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Caching.Constants;
 using MyProject.Infrastructure.Features.Authentication.Models;
 
@@ -10,7 +10,7 @@ namespace MyProject.Infrastructure.Persistence.Interceptors;
 /// <summary>
 /// Interceptor that automatically invalidates user cache when a user or their roles are modified.
 /// </summary>
-internal class UserCacheInvalidationInterceptor(ICacheService cacheService) : SaveChangesInterceptor
+internal class UserCacheInvalidationInterceptor(HybridCache hybridCache) : SaveChangesInterceptor
 {
     private readonly List<Guid> _userIdsToInvalidate = [];
 
@@ -60,7 +60,7 @@ internal class UserCacheInvalidationInterceptor(ICacheService cacheService) : Sa
 
         await Task.WhenAll(_userIdsToInvalidate
             .Distinct()
-            .Select(userId => cacheService.RemoveAsync(CacheKeys.User(userId), cancellationToken)));
+            .Select(userId => hybridCache.RemoveAsync(CacheKeys.User(userId), cancellationToken).AsTask()));
 
         _userIdsToInvalidate.Clear();
 

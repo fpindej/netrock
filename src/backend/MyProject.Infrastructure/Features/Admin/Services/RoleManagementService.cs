@@ -2,7 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using MyProject.Application.Caching;
+using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Admin;
 using MyProject.Application.Features.Admin.Dtos;
@@ -21,7 +21,7 @@ internal class RoleManagementService(
     RoleManager<ApplicationRole> roleManager,
     UserManager<ApplicationUser> userManager,
     MyProjectDbContext dbContext,
-    ICacheService cacheService,
+    HybridCache hybridCache,
     IAuditService auditService,
     ILogger<RoleManagementService> logger) : IRoleManagementService
 {
@@ -327,8 +327,8 @@ internal class RoleManagementService(
         foreach (var user in users)
         {
             await userManager.UpdateSecurityStampAsync(user);
-            await cacheService.RemoveAsync(CacheKeys.SecurityStamp(user.Id), cancellationToken);
-            await cacheService.RemoveAsync(CacheKeys.User(user.Id), cancellationToken);
+            await hybridCache.RemoveAsync(CacheKeys.SecurityStamp(user.Id), cancellationToken);
+            await hybridCache.RemoveAsync(CacheKeys.User(user.Id), cancellationToken);
         }
 
         logger.LogInformation(
