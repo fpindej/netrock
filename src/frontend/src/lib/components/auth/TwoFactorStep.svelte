@@ -129,7 +129,6 @@
 							type="text"
 							inputmode="numeric"
 							autocomplete="one-time-code"
-							pattern="[0-9]{6}"
 							maxlength={6}
 							placeholder={m.auth_twoFactor_codePlaceholder()}
 							required
