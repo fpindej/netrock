@@ -15,9 +15,9 @@ Added Aspire ServiceDefaults project with full OpenTelemetry instrumentation (me
 |------|--------|--------|
 | `MyProject.ServiceDefaults/Extensions.cs` | New shared Aspire project | OTEL metrics/tracing/logging, service discovery, HTTP resilience |
 | `MyProject.ServiceDefaults/MyProject.ServiceDefaults.csproj` | New project file | `IsAspireSharedProject=true` with OTEL + resilience packages |
-| `Directory.Packages.props` | Add 12 packages, replace 1 | OTEL, resilience, service discovery packages; Seq → OpenTelemetry sink |
-| `MyProject.Infrastructure.csproj` | `Serilog.Sinks.Seq` → `Serilog.Sinks.OpenTelemetry` | Logging via OTLP instead of Seq |
-| `LoggerConfigurationExtensions.cs` | Add OTEL sink when endpoint is set | Conditional OTLP export (Aspire or production) |
+| `Directory.Packages.props` | Add OTEL + resilience + ServiceDiscovery packages, remove Seq | OTEL instrumentation and Aspire integration |
+| `MyProject.Infrastructure.csproj` | Remove `Serilog.Sinks.Seq` | Logging now handled by ServiceDefaults OTEL provider |
+| `LoggerConfigurationExtensions.cs` | Remove Seq/OTEL sink, keep Console only | OTEL log export handled by ServiceDefaults via `writeToProviders: true` |
 | `MyProject.WebApi.csproj` | Add ServiceDefaults project reference | Wire OTEL into the API |
 | `Program.cs` | Add `builder.AddServiceDefaults()` | Activate OTEL, service discovery, resilience |
 | `MyProject.slnx` | Add ServiceDefaults project | Solution awareness |
@@ -40,11 +40,11 @@ Added Aspire ServiceDefaults project with full OpenTelemetry instrumentation (me
 
 ## Decisions & Reasoning
 
-### Seq → OpenTelemetry (Serilog sink)
+### Seq removal — OTEL via ServiceDefaults only
 
-- **Choice**: Replace `Serilog.Sinks.Seq` with `Serilog.Sinks.OpenTelemetry`
-- **Alternatives considered**: Keep Seq alongside OTEL, use ILogger directly
-- **Reasoning**: Aspire Dashboard provides the same structured log viewing that Seq did, and OTEL is the standard for production observability. One sink, one protocol, works everywhere.
+- **Choice**: Remove `Serilog.Sinks.Seq` entirely, do NOT add `Serilog.Sinks.OpenTelemetry`
+- **Alternatives considered**: Replace Seq with Serilog OTEL sink, keep Seq alongside OTEL
+- **Reasoning**: ServiceDefaults registers `builder.Logging.AddOpenTelemetry()` as an ILogger provider. With `UseSerilog(writeToProviders: true)`, Serilog forwards all logs to ILogger providers including the OTEL one. Adding a separate Serilog OTEL sink would cause every log to hit the OTLP collector twice. Console is the only Serilog-specific sink needed.
 
 ### Session lifetime (not Persistent) for containers
 
@@ -97,6 +97,32 @@ flowchart TD
     API -->|OTLP| Dashboard
     PG -.->|health| AppHost
 ```
+
+## Review Fixes Applied
+
+After creating the PRs, a detailed review identified 4 critical and 4 minor issues. All were fixed in commit `64e4cb9`.
+
+### Critical
+
+| Issue | Fix |
+|-------|-----|
+| **Duplicate OTEL logs**: ServiceDefaults + Serilog OTEL sink both exported to collector | Removed `Serilog.Sinks.OpenTelemetry` entirely; ServiceDefaults handles log export via `writeToProviders: true` |
+| **SQL text in traces**: `SetDbStatementForText = true` captured full SQL (WHERE clauses with PII) | Removed the option (defaults to false) |
+| **CAPTCHA failure on fresh setup**: `.env.example` had `<TURNSTILE_SITE_KEY>` placeholder | Set to Cloudflare's always-pass test key `1x00000000000000000000AA` |
+| **JWT secret regression**: Init scripts no longer generated random keys | Restored JWT generation in `init.sh`/`init.ps1`, added `{INIT_JWT_SECRET}` placeholder to `appsettings.json` |
+
+### Minor
+
+| Issue | Fix |
+|-------|-----|
+| Unused `Microsoft.Extensions.Resilience` package | Removed from `Directory.Packages.props` |
+| Stale `local` examples in `deploy/up.sh` | Updated to `production` examples with Aspire note |
+| Stale csproj comment referencing docker-compose.local | Updated to generic publish comment |
+| EF Core `Fatal` log level too aggressive | Changed to `Warning` in `appsettings.Development.json` |
+
+### Test fix
+
+The `{INIT_JWT_SECRET}` placeholder (17 chars) broke 138 API tests — too short for HMAC SHA-256. Fixed by adding a JWT key override in `appsettings.Testing.json`.
 
 ## Follow-Up Items
 
