@@ -158,7 +158,7 @@
 				<div class="mt-4 text-center">
 					<button
 						type="button"
-						class="text-sm text-muted-foreground hover:text-primary hover:underline"
+						class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline"
 						onclick={() => {
 							useRecovery = true;
 							code = '';
@@ -203,7 +203,7 @@
 				<div class="mt-4 text-center">
 					<button
 						type="button"
-						class="text-sm text-muted-foreground hover:text-primary hover:underline"
+						class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline"
 						onclick={() => {
 							useRecovery = false;
 							recoveryCode = '';
@@ -217,7 +217,7 @@
 			<div class="mt-2 text-center">
 				<button
 					type="button"
-					class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary hover:underline"
+					class="inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-primary hover:underline"
 					onclick={onBack}
 				>
 					<ArrowLeft class="h-3 w-3" />

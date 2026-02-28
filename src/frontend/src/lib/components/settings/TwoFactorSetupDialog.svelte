@@ -53,7 +53,7 @@
 				sharedKey = data.sharedKey ?? '';
 				authenticatorUri = data.authenticatorUri ?? '';
 				qrDataUrl = await QRCode.toDataURL(authenticatorUri, {
-					width: 256,
+					width: 192,
 					margin: 2,
 					color: { dark: '#000000', light: '#ffffff' }
 				});
@@ -146,27 +146,27 @@
 		</Dialog.Header>
 
 		{#if step === 'qr'}
-			<div class="space-y-4 py-4">
+			<div class="space-y-3 py-2">
 				{#if isLoading && !qrDataUrl}
 					<div class="flex justify-center py-8">
 						<Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
 					</div>
 				{:else}
-					<div class="space-y-3">
+					<div class="space-y-2">
 						<p class="text-sm text-muted-foreground">{m.settings_twoFactor_scanQr()}</p>
-						<div class="flex justify-center rounded-lg bg-white p-4">
+						<div class="flex justify-center rounded-lg bg-white p-3">
 							<img
 								src={qrDataUrl}
 								alt="Two-factor authentication setup QR code"
-								class="h-48 w-48 sm:h-64 sm:w-64"
+								class="h-36 w-36 sm:h-48 sm:w-48"
 							/>
 						</div>
 					</div>
 
-					<div class="space-y-2">
+					<div class="space-y-1.5">
 						<p class="text-sm text-muted-foreground">{m.settings_twoFactor_manualEntry()}</p>
 						<div class="flex items-center gap-2">
-							<code class="flex-1 rounded-md bg-muted px-3 py-2 font-mono text-sm break-all">
+							<code class="flex-1 rounded-md bg-muted px-3 py-1.5 font-mono text-sm break-all">
 								{sharedKey}
 							</code>
 							<Button variant="outline" size="icon" onclick={copyKey}>

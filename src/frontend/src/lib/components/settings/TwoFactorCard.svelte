@@ -46,7 +46,7 @@
 					? m.settings_twoFactor_statusEnabled()
 					: m.settings_twoFactor_statusDisabled()}
 			</p>
-			<div class="flex shrink-0 gap-2">
+			<div class="flex flex-wrap gap-2">
 				{#if twoFactorEnabled}
 					<Button variant="outline" onclick={() => (regenerateDialogOpen = true)}>
 						{m.settings_twoFactor_regenerateCodes()}
