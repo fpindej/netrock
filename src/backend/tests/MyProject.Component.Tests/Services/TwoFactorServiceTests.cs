@@ -250,6 +250,18 @@ public class TwoFactorServiceTests : IDisposable
         Assert.Equal(ErrorType.Unauthorized, result.ErrorType);
     }
 
+    [Fact]
+    public async Task VerifySetup_UserNotFound_ReturnsUnauthorized()
+    {
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns((ApplicationUser?)null);
+
+        var result = await _sut.VerifySetupAsync("123456", CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorType.Unauthorized, result.ErrorType);
+    }
+
     #endregion
 
     #region Disable
@@ -317,6 +329,18 @@ public class TwoFactorServiceTests : IDisposable
     public async Task Disable_NotAuthenticated_ReturnsUnauthorized()
     {
         _userContext.UserId.Returns((Guid?)null);
+
+        var result = await _sut.DisableAsync("password", CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorType.Unauthorized, result.ErrorType);
+    }
+
+    [Fact]
+    public async Task Disable_UserNotFound_ReturnsUnauthorized()
+    {
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns((ApplicationUser?)null);
 
         var result = await _sut.DisableAsync("password", CancellationToken.None);
 
@@ -407,6 +431,18 @@ public class TwoFactorServiceTests : IDisposable
     public async Task RegenerateRecoveryCodes_NotAuthenticated_ReturnsUnauthorized()
     {
         _userContext.UserId.Returns((Guid?)null);
+
+        var result = await _sut.RegenerateRecoveryCodesAsync("password", CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorType.Unauthorized, result.ErrorType);
+    }
+
+    [Fact]
+    public async Task RegenerateRecoveryCodes_UserNotFound_ReturnsUnauthorized()
+    {
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns((ApplicationUser?)null);
 
         var result = await _sut.RegenerateRecoveryCodesAsync("password", CancellationToken.None);
 

@@ -1537,7 +1537,7 @@ public class AuthenticationServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task CompleteTwoFactorLogin_LockedChallenge_ReturnsUnauthorized()
+    public async Task CompleteTwoFactorLogin_LockedChallenge_ReturnsChallengeLocked()
     {
         var user = CreateTestUser();
         var challengeToken = await SeedTwoFactorChallengeAsync(user.Id, failedAttempts: 5);
@@ -1545,7 +1545,41 @@ public class AuthenticationServiceTests : IDisposable
         var result = await _sut.CompleteTwoFactorLoginAsync(challengeToken, "123456", false);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(ErrorMessages.TwoFactor.ChallengeNotFound, result.Error);
+        Assert.Equal(ErrorMessages.TwoFactor.ChallengeLocked, result.Error);
+    }
+
+    [Fact]
+    public async Task CompleteTwoFactorLogin_UserNotFound_ReturnsUnauthorized()
+    {
+        var userId = Guid.NewGuid();
+        var challengeToken = await SeedTwoFactorChallengeAsync(userId);
+        _userManager.FindByIdAsync(userId.ToString()).Returns((ApplicationUser?)null);
+
+        var result = await _sut.CompleteTwoFactorLoginAsync(challengeToken, "123456", false);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Auth.UserNotFound, result.Error);
+        Assert.Equal(ErrorType.Unauthorized, result.ErrorType);
+    }
+
+    [Fact]
+    public async Task CompleteTwoFactorLogin_InvalidCode_LogsAuditFailure()
+    {
+        var user = CreateTestUser();
+        var challengeToken = await SeedTwoFactorChallengeAsync(user.Id);
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, "000000")
+            .Returns(false);
+
+        await _sut.CompleteTwoFactorLoginAsync(challengeToken, "000000", false);
+
+        await _auditService.Received(1).LogAsync(
+            AuditActions.TwoFactorLoginFailure,
+            userId: user.Id,
+            targetEntityType: Arg.Any<string?>(),
+            targetEntityId: Arg.Any<Guid?>(),
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -1651,6 +1685,90 @@ public class AuthenticationServiceTests : IDisposable
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.TwoFactor.ChallengeNotFound, result.Error);
+    }
+
+    [Fact]
+    public async Task CompleteTwoFactorRecoveryLogin_ValidCode_MarksChallengeAsUsed()
+    {
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
+        var challengeToken = await SeedTwoFactorChallengeAsync(user.Id);
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        _userManager.RedeemTwoFactorRecoveryCodeAsync(user, "RECOVERY-01")
+            .Returns(IdentityResult.Success);
+
+        await _sut.CompleteTwoFactorRecoveryLoginAsync(challengeToken, "RECOVERY-01", false);
+
+        var challenge = Assert.Single(_dbContext.TwoFactorChallenges);
+        Assert.True(challenge.IsUsed);
+    }
+
+    [Fact]
+    public async Task CompleteTwoFactorRecoveryLogin_RememberMe_UsesCorrectLifetime()
+    {
+        var user = CreateTestUser();
+        SetupSuccessfulLogin(user);
+        var challengeToken = await SeedTwoFactorChallengeAsync(user.Id, isRememberMe: true);
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        _userManager.RedeemTwoFactorRecoveryCodeAsync(user, "RECOVERY-01")
+            .Returns(IdentityResult.Success);
+
+        await _sut.CompleteTwoFactorRecoveryLoginAsync(challengeToken, "RECOVERY-01", false);
+
+        var refreshToken = _dbContext.RefreshTokens.Single();
+        Assert.True(refreshToken.IsPersistent);
+        var expectedExpiry = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7);
+        Assert.Equal(expectedExpiry, refreshToken.ExpiredAt);
+    }
+
+    [Fact]
+    public async Task CompleteTwoFactorRecoveryLogin_ExpiredChallenge_ReturnsUnauthorized()
+    {
+        var user = CreateTestUser();
+        var challengeToken = await SeedTwoFactorChallengeAsync(user.Id, isExpired: true);
+
+        var result = await _sut.CompleteTwoFactorRecoveryLoginAsync(challengeToken, "RECOVERY-01", false);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.TwoFactor.ChallengeNotFound, result.Error);
+    }
+
+    [Fact]
+    public async Task CompleteTwoFactorRecoveryLogin_UsedChallenge_ReturnsUnauthorized()
+    {
+        var user = CreateTestUser();
+        var challengeToken = await SeedTwoFactorChallengeAsync(user.Id, isUsed: true);
+
+        var result = await _sut.CompleteTwoFactorRecoveryLoginAsync(challengeToken, "RECOVERY-01", false);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.TwoFactor.ChallengeNotFound, result.Error);
+    }
+
+    [Fact]
+    public async Task CompleteTwoFactorRecoveryLogin_LockedChallenge_ReturnsChallengeLocked()
+    {
+        var user = CreateTestUser();
+        var challengeToken = await SeedTwoFactorChallengeAsync(user.Id, failedAttempts: 5);
+
+        var result = await _sut.CompleteTwoFactorRecoveryLoginAsync(challengeToken, "RECOVERY-01", false);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.TwoFactor.ChallengeLocked, result.Error);
+    }
+
+    [Fact]
+    public async Task CompleteTwoFactorRecoveryLogin_UserNotFound_ReturnsUnauthorized()
+    {
+        var userId = Guid.NewGuid();
+        var challengeToken = await SeedTwoFactorChallengeAsync(userId);
+        _userManager.FindByIdAsync(userId.ToString()).Returns((ApplicationUser?)null);
+
+        var result = await _sut.CompleteTwoFactorRecoveryLoginAsync(challengeToken, "RECOVERY-01", false);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Auth.UserNotFound, result.Error);
+        Assert.Equal(ErrorType.Unauthorized, result.ErrorType);
     }
 
     #endregion
