@@ -60,7 +60,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Avatar endpoints** (`PUT/DELETE/GET`) | `UploadAvatarRequest`, `UploadAvatarRequestValidator`, `UserMapper`, frontend `AvatarDialog.svelte` |
 | **`AuditActions.cs`** (add action constant) | Service that logs it, frontend `$lib/utils/audit.ts` (label, color, icon), i18n keys in `en.json`/`cs.json` |
 | **`AuditEvent` entity** (change fields) | `AuditEventConfiguration`, `AuditService`, Application DTOs (`AuditEventOutput`), WebApi DTOs, `AuditMapper`, frontend types |
-| **`ICacheService`** (Application — change caching contract) | `CacheService`, `NoOpCacheService`, `UserCacheInvalidationInterceptor`, all services using `ICacheService` (`AdminService`, `AuthenticationService`, `UserService`, `RoleManagementService`), `CustomWebApplicationFactory` mock |
+| **`HybridCache`** (caching abstraction — change caching usage) | `NoOpHybridCache`, `UserCacheInvalidationInterceptor`, all services using `HybridCache` (`AdminService`, `AuthenticationService`, `UserService`, `RoleManagementService`), `CustomWebApplicationFactory` mock |
 | **`CacheKeys.cs`** (Application — rename/remove key) | All services referencing the changed key, `UserCacheInvalidationInterceptor` |
 | **`CachingOptions`** (Infrastructure — change config shape) | `appsettings.json`, `appsettings.Development.json`, `deploy/envs/local/api.env`, `deploy/envs/production-example/api.env` |
 | **`ICookieService`** (Application — change cookie contract) | `CookieService`, `AuthenticationService`, `UserService` |
@@ -166,7 +166,7 @@ src/backend/MyProject.{Layer}/
                    Features/Email/EmailTemplateNames.cs
                    Identity/IUserService.cs, IUserContext.cs
                    Identity/Constants/AppRoles.cs, AppPermissions.cs
-                   Caching/ICacheService.cs, Constants/CacheKeys.cs
+                   Caching/Constants/CacheKeys.cs
                    Cookies/ICookieService.cs, Constants/CookieNames.cs
                    Persistence/IBaseEntityRepository.cs
   Infrastructure:  Features/{Feature}/Services/{Feature}Service.cs
@@ -293,5 +293,5 @@ src/backend/tests/
 | `deploy/up.sh` / `deploy/up.ps1` | Environment launcher (local/production) |
 | `deploy/config.json` | Deploy configuration (registries, versioning) |
 | `src/frontend/.env.test` | CI + test environment defaults (loaded by `ci.yml`) |
-| `src/backend/MyProject.WebApi/appsettings.Testing.json` | Test environment config (disables Redis, Hangfire, CORS) |
+| `src/backend/MyProject.WebApi/appsettings.Testing.json` | Test environment config (disables Hangfire, caching, CORS) |
 | `src/backend/tests/MyProject.Api.Tests/Fixtures/CustomWebApplicationFactory.cs` | Test host configuration for API tests |
