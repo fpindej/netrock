@@ -744,7 +744,8 @@ internal class AdminService(
                 LockoutEnabled: user.LockoutEnabled,
                 LockoutEnd: user.LockoutEnd,
                 AccessFailedCount: user.AccessFailedCount,
-                IsLockedOut: isLockedOut);
+                IsLockedOut: isLockedOut,
+                IsTwoFactorEnabled: user.TwoFactorEnabled);
         }).ToList();
     }
 
@@ -773,7 +774,8 @@ internal class AdminService(
             LockoutEnabled: user.LockoutEnabled,
             LockoutEnd: user.LockoutEnd,
             AccessFailedCount: user.AccessFailedCount,
-            IsLockedOut: isLockedOut);
+            IsLockedOut: isLockedOut,
+            IsTwoFactorEnabled: user.TwoFactorEnabled);
     }
 
     private async Task InvalidateUserCacheAsync(Guid userId)

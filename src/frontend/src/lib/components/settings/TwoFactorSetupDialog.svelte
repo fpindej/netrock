@@ -131,7 +131,7 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="sm:max-w-md">
+	<Dialog.Content class="sm:max-w-md" interactOutsideBehavior="ignore" showCloseButton={false}>
 		<Dialog.Header>
 			<Dialog.Title>
 				{step === 'recovery'
@@ -211,6 +211,15 @@
 						</Button>
 					</form>
 				{/if}
+
+				<Button
+					variant="outline"
+					class="w-full"
+					onclick={() => (open = false)}
+					disabled={isLoading}
+				>
+					{m.common_cancel()}
+				</Button>
 			</div>
 		{:else}
 			<div class="space-y-4 py-4">

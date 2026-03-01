@@ -32,7 +32,8 @@ internal static class AdminMapper
         LockoutEnabled = output.LockoutEnabled,
         LockoutEnd = output.LockoutEnd,
         AccessFailedCount = output.AccessFailedCount,
-        IsLockedOut = output.IsLockedOut
+        IsLockedOut = output.IsLockedOut,
+        TwoFactorEnabled = output.IsTwoFactorEnabled
     };
 
     /// <summary>
@@ -125,7 +126,8 @@ internal static class AdminMapper
         LockoutEnabled = response.LockoutEnabled,
         LockoutEnd = response.LockoutEnd,
         AccessFailedCount = response.AccessFailedCount,
-        IsLockedOut = response.IsLockedOut
+        IsLockedOut = response.IsLockedOut,
+        TwoFactorEnabled = response.TwoFactorEnabled
     };
 
     /// <summary>

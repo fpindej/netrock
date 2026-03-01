@@ -14,7 +14,8 @@ internal record UserMeResponse(Guid Id, string Username, string Email, string? F
 // Admin - Users
 internal record AdminUserResponse(Guid Id, string Username, string Email, string? FirstName, string? LastName,
     string? PhoneNumber, string? Bio, bool HasAvatar, List<string> Roles,
-    bool EmailConfirmed, bool LockoutEnabled, DateTimeOffset? LockoutEnd, int AccessFailedCount, bool IsLockedOut);
+    bool EmailConfirmed, bool LockoutEnabled, DateTimeOffset? LockoutEnd, int AccessFailedCount, bool IsLockedOut,
+    bool TwoFactorEnabled);
 internal record AdminUserListResponse(List<AdminUserResponse> Items, int TotalCount, int PageNumber, int PageSize,
     int TotalPages, bool HasPreviousPage, bool HasNextPage);
 
