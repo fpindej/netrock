@@ -131,8 +131,7 @@
 			</Select.Root>
 		</div>
 		<Button
-			size="default"
-			class="shrink-0"
+			class="w-full sm:w-auto sm:shrink-0"
 			disabled={!selectedRole || isAssigningRole || cooldown.active}
 			onclick={assignRole}
 		>

@@ -81,7 +81,7 @@
 				</p>
 			{/if}
 			{#if canManageUsers}
-				<Button size="default" onclick={() => (inviteDialogOpen = true)}>
+				<Button class="w-full sm:w-auto" onclick={() => (inviteDialogOpen = true)}>
 					<UserPlus class="me-2 h-4 w-4" />
 					{m.admin_users_inviteUser()}
 				</Button>

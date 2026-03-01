@@ -137,8 +137,8 @@
 					{/if}
 				</div>
 
-				<div class="flex justify-end">
-					<Button type="submit" disabled={isLoading || cooldown.active}>
+				<div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+					<Button type="submit" class="w-full sm:w-auto" disabled={isLoading || cooldown.active}>
 						{#if cooldown.active}
 							{m.common_waitSeconds({ seconds: cooldown.remaining })}
 						{:else}

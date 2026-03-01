@@ -45,42 +45,44 @@
 		<Card.Title>{m.common_dangerZone()}</Card.Title>
 	</Card.Header>
 	<Card.Content>
-		<Dialog.Root bind:open={deleteDialogOpen}>
-			<Dialog.Trigger>
-				{#snippet child({ props })}
-					<Button variant="destructive" size="default" {...props}>
-						<Trash2 class="me-2 h-4 w-4" />
-						{m.admin_roles_deleteRole()}
-					</Button>
-				{/snippet}
-			</Dialog.Trigger>
-			<Dialog.Content>
-				<Dialog.Header>
-					<Dialog.Title>{m.admin_roles_deleteConfirmTitle()}</Dialog.Title>
-					<Dialog.Description>
-						{m.admin_roles_deleteConfirmDescription()}
-					</Dialog.Description>
-				</Dialog.Header>
-				<Dialog.Footer class="flex-col-reverse sm:flex-row">
-					<Button variant="outline" onclick={() => (deleteDialogOpen = false)}>
-						{m.common_cancel()}
-					</Button>
-					<Button
-						variant="destructive"
-						disabled={isDeleting || cooldown.active}
-						onclick={deleteRole}
-					>
-						{#if cooldown.active}
-							{m.common_waitSeconds({ seconds: cooldown.remaining })}
-						{:else}
-							{#if isDeleting}
-								<Loader2 class="me-2 h-4 w-4 animate-spin" />
+		<div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+			<Dialog.Root bind:open={deleteDialogOpen}>
+				<Dialog.Trigger>
+					{#snippet child({ props })}
+						<Button variant="destructive" class="w-full sm:w-auto" {...props}>
+							<Trash2 class="me-2 h-4 w-4" />
+							{m.admin_roles_deleteRole()}
+						</Button>
+					{/snippet}
+				</Dialog.Trigger>
+				<Dialog.Content>
+					<Dialog.Header>
+						<Dialog.Title>{m.admin_roles_deleteConfirmTitle()}</Dialog.Title>
+						<Dialog.Description>
+							{m.admin_roles_deleteConfirmDescription()}
+						</Dialog.Description>
+					</Dialog.Header>
+					<Dialog.Footer class="flex-col-reverse sm:flex-row">
+						<Button variant="outline" onclick={() => (deleteDialogOpen = false)}>
+							{m.common_cancel()}
+						</Button>
+						<Button
+							variant="destructive"
+							disabled={isDeleting || cooldown.active}
+							onclick={deleteRole}
+						>
+							{#if cooldown.active}
+								{m.common_waitSeconds({ seconds: cooldown.remaining })}
+							{:else}
+								{#if isDeleting}
+									<Loader2 class="me-2 h-4 w-4 animate-spin" />
+								{/if}
+								{m.common_delete()}
 							{/if}
-							{m.common_delete()}
-						{/if}
-					</Button>
-				</Dialog.Footer>
-			</Dialog.Content>
-		</Dialog.Root>
+						</Button>
+					</Dialog.Footer>
+				</Dialog.Content>
+			</Dialog.Root>
+		</div>
 	</Card.Content>
 </Card.Root>
