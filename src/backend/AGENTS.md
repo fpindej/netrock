@@ -273,7 +273,7 @@ Docker local: `172.16.0.0/12` pre-configured. Set `XFF_DEPTH=1` on frontend cont
 ### ServiceDefaults (`MyProject.ServiceDefaults`)
 
 Shared Aspire project (`IsAspireSharedProject=true`) providing:
-- **OpenTelemetry**: metrics (ASP.NET Core, HTTP, Runtime), tracing (ASP.NET Core, HTTP with health-check filtering, EF Core), OTLP export
+- **OpenTelemetry**: logging (formatted messages, scopes), metrics (ASP.NET Core, HTTP, Runtime), tracing (ASP.NET Core, HTTP with health-check filtering, EF Core), OTLP export
 - **Service discovery**: automatic for `HttpClient` instances
 - **HTTP resilience**: standard resilience handler on all `HttpClient` instances
 
@@ -289,6 +289,7 @@ Aspire orchestrator for local development. Launches all infrastructure as contai
 |---|---|---|
 | PostgreSQL + PgAdmin | `AddPostgres().WithPgAdmin().AddDatabase("Database")` | Auto → `ConnectionStrings:Database` |
 | MinIO | `AddMinioContainer("storage").WithDataVolume()` | Via `WithEnvironment("FileStorage__*", ...)` |
+| MailPit | `AddMailPit("mailpit", httpPort, smtpPort)` | Via `WithEnvironment("Email__Smtp__*", ...)` |
 | API | `AddProject<Projects.MyProject_WebApi>("api")` | References all above, port pinned by init |
 | Frontend | `AddViteApp("frontend", ...).WithPnpm()` | Port pinned by init |
 
