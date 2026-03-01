@@ -124,6 +124,61 @@ public class EmailOptionsValidationTests
 
     #endregion
 
+    #region Enabled (SMTP validation)
+
+    [Fact]
+    public void Enabled_FalseWithEmptySmtpHost_NoSmtpErrors()
+    {
+        var options = new EmailOptions
+        {
+            Enabled = false,
+            FromAddress = "noreply@example.com",
+            FromName = "Test",
+            FrontendBaseUrl = "https://example.com",
+            Smtp = new EmailOptions.SmtpOptions { Host = "" }
+        };
+
+        var results = Validate(options);
+
+        Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(EmailOptions.Smtp)));
+    }
+
+    [Fact]
+    public void Enabled_TrueWithEmptySmtpHost_ReturnsError()
+    {
+        var options = new EmailOptions
+        {
+            Enabled = true,
+            FromAddress = "noreply@example.com",
+            FromName = "Test",
+            FrontendBaseUrl = "https://example.com",
+            Smtp = new EmailOptions.SmtpOptions { Host = "" }
+        };
+
+        var results = Validate(options);
+
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(EmailOptions.Smtp)));
+    }
+
+    [Fact]
+    public void Enabled_TrueWithValidSmtpHost_NoSmtpErrors()
+    {
+        var options = new EmailOptions
+        {
+            Enabled = true,
+            FromAddress = "noreply@example.com",
+            FromName = "Test",
+            FrontendBaseUrl = "https://example.com",
+            Smtp = new EmailOptions.SmtpOptions { Host = "smtp.example.com" }
+        };
+
+        var results = Validate(options);
+
+        Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(EmailOptions.Smtp)));
+    }
+
+    #endregion
+
     #region Defaults
 
     [Fact]
@@ -138,6 +193,14 @@ public class EmailOptionsValidationTests
         Assert.Contains(results, r => r.MemberNames.Contains(nameof(EmailOptions.FrontendBaseUrl)));
         Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(EmailOptions.FromAddress)));
         Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(EmailOptions.FromName)));
+    }
+
+    [Fact]
+    public void DefaultValues_EnabledIsFalse()
+    {
+        var options = new EmailOptions();
+
+        Assert.False(options.Enabled);
     }
 
     #endregion
