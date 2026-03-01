@@ -35,6 +35,11 @@ internal class MyProjectDbContext(DbContextOptions<MyProjectDbContext> options)
     public DbSet<TwoFactorChallenge> TwoFactorChallenges { get; set; }
 
     /// <summary>
+    /// Gets or sets the external OAuth2 authorization state tokens for pending OAuth flows.
+    /// </summary>
+    public DbSet<ExternalAuthState> ExternalAuthStates { get; set; }
+
+    /// <summary>
     /// Gets or sets the audit events table for the append-only audit log.
     /// </summary>
     public DbSet<AuditEvent> AuditEvents { get; set; }
