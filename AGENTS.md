@@ -12,6 +12,7 @@ Backend API (.NET :8080)
     ├── PostgreSQL
     ├── Hangfire (PostgreSQL-backed)
     ├── MinIO (S3-compatible file storage)
+    ├── MailPit (local email testing via Aspire)
     └── OpenTelemetry → Aspire Dashboard (local) / OTLP endpoint (production)
 ```
 
