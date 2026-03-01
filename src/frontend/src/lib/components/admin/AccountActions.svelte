@@ -106,11 +106,11 @@
 {#if canManage}
 	<Separator class="mt-4" />
 
-	<div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+	<div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
 		{#if user.isLockedOut}
 			<Button
 				variant="outline"
-				size="default"
+				class="w-full sm:w-auto"
 				disabled={isUnlocking || cooldown.active}
 				onclick={unlockUser}
 			>
@@ -127,7 +127,7 @@
 		{:else}
 			<Button
 				variant="outline"
-				size="default"
+				class="w-full sm:w-auto"
 				disabled={isLocking || cooldown.active}
 				onclick={lockUser}
 			>
@@ -146,7 +146,7 @@
 		<Dialog.Root bind:open={resetDialogOpen}>
 			<Dialog.Trigger>
 				{#snippet child({ props })}
-					<Button variant="outline" size="default" {...props}>
+					<Button variant="outline" class="w-full sm:w-auto" {...props}>
 						<KeyRound class="me-2 h-4 w-4" />
 						{m.admin_userDetail_sendPasswordReset()}
 					</Button>
@@ -180,7 +180,7 @@
 		<Dialog.Root bind:open={deleteDialogOpen}>
 			<Dialog.Trigger>
 				{#snippet child({ props })}
-					<Button variant="destructive" size="default" {...props}>
+					<Button variant="destructive" class="w-full sm:w-auto" {...props}>
 						<Trash2 class="me-2 h-4 w-4" />
 						{m.admin_userDetail_deleteAccount()}
 					</Button>

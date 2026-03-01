@@ -3,10 +3,17 @@
  * Mirrors the backend AppRoles.GetRoleRank() logic.
  */
 
+/** Well-known system role names. Mirrors backend AppRoles constants. */
+export const SystemRoles = {
+	SuperAdmin: 'SuperAdmin',
+	Admin: 'Admin',
+	User: 'User'
+} as const;
+
 const ROLE_RANKS: Record<string, number> = {
-	SuperAdmin: 3,
-	Admin: 2,
-	User: 1
+	[SystemRoles.SuperAdmin]: 3,
+	[SystemRoles.Admin]: 2,
+	[SystemRoles.User]: 1
 };
 
 /** Returns the numeric rank for a role name. Unknown roles return 0. */

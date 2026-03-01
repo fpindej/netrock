@@ -46,16 +46,24 @@
 					? m.settings_twoFactor_statusEnabled()
 					: m.settings_twoFactor_statusDisabled()}
 			</p>
-			<div class="flex flex-wrap gap-2">
+			<div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
 				{#if twoFactorEnabled}
-					<Button variant="outline" onclick={() => (regenerateDialogOpen = true)}>
+					<Button
+						variant="outline"
+						class="w-full sm:w-auto"
+						onclick={() => (regenerateDialogOpen = true)}
+					>
 						{m.settings_twoFactor_regenerateCodes()}
 					</Button>
-					<Button variant="destructive" onclick={() => (disableDialogOpen = true)}>
+					<Button
+						variant="destructive"
+						class="w-full sm:w-auto"
+						onclick={() => (disableDialogOpen = true)}
+					>
 						{m.settings_twoFactor_disable()}
 					</Button>
 				{:else}
-					<Button onclick={() => (setupDialogOpen = true)}>
+					<Button class="w-full sm:w-auto" onclick={() => (setupDialogOpen = true)}>
 						{m.settings_twoFactor_enable()}
 					</Button>
 				{/if}

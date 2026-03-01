@@ -53,7 +53,7 @@
 						</div>
 						<Button
 							variant="destructive"
-							class="shrink-0"
+							class="w-full sm:w-auto"
 							onclick={() => (deleteDialogOpen = true)}
 						>
 							{m.settings_deleteAccount_title()}

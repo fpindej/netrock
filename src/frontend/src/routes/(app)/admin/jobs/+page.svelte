@@ -52,7 +52,7 @@
 			<Dialog.Root bind:open={restoreDialogOpen}>
 				<Dialog.Trigger>
 					{#snippet child({ props })}
-						<Button variant="outline" size="default" {...props}>
+						<Button variant="outline" class="w-full sm:w-auto" {...props}>
 							<RefreshCw class="me-2 h-4 w-4" />
 							{m.admin_jobs_restore()}
 						</Button>

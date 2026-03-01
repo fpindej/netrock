@@ -9,10 +9,10 @@ src/
 │   ├── auth/                      # auth.ts (getUser, logout), middleware.ts (token refresh)
 │   ├── components/
 │   │   ├── ui/                    # shadcn (generated, customizable)
-│   │   ├── auth/                  # LoginForm, LoginBackground, RegisterDialog, ForgotPasswordForm, ResetPasswordForm, EmailVerificationBanner, TurnstileWidget
+│   │   ├── auth/                  # LoginForm, LoginBackground, RegisterDialog, ForgotPasswordForm, ResetPasswordForm, EmailVerificationBanner, TurnstileWidget, TwoFactorStep
 │   │   ├── layout/                # Header, Sidebar, SidebarNav, UserNav, ThemeToggle, LanguageSelector, ShortcutsHelp
 │   │   ├── profile/               # ProfileForm, ProfileHeader, AvatarDialog, AccountDetails, InfoItem
-│   │   ├── settings/              # ChangePasswordForm, DeleteAccountDialog, ActivityLog
+│   │   ├── settings/              # ChangePasswordForm, DeleteAccountDialog, ActivityLog, TwoFactorCard, TwoFactorSetupDialog, TwoFactorDisableDialog, TwoFactorRecoveryCodesDialog
 │   │   ├── admin/                 # UserTable, UserDetailCards, UserManagementCard, RoleManagement, AccountActions, RoleCardGrid, RoleDetailsCard, RolePermissionsSection, RoleDeleteSection, JobTable, JobInfoCard, JobActionsCard, JobExecutionHistory, AuditTrailCard, ...
 │   │   └── common/                # StatusIndicator, WorkInProgress
 │   ├── config/                    # i18n.ts (client-safe), server.ts (server-only — never export from barrel)
@@ -148,6 +148,13 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 | `text-left` / `text-right`    | `text-start` / `text-end` |
 | `border-l` / `border-r`       | `border-s` / `border-e`   |
 | `space-x-*` on flex/grid      | `gap-*` (preferred)       |
+
+### Button Layout (Action/Submit Buttons)
+
+- **Mobile**: `w-full` (full width, stacked vertically)
+- **Desktop**: `sm:w-auto` (auto width, right-aligned)
+- **Wrapper**: `flex flex-col gap-2 sm:flex-row sm:justify-end`
+- **Size**: Default size everywhere - no `size="sm"` or `size="lg"` overrides on action buttons
 
 ### Responsive Design (Mobile-First)
 
@@ -338,6 +345,8 @@ pnpm run test -- -t "name" # filter by test name
 - `h-screen` — use `h-dvh`
 - `xl:grid-cols-2` for content — use `lg:grid-cols-2` (max-w-7xl ensures sufficient width)
 - Unconstrained page content — always use `max-w-7xl mx-auto` wrapper
+- `size="sm"` or `size="lg"` on action/submit buttons - use default size with `w-full sm:w-auto`
+- Left-aligned action buttons - always right-align with `sm:justify-end` wrapper
 - `null!`, `as` casts when narrowing works
 - Import server config from barrel (`$lib/config`)
 - Hand-edit `v1.d.ts`

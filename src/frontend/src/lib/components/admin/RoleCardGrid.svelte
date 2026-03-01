@@ -4,6 +4,7 @@
 	import { Shield, Users } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import type { AdminRole } from '$lib/types';
+	import { SystemRoles } from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
@@ -76,7 +77,9 @@
 							</div>
 						{:else}
 							<p class="text-xs text-muted-foreground">
-								{m.admin_roles_noPermissions()}
+								{role.name === SystemRoles.SuperAdmin
+									? m.admin_roles_implicitFullAccess()
+									: m.admin_roles_noPermissions()}
 							</p>
 						{/if}
 					</Card.Content>
