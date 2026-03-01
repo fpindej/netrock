@@ -185,8 +185,8 @@ function Test-ProjectName {
 function Test-Port {
     param([int]$PortNumber)
 
-    if ($PortNumber -lt 1024 -or $PortNumber -gt 65529) {
-        Write-ErrorMessage "Port must be between 1024 and 65529"
+    if ($PortNumber -lt 1024 -or $PortNumber -gt 65527) {
+        Write-ErrorMessage "Port must be between 1024 and 65527"
         return $false
     }
 
