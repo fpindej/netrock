@@ -7,9 +7,15 @@ namespace MyProject.Infrastructure.Features.Email.Options;
 /// Configuration options for the email service.
 /// Maps to the "Email" section in appsettings.json.
 /// </summary>
-public sealed class EmailOptions
+public sealed class EmailOptions : IValidatableObject
 {
     public const string SectionName = "Email";
+
+    /// <summary>
+    /// Gets or sets a value indicating whether real SMTP email delivery is enabled.
+    /// When <c>false</c>, the no-op email service is registered (log only).
+    /// </summary>
+    public bool Enabled { get; init; }
 
     /// <summary>
     /// Gets or sets the sender email address used in the "From" header.
@@ -32,9 +38,20 @@ public sealed class EmailOptions
     public string FrontendBaseUrl { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the SMTP connection configuration. Only required when a real SMTP email service is registered.
+    /// Gets or sets the SMTP connection configuration. Only required when <see cref="Enabled"/> is <c>true</c>.
     /// </summary>
     public SmtpOptions Smtp { get; init; } = new();
+
+    /// <inheritdoc />
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Enabled && string.IsNullOrWhiteSpace(Smtp.Host))
+        {
+            yield return new ValidationResult(
+                "Smtp.Host is required when email is enabled.",
+                [nameof(Smtp)]);
+        }
+    }
 
     /// <summary>
     /// Configuration options for SMTP email delivery.
