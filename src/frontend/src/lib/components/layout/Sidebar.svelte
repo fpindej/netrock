@@ -20,7 +20,10 @@
 </script>
 
 <div
-	class={cn('flex h-full flex-col gap-2 transition-all duration-300', className)}
+	class={cn(
+		'flex h-full flex-col gap-2 ps-[env(safe-area-inset-left,0px)] pt-[env(safe-area-inset-top,0px)] transition-all duration-300',
+		className
+	)}
 	data-collapsed={collapsed}
 >
 	<div class="flex-1 overflow-auto py-4">
@@ -29,10 +32,11 @@
 				<a
 					href={resolve('/')}
 					class={cn('flex items-center gap-2 font-semibold', collapsed ? 'text-base' : 'text-lg')}
+					aria-label={collapsed ? m.app_name() : undefined}
 				>
 					<Package2 class="h-6 w-6 shrink-0" />
 					{#if !collapsed}
-						<span>{m.app_name()}</span>
+						<span class="truncate">{m.app_name()}</span>
 					{/if}
 				</a>
 			</div>
@@ -41,7 +45,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="border-t p-3">
+	<div class="border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
 		<div class={cn('flex items-center gap-1', collapsed ? 'flex-col' : 'flex-row justify-between')}>
 			{#if collapsed}
 				<!-- Collapsed: stack vertically -->
@@ -56,7 +60,7 @@
 							<Button
 								variant="ghost"
 								size="icon"
-								class="mt-2 h-9 w-9"
+								class="mt-2 h-10 w-10"
 								aria-label={m.nav_expand()}
 								{...props}
 								onclick={toggleSidebar}
@@ -85,7 +89,7 @@
 								<Button
 									variant="ghost"
 									size="icon"
-									class="h-9 w-9"
+									class="h-10 w-10"
 									aria-label={m.nav_collapse()}
 									{...props}
 									onclick={toggleSidebar}
