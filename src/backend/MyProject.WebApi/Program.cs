@@ -34,7 +34,7 @@ try
     builder.Host.UseSerilog((context, _, loggerConfiguration) =>
     {
         LoggerConfigurationExtensions.SetupLogger(context.Configuration, loggerConfiguration);
-    }, true);
+    }, preserveStaticLogger: true, writeToProviders: true);
 
     Log.Debug("Adding Aspire service defaults (OpenTelemetry, service discovery, resilience)");
     builder.AddServiceDefaults();
