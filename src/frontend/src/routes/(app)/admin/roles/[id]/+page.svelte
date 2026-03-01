@@ -8,14 +8,14 @@
 	import { ArrowLeft } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import { createCooldown } from '$lib/state';
-	import { hasPermission, Permissions } from '$lib/utils';
+	import { hasPermission, Permissions, SystemRoles } from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	let canManageRoles = $derived(hasPermission(data.user, Permissions.Roles.Manage));
-	let isSuperAdmin = $derived(data.role?.name === 'SuperAdmin');
+	let isSuperAdmin = $derived(data.role?.name === SystemRoles.SuperAdmin);
 	let isSystem = $derived(data.role?.isSystem ?? false);
 	let canEditPermissions = $derived(canManageRoles && !isSuperAdmin);
 	let canEditName = $derived(canManageRoles && !isSystem);
