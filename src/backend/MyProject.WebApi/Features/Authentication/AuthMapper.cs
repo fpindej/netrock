@@ -1,8 +1,10 @@
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.WebApi.Features.Authentication.Dtos.ChangePassword;
+using MyProject.WebApi.Features.Authentication.Dtos.External;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
 using MyProject.WebApi.Features.Authentication.Dtos.ResetPassword;
+using MyProject.WebApi.Features.Authentication.Dtos.SetPassword;
 using MyProject.WebApi.Features.Authentication.Dtos.TwoFactor;
 using MyProject.WebApi.Features.Authentication.Dtos.VerifyEmail;
 
@@ -96,4 +98,45 @@ internal static class AuthMapper
         {
             RecoveryCodes = output.RecoveryCodes
         };
+
+    /// <summary>
+    /// Maps an <see cref="ExternalChallengeRequest"/> to an <see cref="ExternalChallengeInput"/>.
+    /// </summary>
+    public static ExternalChallengeInput ToChallengeInput(this ExternalChallengeRequest request) =>
+        new(Provider: request.Provider, RedirectUri: request.RedirectUri);
+
+    /// <summary>
+    /// Maps an <see cref="ExternalCallbackRequest"/> to an <see cref="ExternalCallbackInput"/>.
+    /// </summary>
+    public static ExternalCallbackInput ToCallbackInput(this ExternalCallbackRequest request) =>
+        new(Code: request.Code, State: request.State);
+
+    /// <summary>
+    /// Maps an <see cref="ExternalCallbackOutput"/> to an <see cref="ExternalCallbackResponse"/>.
+    /// </summary>
+    public static ExternalCallbackResponse ToResponse(this ExternalCallbackOutput output) =>
+        new()
+        {
+            AccessToken = output.Tokens?.AccessToken ?? string.Empty,
+            RefreshToken = output.Tokens?.RefreshToken ?? string.Empty,
+            IsNewUser = output.IsNewUser,
+            Provider = output.Provider,
+            IsLinkOnly = output.IsLinkOnly
+        };
+
+    /// <summary>
+    /// Maps an <see cref="ExternalProviderInfo"/> to an <see cref="ExternalProviderResponse"/>.
+    /// </summary>
+    public static ExternalProviderResponse ToResponse(this ExternalProviderInfo info) =>
+        new()
+        {
+            Name = info.Name,
+            DisplayName = info.DisplayName
+        };
+
+    /// <summary>
+    /// Maps a <see cref="SetPasswordRequest"/> to a <see cref="SetPasswordInput"/>.
+    /// </summary>
+    public static SetPasswordInput ToSetPasswordInput(this SetPasswordRequest request) =>
+        new(NewPassword: request.NewPassword);
 }
