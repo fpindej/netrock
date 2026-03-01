@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -39,18 +38,21 @@ public static class Extensions
     }
 
     /// <summary>
-    /// Configures OpenTelemetry metrics and tracing with OTLP export.
+    /// Configures OpenTelemetry logging, metrics, and tracing with OTLP export.
+    /// All three signals are registered on the <see cref="OpenTelemetryBuilder"/> pipeline
+    /// so that <see cref="OpenTelemetryBuilderExtensions.UseOtlpExporter"/> configures export for all of them.
     /// When <c>OTEL_EXPORTER_OTLP_ENDPOINT</c> is not set (standalone run), the OTLP exporter is a no-op.
     /// </summary>
     private static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
     {
-        builder.Logging.AddOpenTelemetry(logging =>
-        {
-            logging.IncludeFormattedMessage = true;
-            logging.IncludeScopes = true;
-        });
-
         builder.Services.AddOpenTelemetry()
+            .WithLogging(
+                configureBuilder: null,
+                configureOptions: options =>
+                {
+                    options.IncludeFormattedMessage = true;
+                    options.IncludeScopes = true;
+                })
             .WithMetrics(metrics =>
             {
                 metrics.AddAspNetCoreInstrumentation()
