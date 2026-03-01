@@ -9,6 +9,8 @@ var pgAdminPort = frontendPort + 3;
 var postgresPort = frontendPort + 4;
 var minioPort = frontendPort + 5;
 var minioConsolePort = frontendPort + 6;
+var mailpitSmtpPort = frontendPort + 7;
+var mailpitHttpPort = frontendPort + 8;
 
 // ── Infrastructure ──────────────────────────────────────────────────────────
 // Container resources use session lifetime (default) — containers stop on
@@ -30,6 +32,8 @@ var storage = builder.AddMinioContainer("storage", rootPassword: storagePassword
     .WithEndpoint("console", e => e.Port = minioConsolePort)
     .WithDataVolume("{INIT_PROJECT_SLUG}-storage-data");
 
+var mailpit = builder.AddMailPit("mailpit", httpPort: mailpitHttpPort, smtpPort: mailpitSmtpPort);
+
 // ── API ─────────────────────────────────────────────────────────────────────
 // Migrations and seeding are handled by the API on startup (development only).
 // See: ApplicationBuilderExtensions.InitializeDatabaseAsync
@@ -43,6 +47,10 @@ var api = builder.AddProject<Projects.MyProject_WebApi>("api")
     .WithReference(db)
     .WaitFor(db)
     .WaitFor(storage)
+    .WaitFor(mailpit)
+    .WithEnvironment("Email__Smtp__Host", mailpit.Resource.Host)
+    .WithEnvironment("Email__Smtp__Port", () => mailpitSmtpPort.ToString())
+    .WithEnvironment("Email__Smtp__UseSsl", "false")
     .WithEnvironment("FileStorage__Endpoint", storage.GetEndpoint("http"))
     .WithEnvironment("FileStorage__AccessKey", storage.Resource.RootUser)
     .WithEnvironment("FileStorage__SecretKey", storage.Resource.PasswordParameter)
