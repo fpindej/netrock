@@ -2,9 +2,9 @@
 
 # NETrock
 
-**Full-stack .NET 10 + SvelteKit foundation. Auth, permissions, background jobs, admin panel — production-ready out of the box.**
+**Full-stack .NET 10 + SvelteKit foundation. Auth, permissions, background jobs, admin panel - wired up so you can skip the boilerplate.**
 
-Clean Architecture. Fully tested. Fully dockerized. API-first — use the included frontend or bring your own.
+Clean Architecture. 1000+ tests. Dockerized. API-first - use the included frontend or bring your own.
 
 [![CI](https://github.com/fpindej/netrock/actions/workflows/ci.yml/badge.svg)](https://github.com/fpindej/netrock/actions/workflows/ci.yml)
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
@@ -25,7 +25,7 @@ Clean Architecture. Fully tested. Fully dockerized. API-first — use the includ
 
 Every project starts the same way: authentication, role management, rate limiting, validation, API documentation, Docker setup... You spend weeks on infrastructure before writing a single line of business logic.
 
-**NETrock skips all of that.** It ships a production-hardened .NET 10 API with a complete SvelteKit frontend — real security, real patterns, and real conventions that scale. Login works. Token rotation works. The permission system enforces role hierarchy. The admin panel manages users, roles, and background jobs. The Docker stack spins up with health checks. CI runs your tests.
+**NETrock skips all of that.** It ships a .NET 10 API with a SvelteKit frontend - auth that actually works, documented conventions, and the kind of infrastructure you'd build anyway. Login works. Token rotation works. The permission system enforces role hierarchy. The admin panel manages users, roles, and background jobs. The Docker stack spins up with health checks. CI runs your tests.
 
 **Fork it, init it, own it.** After initialization, there is no dependency on "the template." It's your code, your architecture, your product. Every decision is documented so you can understand it, change it, or throw it away.
 
@@ -33,13 +33,13 @@ Every project starts the same way: authentication, role management, rate limitin
 
 ## What You Get
 
-**Backend** — JWT auth with token rotation and reuse detection, permission-based authorization with role hierarchy, rate limiting, HybridCache with stampede protection, PostgreSQL with soft delete and audit trails, S3-compatible file storage (MinIO locally, any S3 provider in production), Hangfire background jobs, OpenAPI docs, health checks, Result pattern with ProblemDetails everywhere. [See full details →](docs/features.md#backend--net-10--c-13)
+**Backend** - JWT auth with token rotation and reuse detection, TOTP two-factor authentication, permission-based authorization with role hierarchy, transactional email delivery (MailKit), rate limiting, HybridCache with stampede protection, PostgreSQL with soft delete and audit trails, S3-compatible file storage (MinIO locally, any S3 provider in production), Hangfire background jobs, OpenAPI docs, health checks, Result pattern with ProblemDetails everywhere. [See full details ->](docs/features.md#backend--net-10--c-13)
 
-**Frontend** — Svelte 5 runes, type-safe API client generated from OpenAPI, automatic token refresh, Tailwind CSS 4 with shadcn-svelte, BFF proxy with CSRF protection, i18n, security headers, permission guards, dark mode, admin panel with user/role/job management. [See full details →](docs/features.md#frontend--sveltekit--svelte-5)
+**Frontend** - Svelte 5 runes, type-safe API client generated from OpenAPI, automatic token refresh, Tailwind CSS 4 with shadcn-svelte, BFF proxy with CSRF protection, i18n, security headers, permission guards, dark mode, admin panel with user/role/job management. [See full details ->](docs/features.md#frontend--sveltekit--svelte-5)
 
-**Infrastructure** — Aspire AppHost for local development (one command, full OTEL dashboard), Docker Compose for production deployment, init script for project bootstrapping, build script with multi-registry support, GitHub Actions CI with smart path filtering, Dependabot. [See full details →](docs/features.md#infrastructure--devops)
+**Infrastructure** - Aspire AppHost for local development (one command, full OTEL dashboard, MailPit for local email testing), structured logs, metrics, and traces via OpenTelemetry, Docker Compose for production deployment, init script for project bootstrapping, build script with multi-registry support, GitHub Actions CI with smart path filtering, Dependabot. [See full details ->](docs/features.md#infrastructure--devops)
 
-**Security** — Security-first design with HttpOnly JWT cookies, refresh token rotation with reuse detection, security stamp propagation, CSP with nonces, CORS startup guard, rate limiting, and input validation everywhere. [See full details →](docs/security.md)
+**Security** - Security-first design with HttpOnly JWT cookies, refresh token rotation with reuse detection, TOTP two-factor authentication with challenge tokens and recovery codes, security stamp propagation, CSP with nonces, CORS startup guard, rate limiting, and input validation everywhere. [See full details ->](docs/security.md)
 
 ---
 
@@ -86,6 +86,7 @@ That's it. Aspire starts all infrastructure (PostgreSQL, MinIO) as containers an
 |---|---|
 | **Aspire Dashboard** | Shown in console output |
 | **Frontend** | `http://localhost:<BASE_PORT>` (default: `http://localhost:13000`) |
+| **MailPit (Email Testing)** | `http://localhost:<BASE_PORT + 8>` |
 
 Three test users are seeded (configured in `appsettings.Development.json`):
 
@@ -118,7 +119,7 @@ Deep dives: **[Features](docs/features.md)** · **[Security](docs/security.md)**
 
 ## Localization
 
-Production-ready i18n with [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) — type-safe keys, SSR-compatible, auto-detection via `Accept-Language`. Ships with English and Czech. Adding a language is a single JSON file.
+i18n with [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) — type-safe keys, SSR-compatible, auto-detection via `Accept-Language`. Ships with English and Czech. Adding a language is a single JSON file.
 
 ---
 
