@@ -64,6 +64,8 @@ internal sealed class UserService(
 
                 var roles = await userManager.GetRolesAsync(user);
                 var permissions = await GetPermissionsForRolesAsync(roles);
+                var logins = await userManager.GetLoginsAsync(user);
+                var hasPassword = await userManager.HasPasswordAsync(user);
 
                 return new UserOutput(
                     Id: user.Id,
@@ -76,7 +78,9 @@ internal sealed class UserService(
                     Roles: roles,
                     Permissions: permissions,
                     IsEmailConfirmed: user.EmailConfirmed,
-                    IsTwoFactorEnabled: user.TwoFactorEnabled);
+                    IsTwoFactorEnabled: user.TwoFactorEnabled,
+                    LinkedProviders: logins.Select(l => l.LoginProvider).ToList(),
+                    HasPassword: hasPassword);
             },
             UserCacheOptions,
             cancellationToken: cancellationToken);
@@ -141,6 +145,8 @@ internal sealed class UserService(
 
         var roles = await userManager.GetRolesAsync(user);
         var permissions = await GetPermissionsForRolesAsync(roles);
+        var logins = await userManager.GetLoginsAsync(user);
+        var hasPassword = await userManager.HasPasswordAsync(user);
 
         var output = new UserOutput(
             Id: user.Id,
@@ -153,7 +159,9 @@ internal sealed class UserService(
             Roles: roles,
             Permissions: permissions,
             IsEmailConfirmed: user.EmailConfirmed,
-            IsTwoFactorEnabled: user.TwoFactorEnabled);
+            IsTwoFactorEnabled: user.TwoFactorEnabled,
+            LinkedProviders: logins.Select(l => l.LoginProvider).ToList(),
+            HasPassword: hasPassword);
 
         await auditService.LogAsync(AuditActions.ProfileUpdate, userId: userId.Value, ct: cancellationToken);
 

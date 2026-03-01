@@ -14,6 +14,8 @@ namespace MyProject.Application.Features.Authentication.Dtos;
 /// <param name="Permissions">The atomic permissions granted to the user through their roles.</param>
 /// <param name="IsEmailConfirmed">Whether the user's email address has been confirmed.</param>
 /// <param name="IsTwoFactorEnabled">Whether the user has two-factor authentication enabled.</param>
+/// <param name="LinkedProviders">External OAuth2 providers linked to this account.</param>
+/// <param name="HasPassword">Whether the user has a password set (false for OAuth-only accounts).</param>
 public record UserOutput(
     Guid Id,
     string UserName,
@@ -25,7 +27,9 @@ public record UserOutput(
     IEnumerable<string> Roles,
     IReadOnlyList<string> Permissions,
     bool IsEmailConfirmed = false,
-    bool IsTwoFactorEnabled = false
+    bool IsTwoFactorEnabled = false,
+    IReadOnlyList<string>? LinkedProviders = null,
+    bool HasPassword = true
 )
 {
     /// <summary>

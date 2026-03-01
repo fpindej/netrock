@@ -24,6 +24,8 @@ internal static class UserMapper
         Roles = user.Roles,
         Permissions = user.Permissions,
         EmailConfirmed = user.IsEmailConfirmed,
-        TwoFactorEnabled = user.IsTwoFactorEnabled
+        TwoFactorEnabled = user.IsTwoFactorEnabled,
+        LinkedProviders = user.LinkedProviders ?? [],
+        HasPassword = user.HasPassword
     };
 }
