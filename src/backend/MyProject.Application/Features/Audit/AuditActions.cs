@@ -97,4 +97,22 @@ public static class AuditActions
 
     /// <summary>User used a recovery code to log in.</summary>
     public const string TwoFactorRecoveryCodeUsed = "TwoFactorRecoveryCodeUsed";
+
+    /// <summary>Successful login via external OAuth2 provider.</summary>
+    public const string ExternalLoginSuccess = "ExternalLoginSuccess";
+
+    /// <summary>Failed login attempt via external OAuth2 provider.</summary>
+    public const string ExternalLoginFailure = "ExternalLoginFailure";
+
+    /// <summary>External OAuth2 account linked to existing user.</summary>
+    public const string ExternalAccountLinked = "ExternalAccountLinked";
+
+    /// <summary>External OAuth2 account unlinked from user.</summary>
+    public const string ExternalAccountUnlinked = "ExternalAccountUnlinked";
+
+    /// <summary>New user account created via external OAuth2 provider.</summary>
+    public const string ExternalAccountCreated = "ExternalAccountCreated";
+
+    /// <summary>User set an initial password (previously passwordless OAuth account).</summary>
+    public const string PasswordSet = "PasswordSet";
 }
