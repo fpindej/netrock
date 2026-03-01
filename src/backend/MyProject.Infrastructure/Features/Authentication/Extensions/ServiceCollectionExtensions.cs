@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Caching.Constants;
@@ -14,6 +15,7 @@ using MyProject.Infrastructure.Cryptography;
 using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Features.Authentication.Options;
 using MyProject.Infrastructure.Features.Authentication.Services;
+using MyProject.Infrastructure.Features.Authentication.Services.ExternalProviders;
 
 namespace MyProject.Infrastructure.Features.Authentication.Extensions;
 
@@ -40,6 +42,8 @@ public static class ServiceCollectionExtensions
             services.AddScoped<EmailTokenService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<ITwoFactorService, TwoFactorService>();
+
+            services.ConfigureExternalProviders(configuration);
 
             return services;
         }
@@ -137,6 +141,42 @@ public static class ServiceCollectionExtensions
                 });
 
             return services;
+        }
+
+        private void ConfigureExternalProviders(IConfiguration configuration)
+        {
+            services.AddOptions<ExternalAuthOptions>()
+                .BindConfiguration(ExternalAuthOptions.SectionName)
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+            var externalOptions = configuration.GetSection(ExternalAuthOptions.SectionName)
+                .Get<ExternalAuthOptions>();
+
+            if (externalOptions is null)
+            {
+                return;
+            }
+
+            if (externalOptions.Google.IsEnabled)
+            {
+                services.AddHttpClient("Google-OAuth");
+                services.AddSingleton<IExternalAuthProvider>(sp =>
+                    new GoogleAuthProvider(
+                        sp.GetRequiredService<IHttpClientFactory>().CreateClient("Google-OAuth"),
+                        externalOptions.Google,
+                        sp.GetRequiredService<ILogger<GoogleAuthProvider>>()));
+            }
+
+            if (externalOptions.GitHub.IsEnabled)
+            {
+                services.AddHttpClient("GitHub-OAuth");
+                services.AddSingleton<IExternalAuthProvider>(sp =>
+                    new GitHubAuthProvider(
+                        sp.GetRequiredService<IHttpClientFactory>().CreateClient("GitHub-OAuth"),
+                        externalOptions.GitHub,
+                        sp.GetRequiredService<ILogger<GitHubAuthProvider>>()));
+            }
         }
     }
 
