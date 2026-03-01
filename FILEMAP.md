@@ -47,6 +47,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`CustomWebApplicationFactory.cs`** (change mock setup) | All API integration tests that depend on factory mocks |
 | **`appsettings.Testing.json`** (change test config) | `CustomWebApplicationFactory` behavior; all API integration tests |
 | **`FileStorageOptions`** (change S3/MinIO config) | `appsettings.json`, `deploy/envs/production-example/compose.env`, `deploy/docker-compose.yml`, `appsettings.Testing.json` |
+| **`EmailOptions`** (change config shape) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `deploy/envs/production-example/api.env`, `ServiceCollectionExtensions` (email DI), `EmailOptionsValidationTests` |
+| **`IEmailService`** (change sending contract) | `NoOpEmailService`, `SmtpEmailService`, `CustomWebApplicationFactory` |
 | **`IEmailTemplateRenderer`** (change rendering contract) | `FluidEmailTemplateRenderer`, `TemplatedEmailSender`, `FluidEmailTemplateRendererTests` |
 | **`ITemplatedEmailSender`** (change send-safe contract) | `TemplatedEmailSender`, all services calling `SendSafeAsync()` (`AuthenticationService`, `AdminService`), `TemplatedEmailSenderTests` |
 | **`EmailTemplateModels.cs`** (add/rename model record) | Matching `.liquid` templates (variables must match snake_case model properties), `FluidEmailTemplateRenderer.CreateOptions()` (register new model type), services that construct the model, `FluidEmailTemplateRendererTests` |
@@ -237,7 +239,8 @@ src/backend/MyProject.Application/Features/Email/
 src/backend/MyProject.Infrastructure/Features/Email/
   Services/FluidEmailTemplateRenderer.cs            Fluid-based renderer (singleton, cached)
   Services/TemplatedEmailSender.cs                  Render+send wrapper (swallows failures)
-  Services/NoOpEmailService.cs                      Dev/test no-op sender
+  Services/SmtpEmailService.cs                      MailKit SMTP sender (when Enabled)
+  Services/NoOpEmailService.cs                      Dev/test no-op sender (when disabled)
   Templates/_base.liquid                            Shared HTML email layout (header, card, footer)
   Templates/{name}.liquid                           HTML body fragment
   Templates/{name}.text.liquid                      Plain text variant (optional)
