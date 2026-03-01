@@ -78,21 +78,23 @@
 			onchange={(perms) => (selectedPermissions = perms)}
 		/>
 		{#if canEditPermissions}
-			<Button
-				size="default"
-				disabled={isSavingPermissions || cooldown.active}
-				onclick={savePermissions}
-			>
-				{#if cooldown.active}
-					{m.common_waitSeconds({ seconds: cooldown.remaining })}
-				{:else if isSavingPermissions}
-					<Loader2 class="me-2 h-4 w-4 animate-spin" />
-					{m.admin_roles_savePermissions()}
-				{:else}
-					<Save class="me-2 h-4 w-4" />
-					{m.admin_roles_savePermissions()}
-				{/if}
-			</Button>
+			<div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+				<Button
+					class="w-full sm:w-auto"
+					disabled={isSavingPermissions || cooldown.active}
+					onclick={savePermissions}
+				>
+					{#if cooldown.active}
+						{m.common_waitSeconds({ seconds: cooldown.remaining })}
+					{:else if isSavingPermissions}
+						<Loader2 class="me-2 h-4 w-4 animate-spin" />
+						{m.admin_roles_savePermissions()}
+					{:else}
+						<Save class="me-2 h-4 w-4" />
+						{m.admin_roles_savePermissions()}
+					{/if}
+				</Button>
+			</div>
 		{/if}
 	</Card.Content>
 </Card.Root>

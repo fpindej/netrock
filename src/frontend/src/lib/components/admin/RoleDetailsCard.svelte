@@ -113,17 +113,19 @@
 			{/if}
 		</div>
 		{#if canManageRoles}
-			<Button size="default" disabled={isSaving || cooldown.active} onclick={saveRole}>
-				{#if cooldown.active}
-					{m.common_waitSeconds({ seconds: cooldown.remaining })}
-				{:else if isSaving}
-					<Loader2 class="me-2 h-4 w-4 animate-spin" />
-					{m.admin_roles_saveDetails()}
-				{:else}
-					<Save class="me-2 h-4 w-4" />
-					{m.admin_roles_saveDetails()}
-				{/if}
-			</Button>
+			<div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+				<Button class="w-full sm:w-auto" disabled={isSaving || cooldown.active} onclick={saveRole}>
+					{#if cooldown.active}
+						{m.common_waitSeconds({ seconds: cooldown.remaining })}
+					{:else if isSaving}
+						<Loader2 class="me-2 h-4 w-4 animate-spin" />
+						{m.admin_roles_saveDetails()}
+					{:else}
+						<Save class="me-2 h-4 w-4" />
+						{m.admin_roles_saveDetails()}
+					{/if}
+				</Button>
+			</div>
 		{/if}
 	</Card.Content>
 </Card.Root>

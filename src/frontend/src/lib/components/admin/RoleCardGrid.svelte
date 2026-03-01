@@ -76,7 +76,9 @@
 							</div>
 						{:else}
 							<p class="text-xs text-muted-foreground">
-								{m.admin_roles_noPermissions()}
+								{role.name === 'SuperAdmin'
+									? m.admin_roles_implicitFullAccess()
+									: m.admin_roles_noPermissions()}
 							</p>
 						{/if}
 					</Card.Content>

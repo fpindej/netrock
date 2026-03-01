@@ -420,6 +420,7 @@
 	"admin_roles_deleteSuccess": "Role deleted successfully",
 	"admin_roles_deleteError": "Failed to delete role",
 	"admin_roles_noPermissions": "No permissions",
+	"admin_roles_implicitFullAccess": "Implicit full access",
 
 	"admin_jobs_title": "Scheduled Jobs",
 	"admin_jobs_description": "Manage background jobs and view execution history.",

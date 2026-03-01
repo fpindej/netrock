@@ -105,112 +105,114 @@
 		<Card.Title>{m.admin_jobDetail_actions()}</Card.Title>
 		<Card.Description>{m.admin_jobDetail_actionsDescription()}</Card.Description>
 	</Card.Header>
-	<Card.Content class="flex flex-wrap gap-2">
-		<!-- Trigger -->
-		<Dialog.Root bind:open={triggerDialogOpen}>
-			<Dialog.Trigger>
-				{#snippet child({ props })}
-					<Button variant="outline" size="default" {...props}>
-						<Play class="me-2 h-4 w-4" />
-						{m.admin_jobDetail_trigger()}
-					</Button>
-				{/snippet}
-			</Dialog.Trigger>
-			<Dialog.Content>
-				<Dialog.Header>
-					<Dialog.Title>{m.admin_jobDetail_trigger()}</Dialog.Title>
-					<Dialog.Description>{m.admin_jobDetail_triggerConfirm()}</Dialog.Description>
-				</Dialog.Header>
-				<Dialog.Footer class="flex-col-reverse sm:flex-row">
-					<Button variant="outline" onclick={() => (triggerDialogOpen = false)}>
-						{m.common_cancel()}
-					</Button>
-					<Button disabled={isTriggering || cooldown.active} onclick={triggerJob}>
-						{#if cooldown.active}
-							{m.common_waitSeconds({ seconds: cooldown.remaining })}
-						{:else}
-							{#if isTriggering}
-								<Loader2 class="me-2 h-4 w-4 animate-spin" />
-							{/if}
+	<Card.Content>
+		<div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+			<!-- Trigger -->
+			<Dialog.Root bind:open={triggerDialogOpen}>
+				<Dialog.Trigger>
+					{#snippet child({ props })}
+						<Button variant="outline" class="w-full sm:w-auto" {...props}>
+							<Play class="me-2 h-4 w-4" />
 							{m.admin_jobDetail_trigger()}
-						{/if}
-					</Button>
-				</Dialog.Footer>
-			</Dialog.Content>
-		</Dialog.Root>
-
-		<!-- Pause / Resume -->
-		{#if isPaused}
-			<Button
-				variant="outline"
-				size="default"
-				disabled={isResuming || cooldown.active}
-				onclick={resumeJob}
-			>
-				{#if cooldown.active}
-					{m.common_waitSeconds({ seconds: cooldown.remaining })}
-				{:else if isResuming}
-					<Loader2 class="me-2 h-4 w-4 animate-spin" />
-					{m.admin_jobDetail_resume()}
-				{:else}
-					<RotateCcw class="me-2 h-4 w-4" />
-					{m.admin_jobDetail_resume()}
-				{/if}
-			</Button>
-		{:else}
-			<Button
-				variant="outline"
-				size="default"
-				disabled={isPausing || cooldown.active}
-				onclick={pauseJob}
-			>
-				{#if cooldown.active}
-					{m.common_waitSeconds({ seconds: cooldown.remaining })}
-				{:else if isPausing}
-					<Loader2 class="me-2 h-4 w-4 animate-spin" />
-					{m.admin_jobDetail_pause()}
-				{:else}
-					<Pause class="me-2 h-4 w-4" />
-					{m.admin_jobDetail_pause()}
-				{/if}
-			</Button>
-		{/if}
-
-		<!-- Delete -->
-		<Dialog.Root bind:open={deleteDialogOpen}>
-			<Dialog.Trigger>
-				{#snippet child({ props })}
-					<Button variant="destructive" size="default" {...props}>
-						<Trash2 class="me-2 h-4 w-4" />
-						{m.admin_jobDetail_delete()}
-					</Button>
-				{/snippet}
-			</Dialog.Trigger>
-			<Dialog.Content>
-				<Dialog.Header>
-					<Dialog.Title>{m.admin_jobDetail_delete()}</Dialog.Title>
-					<Dialog.Description>{m.admin_jobDetail_deleteConfirm()}</Dialog.Description>
-				</Dialog.Header>
-				<Dialog.Footer class="flex-col-reverse sm:flex-row">
-					<Button variant="outline" onclick={() => (deleteDialogOpen = false)}>
-						{m.common_cancel()}
-					</Button>
-					<Button
-						variant="destructive"
-						disabled={isDeleting || cooldown.active}
-						onclick={deleteJob}
-					>
-						{#if cooldown.active}
-							{m.common_waitSeconds({ seconds: cooldown.remaining })}
-						{:else}
-							{#if isDeleting}
-								<Loader2 class="me-2 h-4 w-4 animate-spin" />
+						</Button>
+					{/snippet}
+				</Dialog.Trigger>
+				<Dialog.Content>
+					<Dialog.Header>
+						<Dialog.Title>{m.admin_jobDetail_trigger()}</Dialog.Title>
+						<Dialog.Description>{m.admin_jobDetail_triggerConfirm()}</Dialog.Description>
+					</Dialog.Header>
+					<Dialog.Footer class="flex-col-reverse sm:flex-row">
+						<Button variant="outline" onclick={() => (triggerDialogOpen = false)}>
+							{m.common_cancel()}
+						</Button>
+						<Button disabled={isTriggering || cooldown.active} onclick={triggerJob}>
+							{#if cooldown.active}
+								{m.common_waitSeconds({ seconds: cooldown.remaining })}
+							{:else}
+								{#if isTriggering}
+									<Loader2 class="me-2 h-4 w-4 animate-spin" />
+								{/if}
+								{m.admin_jobDetail_trigger()}
 							{/if}
-							{m.common_delete()}
-						{/if}
-					</Button>
-				</Dialog.Footer>
-			</Dialog.Content>
-		</Dialog.Root>
+						</Button>
+					</Dialog.Footer>
+				</Dialog.Content>
+			</Dialog.Root>
+
+			<!-- Pause / Resume -->
+			{#if isPaused}
+				<Button
+					variant="outline"
+					class="w-full sm:w-auto"
+					disabled={isResuming || cooldown.active}
+					onclick={resumeJob}
+				>
+					{#if cooldown.active}
+						{m.common_waitSeconds({ seconds: cooldown.remaining })}
+					{:else if isResuming}
+						<Loader2 class="me-2 h-4 w-4 animate-spin" />
+						{m.admin_jobDetail_resume()}
+					{:else}
+						<RotateCcw class="me-2 h-4 w-4" />
+						{m.admin_jobDetail_resume()}
+					{/if}
+				</Button>
+			{:else}
+				<Button
+					variant="outline"
+					class="w-full sm:w-auto"
+					disabled={isPausing || cooldown.active}
+					onclick={pauseJob}
+				>
+					{#if cooldown.active}
+						{m.common_waitSeconds({ seconds: cooldown.remaining })}
+					{:else if isPausing}
+						<Loader2 class="me-2 h-4 w-4 animate-spin" />
+						{m.admin_jobDetail_pause()}
+					{:else}
+						<Pause class="me-2 h-4 w-4" />
+						{m.admin_jobDetail_pause()}
+					{/if}
+				</Button>
+			{/if}
+
+			<!-- Delete -->
+			<Dialog.Root bind:open={deleteDialogOpen}>
+				<Dialog.Trigger>
+					{#snippet child({ props })}
+						<Button variant="destructive" class="w-full sm:w-auto" {...props}>
+							<Trash2 class="me-2 h-4 w-4" />
+							{m.admin_jobDetail_delete()}
+						</Button>
+					{/snippet}
+				</Dialog.Trigger>
+				<Dialog.Content>
+					<Dialog.Header>
+						<Dialog.Title>{m.admin_jobDetail_delete()}</Dialog.Title>
+						<Dialog.Description>{m.admin_jobDetail_deleteConfirm()}</Dialog.Description>
+					</Dialog.Header>
+					<Dialog.Footer class="flex-col-reverse sm:flex-row">
+						<Button variant="outline" onclick={() => (deleteDialogOpen = false)}>
+							{m.common_cancel()}
+						</Button>
+						<Button
+							variant="destructive"
+							disabled={isDeleting || cooldown.active}
+							onclick={deleteJob}
+						>
+							{#if cooldown.active}
+								{m.common_waitSeconds({ seconds: cooldown.remaining })}
+							{:else}
+								{#if isDeleting}
+									<Loader2 class="me-2 h-4 w-4 animate-spin" />
+								{/if}
+								{m.common_delete()}
+							{/if}
+						</Button>
+					</Dialog.Footer>
+				</Dialog.Content>
+			</Dialog.Root>
+		</div>
 	</Card.Content>
 </Card.Root>
