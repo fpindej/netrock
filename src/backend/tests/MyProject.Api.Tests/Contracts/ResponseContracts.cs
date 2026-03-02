@@ -5,6 +5,9 @@ internal record AuthTokensResponse(string AccessToken, string RefreshToken, bool
 internal record TwoFactorSetupContract(string SharedKey, string AuthenticatorUri);
 internal record TwoFactorVerifySetupContract(List<string> RecoveryCodes);
 internal record RegisterUserResponse(Guid Id);
+internal record ExternalChallengeContract(string AuthorizationUrl);
+internal record ExternalCallbackContract(string AccessToken, string RefreshToken, bool IsNewUser, string Provider, bool IsLinkOnly);
+internal record ExternalProviderContract(string Name, string DisplayName);
 
 // Users
 internal record UserMeResponse(Guid Id, string Username, string Email, string? FirstName, string? LastName,

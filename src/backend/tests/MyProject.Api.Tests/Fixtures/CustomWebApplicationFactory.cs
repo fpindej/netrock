@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Features.Admin;
+using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Captcha;
 using MyProject.Application.Features.Email;
@@ -34,6 +35,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     public ICaptchaService CaptchaService { get; } = Substitute.For<ICaptchaService>();
     public IAuditService AuditService { get; } = Substitute.For<IAuditService>();
     public ITwoFactorService TwoFactorService { get; } = Substitute.For<ITwoFactorService>();
+    public IExternalAuthService ExternalAuthService { get; } = Substitute.For<IExternalAuthService>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -105,6 +107,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<ITwoFactorService>();
             services.AddSingleton(TwoFactorService);
 
+            services.RemoveAll<IExternalAuthService>();
+            services.AddSingleton(ExternalAuthService);
+
             // Override auth scheme — PostConfigure runs after the app's Configure,
             // ensuring the test scheme wins over the JWT Bearer defaults.
             services.PostConfigure<AuthenticationOptions>(options =>
@@ -140,5 +145,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         CaptchaService.ClearSubstitute(ClearOptions.All);
         AuditService.ClearSubstitute(ClearOptions.All);
         TwoFactorService.ClearSubstitute(ClearOptions.All);
+        ExternalAuthService.ClearSubstitute(ClearOptions.All);
     }
 }
