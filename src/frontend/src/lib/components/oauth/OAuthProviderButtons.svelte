@@ -3,7 +3,6 @@
 	import { browserClient } from '$lib/api';
 	import type { components } from '$lib/api/v1';
 	import { Separator } from '$lib/components/ui/separator';
-	import { toast } from '$lib/components/ui/sonner';
 	import * as m from '$lib/paraglide/messages';
 	import { startOAuthChallenge } from '$lib/utils/oauth';
 	import OAuthProviderButton from './OAuthProviderButton.svelte';
@@ -28,11 +27,8 @@
 		if (loadingProvider) return;
 		loadingProvider = provider;
 
-		try {
-			await startOAuthChallenge(provider);
-		} catch {
-			toast.error(m.oauth_challengeError());
-		} finally {
+		const navigating = await startOAuthChallenge(provider);
+		if (!navigating) {
 			loadingProvider = null;
 		}
 	}
