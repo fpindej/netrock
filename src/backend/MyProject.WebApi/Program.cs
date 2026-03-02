@@ -100,6 +100,7 @@ try
         options.LowercaseUrls = true;
         options.ConstraintMap.Add("roleName", typeof(RoleNameRouteConstraint));
         options.ConstraintMap.Add("jobId", typeof(JobIdRouteConstraint));
+        options.ConstraintMap.Add("providerName", typeof(ProviderNameRouteConstraint));
     });
 
     Log.Debug("Adding ProblemDetails");
