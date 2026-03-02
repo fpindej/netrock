@@ -430,6 +430,7 @@ public class AuthController(
     /// Returns the list of enabled external authentication providers.
     /// Clients should call this on startup to determine which OAuth buttons to render.
     /// </summary>
+    /// <remarks>Cached for 5 minutes because the provider list is static configuration.</remarks>
     [HttpGet("providers")]
     [ProducesResponseType(typeof(IReadOnlyList<ExternalProviderResponse>), StatusCodes.Status200OK)]
     [ResponseCache(Duration = 300)]
@@ -448,7 +449,7 @@ public class AuthController(
     /// </summary>
     [HttpPost("external/challenge")]
     [EnableRateLimiting(RateLimitPolicies.Auth)]
-    [ProducesResponseType<ExternalChallengeResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ExternalChallengeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<ExternalChallengeResponse>> ExternalChallenge(
