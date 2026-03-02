@@ -19,7 +19,7 @@ internal sealed class GoogleAuthProvider(
     private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
     private const string TokenEndpoint = "https://oauth2.googleapis.com/token";
     private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v3/userinfo";
-    private const string HttpClientName = "Google-OAuth";
+    internal const string HttpClientName = "Google-OAuth";
 
     /// <inheritdoc />
     public string Name => "Google";

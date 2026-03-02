@@ -21,7 +21,7 @@ internal sealed class GitHubAuthProvider(
     private const string TokenEndpoint = "https://github.com/login/oauth/access_token";
     private const string UserEndpoint = "https://api.github.com/user";
     private const string UserEmailsEndpoint = "https://api.github.com/user/emails";
-    private const string HttpClientName = "GitHub-OAuth";
+    internal const string HttpClientName = "GitHub-OAuth";
 
     /// <inheritdoc />
     public string Name => "GitHub";
