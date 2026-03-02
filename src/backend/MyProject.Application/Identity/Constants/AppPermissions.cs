@@ -36,6 +36,9 @@ public static class AppPermissions
 
         /// <summary>Assign and remove roles to/from users.</summary>
         public const string AssignRoles = "users.assign_roles";
+
+        /// <summary>Disable two-factor authentication for user accounts.</summary>
+        public const string ManageTwoFactor = "users.manage_2fa";
     }
 
     /// <summary>

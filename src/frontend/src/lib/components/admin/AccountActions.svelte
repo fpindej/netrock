@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Separator } from '$lib/components/ui/separator';
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
@@ -177,30 +178,31 @@
 			</Dialog.Content>
 		</Dialog.Root>
 
-		<Dialog.Root bind:open={deleteDialogOpen}>
-			<Dialog.Trigger>
+		<AlertDialog.Root bind:open={deleteDialogOpen}>
+			<AlertDialog.Trigger>
 				{#snippet child({ props })}
 					<Button variant="destructive" class="w-full sm:w-auto" {...props}>
 						<Trash2 class="me-2 h-4 w-4" />
 						{m.admin_userDetail_deleteAccount()}
 					</Button>
 				{/snippet}
-			</Dialog.Trigger>
-			<Dialog.Content>
-				<Dialog.Header>
-					<Dialog.Title>{m.admin_userDetail_deleteConfirmTitle()}</Dialog.Title>
-					<Dialog.Description>
+			</AlertDialog.Trigger>
+			<AlertDialog.Content>
+				<AlertDialog.Header>
+					<AlertDialog.Title>{m.admin_userDetail_deleteConfirmTitle()}</AlertDialog.Title>
+					<AlertDialog.Description>
 						{m.admin_userDetail_deleteConfirmDescription()}
-					</Dialog.Description>
-				</Dialog.Header>
-				<Dialog.Footer class="flex-col-reverse sm:flex-row">
-					<Button variant="outline" onclick={() => (deleteDialogOpen = false)}>
-						{m.common_cancel()}
-					</Button>
-					<Button
-						variant="destructive"
+					</AlertDialog.Description>
+				</AlertDialog.Header>
+				<AlertDialog.Footer class="flex-col-reverse sm:flex-row">
+					<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
+					<AlertDialog.Action
+						class="bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90"
 						disabled={isDeleting || cooldown.active}
-						onclick={deleteUser}
+						onclick={(e: MouseEvent) => {
+							e.preventDefault();
+							deleteUser();
+						}}
 					>
 						{#if cooldown.active}
 							{m.common_waitSeconds({ seconds: cooldown.remaining })}
@@ -210,9 +212,9 @@
 							{/if}
 							{m.common_delete()}
 						{/if}
-					</Button>
-				</Dialog.Footer>
-			</Dialog.Content>
-		</Dialog.Root>
+					</AlertDialog.Action>
+				</AlertDialog.Footer>
+			</AlertDialog.Content>
+		</AlertDialog.Root>
 	</div>
 {/if}

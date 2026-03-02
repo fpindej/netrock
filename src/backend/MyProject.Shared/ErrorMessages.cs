@@ -95,6 +95,9 @@ public static class ErrorMessages
         public const string EmailVerificationFailed = "Failed to verify email address.";
         public const string CreateUserFailed = "Failed to create user account.";
         public const string LastAdminCannotDelete = "Cannot delete this user — they are the last user holding an administrative role.";
+        public const string TwoFactorNotEnabled = "Two-factor authentication is not enabled for this user.";
+        public const string DisableTwoFactorSelfAction = "You cannot disable your own two-factor authentication from the admin panel.";
+        public const string DisableTwoFactorFailed = "Failed to disable two-factor authentication.";
     }
 
     /// <summary>

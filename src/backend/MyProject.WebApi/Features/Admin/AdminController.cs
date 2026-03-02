@@ -9,6 +9,7 @@ using MyProject.WebApi.Features.Admin.Dtos;
 using MyProject.WebApi.Features.Admin.Dtos.AssignRole;
 using MyProject.WebApi.Features.Admin.Dtos.CreateRole;
 using MyProject.WebApi.Features.Admin.Dtos.CreateUser;
+using MyProject.WebApi.Features.Admin.Dtos.DisableTwoFactor;
 using MyProject.WebApi.Features.Admin.Dtos.ListUsers;
 using MyProject.WebApi.Features.Admin.Dtos.SetPermissions;
 using MyProject.WebApi.Features.Admin.Dtos.UpdateRole;
@@ -317,6 +318,43 @@ public class AdminController(IAdminService adminService, IRoleManagementService 
     {
         var callerUserId = userContext.AuthenticatedUserId;
         var result = await adminService.SendPasswordResetAsync(callerUserId, id, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Disables two-factor authentication for a user. The caller must outrank the target user
+    /// and cannot disable their own 2FA from the admin panel.
+    /// </summary>
+    /// <param name="id">The user ID</param>
+    /// <param name="request">Optional reason for disabling 2FA</param>
+    /// <returns>No content on success</returns>
+    /// <response code="204">2FA disabled successfully</response>
+    /// <response code="400">If the operation failed, 2FA is not enabled, or hierarchy check fails</response>
+    /// <response code="401">If the user is not authenticated</response>
+    /// <response code="403">If the user does not have the required permission</response>
+    /// <response code="404">If the user was not found</response>
+    [HttpPost("users/{id:guid}/disable-2fa")]
+    [RequirePermission(AppPermissions.Users.ManageTwoFactor)]
+    [EnableRateLimiting(RateLimitPolicies.AdminMutations)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult> DisableTwoFactor(
+        Guid id,
+        [FromBody] DisableTwoFactorRequest request,
+        CancellationToken cancellationToken)
+    {
+        var callerUserId = userContext.AuthenticatedUserId;
+        var result = await adminService.DisableTwoFactorAsync(callerUserId, id, request.Reason, cancellationToken);
 
         if (!result.IsSuccess)
         {

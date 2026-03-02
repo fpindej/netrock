@@ -24,12 +24,15 @@
 	let canAssignRoles = $derived(
 		canManageByHierarchy && hasPermission(currentUser, Permissions.Users.AssignRoles)
 	);
+	let canManageTwoFactor = $derived(
+		canManageByHierarchy && hasPermission(currentUser, Permissions.Users.ManageTwoFactor)
+	);
 	let callerRank = $derived(getHighestRank(callerRoles));
 	let piiMasked = $derived(!hasPermission(currentUser, Permissions.Users.ViewPii));
 </script>
 
 <div class="grid gap-6 lg:grid-cols-2">
-	<AccountInfoCard {user} {canManage} {piiMasked} {cooldown} />
+	<AccountInfoCard {user} {canManage} {canManageTwoFactor} {piiMasked} {cooldown} />
 	<UserManagementCard
 		{user}
 		{roles}

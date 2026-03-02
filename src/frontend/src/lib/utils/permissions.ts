@@ -11,7 +11,8 @@ export const Permissions = {
 		View: 'users.view',
 		ViewPii: 'users.view_pii',
 		Manage: 'users.manage',
-		AssignRoles: 'users.assign_roles'
+		AssignRoles: 'users.assign_roles',
+		ManageTwoFactor: 'users.manage_2fa'
 	},
 	Roles: {
 		View: 'roles.view',

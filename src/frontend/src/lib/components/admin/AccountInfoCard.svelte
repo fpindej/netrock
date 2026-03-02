@@ -1,7 +1,10 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
+	import { Textarea } from '$lib/components/ui/textarea';
+	import { Label } from '$lib/components/ui/label';
 	import {
 		Hash,
 		User as UserIcon,
@@ -27,13 +30,17 @@
 	interface Props {
 		user: AdminUser;
 		canManage: boolean;
+		canManageTwoFactor: boolean;
 		piiMasked: boolean;
 		cooldown: Cooldown;
 	}
 
-	let { user, canManage, piiMasked, cooldown }: Props = $props();
+	let { user, canManage, canManageTwoFactor, piiMasked, cooldown }: Props = $props();
 
 	let isVerifying = $state(false);
+	let disable2faDialogOpen = $state(false);
+	let isDisabling2fa = $state(false);
+	let disable2faReason = $state('');
 
 	async function verifyEmail() {
 		isVerifying = true;
@@ -49,6 +56,27 @@
 			handleMutationError(response, error, {
 				cooldown,
 				fallback: m.admin_userDetail_verifyEmailError()
+			});
+		}
+	}
+
+	async function disableTwoFactor() {
+		isDisabling2fa = true;
+		const { response, error } = await browserClient.POST('/api/v1/admin/users/{id}/disable-2fa', {
+			params: { path: { id: user.id ?? '' } },
+			body: { reason: disable2faReason.trim() || null }
+		});
+		isDisabling2fa = false;
+		disable2faDialogOpen = false;
+		disable2faReason = '';
+
+		if (response.ok) {
+			toast.success(m.admin_userDetail_disable2faSuccess());
+			await invalidateAll();
+		} else {
+			handleMutationError(response, error, {
+				cooldown,
+				fallback: m.admin_userDetail_disable2faError()
 			});
 		}
 	}
@@ -144,12 +172,72 @@
 			label={m.admin_userDetail_twoFactorEnabled()}
 		>
 			{#if user.twoFactorEnabled}
-				<Badge
-					variant="outline"
-					class="border-success/30 bg-success/10 text-success dark:border-success/30 dark:bg-success/10 dark:text-success-foreground"
-				>
-					{m.admin_userDetail_yes()}
-				</Badge>
+				<div class="flex items-center gap-2">
+					<Badge
+						variant="outline"
+						class="border-success/30 bg-success/10 text-success dark:border-success/30 dark:bg-success/10 dark:text-success-foreground"
+					>
+						{m.admin_userDetail_yes()}
+					</Badge>
+					{#if canManageTwoFactor}
+						<AlertDialog.Root bind:open={disable2faDialogOpen}>
+							<AlertDialog.Trigger>
+								{#snippet child({ props })}
+									<Button
+										variant="outline"
+										size="sm"
+										class="h-6 px-2 text-xs text-destructive hover:text-destructive"
+										{...props}
+									>
+										{m.admin_userDetail_disable2fa()}
+									</Button>
+								{/snippet}
+							</AlertDialog.Trigger>
+							<AlertDialog.Content>
+								<AlertDialog.Header>
+									<AlertDialog.Title
+										>{m.admin_userDetail_disable2faConfirmTitle()}</AlertDialog.Title
+									>
+									<AlertDialog.Description>
+										{m.admin_userDetail_disable2faConfirmDescription()}
+									</AlertDialog.Description>
+								</AlertDialog.Header>
+								<div class="grid gap-2">
+									<Label for="disable-2fa-reason"
+										>{m.admin_userDetail_disable2faReasonLabel()}</Label
+									>
+									<Textarea
+										id="disable-2fa-reason"
+										placeholder={m.admin_userDetail_disable2faReasonPlaceholder()}
+										bind:value={disable2faReason}
+										class="resize-none"
+										rows={2}
+									/>
+								</div>
+								<AlertDialog.Footer class="flex-col-reverse sm:flex-row">
+									<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
+									<AlertDialog.Action
+										class="bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90"
+										disabled={isDisabling2fa || cooldown.active}
+										onclick={(e: MouseEvent) => {
+											e.preventDefault();
+											disableTwoFactor();
+										}}
+									>
+										{#if cooldown.active}
+											{m.common_waitSeconds({ seconds: cooldown.remaining })}
+										{:else}
+											{#if isDisabling2fa}
+												<Loader2 class="me-2 h-4 w-4 animate-spin" />
+											{/if}
+											{m.admin_userDetail_disable2faConfirm()}
+										{/if}
+									</AlertDialog.Action>
+								</AlertDialog.Footer>
+							</AlertDialog.Content>
+						</AlertDialog.Root>
+					{/if}
+				</div>
 			{:else}
 				<Badge variant="outline" class="text-muted-foreground">
 					{m.admin_userDetail_no()}

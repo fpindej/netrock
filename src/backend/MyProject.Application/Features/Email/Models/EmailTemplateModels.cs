@@ -26,3 +26,10 @@ public record AdminResetPasswordModel(string ResetUrl, string Expiration);
 /// <param name="SetPasswordUrl">The set-password URL for the invited user.</param>
 /// <param name="Expiration">Human-readable token expiration (e.g. "24 hours").</param>
 public record InvitationModel(string SetPasswordUrl, string Expiration);
+
+/// <summary>
+/// Model for the admin-disable-2fa template. Exposed as <c>user_name</c> and <c>reason</c> in Liquid.
+/// </summary>
+/// <param name="UserName">The display name or email of the affected user.</param>
+/// <param name="Reason">Optional admin-provided reason for disabling 2FA.</param>
+public record AdminDisableTwoFactorModel(string UserName, string? Reason);

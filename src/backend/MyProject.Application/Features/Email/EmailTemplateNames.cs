@@ -16,4 +16,7 @@ public static class EmailTemplateNames
 
     /// <summary>Invitation to set a password for a newly created account.</summary>
     public const string Invitation = "invitation";
+
+    /// <summary>Notification that an admin disabled two-factor authentication.</summary>
+    public const string AdminDisableTwoFactor = "admin-disable-2fa";
 }

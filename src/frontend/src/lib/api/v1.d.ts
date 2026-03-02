@@ -2292,6 +2292,92 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/api/v1/admin/users/{id}/disable-2fa': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Disables two-factor authentication for a user. The caller must outrank the target user. */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					/** @description The user ID */
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					'application/json': components['schemas']['DisableTwoFactorRequest'];
+				};
+			};
+			responses: {
+				/** @description Two-factor authentication disabled successfully */
+				204: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description If 2FA is not enabled or hierarchy check fails */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user does not have the required permission */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user was not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	'/api/v1/admin/users/{id}/send-password-reset': {
 		parameters: {
 			query?: never;
@@ -3738,6 +3824,11 @@ export interface components {
 		DeleteAccountRequest: {
 			/** @description The user's current password for confirmation. */
 			password: string;
+		};
+		/** @description Request to disable two-factor authentication for a user. */
+		DisableTwoFactorRequest: {
+			/** @description Optional reason for disabling two-factor authentication. */
+			reason?: null | string;
 		};
 		/** @description Request to handle the OAuth2 provider callback with authorization code and state. */
 		ExternalCallbackRequest: {

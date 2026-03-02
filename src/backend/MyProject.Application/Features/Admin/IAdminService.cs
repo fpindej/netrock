@@ -108,6 +108,19 @@ public interface IAdminService
     Task<Result> SendPasswordResetAsync(Guid callerUserId, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Disables two-factor authentication for a user. The caller must have a strictly higher role rank
+    /// than the target user and cannot disable their own 2FA from the admin panel.
+    /// Revokes all sessions, rotates the security stamp, and sends a notification email.
+    /// </summary>
+    /// <param name="callerUserId">The ID of the admin performing the action.</param>
+    /// <param name="userId">The target user ID.</param>
+    /// <param name="reason">Optional reason for disabling 2FA.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>Success or failure with an error message.</returns>
+    Task<Result> DisableTwoFactorAsync(Guid callerUserId, Guid userId, string? reason,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Creates a new user account and sends an invitation email with a password reset link.
     /// </summary>
     /// <param name="callerUserId">The ID of the admin performing the action.</param>

@@ -486,6 +486,62 @@ internal class AdminService(
     }
 
     /// <inheritdoc />
+    public async Task<Result> DisableTwoFactorAsync(Guid callerUserId, Guid userId, string? reason,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+
+        if (user is null)
+        {
+            return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
+        }
+
+        if (callerUserId == userId)
+        {
+            return Result.Failure(ErrorMessages.Admin.DisableTwoFactorSelfAction);
+        }
+
+        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
+        if (!hierarchyResult.IsSuccess)
+        {
+            return hierarchyResult;
+        }
+
+        if (!await userManager.GetTwoFactorEnabledAsync(user))
+        {
+            return Result.Failure(ErrorMessages.Admin.TwoFactorNotEnabled);
+        }
+
+        var disableResult = await userManager.SetTwoFactorEnabledAsync(user, false);
+        if (!disableResult.Succeeded)
+        {
+            logger.LogWarning("SetTwoFactorEnabledAsync (disable) failed for user '{UserId}': {Errors}",
+                userId, string.Join(", ", disableResult.Errors.Select(e => e.Description)));
+            return Result.Failure(ErrorMessages.Admin.DisableTwoFactorFailed);
+        }
+
+        await userManager.ResetAuthenticatorKeyAsync(user);
+        await RevokeUserSessionsAsync(user, userId, cancellationToken);
+        await InvalidateUserCacheAsync(userId);
+        logger.LogWarning("Two-factor authentication disabled for user '{UserId}' by admin '{CallerUserId}'",
+            userId, callerUserId);
+
+        var metadata = reason is not null
+            ? JsonSerializer.Serialize(new { reason })
+            : null;
+
+        await auditService.LogAsync(AuditActions.AdminDisableTwoFactor, userId: callerUserId,
+            targetEntityType: "User", targetEntityId: userId,
+            metadata: metadata, ct: cancellationToken);
+
+        var email = user.Email ?? user.UserName ?? string.Empty;
+        var model = new AdminDisableTwoFactorModel(user.UserName ?? email, reason);
+        await templatedEmailSender.SendSafeAsync(EmailTemplateNames.AdminDisableTwoFactor, model, email, cancellationToken);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
     public async Task<Result<Guid>> CreateUserAsync(Guid callerUserId, CreateUserInput input,
         CancellationToken cancellationToken = default)
     {

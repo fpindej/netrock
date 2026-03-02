@@ -62,6 +62,9 @@ public static class AuditActions
     /// <summary>Admin removed a role from a user.</summary>
     public const string AdminRemoveRole = "AdminRemoveRole";
 
+    /// <summary>Admin disabled two-factor authentication for a user.</summary>
+    public const string AdminDisableTwoFactor = "AdminDisableTwoFactor";
+
     /// <summary>Admin created a new role.</summary>
     public const string AdminCreateRole = "AdminCreateRole";
 
