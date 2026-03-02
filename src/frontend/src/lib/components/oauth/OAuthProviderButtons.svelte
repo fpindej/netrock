@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browserClient } from '$lib/api';
+	import type { components } from '$lib/api/v1';
 	import { Separator } from '$lib/components/ui/separator';
 	import { toast } from '$lib/components/ui/sonner';
 	import * as m from '$lib/paraglide/messages';
 	import OAuthProviderButton from './OAuthProviderButton.svelte';
 
-	interface Provider {
-		name: string;
-		displayName: string;
-	}
+	type Provider = components['schemas']['ExternalProviderResponse'];
 
 	let providers = $state<Provider[]>([]);
 	let loadingProvider = $state<string | null>(null);
@@ -18,7 +16,7 @@
 		try {
 			const { response, data } = await browserClient.GET('/api/auth/providers');
 			if (response.ok && data) {
-				providers = data as Provider[];
+				providers = data;
 			}
 		} catch {
 			// Silently fail - no OAuth buttons shown
@@ -35,8 +33,8 @@
 				body: { provider, redirectUri }
 			});
 
-			if (response.ok && data) {
-				window.location.href = (data as { authorizationUrl: string }).authorizationUrl;
+			if (response.ok && data?.authorizationUrl) {
+				window.location.href = data.authorizationUrl;
 				return;
 			}
 
@@ -60,12 +58,14 @@
 		</div>
 		<div class="grid gap-2">
 			{#each providers as provider (provider.name)}
+				{@const name = provider.name ?? ''}
+				{@const displayName = provider.displayName ?? name}
 				<OAuthProviderButton
-					provider={provider.name}
-					displayName={provider.displayName}
-					loading={loadingProvider === provider.name}
+					provider={name}
+					{displayName}
+					loading={loadingProvider === name}
 					disabled={loadingProvider !== null}
-					onclick={() => startChallenge(provider.name)}
+					onclick={() => startChallenge(name)}
 				/>
 			{/each}
 		</div>

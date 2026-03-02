@@ -14,12 +14,7 @@
 	let { provider, displayName, disabled = false, loading = false, onclick }: Props = $props();
 </script>
 
-<Button
-	variant="outline"
-	class="w-full"
-	{disabled}
-	{onclick}
->
+<Button variant="outline" class="w-full" {disabled} {onclick}>
 	{#if loading}
 		<Loader2 class="me-2 h-4 w-4 animate-spin" />
 	{:else if provider === 'Google'}
