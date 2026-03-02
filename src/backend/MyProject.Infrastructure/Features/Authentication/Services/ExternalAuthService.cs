@@ -2,8 +2,10 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies;
 using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Audit;
@@ -31,6 +33,7 @@ internal class ExternalAuthService(
     ICookieService cookieService,
     IUserContext userContext,
     IAuditService auditService,
+    HybridCache hybridCache,
     IOptions<AuthenticationOptions> authenticationOptions,
     IOptions<ExternalAuthOptions> externalAuthOptions,
     IEnumerable<IExternalAuthProvider> providers,
@@ -176,6 +179,8 @@ internal class ExternalAuthService(
             return Result.Failure(ErrorMessages.ExternalAuth.ProviderError);
         }
 
+        await hybridCache.RemoveAsync(CacheKeys.User(userId.Value), cancellationToken);
+
         await auditService.LogAsync(AuditActions.ExternalAccountUnlinked, userId: userId.Value,
             metadata: JsonSerializer.Serialize(new { provider }), ct: cancellationToken);
 
@@ -222,9 +227,12 @@ internal class ExternalAuthService(
         var result = await userManager.AddPasswordAsync(user, input.NewPassword);
         if (!result.Succeeded)
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Failure(errors);
+            logger.LogError("Failed to set password for user {UserId}: {Errors}",
+                userId.Value, string.Join(", ", result.Errors.Select(e => e.Description)));
+            return Result.Failure(ErrorMessages.ExternalAuth.PasswordSetFailed);
         }
+
+        await hybridCache.RemoveAsync(CacheKeys.User(userId.Value), cancellationToken);
 
         await auditService.LogAsync(AuditActions.PasswordSet, userId: userId.Value, ct: cancellationToken);
 
@@ -385,9 +393,10 @@ internal class ExternalAuthService(
         var createResult = await userManager.CreateAsync(user);
         if (!createResult.Succeeded)
         {
-            var errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
-            logger.LogError("Failed to create user from external provider {Provider}: {Errors}", provider, errors);
-            return Result<ExternalCallbackOutput>.Failure(errors);
+            logger.LogError("Failed to create user from external provider {Provider}: {Errors}",
+                provider, string.Join(", ", createResult.Errors.Select(e => e.Description)));
+            return Result<ExternalCallbackOutput>.Failure(
+                ErrorMessages.ExternalAuth.ProviderError, ErrorType.Validation);
         }
 
         var roleResult = await userManager.AddToRoleAsync(user, AppRoles.User);
@@ -401,8 +410,14 @@ internal class ExternalAuthService(
 
         if (!loginResult.Succeeded)
         {
-            logger.LogError("Failed to link provider {Provider} to newly created user {UserId}",
-                provider, user.Id);
+            logger.LogError("Failed to link provider {Provider} to newly created user {UserId}: {Errors}",
+                provider, user.Id, string.Join(", ", loginResult.Errors.Select(e => e.Description)));
+
+            // Clean up the orphaned user - they have no password and no linked provider
+            await userManager.DeleteAsync(user);
+
+            return Result<ExternalCallbackOutput>.Failure(
+                ErrorMessages.ExternalAuth.ProviderError, ErrorType.Validation);
         }
 
         var tokens = await GenerateTokensAsync(user, useCookies, cancellationToken);

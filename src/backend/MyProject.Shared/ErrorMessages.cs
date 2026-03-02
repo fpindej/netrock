@@ -179,6 +179,7 @@ public static class ErrorMessages
         public const string ProviderError = "The external authentication provider returned an error.";
         public const string InvalidRedirectUri = "The provided redirect URI is not allowed.";
         public const string PasswordAlreadySet = "A password is already set for this account.";
+        public const string PasswordSetFailed = "Failed to set the password. Please try again.";
     }
 
     /// <summary>
