@@ -131,12 +131,6 @@ public class ExternalAuthServiceTests : IDisposable
         return plainToken;
     }
 
-    private ExternalUserInfo CreateExternalUserInfo(
-        string providerKey = "google-123",
-        string email = "test@example.com",
-        bool emailVerified = true) =>
-        new(providerKey, email, emailVerified, "Test", "User");
-
     // ────────── CreateChallengeAsync ──────────
 
     #region CreateChallenge
@@ -312,6 +306,25 @@ public class ExternalAuthServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task HandleCallback_ExistingLink_NoSession_LockedOut_ReturnsError()
+    {
+        var user = CreateTestUser();
+        var stateToken = await SeedStateAsync();
+        SetupProviderExchange("google-123");
+        SeedUserLogin(user, "Google", "google-123");
+
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        _userManager.IsLockedOutAsync(user).Returns(true);
+        _userContext.UserId.Returns((Guid?)null);
+
+        var input = new ExternalCallbackInput("code", stateToken);
+        var result = await _sut.HandleCallbackAsync(input, false, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorMessages.Auth.LoginAccountLocked, result.Error);
+    }
+
+    [Fact]
     public async Task HandleCallback_ExistingLink_DifferentUser_ReturnsError()
     {
         var linkedUser = CreateTestUser();
@@ -360,6 +373,23 @@ public class ExternalAuthServiceTests : IDisposable
             Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task HandleCallback_Authenticated_LinksProvider_InvalidatesCacheAsync()
+    {
+        var user = CreateTestUser();
+        var stateToken = await SeedStateAsync(userId: user.Id);
+        SetupProviderExchange();
+
+        _userManager.FindByIdAsync(user.Id.ToString()).Returns(user);
+        _userManager.AddLoginAsync(user, Arg.Any<UserLoginInfo>())
+            .Returns(IdentityResult.Success);
+
+        var input = new ExternalCallbackInput("code", stateToken);
+        await _sut.HandleCallbackAsync(input, false, CancellationToken.None);
+
+        await _hybridCache.Received(1).RemoveAsync(CacheKeys.User(user.Id), Arg.Any<CancellationToken>());
+    }
+
     #endregion
 
     // ────────── HandleCallbackAsync - No Existing Link (Unauthenticated) ──────────
@@ -384,6 +414,59 @@ public class ExternalAuthServiceTests : IDisposable
         Assert.True(result.IsSuccess);
         Assert.False(result.Value.IsNewUser);
         Assert.NotNull(result.Value.Tokens);
+    }
+
+    [Fact]
+    public async Task HandleCallback_Unauthenticated_ProviderEmailNotVerified_ReturnsError()
+    {
+        var user = CreateTestUser(emailConfirmed: true);
+        var stateToken = await SeedStateAsync();
+        SetupProviderExchange(email: user.Email!, emailVerified: false);
+
+        _userContext.UserId.Returns((Guid?)null);
+        _userManager.FindByEmailAsync(user.Email!).Returns(user);
+
+        var input = new ExternalCallbackInput("code", stateToken);
+        var result = await _sut.HandleCallbackAsync(input, false, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorMessages.ExternalAuth.EmailNotVerified, result.Error);
+    }
+
+    [Fact]
+    public async Task HandleCallback_Unauthenticated_AutoLink_LockedOut_ReturnsError()
+    {
+        var user = CreateTestUser(emailConfirmed: true);
+        var stateToken = await SeedStateAsync();
+        SetupProviderExchange(email: user.Email!);
+
+        _userContext.UserId.Returns((Guid?)null);
+        _userManager.FindByEmailAsync(user.Email!).Returns(user);
+        _userManager.IsLockedOutAsync(user).Returns(true);
+
+        var input = new ExternalCallbackInput("code", stateToken);
+        var result = await _sut.HandleCallbackAsync(input, false, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorMessages.Auth.LoginAccountLocked, result.Error);
+    }
+
+    [Fact]
+    public async Task HandleCallback_Unauthenticated_AutoLink_InvalidatesCacheAsync()
+    {
+        var user = CreateTestUser(emailConfirmed: true);
+        var stateToken = await SeedStateAsync();
+        SetupProviderExchange(email: user.Email!);
+
+        _userContext.UserId.Returns((Guid?)null);
+        _userManager.FindByEmailAsync(user.Email!).Returns(user);
+        _userManager.AddLoginAsync(user, Arg.Any<UserLoginInfo>())
+            .Returns(IdentityResult.Success);
+
+        var input = new ExternalCallbackInput("code", stateToken);
+        await _sut.HandleCallbackAsync(input, false, CancellationToken.None);
+
+        await _hybridCache.Received(1).RemoveAsync(CacheKeys.User(user.Id), Arg.Any<CancellationToken>());
     }
 
     [Fact]

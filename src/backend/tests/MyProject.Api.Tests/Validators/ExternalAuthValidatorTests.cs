@@ -168,6 +168,41 @@ public class ExternalCallbackRequestValidatorTests
     }
 }
 
+public class ExternalUnlinkRequestValidatorTests
+{
+    private readonly ExternalUnlinkRequestValidator _validator = new();
+
+    [Fact]
+    public void ValidRequest_ShouldPassValidation()
+    {
+        var request = new ExternalUnlinkRequest { Provider = "Google" };
+
+        var result = _validator.TestValidate(request);
+
+        result.ShouldNotHaveAnyValidationErrors();
+    }
+
+    [Fact]
+    public void EmptyProvider_ShouldFail()
+    {
+        var request = new ExternalUnlinkRequest { Provider = "" };
+
+        var result = _validator.TestValidate(request);
+
+        result.ShouldHaveValidationErrorFor(x => x.Provider);
+    }
+
+    [Fact]
+    public void ProviderTooLong_ShouldFail()
+    {
+        var request = new ExternalUnlinkRequest { Provider = new string('a', 33) };
+
+        var result = _validator.TestValidate(request);
+
+        result.ShouldHaveValidationErrorFor(x => x.Provider);
+    }
+}
+
 public class SetPasswordRequestValidatorTests
 {
     private readonly SetPasswordRequestValidator _validator = new();
