@@ -2,8 +2,9 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import * as m from '$lib/paraglide/messages';
-	import { browserClient, getErrorMessage } from '$lib/api';
+	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
+	import { createCooldown } from '$lib/state';
 	import { Loader2 } from '@lucide/svelte';
 
 	interface Props {
@@ -16,6 +17,7 @@
 	let { open = $bindable(), provider, displayName, onDisconnected }: Props = $props();
 
 	let isLoading = $state(false);
+	const cooldown = createCooldown();
 
 	$effect(() => {
 		if (open) {
@@ -36,7 +38,18 @@
 				toast.success(m.settings_oauth_disconnectSuccess());
 				onDisconnected();
 			} else {
-				toast.error(getErrorMessage(apiError, m.settings_oauth_disconnectError()));
+				handleMutationError(response, apiError, {
+					cooldown,
+					fallback: m.settings_oauth_disconnectError(),
+					onError() {
+						toast.error(
+							m.settings_oauth_disconnectError(),
+							getErrorMessage(apiError, '')
+								? { description: getErrorMessage(apiError, '') }
+								: undefined
+						);
+					}
+				});
 			}
 		} catch {
 			toast.error(m.settings_oauth_disconnectError());
@@ -57,16 +70,24 @@
 		<Dialog.Footer class="flex-col-reverse gap-2 sm:flex-row">
 			<Dialog.Close>
 				{#snippet child({ props })}
-					<Button {...props} variant="outline" disabled={isLoading}>
+					<Button {...props} variant="outline" disabled={isLoading || cooldown.active}>
 						{m.common_cancel()}
 					</Button>
 				{/snippet}
 			</Dialog.Close>
-			<Button variant="destructive" disabled={isLoading} onclick={handleDisconnect}>
-				{#if isLoading}
+			<Button
+				variant="destructive"
+				disabled={isLoading || cooldown.active}
+				onclick={handleDisconnect}
+			>
+				{#if cooldown.active}
+					{m.common_waitSeconds({ seconds: cooldown.remaining })}
+				{:else if isLoading}
 					<Loader2 class="me-2 h-4 w-4 animate-spin" />
+					{m.settings_oauth_disconnectConfirm()}
+				{:else}
+					{m.settings_oauth_disconnectConfirm()}
 				{/if}
-				{m.settings_oauth_disconnectConfirm()}
 			</Button>
 		</Dialog.Footer>
 	</Dialog.Content>
