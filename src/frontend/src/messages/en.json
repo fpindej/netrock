@@ -241,7 +241,6 @@
 	"settings_oauth_disconnectConfirm": "Disconnect",
 	"settings_oauth_disconnectSuccess": "Account disconnected successfully.",
 	"settings_oauth_disconnectError": "Failed to disconnect account",
-	"settings_oauth_noProviders": "No external login providers are configured.",
 	"settings_oauth_setPasswordHint": "Set a password before disconnecting your only sign-in method.",
 
 	"oauth_orContinueWith": "or continue with",
