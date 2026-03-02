@@ -38,7 +38,7 @@ Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 ### Cross-Cutting
 
 - Security restrictive by default - deny first, open selectively
-- Atomic commits: `type(scope): imperative description` (Conventional Commits)
+- Atomic commits: `type(scope): imperative description` (Conventional Commits). No `Co-Authored-By` lines.
 - No dead code - remove unused imports, variables, functions, files, and stale references in the same commit
 - No em dashes - never use `—` anywhere (code, comments, docs, UI). Use `-` or rewrite the sentence.
 
