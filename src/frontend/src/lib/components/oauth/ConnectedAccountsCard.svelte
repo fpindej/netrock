@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import type { components } from '$lib/api/v1';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -9,10 +10,7 @@
 	import { Loader2 } from '@lucide/svelte';
 	import DisconnectDialog from './DisconnectDialog.svelte';
 
-	interface Provider {
-		name: string;
-		displayName: string;
-	}
+	type Provider = components['schemas']['ExternalProviderResponse'];
 
 	interface Props {
 		linkedProviders: string[];
@@ -32,15 +30,15 @@
 		try {
 			const { response, data } = await browserClient.GET('/api/auth/providers');
 			if (response.ok && data) {
-				availableProviders = data as Provider[];
+				availableProviders = data;
 			}
 		} catch {
 			// Silently fail - no providers shown
 		}
 	});
 
-	function isLinked(provider: string): boolean {
-		return linkedProviders.includes(provider);
+	function isLinked(providerName: string | undefined): boolean {
+		return !!providerName && linkedProviders.includes(providerName);
 	}
 
 	async function startConnect(provider: string) {
@@ -53,8 +51,8 @@
 				body: { provider, redirectUri }
 			});
 
-			if (response.ok && data) {
-				window.location.href = (data as { authorizationUrl: string }).authorizationUrl;
+			if (response.ok && data?.authorizationUrl) {
+				window.location.href = data.authorizationUrl;
 				return;
 			}
 
@@ -72,7 +70,7 @@
 	}
 
 	function handleDisconnected() {
-		if (disconnectProvider) {
+		if (disconnectProvider?.name) {
 			linkedProviders = linkedProviders.filter((p) => p !== disconnectProvider!.name);
 		}
 	}
@@ -123,7 +121,7 @@
 								</svg>
 							{/if}
 							<div>
-								<p class="text-sm font-medium">{provider.displayName}</p>
+								<p class="text-sm font-medium">{provider.displayName ?? provider.name}</p>
 								{#if isLinked(provider.name)}
 									<Badge variant="default" class="mt-1">
 										{m.settings_oauth_connected()}
@@ -146,7 +144,7 @@
 									variant="outline"
 									class="w-full sm:w-auto"
 									disabled={loadingProvider !== null}
-									onclick={() => startConnect(provider.name)}
+									onclick={() => startConnect(provider.name ?? '')}
 								>
 									{#if loadingProvider === provider.name}
 										<Loader2 class="me-2 h-4 w-4 animate-spin" />
@@ -170,8 +168,8 @@
 {#if disconnectProvider}
 	<DisconnectDialog
 		bind:open={disconnectDialogOpen}
-		provider={disconnectProvider.name}
-		displayName={disconnectProvider.displayName}
+		provider={disconnectProvider.name ?? ''}
+		displayName={disconnectProvider.displayName ?? disconnectProvider.name ?? ''}
 		onDisconnected={handleDisconnected}
 	/>
 {/if}
