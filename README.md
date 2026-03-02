@@ -98,7 +98,7 @@ Three test users are seeded (configured in `appsettings.Development.json`):
 
 ### 3. Start Building
 
-Add your domain entities, services, and pages — the architecture guides you. See [SKILLS.md](SKILLS.md) for step-by-step recipes.
+Add your domain entities, services, and pages - the architecture guides you. Use `/` skills (`.claude/skills/`) for step-by-step procedures.
 
 ---
 
@@ -110,7 +110,7 @@ Add your domain entities, services, and pages — the architecture guides you. S
 | [`AGENTS.md`](AGENTS.md) | Full developer guide — security, git discipline, error handling, local dev |
 | [`src/backend/AGENTS.md`](src/backend/AGENTS.md) | Backend conventions — entities, Result pattern, EF Core, controllers, testing |
 | [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md) | Frontend conventions — routing, API client, components, styling, i18n |
-| [`SKILLS.md`](SKILLS.md) | Step-by-step recipes for 35+ common operations |
+| [`.claude/skills/`](.claude/skills/) | Step-by-step procedures for all operations (use `/` to list) |
 | [`FILEMAP.md`](FILEMAP.md) | Change impact tables — "when you change X, also update Y" |
 
 Deep dives: **[Features](docs/features.md)** · **[Security](docs/security.md)** · **[Architecture](docs/architecture.md)** · **[Development](docs/development.md)** · **[Before You Ship](docs/before-you-ship.md)** · **[Troubleshooting](docs/troubleshooting.md)**

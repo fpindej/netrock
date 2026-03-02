@@ -110,7 +110,7 @@ These are non-negotiable. PRs that don't follow them will be requested to change
 
 ## Development Tips
 
-- Use the [SKILLS.md](SKILLS.md) recipes when adding entities, endpoints, or pages
+- Use `.claude/skills/` procedures when adding entities, endpoints, or pages (type `/` to list available skills)
 - Check [FILEMAP.md](FILEMAP.md) for change impact — "when you change X, also update Y"
 - The architecture tests will catch dependency violations at build time
 - Run `pnpm run api:generate` after any backend API change

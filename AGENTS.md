@@ -106,6 +106,37 @@ One commit = one logical change that could be reverted independently.
 
 Error messages flow: Backend `ErrorMessages.*` → `Result.Failure()` → `ProblemFactory.Create()` → `ProblemDetails.detail` → Frontend `getErrorMessage()`.
 
+## Breaking Changes
+
+When modifying existing code (not creating new), follow these rules.
+
+### What Counts as a Breaking Change
+
+| Layer | Breaking change |
+|---|---|
+| **Domain entity** | Renaming/removing a property, changing a type |
+| **Application interface** | Changing a method signature, renaming/removing a method |
+| **Application DTO** | Renaming/removing a field, changing nullability |
+| **WebApi endpoint** | Changing route, method, request/response shape, status codes |
+| **WebApi response DTO** | Renaming/removing a property, changing type or nullability |
+| **Frontend API types** | Always regenerated - broken by any backend DTO change |
+| **i18n keys** | Renaming a key (all usages break) |
+
+### Safe Strategies
+
+1. **Prefer additive changes** - add new fields/endpoints rather than removing or renaming
+2. **Same-PR migration** - if a breaking change is needed, update all consumers (including frontend types) in the same PR
+3. **V2 endpoint** - for significant changes, create `api/v2/{feature}/{action}` alongside v1
+4. **Deprecate then remove** - mark as obsolete in one PR, remove in a follow-up
+
+### Pre-Modification Checklist
+
+1. Check [FILEMAP.md](FILEMAP.md) for impact
+2. Search for all usages: `grep -r "InterfaceName\|MethodName" src/`
+3. If the change affects the OpenAPI spec - frontend types are affected - regenerate and fix
+4. If the change affects i18n keys - update all `.json` message files and all component usages
+5. Document the breaking change in the commit body
+
 ## Local Development
 
 ```bash

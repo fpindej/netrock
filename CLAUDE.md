@@ -72,5 +72,5 @@ Do these automatically — never wait to be asked:
 | `AGENTS.md` | Architecture, security, code quality, git workflow |
 | `src/backend/AGENTS.md` | Backend conventions: entities, Result, EF Core, controllers, auth, testing |
 | `src/frontend/AGENTS.md` | Frontend conventions: API client, components, styling, routing, i18n |
-| `SKILLS.md` | Step-by-step recipes for all common operations |
+| `.claude/skills/` | Step-by-step procedures for all operations (type `/` to list available skills) |
 | `FILEMAP.md` | "When you change X, also update Y" — change impact tables |

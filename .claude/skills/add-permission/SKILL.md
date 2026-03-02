@@ -1,0 +1,39 @@
+---
+disable-model-invocation: true
+---
+
+Add a permission constant across backend and frontend.
+
+## Steps
+
+**Backend:**
+
+1. Add `public const string` field to the appropriate nested class in `src/backend/MyProject.Application/Identity/Constants/AppPermissions.cs`:
+   ```csharp
+   public static class Orders
+   {
+       public const string View = "orders.view";
+       public const string Manage = "orders.manage";
+   }
+   ```
+   `AppPermissions.All` discovers permissions via reflection - no manual registration needed.
+2. Add `[RequirePermission(AppPermissions.Orders.View)]` to the relevant controller actions
+3. *(Optional)* Seed the permission for existing roles in `SeedRolePermissionsAsync()` in `src/backend/MyProject.Infrastructure/Persistence/Extensions/ApplicationBuilderExtensions.cs`
+4. Verify: `dotnet build src/backend/MyProject.slnx`
+
+**Frontend:**
+
+5. Add matching constants to `src/frontend/src/lib/utils/permissions.ts`:
+   ```typescript
+   Orders: {
+       View: 'orders.view',
+       Manage: 'orders.manage',
+   },
+   ```
+6. Use in components: `hasPermission(user, Permissions.Orders.View)`
+7. If adding a new admin page: add a per-page guard in `+page.server.ts`:
+   ```typescript
+   if (!hasPermission(user, Permissions.Orders.View)) throw redirect(303, '/');
+   ```
+8. If adding a sidebar nav item: add `permission: Permissions.Orders.View` to the nav item in `SidebarNav.svelte` - items are filtered per-permission, not as a group
+9. Verify: `cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check`

@@ -39,7 +39,7 @@ src/backend/
 - **Collections**: Prefer `IReadOnlyList<T>` on public interfaces — it communicates that callers shouldn't modify the collection. Avoid exposing `List<T>` or `T[]` directly.
 - **Time**: Always `TimeProvider` (injected). Registered as `TimeProvider.System` singleton.
 - **XML docs**: `/// <summary>` on all public and internal API surface.
-- **NuGet**: Versions in `Directory.Packages.props` only, versionless `<PackageReference>` in `.csproj`.
+- **NuGet**: Versions in `Directory.Packages.props` only, versionless `<PackageReference>` in `.csproj`. To add: `<PackageVersion Include="Pkg" Version="X.Y.Z" />` in props, `<PackageReference Include="Pkg" />` in csproj.
 
 ## Entity Definition
 
@@ -151,7 +151,8 @@ FluentValidation auto-discovered from WebApi assembly. Co-locate validators with
 - Client-facing messages are centralized as `const string` in `ErrorMessages.cs` nested classes — reference constants rather than inline strings for consistency and single-source-of-truth
 - Runtime values (role names, user IDs, framework errors): log server-side via `ILogger`, never in `Result.Failure()`
 - Identity errors: log `.Description` server-side, return a static `ErrorMessages` constant to the client
-- Exception: password validation errors (registration, change, reset) are forwarded as-is — they describe password policy, not internals
+- Exception: password validation errors (registration, change, reset) are forwarded as-is - they describe password policy, not internals
+- To add: create `const string` in `ErrorMessages.cs` nested class. Use: `Result.Failure(ErrorMessages.Orders.NotFound)`. Dynamic values go in logs, not in Result.
 
 ## Authorization
 
@@ -162,6 +163,7 @@ Atomic permissions via `[RequirePermission("permission.name")]` on controller ac
 - `AppPermissions.cs`: constants discovered via reflection (`AppPermissions.All`)
 - `PermissionAuthorizationHandler`: SuperAdmin bypass → claim match → deny
 - Never class-level `[Authorize(Roles)]` on controllers using permissions
+- To add a role: add `public const string` to `AppRoles.cs` - reflection discovers it, seeding picks it up automatically. Optionally seed permissions in `SeedRolePermissionsAsync()`.
 
 ### Role Hierarchy
 
@@ -221,7 +223,7 @@ Transactional emails use [Fluid](https://github.com/sebastienros/fluid) (Liquid)
 
 **Security:** HTML body is rendered with `HtmlEncoder.Default` preventing XSS. Subject and plain text are unencoded. The `{{ body | raw }}` filter in `_base.liquid` safely injects pre-encoded child HTML.
 
-**Adding a new template:** See [SKILLS.md — Add a Transactional Email Template](../../../SKILLS.md#add-a-transactional-email-template).
+**Adding a new template:** Use the `/add-email-template` skill.
 
 ## OpenAPI
 
