@@ -8,6 +8,7 @@ namespace MyProject.Infrastructure.Features.Authentication.Options;
 /// Configuration for external OAuth2/OIDC login providers.
 /// Maps to the "Authentication:ExternalProviders" section in appsettings.json.
 /// </summary>
+// TODO #368: Replace static appsettings configuration with admin-managed DB storage.
 public sealed class ExternalAuthOptions : IValidatableObject
 {
     public const string SectionName = "Authentication:ExternalProviders";

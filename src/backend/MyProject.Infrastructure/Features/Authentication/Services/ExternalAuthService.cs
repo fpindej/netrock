@@ -187,6 +187,7 @@ internal class ExternalAuthService(
         return Result.Success();
     }
 
+    // TODO #368: Query admin-managed provider storage instead of reading from DI-registered singletons.
     /// <inheritdoc />
     public IReadOnlyList<ExternalProviderInfo> GetAvailableProviders() =>
         providers.Select(p => new ExternalProviderInfo(p.Name, p.DisplayName)).ToList();

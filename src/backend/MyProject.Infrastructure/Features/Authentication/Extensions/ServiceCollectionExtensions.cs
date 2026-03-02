@@ -144,6 +144,7 @@ public static class ServiceCollectionExtensions
             return services;
         }
 
+        // TODO #368: Replace appsettings-driven registration with admin-managed provider storage.
         private void ConfigureExternalProviders(IConfiguration configuration)
         {
             services.AddOptions<ExternalAuthOptions>()

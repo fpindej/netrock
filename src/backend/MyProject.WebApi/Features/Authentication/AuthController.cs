@@ -430,7 +430,8 @@ public class AuthController(
     /// Returns the list of enabled external authentication providers.
     /// Clients should call this on startup to determine which OAuth buttons to render.
     /// </summary>
-    /// <remarks>Cached for 5 minutes because the provider list is static configuration.</remarks>
+    /// <remarks>Cached for 5 minutes because the provider list is static configuration.
+    /// TODO #368: Remove cache or switch to cache invalidation when providers become admin-managed.</remarks>
     [HttpGet("providers")]
     [ProducesResponseType(typeof(IReadOnlyList<ExternalProviderResponse>), StatusCodes.Status200OK)]
     [ResponseCache(Duration = 300)]
