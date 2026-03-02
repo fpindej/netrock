@@ -1,8 +1,10 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using System.Web;
 using Microsoft.Extensions.Logging;
+using MyProject.Shared;
 
 namespace MyProject.Infrastructure.Features.Authentication.Services.ExternalProviders;
 
@@ -93,6 +95,55 @@ internal sealed class GitHubAuthProvider(
             emailVerified,
             ExtractFirstName(user.Name),
             ExtractLastName(user.Name));
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> TestConnectionAsync(ProviderCredentials credentials, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var httpClient = httpClientFactory.CreateClient(HttpClientName);
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+            using var tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["code"] = "__test_connection__",
+                ["client_id"] = credentials.ClientId,
+                ["client_secret"] = credentials.ClientSecret
+            });
+
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, TokenEndpoint)
+            {
+                Content = tokenRequest
+            };
+            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            using var response = await httpClient.SendAsync(requestMessage, cancellationToken);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return Result.Failure(ErrorMessages.ExternalAuth.TestConnectionInvalidCredentials);
+            }
+
+            // GitHub returns 200 even on errors - check the error field in the JSON body
+            var body = await response.Content.ReadFromJsonAsync<GitHubTokenResponse>(cancellationToken);
+            if (body?.Error is "bad_verification_code")
+            {
+                return Result.Success();
+            }
+
+            if (body?.Error is "incorrect_client_credentials")
+            {
+                return Result.Failure(ErrorMessages.ExternalAuth.TestConnectionInvalidCredentials);
+            }
+
+            return Result.Success();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            logger.LogWarning(ex, "GitHub test connection failed");
+            return Result.Failure(ErrorMessages.ExternalAuth.TestConnectionProviderUnreachable);
+        }
     }
 
     private static async Task<GitHubUser> GetUserAsync(

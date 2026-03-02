@@ -1,8 +1,10 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Web;
 using Microsoft.Extensions.Logging;
+using MyProject.Shared;
 
 namespace MyProject.Infrastructure.Features.Authentication.Services.ExternalProviders;
 
@@ -81,6 +83,45 @@ internal sealed class AppleAuthProvider(
         return DecodeIdToken(tokenResult.IdToken);
     }
 
+    /// <inheritdoc />
+    public async Task<Result> TestConnectionAsync(ProviderCredentials credentials, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var httpClient = httpClientFactory.CreateClient(HttpClientName);
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+            using var tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["code"] = "__test_connection__",
+                ["client_id"] = credentials.ClientId,
+                ["client_secret"] = credentials.ClientSecret,
+                ["redirect_uri"] = "https://localhost/test",
+                ["grant_type"] = "authorization_code"
+            });
+
+            using var response = await httpClient.PostAsync(TokenEndpoint, tokenRequest, cancellationToken);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return Result.Failure(ErrorMessages.ExternalAuth.TestConnectionInvalidCredentials);
+            }
+
+            var body = await response.Content.ReadFromJsonAsync<TokenErrorResponse>(cancellationToken);
+            if (body?.Error is "invalid_client")
+            {
+                return Result.Failure(ErrorMessages.ExternalAuth.TestConnectionInvalidCredentials);
+            }
+
+            return Result.Success();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            logger.LogWarning(ex, "Apple test connection failed");
+            return Result.Failure(ErrorMessages.ExternalAuth.TestConnectionProviderUnreachable);
+        }
+    }
+
     /// <summary>
     /// Decodes the id_token payload from Apple's token endpoint.
     /// Since we received the token directly from Apple over HTTPS (not from a client),
@@ -119,6 +160,12 @@ internal sealed class AppleAuthProvider(
     {
         [JsonPropertyName("id_token")]
         public string? IdToken { get; init; }
+    }
+
+    private sealed class TokenErrorResponse
+    {
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
     }
 
     private sealed class AppleIdTokenClaims

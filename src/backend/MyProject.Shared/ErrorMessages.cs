@@ -181,6 +181,9 @@ public static class ErrorMessages
         public const string PasswordSetFailed = "Failed to set the password. Please try again.";
         public const string UnknownProvider = "The specified authentication provider is not recognized.";
         public const string ClientSecretRequired = "A client secret is required when enabling a provider that has no existing secret.";
+        public const string TestConnectionInvalidCredentials = "The provider rejected the credentials. Verify the client ID and secret are correct.";
+        public const string TestConnectionProviderUnreachable = "Could not reach the authentication provider. Please try again later.";
+        public const string TestConnectionNotConfigured = "No credentials are configured for this provider.";
     }
 
     /// <summary>

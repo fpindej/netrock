@@ -526,6 +526,9 @@
 	"admin_oauthProviders_toggleEnabled": "Toggle provider enabled",
 	"admin_oauthProviders_providerEnabled": "This provider is enabled for external login.",
 	"admin_oauthProviders_providerDisabled": "This provider is disabled.",
+	"admin_oauthProviders_testConnection": "Test Connection",
+	"admin_oauthProviders_testConnectionSuccess": "Connection successful. Credentials are valid.",
+	"admin_oauthProviders_testConnectionError": "Connection test failed.",
 
 	"audit_trail_title": "Audit Trail",
 	"audit_trail_description": "History of actions performed on or by this user.",
@@ -585,6 +588,7 @@
 	"audit_action_externalAccountUnlinked": "External account unlinked",
 	"audit_action_externalAccountCreated": "Account created via external login",
 	"audit_action_adminUpdateOAuthProvider": "OAuth provider updated",
+	"audit_action_adminTestOAuthProvider": "OAuth provider tested",
 	"audit_action_passwordSet": "Password set",
 
 	"serverError_backendUnavailable": "Backend unavailable",

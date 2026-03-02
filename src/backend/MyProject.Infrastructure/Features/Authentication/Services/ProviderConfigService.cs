@@ -155,6 +155,45 @@ internal sealed class ProviderConfigService(
         return Result.Success();
     }
 
+    /// <inheritdoc />
+    public async Task<Result> TestConnectionAsync(
+        Guid callerUserId, string provider, CancellationToken cancellationToken)
+    {
+        var knownProvider = providers.FirstOrDefault(
+            p => string.Equals(p.Name, provider, StringComparison.OrdinalIgnoreCase));
+
+        if (knownProvider is null)
+        {
+            return Result.Failure(ErrorMessages.ExternalAuth.UnknownProvider, ErrorType.Validation);
+        }
+
+        var canonicalName = knownProvider.Name;
+
+        var dbConfig = await dbContext.Set<ExternalProviderConfig>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Provider == canonicalName, cancellationToken);
+
+        if (dbConfig is null || string.IsNullOrEmpty(dbConfig.EncryptedClientId)
+                             || string.IsNullOrEmpty(dbConfig.EncryptedClientSecret))
+        {
+            return Result.Failure(ErrorMessages.ExternalAuth.TestConnectionNotConfigured, ErrorType.Validation);
+        }
+
+        var credentials = new ProviderCredentials(
+            encryptionService.Decrypt(dbConfig.EncryptedClientId),
+            encryptionService.Decrypt(dbConfig.EncryptedClientSecret));
+
+        var result = await knownProvider.TestConnectionAsync(credentials, cancellationToken);
+
+        await auditService.LogAsync(
+            AuditActions.AdminTestOAuthProvider,
+            userId: callerUserId,
+            metadata: JsonSerializer.Serialize(new { provider = canonicalName, success = result.IsSuccess }),
+            ct: cancellationToken);
+
+        return result;
+    }
+
     private async Task<ProviderCredentialsOutput?> LoadCredentialsAsync(
         string provider, CancellationToken cancellationToken)
     {

@@ -33,4 +33,14 @@ public interface IProviderConfigService
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A result indicating success or failure.</returns>
     Task<Result> UpsertAsync(Guid callerUserId, UpsertProviderConfigInput input, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Tests whether the stored credentials for a provider are valid by probing the provider's token endpoint.
+    /// Works even for disabled providers (tests credentials, not enabled state).
+    /// </summary>
+    /// <param name="callerUserId">The ID of the admin performing the test.</param>
+    /// <param name="provider">The provider name (e.g. "Google").</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A result indicating whether the credentials are valid.</returns>
+    Task<Result> TestConnectionAsync(Guid callerUserId, string provider, CancellationToken cancellationToken);
 }

@@ -1,3 +1,5 @@
+using MyProject.Shared;
+
 namespace MyProject.Infrastructure.Features.Authentication.Services.ExternalProviders;
 
 /// <summary>
@@ -35,4 +37,14 @@ internal interface IExternalAuthProvider
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The user's external identity information.</returns>
     Task<ExternalUserInfo> ExchangeCodeAsync(ProviderCredentials credentials, string code, string redirectUri, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Tests whether the provider's OAuth credentials are valid by sending a dummy token request.
+    /// A valid credential set returns <see cref="Result.Success()"/> (provider rejects the code but accepts the client),
+    /// while invalid credentials return a failure result.
+    /// </summary>
+    /// <param name="credentials">The OAuth2 client credentials to validate.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Success if credentials are accepted by the provider, failure otherwise.</returns>
+    Task<Result> TestConnectionAsync(ProviderCredentials credentials, CancellationToken cancellationToken);
 }

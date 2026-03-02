@@ -78,6 +78,8 @@ export function getAuditActionLabel(action: string | undefined): string {
 			return m.audit_action_externalAccountCreated();
 		case 'AdminUpdateOAuthProvider':
 			return m.audit_action_adminUpdateOAuthProvider();
+		case 'AdminTestOAuthProvider':
+			return m.audit_action_adminTestOAuthProvider();
 		case 'PasswordSet':
 			return m.audit_action_passwordSet();
 		default:
@@ -123,6 +125,7 @@ export function getAuditActionVariant(action: string | undefined): TimelineVaria
 		case 'ExternalAccountLinked':
 		case 'ExternalAccountUnlinked':
 		case 'AdminUpdateOAuthProvider':
+		case 'AdminTestOAuthProvider':
 			return 'warning';
 		default:
 			return 'default';

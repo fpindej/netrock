@@ -118,4 +118,7 @@ public static class AuditActions
 
     /// <summary>Admin created or updated an OAuth provider configuration.</summary>
     public const string AdminUpdateOAuthProvider = "AdminUpdateOAuthProvider";
+
+    /// <summary>Admin tested an OAuth provider's credentials.</summary>
+    public const string AdminTestOAuthProvider = "AdminTestOAuthProvider";
 }
