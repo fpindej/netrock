@@ -13,7 +13,7 @@ namespace MyProject.Infrastructure.Features.Authentication.Services.ExternalProv
 /// to retrieve the user's identity and primary verified email.
 /// </summary>
 internal sealed class GitHubAuthProvider(
-    HttpClient httpClient,
+    IHttpClientFactory httpClientFactory,
     ExternalAuthOptions.ProviderOptions options,
     ILogger<GitHubAuthProvider> logger) : IExternalAuthProvider
 {
@@ -21,6 +21,7 @@ internal sealed class GitHubAuthProvider(
     private const string TokenEndpoint = "https://github.com/login/oauth/access_token";
     private const string UserEndpoint = "https://api.github.com/user";
     private const string UserEmailsEndpoint = "https://api.github.com/user/emails";
+    private const string HttpClientName = "GitHub-OAuth";
 
     /// <inheritdoc />
     public string Name => "GitHub";
@@ -44,7 +45,9 @@ internal sealed class GitHubAuthProvider(
     public async Task<ExternalUserInfo> ExchangeCodeAsync(
         string code, string redirectUri, CancellationToken cancellationToken)
     {
-        var tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
+        using var httpClient = httpClientFactory.CreateClient(HttpClientName);
+
+        using var tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["code"] = code,
             ["client_id"] = options.ClientId,
@@ -76,8 +79,8 @@ internal sealed class GitHubAuthProvider(
             throw new InvalidOperationException("GitHub token response did not contain an access_token.");
         }
 
-        var user = await GetUserAsync(tokenResult.AccessToken, cancellationToken);
-        var (email, emailVerified) = await GetPrimaryEmailAsync(tokenResult.AccessToken, cancellationToken);
+        var user = await GetUserAsync(httpClient, tokenResult.AccessToken, cancellationToken);
+        var (email, emailVerified) = await GetPrimaryEmailAsync(httpClient, tokenResult.AccessToken, cancellationToken);
 
         return new ExternalUserInfo(
             user.Id.ToString(),
@@ -87,7 +90,8 @@ internal sealed class GitHubAuthProvider(
             ExtractLastName(user.Name));
     }
 
-    private async Task<GitHubUser> GetUserAsync(string accessToken, CancellationToken cancellationToken)
+    private static async Task<GitHubUser> GetUserAsync(
+        HttpClient httpClient, string accessToken, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, UserEndpoint);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -100,8 +104,8 @@ internal sealed class GitHubAuthProvider(
             ?? throw new InvalidOperationException("GitHub returned an empty user response.");
     }
 
-    private async Task<(string Email, bool Verified)> GetPrimaryEmailAsync(
-        string accessToken, CancellationToken cancellationToken)
+    private static async Task<(string Email, bool Verified)> GetPrimaryEmailAsync(
+        HttpClient httpClient, string accessToken, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, UserEmailsEndpoint);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);

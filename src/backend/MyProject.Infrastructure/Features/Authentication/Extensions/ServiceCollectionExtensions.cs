@@ -163,7 +163,7 @@ public static class ServiceCollectionExtensions
                 services.AddHttpClient("Google-OAuth");
                 services.AddSingleton<IExternalAuthProvider>(sp =>
                     new GoogleAuthProvider(
-                        sp.GetRequiredService<IHttpClientFactory>().CreateClient("Google-OAuth"),
+                        sp.GetRequiredService<IHttpClientFactory>(),
                         externalOptions.Google,
                         sp.GetRequiredService<ILogger<GoogleAuthProvider>>()));
             }
@@ -173,7 +173,7 @@ public static class ServiceCollectionExtensions
                 services.AddHttpClient("GitHub-OAuth");
                 services.AddSingleton<IExternalAuthProvider>(sp =>
                     new GitHubAuthProvider(
-                        sp.GetRequiredService<IHttpClientFactory>().CreateClient("GitHub-OAuth"),
+                        sp.GetRequiredService<IHttpClientFactory>(),
                         externalOptions.GitHub,
                         sp.GetRequiredService<ILogger<GitHubAuthProvider>>()));
             }
