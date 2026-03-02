@@ -521,6 +521,16 @@ describe('API proxy — URL construction and cookie auth paths', () => {
 		expect(targetUrl.searchParams.get('useCookies')).toBe('true');
 	});
 
+	it('appends useCookies=true for auth/external/callback path', async () => {
+		const event = mockProxyEvent({ path: 'auth/external/callback' });
+
+		await fallback(event);
+
+		const targetUrl = new URL(getProxiedRequest(event).url);
+
+		expect(targetUrl.searchParams.get('useCookies')).toBe('true');
+	});
+
 	it('does not append useCookies for non-auth paths', async () => {
 		const event = mockProxyEvent({ path: 'users' });
 

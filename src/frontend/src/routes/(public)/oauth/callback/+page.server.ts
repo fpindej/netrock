@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 	}
 
 	try {
-		const response = await fetch('/api/auth/external/callback?useCookies=true', {
+		const response = await fetch('/api/auth/external/callback', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ code, state })

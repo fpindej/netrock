@@ -12,7 +12,8 @@ const COOKIE_AUTH_PATHS = [
 	'auth/login',
 	'auth/refresh',
 	'auth/login/2fa',
-	'auth/login/2fa/recovery'
+	'auth/login/2fa/recovery',
+	'auth/external/callback'
 ];
 
 /** HTTP methods that can mutate state and are vulnerable to CSRF */
