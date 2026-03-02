@@ -49,7 +49,19 @@ public class ExternalAuthServiceTests : IDisposable
         var externalOptions = Options.Create(new ExternalAuthOptions
         {
             AllowedRedirectUris = ["https://example.com/oauth/callback"],
-            StateLifetime = TimeSpan.FromMinutes(10)
+            StateLifetime = TimeSpan.FromMinutes(10),
+            Google = new ExternalAuthOptions.ProviderOptions
+            {
+                Enabled = true,
+                ClientId = "google-client-id",
+                ClientSecret = "google-client-secret"
+            },
+            GitHub = new ExternalAuthOptions.ProviderOptions
+            {
+                Enabled = true,
+                ClientId = "github-client-id",
+                ClientSecret = "github-client-secret"
+            }
         });
 
         var tokenSessionService = Substitute.For<ITokenSessionService>();
@@ -118,7 +130,7 @@ public class ExternalAuthServiceTests : IDisposable
     [Fact]
     public async Task CreateChallenge_ValidInput_CreatesStateAndReturnsUrl()
     {
-        _googleProvider.BuildAuthorizationUrl(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>())
+        _googleProvider.BuildAuthorizationUrl(Arg.Any<ProviderCredentials>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>())
             .Returns("https://accounts.google.com/o/oauth2/v2/auth?state=abc");
 
         var input = new ExternalChallengeInput("Google", "https://example.com/oauth/callback");
@@ -156,7 +168,7 @@ public class ExternalAuthServiceTests : IDisposable
     {
         var userId = Guid.NewGuid();
         _userContext.UserId.Returns(userId);
-        _googleProvider.BuildAuthorizationUrl(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>())
+        _googleProvider.BuildAuthorizationUrl(Arg.Any<ProviderCredentials>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>())
             .Returns("https://accounts.google.com/auth");
 
         var input = new ExternalChallengeInput("Google", "https://example.com/oauth/callback");
@@ -230,7 +242,8 @@ public class ExternalAuthServiceTests : IDisposable
     public async Task HandleCallback_CodeExchangeFails_ReturnsError()
     {
         var stateToken = await SeedStateAsync();
-        _googleProvider.ExchangeCodeAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _googleProvider.ExchangeCodeAsync(
+                Arg.Any<ProviderCredentials>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns<ExternalUserInfo>(_ => throw new HttpRequestException("Provider unreachable"));
 
         var input = new ExternalCallbackInput("bad-code", stateToken);
@@ -734,7 +747,8 @@ public class ExternalAuthServiceTests : IDisposable
         string email = "test@example.com",
         bool emailVerified = true)
     {
-        _googleProvider.ExchangeCodeAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        _googleProvider.ExchangeCodeAsync(
+                Arg.Any<ProviderCredentials>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ExternalUserInfo(providerKey, email, emailVerified, "Test", "User"));
     }
 

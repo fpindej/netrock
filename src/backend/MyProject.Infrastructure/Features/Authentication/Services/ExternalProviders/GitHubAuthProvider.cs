@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using System.Web;
 using Microsoft.Extensions.Logging;
-using MyProject.Infrastructure.Features.Authentication.Options;
 
 namespace MyProject.Infrastructure.Features.Authentication.Services.ExternalProviders;
 
@@ -14,7 +13,6 @@ namespace MyProject.Infrastructure.Features.Authentication.Services.ExternalProv
 /// </summary>
 internal sealed class GitHubAuthProvider(
     IHttpClientFactory httpClientFactory,
-    ExternalAuthOptions.ProviderOptions options,
     ILogger<GitHubAuthProvider> logger) : IExternalAuthProvider
 {
     private const string AuthorizationEndpoint = "https://github.com/login/oauth/authorize";
@@ -30,10 +28,10 @@ internal sealed class GitHubAuthProvider(
     public string DisplayName => "GitHub";
 
     /// <inheritdoc />
-    public string BuildAuthorizationUrl(string state, string redirectUri, string? nonce = null)
+    public string BuildAuthorizationUrl(ProviderCredentials credentials, string state, string redirectUri, string? nonce = null)
     {
         var query = HttpUtility.ParseQueryString(string.Empty);
-        query["client_id"] = options.ClientId;
+        query["client_id"] = credentials.ClientId;
         query["redirect_uri"] = redirectUri;
         query["scope"] = "read:user user:email";
         query["state"] = state;
@@ -43,15 +41,15 @@ internal sealed class GitHubAuthProvider(
 
     /// <inheritdoc />
     public async Task<ExternalUserInfo> ExchangeCodeAsync(
-        string code, string redirectUri, CancellationToken cancellationToken)
+        ProviderCredentials credentials, string code, string redirectUri, CancellationToken cancellationToken)
     {
         using var httpClient = httpClientFactory.CreateClient(HttpClientName);
 
         using var tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["code"] = code,
-            ["client_id"] = options.ClientId,
-            ["client_secret"] = options.ClientSecret,
+            ["client_id"] = credentials.ClientId,
+            ["client_secret"] = credentials.ClientSecret,
             ["redirect_uri"] = redirectUri
         });
 

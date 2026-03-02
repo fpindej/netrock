@@ -2,7 +2,6 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using System.Web;
 using Microsoft.Extensions.Logging;
-using MyProject.Infrastructure.Features.Authentication.Options;
 
 namespace MyProject.Infrastructure.Features.Authentication.Services.ExternalProviders;
 
@@ -13,7 +12,6 @@ namespace MyProject.Infrastructure.Features.Authentication.Services.ExternalProv
 /// </summary>
 internal sealed class GoogleAuthProvider(
     IHttpClientFactory httpClientFactory,
-    ExternalAuthOptions.ProviderOptions options,
     ILogger<GoogleAuthProvider> logger) : IExternalAuthProvider
 {
     private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -28,10 +26,10 @@ internal sealed class GoogleAuthProvider(
     public string DisplayName => "Google";
 
     /// <inheritdoc />
-    public string BuildAuthorizationUrl(string state, string redirectUri, string? nonce = null)
+    public string BuildAuthorizationUrl(ProviderCredentials credentials, string state, string redirectUri, string? nonce = null)
     {
         var query = HttpUtility.ParseQueryString(string.Empty);
-        query["client_id"] = options.ClientId;
+        query["client_id"] = credentials.ClientId;
         query["redirect_uri"] = redirectUri;
         query["response_type"] = "code";
         query["scope"] = "openid email profile";
@@ -48,15 +46,15 @@ internal sealed class GoogleAuthProvider(
 
     /// <inheritdoc />
     public async Task<ExternalUserInfo> ExchangeCodeAsync(
-        string code, string redirectUri, CancellationToken cancellationToken)
+        ProviderCredentials credentials, string code, string redirectUri, CancellationToken cancellationToken)
     {
         using var httpClient = httpClientFactory.CreateClient(HttpClientName);
 
         using var tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["code"] = code,
-            ["client_id"] = options.ClientId,
-            ["client_secret"] = options.ClientSecret,
+            ["client_id"] = credentials.ClientId,
+            ["client_secret"] = credentials.ClientSecret,
             ["redirect_uri"] = redirectUri,
             ["grant_type"] = "authorization_code"
         });

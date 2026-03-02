@@ -75,7 +75,8 @@ internal class ExternalAuthService(
         dbContext.ExternalAuthStates.Add(stateEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var authorizationUrl = provider.BuildAuthorizationUrl(stateToken, input.RedirectUri);
+        var credentials = GetProviderCredentials(provider.Name);
+        var authorizationUrl = provider.BuildAuthorizationUrl(credentials, stateToken, input.RedirectUri);
 
         return Result<ExternalChallengeOutput>.Success(new ExternalChallengeOutput(authorizationUrl));
     }
@@ -105,10 +106,11 @@ internal class ExternalAuthService(
         }
 
         // 2. Exchange code for user info
+        var credentials = GetProviderCredentials(provider.Name);
         ExternalUserInfo externalUser;
         try
         {
-            externalUser = await provider.ExchangeCodeAsync(input.Code, state.RedirectUri, cancellationToken);
+            externalUser = await provider.ExchangeCodeAsync(credentials, input.Code, state.RedirectUri, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -468,6 +470,17 @@ internal class ExternalAuthService(
 
         return Result<ExternalCallbackOutput>.Success(
             new ExternalCallbackOutput(tokens, IsNewUser: true, Provider: provider, IsLinkOnly: false));
+    }
+
+    private ProviderCredentials GetProviderCredentials(string providerName)
+    {
+        var options = string.Equals(providerName, "Google", StringComparison.OrdinalIgnoreCase)
+            ? _externalOptions.Google
+            : string.Equals(providerName, "GitHub", StringComparison.OrdinalIgnoreCase)
+                ? _externalOptions.GitHub
+                : throw new InvalidOperationException($"No credentials configured for provider '{providerName}'.");
+
+        return new ProviderCredentials(options.ClientId, options.ClientSecret);
     }
 
     private static string GenerateStateToken()

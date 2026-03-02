@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Caching.Constants;
@@ -145,7 +144,6 @@ public static class ServiceCollectionExtensions
             return services;
         }
 
-        // TODO #368: Replace appsettings-driven registration with admin-managed provider storage.
         private void ConfigureExternalProviders(IConfiguration configuration)
         {
             services.AddOptions<ExternalAuthOptions>()
@@ -153,33 +151,11 @@ public static class ServiceCollectionExtensions
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
-            var externalOptions = configuration.GetSection(ExternalAuthOptions.SectionName)
-                .Get<ExternalAuthOptions>();
+            services.AddHttpClient(GoogleAuthProvider.HttpClientName);
+            services.AddSingleton<IExternalAuthProvider, GoogleAuthProvider>();
 
-            if (externalOptions is null)
-            {
-                return;
-            }
-
-            if (externalOptions.Google.Enabled)
-            {
-                services.AddHttpClient(GoogleAuthProvider.HttpClientName);
-                services.AddSingleton<IExternalAuthProvider>(sp =>
-                    new GoogleAuthProvider(
-                        sp.GetRequiredService<IHttpClientFactory>(),
-                        externalOptions.Google,
-                        sp.GetRequiredService<ILogger<GoogleAuthProvider>>()));
-            }
-
-            if (externalOptions.GitHub.Enabled)
-            {
-                services.AddHttpClient(GitHubAuthProvider.HttpClientName);
-                services.AddSingleton<IExternalAuthProvider>(sp =>
-                    new GitHubAuthProvider(
-                        sp.GetRequiredService<IHttpClientFactory>(),
-                        externalOptions.GitHub,
-                        sp.GetRequiredService<ILogger<GitHubAuthProvider>>()));
-            }
+            services.AddHttpClient(GitHubAuthProvider.HttpClientName);
+            services.AddSingleton<IExternalAuthProvider, GitHubAuthProvider>();
         }
     }
 
