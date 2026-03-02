@@ -39,7 +39,6 @@ internal sealed class MyCleanupJob(
 
 Key conventions:
 - Mark `internal sealed`, use primary constructor
-- Use `TimeProvider` (never `DateTime.UtcNow`)
 - Descriptive `JobId` (kebab-case, e.g. `"expired-token-cleanup"`)
 - `Hangfire.Cron` helpers: `Cron.Hourly()`, `Cron.Daily()`, `Cron.Weekly()`
 

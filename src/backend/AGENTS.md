@@ -35,11 +35,10 @@ src/backend/
 
 ### Key Rules
 
-- **Nullability**: `string.Empty` for required, `string?` for optional. Avoid `null!` - prefer fixing the design so nullability is expressed in the type system.
-- **Collections**: Prefer `IReadOnlyList<T>` on public interfaces - it communicates that callers shouldn't modify the collection. Avoid exposing `List<T>` or `T[]` directly.
-- **Time**: Always `TimeProvider` (injected). Registered as `TimeProvider.System` singleton.
-- **XML docs**: `/// <summary>` on all public and internal API surface.
-- **NuGet**: Versions in `Directory.Packages.props` only, versionless `<PackageReference>` in `.csproj`. To add: `<PackageVersion Include="Pkg" Version="X.Y.Z" />` in props, `<PackageReference Include="Pkg" />` in csproj.
+- **Nullability**: `string.Empty` for required, `string?` for optional. Express nullability in the type system.
+- **Collections**: Prefer `IReadOnlyList<T>` on public interfaces. Avoid exposing `List<T>` or `T[]` directly.
+- **Time**: `TimeProvider` registered as `TimeProvider.System` singleton.
+- **NuGet**: To add a package: `<PackageVersion Include="Pkg" Version="X.Y.Z" />` in `Directory.Packages.props`, `<PackageReference Include="Pkg" />` in `.csproj`.
 
 ## Entity Definition
 

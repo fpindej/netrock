@@ -47,8 +47,6 @@ Two layers: `lib/api/` (auth-agnostic client factory) and `lib/auth/` (all auth 
 
 ### Type Generation
 
-**Never hand-edit `v1.d.ts`.** Regenerate: `pnpm run api:generate` (backend must be running).
-
 Type aliases in `$lib/types/index.ts`:
 
 ```typescript
@@ -126,7 +124,7 @@ Use `interface Props` + destructure from `$props()` - this separates the type de
 
 ### Organization
 
-Feature folders in `$lib/components/{feature}/` with barrel `index.ts`. Import via barrel only:
+Import via barrel only:
 
 ```typescript
 import { ProfileForm, AvatarDialog } from '$lib/components/profile';
@@ -335,13 +333,6 @@ pnpm run test -- -t "name" # filter by test name
 - **`noUncheckedIndexedAccess: true`** - array/object index access returns `T | undefined`. Guard with `if`, optional chaining, or nullish coalescing before using indexed values.
 - **`@typescript-eslint/no-explicit-any: 'error'`** - `any` is a lint error. Use `unknown`, generics, or proper interfaces.
 
-## Don'ts
-
-- `export let` - use `$props()`
-- `$props<{...}>()` - use `interface Props` + `$props()`
-- `any` - define proper interfaces
-- Physical CSS (`ml-`, `mr-`, `pl-`, `pr-`, `border-l`, `border-r`)
-- `space-x-*` on flex/grid - use `gap-*`
 - `h-screen` - use `h-dvh`
 - `xl:grid-cols-2` for content - use `lg:grid-cols-2` (max-w-7xl ensures sufficient width)
 - Unconstrained page content - always use `max-w-7xl mx-auto` wrapper
