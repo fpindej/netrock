@@ -158,6 +158,12 @@ public static class ServiceCollectionExtensions
             services.AddHttpClient(GitHubAuthProvider.HttpClientName);
             services.AddSingleton<IExternalAuthProvider, GitHubAuthProvider>();
 
+            services.AddHttpClient(DiscordAuthProvider.HttpClientName);
+            services.AddSingleton<IExternalAuthProvider, DiscordAuthProvider>();
+
+            services.AddHttpClient(AppleAuthProvider.HttpClientName);
+            services.AddSingleton<IExternalAuthProvider, AppleAuthProvider>();
+
             services.AddSingleton<ISecretEncryptionService, AesGcmEncryptionService>();
             services.AddScoped<IProviderConfigService, ProviderConfigService>();
         }
