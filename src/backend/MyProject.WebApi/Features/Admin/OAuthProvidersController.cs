@@ -78,7 +78,13 @@ public class OAuthProvidersController(
         }
 
         var callerUserId = userContext.AuthenticatedUserId;
-        await providerConfigService.UpsertAsync(callerUserId, request.ToInput(provider), cancellationToken);
+        var result = await providerConfigService.UpsertAsync(
+            callerUserId, request.ToInput(provider), cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
 
         return NoContent();
     }

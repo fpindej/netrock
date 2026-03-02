@@ -63,6 +63,19 @@ public class AppPermissionsTests
     }
 
     [Fact]
+    public void ByCategory_ShouldContainOAuthProvidersCategory()
+    {
+        Assert.True(AppPermissions.ByCategory.ContainsKey("OAuthProviders"));
+    }
+
+    [Fact]
+    public void OAuthProvidersPermissions_ShouldExist()
+    {
+        Assert.Equal("oauth_providers.view", AppPermissions.OAuthProviders.View);
+        Assert.Equal("oauth_providers.manage", AppPermissions.OAuthProviders.Manage);
+    }
+
+    [Fact]
     public void All_ShouldContainEveryDefinedPermission()
     {
         Assert.Contains(AppPermissions.Users.View, AppPermissions.All);
@@ -72,6 +85,8 @@ public class AppPermissionsTests
         Assert.Contains(AppPermissions.Roles.Manage, AppPermissions.All);
         Assert.Contains(AppPermissions.Jobs.View, AppPermissions.All);
         Assert.Contains(AppPermissions.Jobs.Manage, AppPermissions.All);
+        Assert.Contains(AppPermissions.OAuthProviders.View, AppPermissions.All);
+        Assert.Contains(AppPermissions.OAuthProviders.Manage, AppPermissions.All);
     }
 
     [Fact]

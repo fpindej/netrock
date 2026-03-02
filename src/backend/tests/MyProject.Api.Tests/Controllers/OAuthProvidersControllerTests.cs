@@ -5,6 +5,7 @@ using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity.Constants;
+using MyProject.Shared;
 
 namespace MyProject.Api.Tests.Controllers;
 
@@ -103,6 +104,9 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
             {
                 new("Google", "Google", false, null, false, "appsettings", null, null)
             });
+        _factory.ProviderConfigService.UpsertAsync(
+                Arg.Any<Guid>(), Arg.Any<UpsertProviderConfigInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
 
         var response = await _client.SendAsync(
             Put("/api/v1/admin/oauth-providers/Google",
@@ -175,6 +179,9 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
             {
                 new("Google", "Google", true, "existing-id", true, "database", DateTime.UtcNow, Guid.NewGuid())
             });
+        _factory.ProviderConfigService.UpsertAsync(
+                Arg.Any<Guid>(), Arg.Any<UpsertProviderConfigInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
 
         var response = await _client.SendAsync(
             Put("/api/v1/admin/oauth-providers/Google",
