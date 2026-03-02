@@ -310,9 +310,4 @@ Aspire orchestrator for local development. Launches all infrastructure as contai
 
 Serilog bridges to OpenTelemetry via the ServiceDefaults `AddOpenTelemetry()` logger provider. With `writeToProviders: true`, Serilog forwards logs to all registered `ILoggerProvider` instances including the OTEL one — no separate Serilog OTEL sink needed. When `OTEL_EXPORTER_OTLP_ENDPOINT` is set (by Aspire or production infrastructure), logs flow to the OTLP collector. The console sink always remains active.
 
-### Adding a new infrastructure dependency to AppHost
-
-1. Add hosting package to `Directory.Packages.props` and `MyProject.AppHost.csproj`
-2. Add resource in `MyProject.AppHost/Program.cs` (e.g., `builder.AddRabbitMQ("rabbitmq")`)
-3. Wire to API via `.WithReference()` or `.WithEnvironment()` depending on connection format
-4. Add `.WaitFor()` if the API needs the resource at startup
+**Adding a new dependency:** Use the `/add-aspire-dep` skill.
