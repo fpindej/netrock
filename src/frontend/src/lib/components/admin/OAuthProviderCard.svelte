@@ -8,7 +8,7 @@
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
-	import { createCooldown } from '$lib/state';
+	import { createCooldown, createFieldShakes } from '$lib/state';
 	import { Loader2 } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import type { OAuthProviderConfig } from '$lib/types';
@@ -24,7 +24,9 @@
 	let clientId = $state(provider.clientId ?? '');
 	let clientSecret = $state('');
 	let isSaving = $state(false);
+	let fieldErrors = $state<Record<string, string>>({});
 	const cooldown = createCooldown();
+	const fieldShakes = createFieldShakes();
 
 	let isDirty = $derived(
 		isEnabled !== (provider.isEnabled ?? false) ||
@@ -34,6 +36,7 @@
 
 	async function save() {
 		isSaving = true;
+		fieldErrors = {};
 		const { response, error } = await browserClient.PUT(
 			'/api/v1/admin/oauth-providers/{provider}',
 			{
@@ -54,7 +57,11 @@
 		} else {
 			handleMutationError(response, error, {
 				cooldown,
-				fallback: m.admin_oauthProviders_saveError()
+				fallback: m.admin_oauthProviders_saveError(),
+				onValidationError(errors) {
+					fieldErrors = errors;
+					fieldShakes.triggerFields(Object.keys(errors));
+				}
 			});
 		}
 	}
@@ -88,7 +95,15 @@
 				bind:value={clientId}
 				placeholder={m.admin_oauthProviders_clientIdPlaceholder()}
 				disabled={!canManage}
+				class={fieldShakes.class('clientId')}
+				aria-invalid={!!fieldErrors.clientId}
+				aria-describedby={fieldErrors.clientId ? `${provider.provider}-client-id-error` : undefined}
 			/>
+			{#if fieldErrors.clientId}
+				<p id="{provider.provider}-client-id-error" class="text-xs text-destructive">
+					{fieldErrors.clientId}
+				</p>
+			{/if}
 		</div>
 		<div class="space-y-2">
 			<Label for="{provider.provider}-client-secret">
@@ -102,7 +117,17 @@
 					? m.admin_oauthProviders_secretUnchanged()
 					: m.admin_oauthProviders_clientSecretPlaceholder()}
 				disabled={!canManage}
+				class={fieldShakes.class('clientSecret')}
+				aria-invalid={!!fieldErrors.clientSecret}
+				aria-describedby={fieldErrors.clientSecret
+					? `${provider.provider}-client-secret-error`
+					: undefined}
 			/>
+			{#if fieldErrors.clientSecret}
+				<p id="{provider.provider}-client-secret-error" class="text-xs text-destructive">
+					{fieldErrors.clientSecret}
+				</p>
+			{/if}
 		</div>
 	</Card.Content>
 	{#if canManage}
