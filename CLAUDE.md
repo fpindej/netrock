@@ -32,6 +32,7 @@ Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 - Use shadcn-svelte components (`pnpm dlx shadcn-svelte@latest add <name>`) — never build what shadcn already provides
 - Pixel-perfect responsiveness — mobile, tablet, desktop, ultrawide, landscape and portrait
 - Touch targets minimum 44px on all interactive elements
+- Unified UX — reuse existing components and patterns so the app feels like one product, not five
 
 ### Cross-Cutting
 
