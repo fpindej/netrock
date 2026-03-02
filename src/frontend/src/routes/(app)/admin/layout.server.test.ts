@@ -1,7 +1,7 @@
 /**
  * Tests for the admin layout server guard — the permission boundary for admin routes.
  *
- * The admin layout requires at least one of: users.view, roles.view, or jobs.view.
+ * The admin layout requires at least one of: users.view, roles.view, jobs.view, or oauth_providers.view.
  * Users without any of these permissions are redirected to /.
  *
  * Follows the same pattern as the parent (app) layout test.
@@ -19,7 +19,7 @@ const MOCK_ADMIN_USER = {
 	firstName: 'Admin',
 	lastName: 'User',
 	roles: ['Admin'],
-	permissions: ['users.view', 'roles.view', 'jobs.view'],
+	permissions: ['users.view', 'roles.view', 'jobs.view', 'oauth_providers.view'],
 	emailConfirmed: true
 };
 
@@ -117,6 +117,12 @@ describe('admin layout server load', () => {
 
 	it('user with only jobs.view — returns user data', async () => {
 		const user = { ...MOCK_REGULAR_USER, permissions: ['jobs.view'] };
+		const result = await load(mockLoadEvent(user));
+		expect(result).toEqual({ user });
+	});
+
+	it('user with only oauth_providers.view — returns user data', async () => {
+		const user = { ...MOCK_REGULAR_USER, permissions: ['oauth_providers.view'] };
 		const result = await load(mockLoadEvent(user));
 		expect(result).toEqual({ user });
 	});

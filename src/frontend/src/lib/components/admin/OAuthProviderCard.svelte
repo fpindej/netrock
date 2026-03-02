@@ -116,7 +116,7 @@
 		</div>
 	</Card.Content>
 	{#if canManage}
-		<Card.Footer class="flex justify-end">
+		<Card.Footer class="flex flex-col gap-2 sm:flex-row sm:justify-end">
 			<Button
 				disabled={!isDirty || isSaving || cooldown.active}
 				onclick={save}

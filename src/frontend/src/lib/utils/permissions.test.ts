@@ -172,4 +172,9 @@ describe('Permissions constant', () => {
 		expect(Permissions.Jobs.View).toBe('jobs.view');
 		expect(Permissions.Jobs.Manage).toBe('jobs.manage');
 	});
+
+	it('exposes OAuthProviders permissions', () => {
+		expect(Permissions.OAuthProviders.View).toBe('oauth_providers.view');
+		expect(Permissions.OAuthProviders.Manage).toBe('oauth_providers.manage');
+	});
 });
