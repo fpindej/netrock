@@ -164,7 +164,7 @@ erDiagram
 
 ## Follow-Up Items
 
-- [ ] #368 - Replace static appsettings configuration with admin-managed DB storage
+- [x] #368 - Replace static appsettings configuration with admin-managed DB storage
 - [ ] #381 - Add HTTP client resilience (retries, circuit breakers) for OAuth providers
 - [ ] Replace frontend `ERROR_MAP` string matching with backend error codes
 - [ ] Add Apple Sign-In provider (same `IExternalAuthProvider` pattern)

@@ -33,6 +33,7 @@ internal class ExternalAuthService(
     ITokenSessionService tokenSessionService,
     IOptions<ExternalAuthOptions> externalAuthOptions,
     IEnumerable<IExternalAuthProvider> providers,
+    IProviderConfigService providerConfigService,
     ILogger<ExternalAuthService> logger,
     MyProjectDbContext dbContext) : IExternalAuthService
 {
@@ -57,6 +58,14 @@ internal class ExternalAuthService(
                 ErrorMessages.ExternalAuth.ProviderNotConfigured, ErrorType.Validation);
         }
 
+        var credentialsOutput = await providerConfigService.GetCredentialsAsync(provider.Name, cancellationToken);
+        if (credentialsOutput is null)
+        {
+            return Result<ExternalChallengeOutput>.Failure(
+                ErrorMessages.ExternalAuth.ProviderNotConfigured, ErrorType.Validation);
+        }
+
+        var credentials = new ProviderCredentials(credentialsOutput.ClientId, credentialsOutput.ClientSecret);
         var stateToken = GenerateStateToken();
         var utcNow = timeProvider.GetUtcNow().UtcDateTime;
 
@@ -75,7 +84,6 @@ internal class ExternalAuthService(
         dbContext.ExternalAuthStates.Add(stateEntity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var credentials = GetProviderCredentials(provider.Name);
         var authorizationUrl = provider.BuildAuthorizationUrl(credentials, stateToken, input.RedirectUri);
 
         return Result<ExternalChallengeOutput>.Success(new ExternalChallengeOutput(authorizationUrl));
@@ -106,7 +114,14 @@ internal class ExternalAuthService(
         }
 
         // 2. Exchange code for user info
-        var credentials = GetProviderCredentials(provider.Name);
+        var credentialsOutput = await providerConfigService.GetCredentialsAsync(provider.Name, cancellationToken);
+        if (credentialsOutput is null)
+        {
+            return Result<ExternalCallbackOutput>.Failure(
+                ErrorMessages.ExternalAuth.ProviderNotConfigured, ErrorType.Validation);
+        }
+
+        var credentials = new ProviderCredentials(credentialsOutput.ClientId, credentialsOutput.ClientSecret);
         ExternalUserInfo externalUser;
         try
         {
@@ -184,10 +199,16 @@ internal class ExternalAuthService(
         return Result.Success();
     }
 
-    // TODO #368: Query admin-managed provider storage instead of reading from DI-registered singletons.
     /// <inheritdoc />
-    public IReadOnlyList<ExternalProviderInfo> GetAvailableProviders() =>
-        providers.Select(p => new ExternalProviderInfo(p.Name, p.DisplayName)).ToList();
+    public async Task<IReadOnlyList<ExternalProviderInfo>> GetAvailableProvidersAsync(
+        CancellationToken cancellationToken)
+    {
+        var configs = await providerConfigService.GetAllAsync(cancellationToken);
+        return configs
+            .Where(c => c.IsEnabled)
+            .Select(c => new ExternalProviderInfo(c.Provider, c.DisplayName))
+            .ToList();
+    }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<string>> GetLinkedProvidersAsync(Guid userId, CancellationToken cancellationToken)
@@ -470,17 +491,6 @@ internal class ExternalAuthService(
 
         return Result<ExternalCallbackOutput>.Success(
             new ExternalCallbackOutput(tokens, IsNewUser: true, Provider: provider, IsLinkOnly: false));
-    }
-
-    private ProviderCredentials GetProviderCredentials(string providerName)
-    {
-        var options = string.Equals(providerName, "Google", StringComparison.OrdinalIgnoreCase)
-            ? _externalOptions.Google
-            : string.Equals(providerName, "GitHub", StringComparison.OrdinalIgnoreCase)
-                ? _externalOptions.GitHub
-                : throw new InvalidOperationException($"No credentials configured for provider '{providerName}'.");
-
-        return new ProviderCredentials(options.ClientId, options.ClientSecret);
     }
 
     private static string GenerateStateToken()

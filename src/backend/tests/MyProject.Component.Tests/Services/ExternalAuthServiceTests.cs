@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Features.Audit;
+using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity;
 using MyProject.Application.Identity.Constants;
@@ -29,6 +30,7 @@ public class ExternalAuthServiceTests : IDisposable
     private readonly HybridCache _hybridCache;
     private readonly MyProjectDbContext _dbContext;
     private readonly IExternalAuthProvider _googleProvider;
+    private readonly IProviderConfigService _providerConfigService;
     private readonly ExternalAuthService _sut;
 
     private static readonly DateTimeOffset FixedTime = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
@@ -45,6 +47,10 @@ public class ExternalAuthServiceTests : IDisposable
         _googleProvider = Substitute.For<IExternalAuthProvider>();
         _googleProvider.Name.Returns("Google");
         _googleProvider.DisplayName.Returns("Google");
+
+        _providerConfigService = Substitute.For<IProviderConfigService>();
+        _providerConfigService.GetCredentialsAsync("Google", Arg.Any<CancellationToken>())
+            .Returns(new ProviderCredentialsOutput("google-client-id", "google-client-secret"));
 
         var externalOptions = Options.Create(new ExternalAuthOptions
         {
@@ -79,6 +85,7 @@ public class ExternalAuthServiceTests : IDisposable
             tokenSessionService,
             externalOptions,
             [_googleProvider],
+            _providerConfigService,
             Substitute.For<ILogger<ExternalAuthService>>(),
             _dbContext);
     }
@@ -695,9 +702,12 @@ public class ExternalAuthServiceTests : IDisposable
     #region GetAvailableProviders
 
     [Fact]
-    public void GetAvailableProviders_ReturnsConfiguredProviders()
+    public async Task GetAvailableProviders_ReturnsConfiguredProviders()
     {
-        var providers = _sut.GetAvailableProviders();
+        _providerConfigService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns([new ProviderConfigOutput("Google", "Google", true, "client-id", true, "appsettings", null, null)]);
+
+        var providers = await _sut.GetAvailableProvidersAsync(CancellationToken.None);
 
         Assert.Single(providers);
         Assert.Equal("Google", providers[0].Name);
