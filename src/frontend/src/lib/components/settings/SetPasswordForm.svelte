@@ -40,6 +40,8 @@
 			});
 
 			if (response.ok) {
+				newPassword = '';
+				confirmPassword = '';
 				toast.success(m.settings_setPassword_success());
 				onPasswordSet();
 			} else {
