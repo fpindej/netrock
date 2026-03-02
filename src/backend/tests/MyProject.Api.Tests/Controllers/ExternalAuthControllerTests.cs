@@ -206,6 +206,8 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
         var body = await response.Content.ReadFromJsonAsync<ExternalCallbackContract>();
         Assert.NotNull(body);
         Assert.True(body.IsLinkOnly);
+        Assert.Null(body.AccessToken);
+        Assert.Null(body.RefreshToken);
     }
 
     [Fact]

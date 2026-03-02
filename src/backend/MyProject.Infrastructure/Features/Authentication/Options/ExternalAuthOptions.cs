@@ -49,6 +49,7 @@ public sealed class ExternalAuthOptions : IValidatableObject
                 [nameof(StateLifetime)]);
         }
 
+        // Blocklist rather than allowlist so custom mobile schemes (e.g. myapp://oauth/callback) are permitted.
         foreach (var uri in AllowedRedirectUris)
         {
             if (!Uri.TryCreate(uri, UriKind.Absolute, out var parsed))
