@@ -584,6 +584,7 @@
 	"audit_action_externalAccountLinked": "External account linked",
 	"audit_action_externalAccountUnlinked": "External account unlinked",
 	"audit_action_externalAccountCreated": "Account created via external login",
+	"audit_action_adminUpdateOAuthProvider": "OAuth provider updated",
 	"audit_action_passwordSet": "Password set",
 
 	"serverError_backendUnavailable": "Backend unavailable",

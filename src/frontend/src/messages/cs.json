@@ -584,6 +584,7 @@
 	"audit_action_externalAccountLinked": "Externí účet propojen",
 	"audit_action_externalAccountUnlinked": "Externí účet odpojen",
 	"audit_action_externalAccountCreated": "Účet vytvořen přes externí přihlášení",
+	"audit_action_adminUpdateOAuthProvider": "OAuth poskytovatel aktualizován",
 	"audit_action_passwordSet": "Heslo nastaveno",
 
 	"serverError_backendUnavailable": "Backend není dostupný",
