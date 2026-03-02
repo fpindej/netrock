@@ -66,6 +66,18 @@ export function getAuditActionLabel(action: string | undefined): string {
 			return m.audit_action_twoFactorRecoveryCodesRegenerated();
 		case 'TwoFactorRecoveryCodeUsed':
 			return m.audit_action_twoFactorRecoveryCodeUsed();
+		case 'ExternalLoginSuccess':
+			return m.audit_action_externalLoginSuccess();
+		case 'ExternalLoginFailure':
+			return m.audit_action_externalLoginFailure();
+		case 'ExternalAccountLinked':
+			return m.audit_action_externalAccountLinked();
+		case 'ExternalAccountUnlinked':
+			return m.audit_action_externalAccountUnlinked();
+		case 'ExternalAccountCreated':
+			return m.audit_action_externalAccountCreated();
+		case 'PasswordSet':
+			return m.audit_action_passwordSet();
 		default:
 			return action ?? '-';
 	}
@@ -81,6 +93,9 @@ export function getAuditActionVariant(action: string | undefined): TimelineVaria
 		case 'AdminUnlockUser':
 		case 'TwoFactorEnabled':
 		case 'TwoFactorLoginSuccess':
+		case 'ExternalLoginSuccess':
+		case 'ExternalAccountCreated':
+		case 'PasswordSet':
 			return 'success';
 		case 'LoginFailure':
 		case 'AccountDeletion':
@@ -89,6 +104,7 @@ export function getAuditActionVariant(action: string | undefined): TimelineVaria
 		case 'AdminLockUser':
 		case 'TwoFactorLoginFailure':
 		case 'TwoFactorDisabled':
+		case 'ExternalLoginFailure':
 			return 'destructive';
 		case 'AdminCreateUser':
 		case 'AdminVerifyEmail':
@@ -102,6 +118,8 @@ export function getAuditActionVariant(action: string | undefined): TimelineVaria
 		case 'AvatarRemove':
 		case 'TwoFactorRecoveryCodesRegenerated':
 		case 'TwoFactorRecoveryCodeUsed':
+		case 'ExternalAccountLinked':
+		case 'ExternalAccountUnlinked':
 			return 'warning';
 		default:
 			return 'default';
