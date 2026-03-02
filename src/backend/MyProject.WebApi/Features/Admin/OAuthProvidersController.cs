@@ -64,11 +64,17 @@ public class OAuthProvidersController(
         CancellationToken cancellationToken)
     {
         var configs = await providerConfigService.GetAllAsync(cancellationToken);
-        var known = configs.Any(c => string.Equals(c.Provider, provider, StringComparison.OrdinalIgnoreCase));
+        var config = configs.FirstOrDefault(
+            c => string.Equals(c.Provider, provider, StringComparison.OrdinalIgnoreCase));
 
-        if (!known)
+        if (config is null)
         {
             return ProblemFactory.Create(ErrorMessages.ExternalAuth.UnknownProvider, ErrorType.Validation);
+        }
+
+        if (request.IsEnabled && request.ClientSecret is null && !config.HasClientSecret)
+        {
+            return ProblemFactory.Create(ErrorMessages.ExternalAuth.ClientSecretRequired, ErrorType.Validation);
         }
 
         var callerUserId = userContext.AuthenticatedUserId;

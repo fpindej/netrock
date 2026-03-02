@@ -180,6 +180,7 @@ public static class ErrorMessages
         public const string PasswordAlreadySet = "A password is already set for this account.";
         public const string PasswordSetFailed = "Failed to set the password. Please try again.";
         public const string UnknownProvider = "The specified authentication provider is not recognized.";
+        public const string ClientSecretRequired = "A client secret is required when enabling a provider that has no existing secret.";
     }
 
     /// <summary>

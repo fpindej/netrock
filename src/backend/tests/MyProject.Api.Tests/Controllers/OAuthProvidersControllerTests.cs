@@ -129,6 +129,7 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
                 JsonContent.Create(new { IsEnabled = true, ClientId = "id", ClientSecret = "secret" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, "The specified authentication provider is not recognized.");
     }
 
     [Fact]
@@ -164,6 +165,46 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
                 JsonContent.Create(new { IsEnabled = true, ClientId = "id", ClientSecret = "secret" })));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateProvider_NullClientSecret_KeepsExisting_Returns204()
+    {
+        _factory.ProviderConfigService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<ProviderConfigOutput>
+            {
+                new("Google", "Google", true, "existing-id", true, "database", DateTime.UtcNow, Guid.NewGuid())
+            });
+
+        var response = await _client.SendAsync(
+            Put("/api/v1/admin/oauth-providers/Google",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage),
+                JsonContent.Create(new { IsEnabled = true, ClientId = "updated-id" })));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        await _factory.ProviderConfigService.Received(1).UpsertAsync(
+            Arg.Any<Guid>(),
+            Arg.Is<UpsertProviderConfigInput>(i => i.ClientSecret == null),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateProvider_EnabledWithoutSecretAndNoExisting_Returns400()
+    {
+        _factory.ProviderConfigService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<ProviderConfigOutput>
+            {
+                new("Google", "Google", false, null, false, "appsettings", null, null)
+            });
+
+        var response = await _client.SendAsync(
+            Put("/api/v1/admin/oauth-providers/Google",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage),
+                JsonContent.Create(new { IsEnabled = true, ClientId = "new-id" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400,
+            "A client secret is required when enabling a provider that has no existing secret.");
     }
 
     [Fact]
