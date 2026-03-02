@@ -45,6 +45,11 @@ internal class MyProjectDbContext(DbContextOptions<MyProjectDbContext> options)
     public DbSet<AuditEvent> AuditEvents { get; set; }
 
     /// <summary>
+    /// Gets or sets the external provider configurations for admin-managed OAuth credentials.
+    /// </summary>
+    public DbSet<ExternalProviderConfig> ExternalProviderConfigs { get; set; }
+
+    /// <summary>
     /// Configures the model by applying all <see cref="IEntityTypeConfiguration{TEntity}"/> from this assembly,
     /// the auth schema, and fuzzy search extensions.
     /// <para>
