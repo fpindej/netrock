@@ -6,10 +6,12 @@ using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Captcha;
 using MyProject.Shared;
 using MyProject.WebApi.Features.Authentication.Dtos.ChangePassword;
+using MyProject.WebApi.Features.Authentication.Dtos.External;
 using MyProject.WebApi.Features.Authentication.Dtos.ForgotPassword;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
 using MyProject.WebApi.Features.Authentication.Dtos.ResetPassword;
+using MyProject.WebApi.Features.Authentication.Dtos.SetPassword;
 using MyProject.WebApi.Features.Authentication.Dtos.TwoFactor;
 using MyProject.WebApi.Features.Authentication.Dtos.VerifyEmail;
 using MyProject.WebApi.Shared;
@@ -26,7 +28,8 @@ namespace MyProject.WebApi.Features.Authentication;
 public class AuthController(
     IAuthenticationService authenticationService,
     ITwoFactorService twoFactorService,
-    ICaptchaService captchaService) : ControllerBase
+    ICaptchaService captchaService,
+    IExternalAuthService externalAuthService) : ControllerBase
 {
     /// <summary>
     /// Authenticates a user and returns JWT tokens, or a 2FA challenge if two-factor is enabled.
@@ -419,5 +422,121 @@ public class AuthController(
         }
 
         return Ok(result.Value.ToResponse());
+    }
+
+    // ────────── External Authentication (OAuth2) ──────────
+
+    /// <summary>
+    /// Returns the list of enabled external authentication providers.
+    /// Clients should call this on startup to determine which OAuth buttons to render.
+    /// </summary>
+    [HttpGet("providers")]
+    [ProducesResponseType(typeof(IReadOnlyList<ExternalProviderResponse>), StatusCodes.Status200OK)]
+    [ResponseCache(Duration = 300)]
+    public ActionResult<IReadOnlyList<ExternalProviderResponse>> GetProviders()
+    {
+        var providers = externalAuthService.GetAvailableProviders()
+            .Select(p => p.ToResponse())
+            .ToList();
+
+        return Ok(providers);
+    }
+
+    /// <summary>
+    /// Initiates an external OAuth2 authorization flow by creating a state token
+    /// and returning the provider's authorization URL.
+    /// </summary>
+    [HttpPost("external/challenge")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [ProducesResponseType<ExternalChallengeResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult<ExternalChallengeResponse>> ExternalChallenge(
+        [FromBody] ExternalChallengeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await externalAuthService.CreateChallengeAsync(request.ToChallengeInput(), cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return Ok(new ExternalChallengeResponse { AuthorizationUrl = result.Value.AuthorizationUrl });
+    }
+
+    /// <summary>
+    /// Handles the OAuth2 callback after provider authorization.
+    /// Validates state, exchanges the code, and performs login/linking/creation.
+    /// </summary>
+    [HttpPost("external/callback")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [ProducesResponseType(typeof(ExternalCallbackResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult<ExternalCallbackResponse>> ExternalCallback(
+        [FromBody] ExternalCallbackRequest request,
+        [FromQuery] bool useCookies = false,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await externalAuthService.HandleCallbackAsync(
+            request.ToCallbackInput(), useCookies, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return Ok(result.Value.ToResponse());
+    }
+
+    /// <summary>
+    /// Unlinks an external provider from the current user's account.
+    /// Fails if this is the user's only authentication method.
+    /// </summary>
+    [Authorize]
+    [HttpPost("external/unlink")]
+    [EnableRateLimiting(RateLimitPolicies.Sensitive)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult> ExternalUnlink(
+        [FromBody] ExternalUnlinkRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await externalAuthService.UnlinkProviderAsync(request.Provider, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Sets an initial password for a passwordless OAuth-created account.
+    /// Only available when the user has no password set.
+    /// </summary>
+    [Authorize]
+    [HttpPost("set-password")]
+    [EnableRateLimiting(RateLimitPolicies.Sensitive)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult> SetPassword(
+        [FromBody] SetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await externalAuthService.SetPasswordAsync(request.ToSetPasswordInput(), cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return NoContent();
     }
 }

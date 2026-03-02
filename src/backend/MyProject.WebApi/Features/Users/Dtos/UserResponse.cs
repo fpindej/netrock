@@ -66,4 +66,14 @@ public class UserResponse
     /// Whether the user has two-factor authentication enabled.
     /// </summary>
     public bool TwoFactorEnabled { [UsedImplicitly] get; init; }
+
+    /// <summary>
+    /// External OAuth2 providers linked to this account.
+    /// </summary>
+    public IReadOnlyList<string> LinkedProviders { [UsedImplicitly] get; init; } = [];
+
+    /// <summary>
+    /// Whether the user has a password set (false for OAuth-only accounts).
+    /// </summary>
+    public bool HasPassword { [UsedImplicitly] get; init; }
 }

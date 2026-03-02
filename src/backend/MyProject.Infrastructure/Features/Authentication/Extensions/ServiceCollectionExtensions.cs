@@ -42,6 +42,7 @@ public static class ServiceCollectionExtensions
             services.AddScoped<EmailTokenService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<ITwoFactorService, TwoFactorService>();
+            services.AddScoped<IExternalAuthService, ExternalAuthService>();
 
             services.ConfigureExternalProviders(configuration);
 
