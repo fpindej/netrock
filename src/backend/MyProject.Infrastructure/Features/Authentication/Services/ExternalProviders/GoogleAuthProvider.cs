@@ -61,7 +61,7 @@ internal sealed class GoogleAuthProvider(
             ["grant_type"] = "authorization_code"
         });
 
-        var tokenResponse = await httpClient.PostAsync(TokenEndpoint, tokenRequest, cancellationToken);
+        using var tokenResponse = await httpClient.PostAsync(TokenEndpoint, tokenRequest, cancellationToken);
 
         if (!tokenResponse.IsSuccessStatusCode)
         {
@@ -92,7 +92,7 @@ internal sealed class GoogleAuthProvider(
         using var request = new HttpRequestMessage(HttpMethod.Get, UserInfoEndpoint);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-        var response = await httpClient.SendAsync(request, cancellationToken);
+        using var response = await httpClient.SendAsync(request, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {

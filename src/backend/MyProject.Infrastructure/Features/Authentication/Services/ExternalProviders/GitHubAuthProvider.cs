@@ -61,7 +61,7 @@ internal sealed class GitHubAuthProvider(
         };
         tokenRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-        var tokenResponse = await httpClient.SendAsync(tokenRequestMessage, cancellationToken);
+        using var tokenResponse = await httpClient.SendAsync(tokenRequestMessage, cancellationToken);
 
         if (!tokenResponse.IsSuccessStatusCode)
         {
@@ -97,7 +97,7 @@ internal sealed class GitHubAuthProvider(
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Headers.UserAgent.Add(new ProductInfoHeaderValue("MyProject", "1.0"));
 
-        var response = await httpClient.SendAsync(request, cancellationToken);
+        using var response = await httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<GitHubUser>(cancellationToken)
@@ -111,7 +111,7 @@ internal sealed class GitHubAuthProvider(
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Headers.UserAgent.Add(new ProductInfoHeaderValue("MyProject", "1.0"));
 
-        var response = await httpClient.SendAsync(request, cancellationToken);
+        using var response = await httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         var emails = await response.Content.ReadFromJsonAsync<List<GitHubEmail>>(cancellationToken)
