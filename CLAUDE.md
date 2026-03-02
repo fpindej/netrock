@@ -34,6 +34,7 @@ Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 
 - Security restrictive by default — deny first, open selectively
 - Atomic commits: `type(scope): imperative description` (Conventional Commits)
+- No dead code — remove unused imports, variables, functions, files, and stale references in the same commit
 
 ## Verification
 
