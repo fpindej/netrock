@@ -3,14 +3,12 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cryptography;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Infrastructure.Features.Authentication.Models;
-using MyProject.Infrastructure.Features.Authentication.Options;
 using MyProject.Infrastructure.Features.Authentication.Services.ExternalProviders;
 using MyProject.Infrastructure.Persistence;
 using MyProject.Shared;
@@ -18,13 +16,12 @@ using MyProject.Shared;
 namespace MyProject.Infrastructure.Features.Authentication.Services;
 
 /// <summary>
-/// Manages OAuth provider configuration with DB storage and appsettings fallback.
+/// Manages OAuth provider configuration with DB storage as the single source of truth.
 /// Uses <see cref="HybridCache"/> with 5-minute TTL per provider.
 /// </summary>
 internal sealed class ProviderConfigService(
     MyProjectDbContext dbContext,
     ISecretEncryptionService encryptionService,
-    IOptions<ExternalAuthOptions> externalAuthOptions,
     IEnumerable<IExternalAuthProvider> providers,
     HybridCache hybridCache,
     IAuditService auditService,
@@ -35,8 +32,6 @@ internal sealed class ProviderConfigService(
     {
         Expiration = TimeSpan.FromMinutes(5)
     };
-
-    private readonly ExternalAuthOptions _options = externalAuthOptions.Value;
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ProviderConfigOutput>> GetAllAsync(CancellationToken cancellationToken)
@@ -74,14 +69,13 @@ internal sealed class ProviderConfigService(
             }
             else
             {
-                var appSettings = GetAppSettingsOptions(provider.Name);
                 result.Add(new ProviderConfigOutput(
                     provider.Name,
                     provider.DisplayName,
-                    appSettings?.Enabled ?? false,
-                    appSettings?.ClientId,
-                    HasClientSecret: !string.IsNullOrEmpty(appSettings?.ClientSecret),
-                    Source: "appsettings",
+                    IsEnabled: false,
+                    ClientId: null,
+                    HasClientSecret: false,
+                    Source: "unconfigured",
                     UpdatedAt: null,
                     UpdatedBy: null));
             }
@@ -168,36 +162,17 @@ internal sealed class ProviderConfigService(
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Provider == provider, cancellationToken);
 
-        if (dbConfig is not null)
-        {
-            if (!dbConfig.IsEnabled)
-            {
-                return null;
-            }
-
-            var clientSecret = string.IsNullOrEmpty(dbConfig.EncryptedClientSecret)
-                ? string.Empty
-                : encryptionService.Decrypt(dbConfig.EncryptedClientSecret);
-
-            return new ProviderCredentialsOutput(
-                encryptionService.Decrypt(dbConfig.EncryptedClientId),
-                clientSecret);
-        }
-
-        // Fallback to appsettings
-        var appSettings = GetAppSettingsOptions(provider);
-        if (appSettings is null || !appSettings.Enabled)
+        if (dbConfig is null || !dbConfig.IsEnabled)
         {
             return null;
         }
 
-        return new ProviderCredentialsOutput(appSettings.ClientId, appSettings.ClientSecret);
-    }
+        var clientSecret = string.IsNullOrEmpty(dbConfig.EncryptedClientSecret)
+            ? string.Empty
+            : encryptionService.Decrypt(dbConfig.EncryptedClientSecret);
 
-    private ExternalAuthOptions.ProviderOptions? GetAppSettingsOptions(string provider)
-    {
-        return string.Equals(provider, "Google", StringComparison.OrdinalIgnoreCase) ? _options.Google
-            : string.Equals(provider, "GitHub", StringComparison.OrdinalIgnoreCase) ? _options.GitHub
-            : null;
+        return new ProviderCredentialsOutput(
+            encryptionService.Decrypt(dbConfig.EncryptedClientId),
+            clientSecret);
     }
 }

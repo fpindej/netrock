@@ -55,19 +55,7 @@ public class ExternalAuthServiceTests : IDisposable
         var externalOptions = Options.Create(new ExternalAuthOptions
         {
             AllowedRedirectUris = ["https://example.com/oauth/callback"],
-            StateLifetime = TimeSpan.FromMinutes(10),
-            Google = new ExternalAuthOptions.ProviderOptions
-            {
-                Enabled = true,
-                ClientId = "google-client-id",
-                ClientSecret = "google-client-secret"
-            },
-            GitHub = new ExternalAuthOptions.ProviderOptions
-            {
-                Enabled = true,
-                ClientId = "github-client-id",
-                ClientSecret = "github-client-secret"
-            }
+            StateLifetime = TimeSpan.FromMinutes(10)
         });
 
         var tokenSessionService = Substitute.For<ITokenSessionService>();
@@ -705,7 +693,7 @@ public class ExternalAuthServiceTests : IDisposable
     public async Task GetAvailableProviders_ReturnsConfiguredProviders()
     {
         _providerConfigService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns([new ProviderConfigOutput("Google", "Google", true, "client-id", true, "appsettings", null, null)]);
+            .Returns([new ProviderConfigOutput("Google", "Google", true, "client-id", true, "database", null, null)]);
 
         var providers = await _sut.GetAvailableProvidersAsync(CancellationToken.None);
 

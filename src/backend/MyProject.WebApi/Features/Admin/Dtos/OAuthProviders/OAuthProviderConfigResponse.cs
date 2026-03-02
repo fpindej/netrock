@@ -33,7 +33,7 @@ public class OAuthProviderConfigResponse
     public bool HasClientSecret { [UsedImplicitly] get; [UsedImplicitly] init; }
 
     /// <summary>
-    /// Where the configuration comes from: "database" or "appsettings".
+    /// Where the configuration comes from: "database" or "unconfigured".
     /// </summary>
     public string Source { [UsedImplicitly] get; [UsedImplicitly] init; } = string.Empty;
 

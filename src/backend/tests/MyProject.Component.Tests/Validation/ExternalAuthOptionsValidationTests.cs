@@ -11,10 +11,7 @@ public class ExternalAuthOptionsValidationTests
         var results = new List<ValidationResult>();
         Validator.TryValidateObject(options, context, results, validateAllProperties: true);
 
-        if (options is IValidatableObject validatable)
-        {
-            results.AddRange(validatable.Validate(context));
-        }
+        results.AddRange(options.Validate(context));
 
         return results;
     }
@@ -135,79 +132,4 @@ public class ExternalAuthOptionsValidationTests
 
     #endregion
 
-    #region ProviderOptions
-
-    [Fact]
-    public void ProviderOptions_EnabledWithCredentials_NoErrors()
-    {
-        var provider = new ExternalAuthOptions.ProviderOptions
-        {
-            Enabled = true,
-            ClientId = "client-id",
-            ClientSecret = "client-secret"
-        };
-
-        var context = new ValidationContext(provider);
-        var results = new List<ValidationResult>();
-        Validator.TryValidateObject(provider, context, results, validateAllProperties: true);
-        results.AddRange(provider.Validate(context));
-
-        Assert.Empty(results);
-    }
-
-    [Fact]
-    public void ProviderOptions_DisabledWithoutCredentials_NoErrors()
-    {
-        var provider = new ExternalAuthOptions.ProviderOptions
-        {
-            Enabled = false
-        };
-
-        var context = new ValidationContext(provider);
-        var results = new List<ValidationResult>();
-        Validator.TryValidateObject(provider, context, results, validateAllProperties: true);
-        results.AddRange(provider.Validate(context));
-
-        Assert.Empty(results);
-    }
-
-    [Theory]
-    [InlineData("", "secret")]
-    [InlineData("  ", "secret")]
-    public void ProviderOptions_EnabledWithoutClientId_ReturnsError(string clientId, string clientSecret)
-    {
-        var provider = new ExternalAuthOptions.ProviderOptions
-        {
-            Enabled = true,
-            ClientId = clientId,
-            ClientSecret = clientSecret
-        };
-
-        var context = new ValidationContext(provider);
-        var results = new List<ValidationResult>();
-        results.AddRange(provider.Validate(context));
-
-        Assert.Contains(results, r => r.MemberNames.Contains(nameof(ExternalAuthOptions.ProviderOptions.ClientId)));
-    }
-
-    [Theory]
-    [InlineData("id", "")]
-    [InlineData("id", "  ")]
-    public void ProviderOptions_EnabledWithoutClientSecret_ReturnsError(string clientId, string clientSecret)
-    {
-        var provider = new ExternalAuthOptions.ProviderOptions
-        {
-            Enabled = true,
-            ClientId = clientId,
-            ClientSecret = clientSecret
-        };
-
-        var context = new ValidationContext(provider);
-        var results = new List<ValidationResult>();
-        results.AddRange(provider.Validate(context));
-
-        Assert.Contains(results, r => r.MemberNames.Contains(nameof(ExternalAuthOptions.ProviderOptions.ClientSecret)));
-    }
-
-    #endregion
 }

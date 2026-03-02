@@ -57,7 +57,7 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
             .Returns(new List<ProviderConfigOutput>
             {
                 new("Google", "Google", true, "google-client-id", true, "database", DateTime.UtcNow, Guid.NewGuid()),
-                new("GitHub", "GitHub", false, null, false, "appsettings", null, null)
+                new("GitHub", "GitHub", false, null, false, "unconfigured", null, null)
             });
 
         var response = await _client.SendAsync(
@@ -102,7 +102,7 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
         _factory.ProviderConfigService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(new List<ProviderConfigOutput>
             {
-                new("Google", "Google", false, null, false, "appsettings", null, null)
+                new("Google", "Google", false, null, false, "unconfigured", null, null)
             });
         _factory.ProviderConfigService.UpsertAsync(
                 Arg.Any<Guid>(), Arg.Any<UpsertProviderConfigInput>(), Arg.Any<CancellationToken>())
@@ -124,7 +124,7 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
         _factory.ProviderConfigService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(new List<ProviderConfigOutput>
             {
-                new("Google", "Google", false, null, false, "appsettings", null, null)
+                new("Google", "Google", false, null, false, "unconfigured", null, null)
             });
 
         var response = await _client.SendAsync(
@@ -201,7 +201,7 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
         _factory.ProviderConfigService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(new List<ProviderConfigOutput>
             {
-                new("Google", "Google", false, null, false, "appsettings", null, null)
+                new("Google", "Google", false, null, false, "unconfigured", null, null)
             });
 
         var response = await _client.SendAsync(
