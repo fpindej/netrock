@@ -40,8 +40,9 @@ public interface IExternalAuthService
     /// <summary>
     /// Returns all configured and enabled external authentication providers.
     /// </summary>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A list of available provider information.</returns>
-    IReadOnlyList<ExternalProviderInfo> GetAvailableProviders();
+    Task<IReadOnlyList<ExternalProviderInfo>> GetAvailableProvidersAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Gets the names of external providers linked to a specific user.

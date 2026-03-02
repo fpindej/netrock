@@ -52,7 +52,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
     [Fact]
     public async Task GetProviders_ReturnsProviders()
     {
-        _factory.ExternalAuthService.GetAvailableProviders()
+        _factory.ExternalAuthService.GetAvailableProvidersAsync(Arg.Any<CancellationToken>())
             .Returns(new List<ExternalProviderInfo>
             {
                 new("Google", "Google"),
@@ -72,7 +72,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
     [Fact]
     public async Task GetProviders_NoProviders_ReturnsEmptyList()
     {
-        _factory.ExternalAuthService.GetAvailableProviders()
+        _factory.ExternalAuthService.GetAvailableProvidersAsync(Arg.Any<CancellationToken>())
             .Returns(new List<ExternalProviderInfo>());
 
         var response = await _client.SendAsync(Get("/api/auth/providers"));

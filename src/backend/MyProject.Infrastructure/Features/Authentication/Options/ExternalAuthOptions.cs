@@ -8,7 +8,6 @@ namespace MyProject.Infrastructure.Features.Authentication.Options;
 /// Configuration for external OAuth2/OIDC login providers.
 /// Maps to the "Authentication:ExternalProviders" section in appsettings.json.
 /// </summary>
-// TODO #368: Replace static appsettings configuration with admin-managed DB storage.
 public sealed class ExternalAuthOptions : IValidatableObject
 {
     public const string SectionName = "Authentication:ExternalProviders";
@@ -26,6 +25,14 @@ public sealed class ExternalAuthOptions : IValidatableObject
     /// Defaults to 10 minutes. Valid range: 1-30 minutes.
     /// </summary>
     public TimeSpan StateLifetime { get; [UsedImplicitly] init; } = TimeSpan.FromMinutes(10);
+
+    /// <summary>
+    /// Gets or sets the master encryption key used to protect OAuth client secrets at rest.
+    /// Must be at least 32 characters. The raw value is SHA-256 hashed to derive the AES-256 key.
+    /// </summary>
+    [Required]
+    [MinLength(32)]
+    public string EncryptionKey { get; [UsedImplicitly] init; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the Google OAuth2/OIDC provider configuration.

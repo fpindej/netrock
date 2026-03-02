@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Caching.Hybrid;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cookies.Constants;
+using MyProject.Application.Cryptography;
 using MyProject.Application.Features.Authentication;
 using MyProject.Infrastructure.Cryptography;
 using MyProject.Infrastructure.Features.Authentication.Models;
@@ -156,6 +157,9 @@ public static class ServiceCollectionExtensions
 
             services.AddHttpClient(GitHubAuthProvider.HttpClientName);
             services.AddSingleton<IExternalAuthProvider, GitHubAuthProvider>();
+
+            services.AddSingleton<ISecretEncryptionService, AesGcmEncryptionService>();
+            services.AddScoped<IProviderConfigService, ProviderConfigService>();
         }
     }
 
