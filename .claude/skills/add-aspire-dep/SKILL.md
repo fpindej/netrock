@@ -2,7 +2,7 @@
 disable-model-invocation: true
 ---
 
-Add an infrastructure dependency to Aspire AppHost.
+Adds an infrastructure dependency to Aspire AppHost.
 
 ## Steps
 

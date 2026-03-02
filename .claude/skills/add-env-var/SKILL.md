@@ -2,7 +2,7 @@
 disable-model-invocation: true
 ---
 
-Add an environment variable (backend or frontend).
+Adds an environment variable (backend or frontend).
 
 ## Backend-consumed variable
 

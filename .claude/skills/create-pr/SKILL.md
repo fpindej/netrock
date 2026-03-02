@@ -3,7 +3,7 @@ disable-model-invocation: true
 argument-hint: "[base branch]"
 ---
 
-Create a pull request for the current branch.
+Creates a pull request for the current branch.
 
 ## Hard rules
 

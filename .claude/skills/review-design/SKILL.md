@@ -1,13 +1,14 @@
 ---
+description: Reviews frontend components for design quality and UI/UX standards. Use when checking component styling, responsiveness, accessibility, or when asked to review a design.
 context: fork
 agent: Explore
 allowed-tools: Read, Glob, Grep, Bash
 argument-hint: "[file path, component name, or glob pattern]"
 ---
 
-Review frontend components for design quality, UI/UX best practices, and project standards.
+Reviews frontend components for design quality, UI/UX best practices, and project standards.
 
-Argument: file path, component name, or glob pattern. If omitted, review all files changed on the current branch vs master.
+Argument: file path, component name, or glob pattern. If omitted, reviews all files changed on the current branch vs master.
 
 ## Steps
 

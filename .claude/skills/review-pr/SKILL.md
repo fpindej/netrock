@@ -1,13 +1,14 @@
 ---
+description: Reviews a pull request for production-readiness. Use when reviewing PRs, checking code changes before merge, or when asked to evaluate a PR.
 context: fork
 agent: Explore
 allowed-tools: Read, Glob, Grep, Bash
 argument-hint: "[PR number or URL]"
 ---
 
-Review a pull request for production-readiness before merge.
+Reviews a pull request for production-readiness before merge.
 
-Argument: PR number or URL. If omitted, review the current branch's open PR.
+Argument: PR number or URL. If omitted, reviews the current branch's open PR.
 
 ## Steps
 
@@ -25,7 +26,7 @@ Argument: PR number or URL. If omitted, review the current branch's open PR.
 - **Conventions**: Matches project patterns (Props, logical CSS, Result pattern, etc.)
 - **Completeness**: Are new flags/props consumed where needed? No dead code introduced?
 - **Tests**: If behavior changed, are tests added or updated?
-- **No em dashes**: Flag any `-` (em dash) usage - it's an AI tell and a project rule violation. Use `-` or rewrite.
+- **No em dashes**: Flag any em dash (unicode U+2014) usage - it's an AI tell and a project rule violation. Use a regular dash or rewrite.
 - **No emojis**: Flag any emoji usage in code, UI text, or comments - project rule violation.
 - **Dockerfile**: If a new `.csproj` project was added that WebApi references, verify it has a COPY line in the Dockerfile restore layer.
 - **Production-grade**: This is production code. Every pattern, fix, and decision must be production-quality.

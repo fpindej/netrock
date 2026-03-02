@@ -3,7 +3,7 @@ disable-model-invocation: true
 argument-hint: "[unit|component|api|validator]"
 ---
 
-Add backend tests. Specify test type or infer from context.
+Adds backend tests. Specify test type or infer from context.
 
 ## Unit Test
 

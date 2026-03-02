@@ -2,9 +2,9 @@
 disable-model-invocation: true
 ---
 
-Add an API endpoint to an existing feature.
+Adds an API endpoint to an existing feature.
 
-Infer the feature, operation, HTTP method, route, shapes, and auth from context. Ask only if multiple valid approaches exist and the tradeoffs matter.
+Infers the feature, operation, HTTP method, route, shapes, and auth from context. Asks only if multiple valid approaches exist and the tradeoffs matter.
 
 ## Steps
 

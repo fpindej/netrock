@@ -1,11 +1,12 @@
 ---
+description: Reviews a Dependabot PR and evaluates whether the dependency update is safe to merge. Use when a Dependabot PR is opened, when evaluating dependency updates, or when asked to check if a version bump is safe.
 context: fork
 agent: Explore
-allowed-tools: Read, Glob, Grep, Bash
+allowed-tools: Read, Glob, Grep, Bash, WebFetch
 argument-hint: "[PR number or URL]"
 ---
 
-Review a Dependabot PR and evaluate whether it is safe to merge.
+Reviews a Dependabot PR and evaluates whether it is safe to merge.
 
 Argument: PR number or URL.
 

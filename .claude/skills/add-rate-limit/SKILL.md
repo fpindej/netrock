@@ -2,7 +2,7 @@
 disable-model-invocation: true
 ---
 
-Add a rate limit policy.
+Adds a rate limit policy.
 
 ## Steps
 

@@ -2,7 +2,7 @@
 disable-model-invocation: true
 ---
 
-Add a route constraint for validating string path parameters at the routing layer.
+Adds a route constraint for validating string path parameters at the routing layer.
 
 ## Steps
 

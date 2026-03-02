@@ -2,7 +2,7 @@
 disable-model-invocation: true
 ---
 
-Add a permission constant across backend and frontend.
+Adds a permission constant across backend and frontend.
 
 ## Steps
 

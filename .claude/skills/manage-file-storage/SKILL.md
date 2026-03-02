@@ -3,7 +3,7 @@ disable-model-invocation: true
 argument-hint: "[swap|remove]"
 ---
 
-Swap S3 provider or remove file storage entirely.
+Swaps S3 provider or removes file storage entirely.
 
 ## Swap S3 Provider (Cloudflare R2, DigitalOcean Spaces, etc.)
 

@@ -2,7 +2,7 @@
 disable-model-invocation: true
 ---
 
-Add a typed options/configuration class.
+Adds a typed options/configuration class.
 
 ## Steps
 

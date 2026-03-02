@@ -2,7 +2,7 @@
 disable-model-invocation: true
 ---
 
-Add a recurring or one-time Hangfire background job.
+Adds a recurring or one-time Hangfire background job.
 
 ## Recurring Job
 

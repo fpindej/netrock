@@ -2,9 +2,9 @@
 disable-model-invocation: true
 ---
 
-Create a new frontend page with routing, i18n, and navigation.
+Creates a new frontend page with routing, i18n, and navigation.
 
-Infer route, route group, components needed, and data requirements from context. Default to `(app)` (authenticated). Ask only if genuinely ambiguous.
+Infers route, route group, components needed, and data requirements from context. Defaults to `(app)` (authenticated). Asks only if genuinely ambiguous.
 
 ## Conventions
 

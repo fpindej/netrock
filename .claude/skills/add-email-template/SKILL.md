@@ -2,7 +2,7 @@
 disable-model-invocation: true
 ---
 
-Add a transactional email template using Fluid (Liquid).
+Adds a transactional email template using Fluid (Liquid).
 
 Each email has a 3-file pattern plus a model record.
 

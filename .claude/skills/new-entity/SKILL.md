@@ -2,9 +2,9 @@
 disable-model-invocation: true
 ---
 
-Create a new backend entity with EF Core configuration and migration.
+Creates a new backend entity with EF Core configuration and migration.
 
-Infer entity name, properties, feature name, and enum values from context. Ask only if the entity's purpose or key properties are genuinely ambiguous.
+Infers entity name, properties, feature name, and enum values from context. Asks only if the entity's purpose or key properties are genuinely ambiguous.
 
 ## Conventions
 

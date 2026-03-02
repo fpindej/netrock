@@ -2,7 +2,7 @@
 disable-model-invocation: true
 ---
 
-Regenerate frontend API types from the backend OpenAPI spec.
+Regenerates frontend API types from the backend OpenAPI spec.
 
 ## Steps
 

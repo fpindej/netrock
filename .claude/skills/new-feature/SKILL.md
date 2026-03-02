@@ -2,9 +2,9 @@
 disable-model-invocation: true
 ---
 
-Create a full-stack feature: backend entity through to frontend page.
+Creates a full-stack feature: backend entity through to frontend page.
 
-Infer everything possible from the feature description. Ask only when genuinely ambiguous (multiple valid designs with different tradeoffs). Prefer conventions from existing features.
+Infers everything possible from the feature description. Asks only when genuinely ambiguous (multiple valid designs with different tradeoffs). Prefers conventions from existing features.
 
 ## Steps
 

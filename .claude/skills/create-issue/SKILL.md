@@ -2,9 +2,9 @@
 disable-model-invocation: true
 ---
 
-Create a GitHub issue.
+Creates a GitHub issue.
 
-Infer type, scope, labels, and whether to split into sub-issues from context. Ask only if the user hasn't described what needs to be done.
+Infers type, scope, labels, and whether to split into sub-issues from context. Asks only if the user hasn't described what needs to be done.
 
 ## Steps
 

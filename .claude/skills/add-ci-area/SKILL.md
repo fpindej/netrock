@@ -2,7 +2,7 @@
 disable-model-invocation: true
 ---
 
-Add a new project area to CI.
+Adds a new project area to CI.
 
 ## Steps
 
