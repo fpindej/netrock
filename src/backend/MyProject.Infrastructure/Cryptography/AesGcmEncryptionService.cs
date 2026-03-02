@@ -9,12 +9,13 @@ namespace MyProject.Infrastructure.Cryptography;
 /// <summary>
 /// AES-256-GCM implementation of <see cref="ISecretEncryptionService"/>.
 /// Ciphertext format: <c>base64(nonce[12] || ciphertext[N] || tag[16])</c>.
-/// The master key is derived by SHA-256 hashing the configured encryption key to ensure exactly 32 bytes.
+/// The master key is derived via HKDF-SHA256 from the configured encryption key to ensure exactly 32 bytes.
 /// </summary>
 internal sealed class AesGcmEncryptionService : ISecretEncryptionService
 {
     private const int NonceSize = 12;
     private const int TagSize = 16;
+    private const int KeySize = 32;
 
     private readonly byte[] _key;
 
@@ -24,7 +25,9 @@ internal sealed class AesGcmEncryptionService : ISecretEncryptionService
     /// <param name="options">External auth configuration containing the master encryption key.</param>
     public AesGcmEncryptionService(IOptions<ExternalAuthOptions> options)
     {
-        _key = SHA256.HashData(Encoding.UTF8.GetBytes(options.Value.EncryptionKey));
+        var ikm = Encoding.UTF8.GetBytes(options.Value.EncryptionKey);
+        _key = HKDF.DeriveKey(HashAlgorithmName.SHA256, ikm, KeySize,
+            info: "oauth-provider-encryption"u8.ToArray());
     }
 
     /// <inheritdoc />
