@@ -115,4 +115,7 @@ public static class AuditActions
 
     /// <summary>User set an initial password (previously passwordless OAuth account).</summary>
     public const string PasswordSet = "PasswordSet";
+
+    /// <summary>Admin created or updated an OAuth provider configuration.</summary>
+    public const string AdminUpdateOAuthProvider = "AdminUpdateOAuthProvider";
 }

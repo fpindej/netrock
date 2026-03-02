@@ -19,4 +19,11 @@ public static class CacheKeys
     /// <param name="userId">The user's unique identifier.</param>
     /// <returns>A cache key in the format <c>security-stamp:{userId}</c>.</returns>
     public static string SecurityStamp(Guid userId) => $"security-stamp:{userId}";
+
+    /// <summary>
+    /// Returns the cache key for an OAuth provider's configuration and credentials.
+    /// </summary>
+    /// <param name="provider">The provider identifier (e.g. "Google").</param>
+    /// <returns>A cache key in the format <c>provider-config:{provider}</c>.</returns>
+    public static string ProviderConfig(string provider) => $"provider-config:{provider}";
 }
