@@ -524,12 +524,8 @@
 	"admin_oauthProviders_saveSuccess": "Konfigurace poskytovatele uložena.",
 	"admin_oauthProviders_saveError": "Nepodařilo se uložit konfiguraci poskytovatele.",
 	"admin_oauthProviders_toggleEnabled": "Přepnout stav poskytovatele",
-	"admin_oauthProviders_enabled": "Zapnuto",
-	"admin_oauthProviders_disabled": "Vypnuto",
 	"admin_oauthProviders_providerEnabled": "Tento poskytovatel je zapnutý pro externí přihlášení.",
 	"admin_oauthProviders_providerDisabled": "Tento poskytovatel je vypnutý.",
-	"admin_oauthProviders_sourceDatabase": "Databáze",
-	"admin_oauthProviders_sourceAppsettings": "Appsettings",
 
 	"audit_trail_title": "Audit",
 	"audit_trail_description": "Historie akcí provedených tímto uživatelem nebo na něm.",
