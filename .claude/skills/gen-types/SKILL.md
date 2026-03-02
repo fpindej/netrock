@@ -6,16 +6,12 @@ Regenerate frontend API types from the backend OpenAPI spec.
 
 ## Steps
 
-1. Verify backend is running:
-   ```bash
-   curl -sf http://localhost:8080/openapi/v1.json > /dev/null || echo "Backend not running"
-   ```
-   If not running, start via Aspire: `dotnet run --project src/backend/MyProject.AppHost`
-
-2. Generate types:
+1. Try generating types:
    ```bash
    cd src/frontend && pnpm run api:generate
    ```
+
+2. **If generation fails** (backend not running, generator broken, any reason): don't loop retrying or wait for startup. If you can see the API definition clearly from the backend code (DTOs, controllers, response types), edit `src/frontend/src/lib/api/v1.d.ts` manually to match. Add a comment at the top of the commit message: `Note: v1.d.ts was manually edited - regenerate with pnpm run api:generate to verify.`
 
 3. Check what changed - look for renamed/removed schemas (breaking) vs added schemas (safe)
 
