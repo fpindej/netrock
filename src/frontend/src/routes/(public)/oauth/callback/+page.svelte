@@ -7,6 +7,17 @@
 	import { LoginBackground } from '$lib/components/auth';
 
 	let { data } = $props();
+
+	/** Sentinel values from +page.server.ts that aren't real backend messages. */
+	const GENERIC_ERRORS = ['provider_denied', 'missing_params', 'network_error'];
+
+	const errorMessage = $derived(
+		data.error === 'provider_denied'
+			? m.oauth_callback_providerDenied()
+			: data.error && !GENERIC_ERRORS.includes(data.error)
+				? data.error
+				: m.oauth_callback_errorDescription()
+	);
 </script>
 
 <svelte:head>
@@ -18,14 +29,14 @@
 		<div class="sm:mx-auto sm:w-full sm:max-w-md">
 			<Card.Root class="border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm">
 				<Card.Header class="text-center">
-					<div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+					<div
+						class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10"
+					>
 						<CircleAlert class="h-6 w-6 text-destructive" />
 					</div>
 					<Card.Title>{m.oauth_callback_errorTitle()}</Card.Title>
 					<Card.Description>
-						{data.error === 'provider_denied'
-							? m.oauth_callback_providerDenied()
-							: m.oauth_callback_errorDescription()}
+						{errorMessage}
 					</Card.Description>
 				</Card.Header>
 				<Card.Content>
