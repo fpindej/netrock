@@ -164,6 +164,24 @@ public static class ServiceCollectionExtensions
             services.AddHttpClient(AppleAuthProvider.HttpClientName);
             services.AddSingleton<IExternalAuthProvider, AppleAuthProvider>();
 
+            services.AddHttpClient(MicrosoftAuthProvider.HttpClientName);
+            services.AddSingleton<IExternalAuthProvider, MicrosoftAuthProvider>();
+
+            services.AddHttpClient(LinkedInAuthProvider.HttpClientName);
+            services.AddSingleton<IExternalAuthProvider, LinkedInAuthProvider>();
+
+            services.AddHttpClient(GitLabAuthProvider.HttpClientName);
+            services.AddSingleton<IExternalAuthProvider, GitLabAuthProvider>();
+
+            services.AddHttpClient(FacebookAuthProvider.HttpClientName);
+            services.AddSingleton<IExternalAuthProvider, FacebookAuthProvider>();
+
+            services.AddHttpClient(SlackAuthProvider.HttpClientName);
+            services.AddSingleton<IExternalAuthProvider, SlackAuthProvider>();
+
+            services.AddHttpClient(TwitchAuthProvider.HttpClientName);
+            services.AddSingleton<IExternalAuthProvider, TwitchAuthProvider>();
+
             services.AddSingleton<ISecretEncryptionService, AesGcmEncryptionService>();
             services.AddScoped<IProviderConfigService, ProviderConfigService>();
         }
