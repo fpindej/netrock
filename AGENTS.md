@@ -82,6 +82,8 @@ One commit = one logical change that could be reverted independently.
 
 **Avoid committing broken code.** Run verification before each commit. If it fails, fix and re-run - keep the main branch green.
 
+**Split large features into stacked PRs.** If a feature touches many files or layers, break it into reviewable chunks (e.g., backend models, then API endpoints, then frontend). Each PR targets the previous PR's branch via `--base`. This keeps reviews focused and mergeable. See `/create-pr` for the mechanics.
+
 ### Labels (Issues & PRs)
 
 | Label | When |
