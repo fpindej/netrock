@@ -51,6 +51,18 @@ public static class AppPermissions
     }
 
     /// <summary>
+    /// OAuth provider management permissions.
+    /// </summary>
+    public static class OAuthProviders
+    {
+        /// <summary>View OAuth provider configurations.</summary>
+        public const string View = "oauth_providers.view";
+
+        /// <summary>Create, update, and manage OAuth provider configurations.</summary>
+        public const string Manage = "oauth_providers.manage";
+    }
+
+    /// <summary>
     /// Job scheduling permissions.
     /// </summary>
     public static class Jobs
