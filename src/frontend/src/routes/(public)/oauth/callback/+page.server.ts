@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+import { isRedirect, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, fetch }) => {
@@ -32,12 +32,13 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 
 		if (data.isLinkOnly) {
 			// Account linking from settings - redirect back to settings
-			redirect(303, '/settings');
+			throw redirect(303, '/settings');
 		}
-	} catch {
+	} catch (e) {
+		if (isRedirect(e)) throw e;
 		return { error: 'network_error' };
 	}
 
 	// Successful login - redirect to dashboard
-	redirect(303, '/');
+	throw redirect(303, '/');
 };
