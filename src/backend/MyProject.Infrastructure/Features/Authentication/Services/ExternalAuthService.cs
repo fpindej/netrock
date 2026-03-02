@@ -244,19 +244,27 @@ internal class ExternalAuthService(
         string plainToken, CancellationToken cancellationToken)
     {
         var hashedToken = HashHelper.Sha256(plainToken);
+        var utcNow = timeProvider.GetUtcNow().UtcDateTime;
+
+        // Load only if the token is valid, unused, and not expired.
+        // Pushing all conditions into the WHERE clause narrows the TOCTOU window:
+        // a concurrent request arriving after SaveChangesAsync won't find the row
+        // because IsUsed is already true in the DB.
         var state = await dbContext.ExternalAuthStates
-            .FirstOrDefaultAsync(s => s.Token == hashedToken, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Token == hashedToken && !s.IsUsed && s.ExpiresAt >= utcNow,
+                cancellationToken);
 
-        if (state is null || state.IsUsed)
+        if (state is null)
         {
-            return Result<ExternalAuthState>.Failure(
-                ErrorMessages.ExternalAuth.InvalidState, ErrorType.Validation);
-        }
+            // Distinguish expired from invalid/already-used for a better error message.
+            var isExpired = await dbContext.ExternalAuthStates
+                .AnyAsync(s => s.Token == hashedToken && s.ExpiresAt < utcNow, cancellationToken);
 
-        if (state.ExpiresAt < timeProvider.GetUtcNow().UtcDateTime)
-        {
-            return Result<ExternalAuthState>.Failure(
-                ErrorMessages.ExternalAuth.StateExpired, ErrorType.Validation);
+            return isExpired
+                ? Result<ExternalAuthState>.Failure(
+                    ErrorMessages.ExternalAuth.StateExpired, ErrorType.Validation)
+                : Result<ExternalAuthState>.Failure(
+                    ErrorMessages.ExternalAuth.InvalidState, ErrorType.Validation);
         }
 
         // Mark as used (single-use)
