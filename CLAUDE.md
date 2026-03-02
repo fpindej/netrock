@@ -29,6 +29,9 @@ Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 - Logical CSS only: `ms-*`/`me-*`/`ps-*`/`pe-*` — never `ml-*`/`mr-*`/`pl-*`/`pr-*`
 - No `any` — define proper interfaces
 - Feature folders in `$lib/components/{feature}/` with barrel `index.ts`
+- Use shadcn-svelte components (`pnpm dlx shadcn-svelte@latest add <name>`) — never build what shadcn already provides
+- Pixel-perfect responsiveness — mobile, tablet, desktop, ultrawide, landscape and portrait
+- Touch targets minimum 44px on all interactive elements
 
 ### Cross-Cutting
 
