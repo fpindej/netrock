@@ -37,7 +37,7 @@
 		const { response, error } = await browserClient.PUT(
 			'/api/v1/admin/oauth-providers/{provider}',
 			{
-				params: { path: { provider: provider.provider! } },
+				params: { path: { provider: provider.provider ?? '' } },
 				body: {
 					isEnabled,
 					clientId,

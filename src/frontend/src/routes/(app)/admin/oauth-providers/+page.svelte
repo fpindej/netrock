@@ -24,7 +24,7 @@
 	{#if data.providers.length === 0}
 		<p class="text-sm text-muted-foreground">{m.admin_oauthProviders_noProviders()}</p>
 	{:else}
-		<div class="grid gap-4 sm:grid-cols-2">
+		<div class="grid gap-6 lg:grid-cols-2">
 			{#each data.providers as provider (provider.provider)}
 				<OAuthProviderCard {provider} {canManage} />
 			{/each}
