@@ -436,12 +436,15 @@ if (Test-Path $frontendEnvExample) {
     Write-SubStep "Created frontend .env.local from .env.example"
 }
 
-# Generate random JWT secret
+# Generate random secrets
 $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
 $jwtBytes = New-Object byte[] 48
 $rng.GetBytes($jwtBytes)
+$encBytes = New-Object byte[] 48
+$rng.GetBytes($encBytes)
 $rng.Dispose()
 $JwtSecret = [Convert]::ToBase64String($jwtBytes) -replace '[/+=]', '' | ForEach-Object { $_.Substring(0, [Math]::Min(64, $_.Length)) }
+$EncryptionKey = [Convert]::ToBase64String($encBytes) -replace '[/+=]', '' | ForEach-Object { $_.Substring(0, [Math]::Min(64, $_.Length)) }
 
 Write-SubStep "Replacing placeholders..."
 $files = Get-ChildItem -Path $ScriptDir -Recurse -File | Where-Object {
@@ -459,11 +462,12 @@ foreach ($file in $files) {
         $content = [System.IO.File]::ReadAllText($file.FullName)
         $originalContent = $content
 
-        if ($content -match "\{INIT_FRONTEND_PORT\}|\{INIT_API_PORT\}|\{INIT_PROJECT_SLUG\}|\{INIT_JWT_SECRET\}") {
+        if ($content -match "\{INIT_FRONTEND_PORT\}|\{INIT_API_PORT\}|\{INIT_PROJECT_SLUG\}|\{INIT_JWT_SECRET\}|\{INIT_ENCRYPTION_KEY\}") {
             $content = $content -replace "\{INIT_FRONTEND_PORT\}", $FrontendPort
             $content = $content -replace "\{INIT_API_PORT\}", $ApiPort
             $content = $content -replace "\{INIT_PROJECT_SLUG\}", $ProjectSlug
             $content = $content -replace "\{INIT_JWT_SECRET\}", $JwtSecret
+            $content = $content -replace "\{INIT_ENCRYPTION_KEY\}", $EncryptionKey
 
             if ($content -ne $originalContent) {
                 Set-FileContent $file.FullName $content

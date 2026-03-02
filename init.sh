@@ -478,22 +478,25 @@ if [ -f "src/frontend/.env.example" ]; then
     print_substep "Created frontend .env.local from .env.example"
 fi
 
-# Generate random JWT secret
+# Generate random secrets
 JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n/+=' | cut -c1-64)
+ENCRYPTION_KEY=$(openssl rand -base64 64 | tr -d '\n/+=' | cut -c1-64)
 
 print_substep "Replacing placeholders..."
 if [ "$OS" = "Darwin" ]; then
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}\|{INIT_ENCRYPTION_KEY}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
         -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" \
-        -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" 2>/dev/null || true
+        -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" \
+        -e "s/{INIT_ENCRYPTION_KEY}/$ENCRYPTION_KEY/g" 2>/dev/null || true
 else
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}\|{INIT_ENCRYPTION_KEY}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
         -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" \
-        -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" 2>/dev/null || true
+        -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" \
+        -e "s/{INIT_ENCRYPTION_KEY}/$ENCRYPTION_KEY/g" 2>/dev/null || true
 fi
 
 print_success "Port configuration complete"

@@ -54,6 +54,12 @@ internal sealed class AesGcmEncryptionService : ISecretEncryptionService
     {
         var blob = Convert.FromBase64String(ciphertext);
 
+        if (blob.Length < NonceSize + TagSize)
+        {
+            throw new CryptographicException(
+                $"Ciphertext blob is too short ({blob.Length} bytes). Minimum is {NonceSize + TagSize} bytes.");
+        }
+
         var nonce = blob.AsSpan(0, NonceSize);
         var tag = blob.AsSpan(blob.Length - TagSize);
         var encrypted = blob.AsSpan(NonceSize, blob.Length - NonceSize - TagSize);
