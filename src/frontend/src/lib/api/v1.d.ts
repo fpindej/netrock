@@ -3543,10 +3543,10 @@ export interface components {
 		};
 		/** @description Response from the external OAuth2 callback handler. */
 		ExternalCallbackResponse: {
-			/** @description The JWT access token, or empty if this was a link-only operation. */
-			accessToken?: string;
-			/** @description The refresh token, or empty if this was a link-only operation. */
-			refreshToken?: string;
+			/** @description The JWT access token, or null if this was a link-only operation. */
+			accessToken?: string | null;
+			/** @description The refresh token, or null if this was a link-only operation. */
+			refreshToken?: string | null;
 			/** @description Whether a new user account was created during this flow. */
 			isNewUser?: boolean;
 			/** @description The provider name that was used. */

@@ -117,8 +117,8 @@ internal static class AuthMapper
     public static ExternalCallbackResponse ToResponse(this ExternalCallbackOutput output) =>
         new()
         {
-            AccessToken = output.Tokens?.AccessToken ?? string.Empty,
-            RefreshToken = output.Tokens?.RefreshToken ?? string.Empty,
+            AccessToken = output.Tokens?.AccessToken,
+            RefreshToken = output.Tokens?.RefreshToken,
             IsNewUser = output.IsNewUser,
             Provider = output.Provider,
             IsLinkOnly = output.IsLinkOnly

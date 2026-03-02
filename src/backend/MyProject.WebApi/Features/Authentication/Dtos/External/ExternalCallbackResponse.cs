@@ -8,14 +8,14 @@ namespace MyProject.WebApi.Features.Authentication.Dtos.External;
 public class ExternalCallbackResponse
 {
     /// <summary>
-    /// The JWT access token, or empty if this was a link-only operation.
+    /// The JWT access token, or null if this was a link-only operation.
     /// </summary>
-    public string AccessToken { [UsedImplicitly] get; [UsedImplicitly] init; } = string.Empty;
+    public string? AccessToken { [UsedImplicitly] get; [UsedImplicitly] init; }
 
     /// <summary>
-    /// The refresh token, or empty if this was a link-only operation.
+    /// The refresh token, or null if this was a link-only operation.
     /// </summary>
-    public string RefreshToken { [UsedImplicitly] get; [UsedImplicitly] init; } = string.Empty;
+    public string? RefreshToken { [UsedImplicitly] get; [UsedImplicitly] init; }
 
     /// <summary>
     /// Whether a new user account was created during this flow.
