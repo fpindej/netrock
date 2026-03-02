@@ -257,6 +257,8 @@ internal class ExternalAuthService(
         if (state is null)
         {
             // Distinguish expired from invalid/already-used for a better error message.
+            // Note: a used token that also happens to be expired will report "expired" rather
+            // than "invalid". This is acceptable since both cases deny the request.
             var isExpired = await dbContext.ExternalAuthStates
                 .AnyAsync(s => s.Token == hashedToken && s.ExpiresAt < utcNow, cancellationToken);
 
