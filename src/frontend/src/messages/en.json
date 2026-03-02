@@ -252,6 +252,10 @@
 	"oauth_callback_errorDescription": "Something went wrong during external sign-in. Please try again.",
 	"oauth_callback_backToLogin": "Back to login",
 	"oauth_callback_providerDenied": "Access was denied. Please try again or use another sign-in method.",
+	"oauth_callback_alreadyLinked": "This external account is already linked to another user.",
+	"oauth_callback_emailNotVerified": "Your email must be verified before linking an external account. Please verify your email first.",
+	"oauth_callback_stateExpired": "The sign-in session has expired. Please try again.",
+	"oauth_callback_accountLocked": "Your account is temporarily locked. Please try again later.",
 
 	"profile_title": "Profile",
 	"profile_description": "This is how others will see you on the site.",

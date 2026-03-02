@@ -8,15 +8,27 @@
 
 	let { data } = $props();
 
-	/** Sentinel values from +page.server.ts that aren't real backend messages. */
-	const GENERIC_ERRORS = ['provider_denied', 'missing_params', 'network_error'];
+	/**
+	 * Maps backend ProblemDetails `detail` strings to translated messages.
+	 * Keys are the exact English strings from ErrorMessages.cs.
+	 * Unmapped errors fall back to the generic description.
+	 *
+	 * TODO: Remove this map once the backend returns error codes instead of
+	 * English strings, and use those codes as i18n keys directly.
+	 */
+	const ERROR_MAP: Record<string, () => string> = {
+		provider_denied: () => m.oauth_callback_providerDenied(),
+		'This external account is already linked to another user.': () =>
+			m.oauth_callback_alreadyLinked(),
+		'Your email address must be verified before linking an external account. Please verify your email first.':
+			() => m.oauth_callback_emailNotVerified(),
+		'OAuth state token has expired. Please try again.': () => m.oauth_callback_stateExpired(),
+		'Account is temporarily locked. Please try again later or contact an administrator.': () =>
+			m.oauth_callback_accountLocked()
+	};
 
 	const errorMessage = $derived(
-		data.error === 'provider_denied'
-			? m.oauth_callback_providerDenied()
-			: data.error && !GENERIC_ERRORS.includes(data.error)
-				? data.error
-				: m.oauth_callback_errorDescription()
+		(data.error && ERROR_MAP[data.error]?.()) ?? m.oauth_callback_errorDescription()
 	);
 </script>
 

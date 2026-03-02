@@ -252,6 +252,10 @@
 	"oauth_callback_errorDescription": "Při externím přihlášení došlo k chybě. Zkuste to prosím znovu.",
 	"oauth_callback_backToLogin": "Zpět na přihlášení",
 	"oauth_callback_providerDenied": "Přístup byl odepřen. Zkuste to znovu nebo použijte jinou metodu přihlášení.",
+	"oauth_callback_alreadyLinked": "Tento externí účet je již propojen s jiným uživatelem.",
+	"oauth_callback_emailNotVerified": "Před propojením externího účtu je nutné ověřit e-mailovou adresu. Nejprve prosím ověřte svůj e-mail.",
+	"oauth_callback_stateExpired": "Přihlašovací relace vypršela. Zkuste to prosím znovu.",
+	"oauth_callback_accountLocked": "Váš účet je dočasně uzamčen. Zkuste to prosím později.",
 
 	"profile_title": "Profil",
 	"profile_description": "Takto vás uvidí ostatní uživatelé.",
