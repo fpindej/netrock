@@ -63,9 +63,9 @@
 <Card.Root>
 	<Card.Header>
 		<div class="flex items-center justify-between">
-			<div class="flex items-center gap-2">
-				<ProviderIcon provider={provider.provider ?? ''} class="h-5 w-5" />
-				<Card.Title>{provider.displayName}</Card.Title>
+			<div class="flex min-w-0 items-center gap-2">
+				<ProviderIcon provider={provider.provider ?? ''} class="h-5 w-5 shrink-0" />
+				<Card.Title class="truncate">{provider.displayName}</Card.Title>
 			</div>
 			<Switch
 				checked={isEnabled}
