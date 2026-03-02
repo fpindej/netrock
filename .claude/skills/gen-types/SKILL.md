@@ -1,3 +1,7 @@
+---
+disable-model-invocation: true
+---
+
 Regenerate frontend API types from the backend OpenAPI spec.
 
 ## Steps
@@ -6,14 +10,14 @@ Regenerate frontend API types from the backend OpenAPI spec.
    ```bash
    curl -sf http://localhost:8080/openapi/v1.json > /dev/null || echo "Backend not running"
    ```
-   If not running: `dotnet run --project src/backend/MyProject.AppHost`
+   If not running, start via Aspire: `dotnet run --project src/backend/MyProject.AppHost`
 
 2. Generate types:
    ```bash
    cd src/frontend && pnpm run api:generate
    ```
 
-3. Check what changed — look for renamed/removed schemas (breaking) vs added schemas (safe)
+3. Check what changed - look for renamed/removed schemas (breaking) vs added schemas (safe)
 
 4. Update type aliases in `src/frontend/src/lib/types/index.ts` if schemas changed
 
@@ -21,7 +25,7 @@ Regenerate frontend API types from the backend OpenAPI spec.
    ```bash
    cd src/frontend && pnpm run check
    ```
-   If errors: the backend made a breaking API change — fix all frontend consumers
+   If errors: the backend made a breaking API change - fix all frontend consumers
 
 6. Format: `cd src/frontend && pnpm run format`
 

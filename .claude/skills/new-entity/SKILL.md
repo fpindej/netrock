@@ -1,6 +1,14 @@
+---
+disable-model-invocation: true
+---
+
 Create a new backend entity with EF Core configuration and migration.
 
 Infer entity name, properties, feature name, and enum values from context. Ask only if the entity's purpose or key properties are genuinely ambiguous.
+
+## Conventions
+
+- **Boolean properties**: Use `Is*` prefix in C# (e.g. `IsUsed`, `IsInvalidated`) per .NET convention, but map to prefix-free DB column names via `HasColumnName` (e.g. `Used`, `Invalidated`) to keep the schema clean.
 
 ## Steps
 
@@ -15,6 +23,7 @@ Infer entity name, properties, feature name, and enum values from context. Ask o
 
 4. Create EF config `Infrastructure/Features/{Feature}/Configurations/{Entity}Configuration.cs`:
    - Extend `BaseEntityConfiguration<T>`, mark `internal`, `.HasComment()` on enum columns
+   - For boolean properties: map with `.HasColumnName("PrefixFree")` to keep DB schema clean
 5. Add `DbSet<{Entity}>` to `Infrastructure/Persistence/MyProjectDbContext.cs`
 6. Run migration:
    ```bash
@@ -24,9 +33,13 @@ Infer entity name, properties, feature name, and enum values from context. Ask o
      --output-dir Persistence/Migrations
    ```
 
+**Dockerfile:**
+
+7. If a new project was added that WebApi references, add its `.csproj` COPY line to the Dockerfile restore layer - otherwise `dotnet restore` fails in Docker builds.
+
 **Verify and commit:**
 
-7. `dotnet build src/backend/MyProject.slnx` — fix errors, loop until green
-8. Commit: `feat({feature}): add {Entity} entity and EF configuration`
+8. `dotnet build src/backend/MyProject.slnx` - fix errors, loop until green
+9. Commit: `feat({feature}): add {Entity} entity and EF configuration`
 
-> This command stops at Infrastructure. Use `/new-endpoint` to add service, controller, and API surface.
+> This skill stops at Infrastructure. Use `/new-endpoint` to add service, controller, and API surface.
