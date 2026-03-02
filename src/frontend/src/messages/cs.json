@@ -526,9 +526,9 @@
 	"admin_oauthProviders_toggleEnabled": "Přepnout stav poskytovatele",
 	"admin_oauthProviders_providerEnabled": "Tento poskytovatel je zapnutý pro externí přihlášení.",
 	"admin_oauthProviders_providerDisabled": "Tento poskytovatel je vypnutý.",
-	"admin_oauthProviders_testConnection": "Otestovat pripojeni",
-	"admin_oauthProviders_testConnectionSuccess": "Pripojeni uspesne. Prihlasovaci udaje jsou platne.",
-	"admin_oauthProviders_testConnectionError": "Test pripojeni selhal.",
+	"admin_oauthProviders_testConnection": "Otestovat připojení",
+	"admin_oauthProviders_testConnectionSuccess": "Připojení úspěšné. Přihlašovací údaje jsou platné.",
+	"admin_oauthProviders_testConnectionError": "Test připojení selhal.",
 
 	"audit_trail_title": "Audit",
 	"audit_trail_description": "Historie akcí provedených tímto uživatelem nebo na něm.",
@@ -588,7 +588,7 @@
 	"audit_action_externalAccountUnlinked": "Externí účet odpojen",
 	"audit_action_externalAccountCreated": "Účet vytvořen přes externí přihlášení",
 	"audit_action_adminUpdateOAuthProvider": "OAuth poskytovatel aktualizován",
-	"audit_action_adminTestOAuthProvider": "OAuth poskytovatel otestovan",
+	"audit_action_adminTestOAuthProvider": "OAuth poskytovatel otestován",
 	"audit_action_passwordSet": "Heslo nastaveno",
 
 	"serverError_backendUnavailable": "Backend není dostupný",
