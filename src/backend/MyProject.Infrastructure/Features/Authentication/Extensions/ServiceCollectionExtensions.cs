@@ -158,7 +158,7 @@ public static class ServiceCollectionExtensions
                 return;
             }
 
-            if (externalOptions.Google.IsEnabled)
+            if (externalOptions.Google.Enabled)
             {
                 services.AddHttpClient("Google-OAuth");
                 services.AddSingleton<IExternalAuthProvider>(sp =>
@@ -168,7 +168,7 @@ public static class ServiceCollectionExtensions
                         sp.GetRequiredService<ILogger<GoogleAuthProvider>>()));
             }
 
-            if (externalOptions.GitHub.IsEnabled)
+            if (externalOptions.GitHub.Enabled)
             {
                 services.AddHttpClient("GitHub-OAuth");
                 services.AddSingleton<IExternalAuthProvider>(sp =>

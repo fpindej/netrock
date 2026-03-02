@@ -69,7 +69,7 @@ public sealed class ExternalAuthOptions : IValidatableObject
         /// Gets or sets whether this provider is enabled.
         /// When <c>false</c>, the provider is not registered and no UI elements are shown.
         /// </summary>
-        public bool IsEnabled { get; [UsedImplicitly] init; }
+        public bool Enabled { get; [UsedImplicitly] init; }
 
         /// <summary>
         /// Gets or sets the OAuth2 client ID issued by the provider.
@@ -84,7 +84,7 @@ public sealed class ExternalAuthOptions : IValidatableObject
         /// <inheritdoc />
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (!IsEnabled)
+            if (!Enabled)
             {
                 yield break;
             }
