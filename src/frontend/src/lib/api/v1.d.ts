@@ -1312,6 +1312,7 @@ export interface paths {
 		/**
 		 * Returns the list of enabled external authentication providers.
 		 *     Clients should call this on startup to determine which OAuth buttons to render.
+		 * @description Cached for 5 minutes because the provider list is static configuration.
 		 */
 		get: {
 			parameters: {
