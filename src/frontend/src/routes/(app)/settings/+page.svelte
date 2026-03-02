@@ -1,10 +1,12 @@
 <script lang="ts">
 	import {
 		ChangePasswordForm,
+		SetPasswordForm,
 		DeleteAccountDialog,
 		ActivityLog,
 		TwoFactorCard
 	} from '$lib/components/settings';
+	import { ConnectedAccountsCard } from '$lib/components/oauth';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as m from '$lib/paraglide/messages';
@@ -13,6 +15,10 @@
 	let { data }: { data: PageData } = $props();
 
 	let twoFactorEnabled = $state(data.user.twoFactorEnabled ?? false);
+	let hasPassword = $state((data.user as Record<string, unknown>).hasPassword !== false);
+	let linkedProviders = $state(
+		((data.user as Record<string, unknown>).linkedProviders as string[]) ?? []
+	);
 	let deleteDialogOpen = $state(false);
 </script>
 
@@ -28,9 +34,15 @@
 	</div>
 	<div class="h-px w-full bg-border"></div>
 	<div class="space-y-8">
-		<ChangePasswordForm />
+		{#if hasPassword}
+			<ChangePasswordForm />
+		{:else}
+			<SetPasswordForm onPasswordSet={() => (hasPassword = true)} />
+		{/if}
 
 		<TwoFactorCard bind:twoFactorEnabled />
+
+		<ConnectedAccountsCard bind:linkedProviders {hasPassword} />
 
 		<ActivityLog />
 
