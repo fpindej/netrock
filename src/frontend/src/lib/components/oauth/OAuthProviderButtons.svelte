@@ -5,6 +5,7 @@
 	import { Separator } from '$lib/components/ui/separator';
 	import { toast } from '$lib/components/ui/sonner';
 	import * as m from '$lib/paraglide/messages';
+	import { startOAuthChallenge } from '$lib/utils/oauth';
 	import OAuthProviderButton from './OAuthProviderButton.svelte';
 
 	type Provider = components['schemas']['ExternalProviderResponse'];
@@ -23,22 +24,12 @@
 		}
 	});
 
-	async function startChallenge(provider: string) {
+	async function handleChallenge(provider: string) {
 		if (loadingProvider) return;
 		loadingProvider = provider;
 
 		try {
-			const redirectUri = `${window.location.origin}/oauth/callback`;
-			const { response, data } = await browserClient.POST('/api/auth/external/challenge', {
-				body: { provider, redirectUri }
-			});
-
-			if (response.ok && data?.authorizationUrl) {
-				window.location.href = data.authorizationUrl;
-				return;
-			}
-
-			toast.error(m.oauth_challengeError());
+			await startOAuthChallenge(provider);
 		} catch {
 			toast.error(m.oauth_challengeError());
 		} finally {
@@ -65,7 +56,7 @@
 					{displayName}
 					loading={loadingProvider === name}
 					disabled={loadingProvider !== null}
-					onclick={() => startChallenge(name)}
+					onclick={() => handleChallenge(name)}
 				/>
 			{/each}
 		</div>
