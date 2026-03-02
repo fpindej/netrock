@@ -343,11 +343,14 @@
 	"meta_adminRoles_description": "Zobrazení rolí a přiřazených uživatelů.",
 	"meta_adminJobs_title": "Naplánované úlohy",
 	"meta_adminJobs_description": "Správa naplánovaných úloh na pozadí.",
+	"meta_adminOAuthProviders_title": "OAuth poskytovatelé",
+	"meta_adminOAuthProviders_description": "Správa konfigurace OAuth poskytovatelů.",
 
 	"nav_admin": "Administrace",
 	"nav_adminUsers": "Uživatelé",
 	"nav_adminRoles": "Role",
 	"nav_adminJobs": "Úlohy",
+	"nav_adminOAuthProviders": "OAuth",
 
 	"admin_users_title": "Uživatelé",
 	"admin_users_description": "Správa uživatelských účtů, rolí a přístupu.",
@@ -509,6 +512,25 @@
 	"meta_adminJobDetail_title": "Detail úlohy",
 	"meta_adminJobDetail_description": "Zobrazení a správa detailů úlohy a historie spuštění.",
 
+	"admin_oauthProviders_title": "OAuth poskytovatelé",
+	"admin_oauthProviders_description": "Konfigurace OAuth poskytovatelů pro externí přihlášení.",
+	"admin_oauthProviders_noProviders": "Žádní OAuth poskytovatelé nejsou nakonfigurováni.",
+	"admin_oauthProviders_clientId": "Client ID",
+	"admin_oauthProviders_clientIdPlaceholder": "Zadejte client ID...",
+	"admin_oauthProviders_clientSecret": "Client Secret",
+	"admin_oauthProviders_clientSecretPlaceholder": "Zadejte client secret...",
+	"admin_oauthProviders_secretUnchanged": "Beze změny (ponechte prázdné pro zachování)",
+	"admin_oauthProviders_save": "Uložit",
+	"admin_oauthProviders_saveSuccess": "Konfigurace poskytovatele uložena.",
+	"admin_oauthProviders_saveError": "Nepodařilo se uložit konfiguraci poskytovatele.",
+	"admin_oauthProviders_toggleEnabled": "Přepnout stav poskytovatele",
+	"admin_oauthProviders_enabled": "Zapnuto",
+	"admin_oauthProviders_disabled": "Vypnuto",
+	"admin_oauthProviders_providerEnabled": "Tento poskytovatel je zapnutý pro externí přihlášení.",
+	"admin_oauthProviders_providerDisabled": "Tento poskytovatel je vypnutý.",
+	"admin_oauthProviders_sourceDatabase": "Databáze",
+	"admin_oauthProviders_sourceAppsettings": "Appsettings",
+
 	"audit_trail_title": "Audit",
 	"audit_trail_description": "Historie akcí provedených tímto uživatelem nebo na něm.",
 	"audit_trail_empty": "Zatím žádné záznamy.",
@@ -576,6 +598,7 @@
 
 	"serverError_failedToLoadJobs": "Nepodařilo se načíst úlohy",
 	"serverError_failedToLoadJobDetails": "Nepodařilo se načíst detail úlohy",
+	"serverError_failedToLoadOAuthProviders": "Nepodařilo se načíst OAuth poskytovatele",
 
 	"admin_warning_rolesUnavailable": "Nepodařilo se načíst dostupné role. Přiřazování rolí je dočasně nedostupné.",
 	"admin_warning_permissionsUnavailable": "Nepodařilo se načíst oprávnění. Úprava oprávnění je dočasně nedostupná."

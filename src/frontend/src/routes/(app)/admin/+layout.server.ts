@@ -9,7 +9,8 @@ export const load: LayoutServerLoad = async ({ parent }) => {
 	const hasAdminAccess = hasAnyPermission(user, [
 		Permissions.Users.View,
 		Permissions.Roles.View,
-		Permissions.Jobs.View
+		Permissions.Jobs.View,
+		Permissions.OAuthProviders.View
 	]);
 	if (!hasAdminAccess) {
 		throw redirect(303, '/');

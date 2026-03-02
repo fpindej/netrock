@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { cn, hasPermission, Permissions } from '$lib/utils';
 	import { buttonVariants } from '$lib/components/ui/button';
-	import { LayoutDashboard, Users, Shield, Clock, type IconProps } from '@lucide/svelte';
+	import { LayoutDashboard, Users, Shield, Clock, KeyRound, type IconProps } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import type { Component } from 'svelte';
@@ -46,6 +46,12 @@
 			href: resolve('/admin/jobs'),
 			icon: Clock,
 			permission: Permissions.Jobs.View
+		},
+		{
+			title: m.nav_adminOAuthProviders,
+			href: resolve('/admin/oauth-providers'),
+			icon: KeyRound,
+			permission: Permissions.OAuthProviders.View
 		}
 	];
 

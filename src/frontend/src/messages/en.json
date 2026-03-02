@@ -343,11 +343,14 @@
 	"meta_adminRoles_description": "View roles and user assignments.",
 	"meta_adminJobs_title": "Scheduled Jobs",
 	"meta_adminJobs_description": "Manage scheduled background jobs.",
+	"meta_adminOAuthProviders_title": "OAuth Providers",
+	"meta_adminOAuthProviders_description": "Manage OAuth provider configurations.",
 
 	"nav_admin": "Admin",
 	"nav_adminUsers": "Users",
 	"nav_adminRoles": "Roles",
 	"nav_adminJobs": "Jobs",
+	"nav_adminOAuthProviders": "OAuth",
 
 	"admin_users_title": "Users",
 	"admin_users_description": "Manage user accounts, roles, and access.",
@@ -509,6 +512,25 @@
 	"meta_adminJobDetail_title": "Job Detail",
 	"meta_adminJobDetail_description": "View and manage job details and execution history.",
 
+	"admin_oauthProviders_title": "OAuth Providers",
+	"admin_oauthProviders_description": "Configure OAuth providers for external authentication.",
+	"admin_oauthProviders_noProviders": "No OAuth providers configured.",
+	"admin_oauthProviders_clientId": "Client ID",
+	"admin_oauthProviders_clientIdPlaceholder": "Enter client ID...",
+	"admin_oauthProviders_clientSecret": "Client Secret",
+	"admin_oauthProviders_clientSecretPlaceholder": "Enter client secret...",
+	"admin_oauthProviders_secretUnchanged": "Unchanged (leave empty to keep current)",
+	"admin_oauthProviders_save": "Save",
+	"admin_oauthProviders_saveSuccess": "Provider configuration saved.",
+	"admin_oauthProviders_saveError": "Failed to save provider configuration.",
+	"admin_oauthProviders_toggleEnabled": "Toggle provider enabled",
+	"admin_oauthProviders_enabled": "Enabled",
+	"admin_oauthProviders_disabled": "Disabled",
+	"admin_oauthProviders_providerEnabled": "This provider is enabled for external login.",
+	"admin_oauthProviders_providerDisabled": "This provider is disabled.",
+	"admin_oauthProviders_sourceDatabase": "Database",
+	"admin_oauthProviders_sourceAppsettings": "Appsettings",
+
 	"audit_trail_title": "Audit Trail",
 	"audit_trail_description": "History of actions performed on or by this user.",
 	"audit_trail_empty": "No audit events yet.",
@@ -576,6 +598,7 @@
 
 	"serverError_failedToLoadJobs": "Failed to load jobs",
 	"serverError_failedToLoadJobDetails": "Failed to load job details",
+	"serverError_failedToLoadOAuthProviders": "Failed to load OAuth providers",
 
 	"admin_warning_rolesUnavailable": "Could not load available roles. Role assignment is temporarily unavailable.",
 	"admin_warning_permissionsUnavailable": "Could not load permissions. Permission editing is temporarily unavailable."

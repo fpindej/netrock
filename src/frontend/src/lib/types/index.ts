@@ -15,3 +15,4 @@ export type ListAuditEventsResponse = components['schemas']['ListAuditEventsResp
 export type Job = components['schemas']['RecurringJobResponse'];
 export type JobDetail = components['schemas']['RecurringJobDetailResponse'];
 export type JobExecution = components['schemas']['JobExecutionResponse'];
+export type OAuthProviderConfig = components['schemas']['OAuthProviderConfigResponse'];

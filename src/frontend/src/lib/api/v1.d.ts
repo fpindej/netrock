@@ -3304,6 +3304,138 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/api/v1/admin/oauth-providers': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Gets all known OAuth providers with their configuration state. */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Returns the list of provider configurations */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['OAuthProviderConfigResponse'][];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user does not have the required permission */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/admin/oauth-providers/{provider}': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		/** Creates or updates an OAuth provider's configuration. */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					/** @description The provider identifier (e.g. "Google", "GitHub") */
+					provider: string;
+				};
+				cookie?: never;
+			};
+			/** @description The provider configuration to apply */
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['UpdateOAuthProviderRequest'];
+				};
+			};
+			responses: {
+				/** @description Provider configuration updated successfully */
+				204: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description If the request is invalid or the provider is unknown */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user is not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If the user does not have the required permission */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description If too many requests have been made */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	'/api/v1/admin/jobs/{jobId}/resume': {
 		parameters: {
 			query?: never;
@@ -3676,6 +3808,31 @@ export interface components {
 			 */
 			rememberMe?: boolean;
 		};
+		/** @description Represents an OAuth provider's configuration state for admin display. */
+		OAuthProviderConfigResponse: {
+			/** @description The provider identifier (e.g. "Google", "GitHub"). */
+			provider?: string;
+			/** @description The human-readable display name. */
+			displayName?: string;
+			/** @description Whether the provider is currently enabled for login. */
+			isEnabled?: boolean;
+			/** @description The OAuth client ID, or null if not configured. */
+			clientId?: null | string;
+			/** @description Whether a client secret is stored. */
+			hasClientSecret?: boolean;
+			/** @description Where the configuration comes from: "database" or "appsettings". */
+			source?: string;
+			/**
+			 * Format: date-time
+			 * @description When the DB record was last updated, or null.
+			 */
+			updatedAt?: null | string;
+			/**
+			 * Format: uuid
+			 * @description The admin user ID who last updated the record, or null.
+			 */
+			updatedBy?: null | string;
+		};
 		/** @description A group of permissions belonging to the same category. */
 		PermissionGroupResponse: {
 			/** @description The category name (e.g. "Users", "Roles"). */
@@ -3865,6 +4022,15 @@ export interface components {
 			name?: null | string;
 			/** @description The new description, or `null` to keep the current description. */
 			description?: null | string;
+		};
+		/** @description Request body for creating or updating an OAuth provider's configuration. */
+		UpdateOAuthProviderRequest: {
+			/** @description Whether to enable this provider for login. */
+			isEnabled?: boolean;
+			/** @description The OAuth client ID. */
+			clientId?: string;
+			/** @description The OAuth client secret, or null to keep the existing value. */
+			clientSecret?: null | string;
 		};
 		/** @description Represents a request to update the user's profile information. */
 		UpdateUserRequest: {

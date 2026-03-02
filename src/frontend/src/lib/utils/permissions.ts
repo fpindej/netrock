@@ -20,6 +20,10 @@ export const Permissions = {
 	Jobs: {
 		View: 'jobs.view',
 		Manage: 'jobs.manage'
+	},
+	OAuthProviders: {
+		View: 'oauth_providers.view',
+		Manage: 'oauth_providers.manage'
 	}
 } as const;
 
