@@ -163,6 +163,25 @@ public static class ErrorMessages
     }
 
     /// <summary>
+    /// External authentication (OAuth2) error messages.
+    /// </summary>
+    public static class ExternalAuth
+    {
+        public const string ProviderNotConfigured = "The requested authentication provider is not configured.";
+        public const string InvalidState = "Invalid or missing OAuth state token.";
+        public const string StateExpired = "OAuth state token has expired. Please try again.";
+        public const string EmailNotVerified = "Your email address must be verified before linking an external account. Please verify your email first.";
+        public const string AlreadyLinkedToOtherUser = "This external account is already linked to another user.";
+        public const string AlreadyLinked = "This external account is already linked to your account.";
+        public const string ProviderNotLinked = "This provider is not linked to your account.";
+        public const string CannotUnlinkLastMethod = "Cannot unlink this provider because it is your only sign-in method. Set a password first.";
+        public const string CodeExchangeFailed = "Failed to exchange the authorization code with the provider.";
+        public const string ProviderError = "The external authentication provider returned an error.";
+        public const string InvalidRedirectUri = "The provided redirect URI is not allowed.";
+        public const string PasswordAlreadySet = "A password is already set for this account.";
+    }
+
+    /// <summary>
     /// Generic entity operation error messages (repository layer).
     /// </summary>
     public static class Entity
