@@ -5,7 +5,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { browserClient } from '$lib/api';
-	import { toast } from '$lib/components/ui/sonner';
 	import * as m from '$lib/paraglide/messages';
 	import { startOAuthChallenge } from '$lib/utils/oauth';
 	import { Loader2 } from '@lucide/svelte';
@@ -47,11 +46,8 @@
 		if (loadingProvider) return;
 		loadingProvider = provider;
 
-		try {
-			await startOAuthChallenge(provider);
-		} catch {
-			toast.error(m.oauth_challengeError());
-		} finally {
+		const navigating = await startOAuthChallenge(provider);
+		if (!navigating) {
 			loadingProvider = null;
 		}
 	}
