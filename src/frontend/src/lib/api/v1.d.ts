@@ -1302,6 +1302,305 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/api/auth/providers': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Returns the list of enabled external authentication providers.
+		 *     Clients should call this on startup to determine which OAuth buttons to render.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ExternalProviderResponse'][];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/external/challenge': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Initiates an external OAuth2 authorization flow by creating a state token
+		 *     and returning the provider's authorization URL.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['ExternalChallengeRequest'];
+				};
+			};
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ExternalChallengeResponse'];
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/external/callback': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Handles the OAuth2 callback after provider authorization.
+		 *     Validates state, exchanges the code, and performs login/linking/creation.
+		 */
+		post: {
+			parameters: {
+				query?: {
+					useCookies?: boolean;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['ExternalCallbackRequest'];
+				};
+			};
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ExternalCallbackResponse'];
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/external/unlink': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Unlinks an external provider from the current user's account.
+		 *     Fails if this is the user's only authentication method.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['ExternalUnlinkRequest'];
+				};
+			};
+			responses: {
+				/** @description No Content */
+				204: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/auth/set-password': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Sets an initial password for a passwordless OAuth-created account.
+		 *     Only available when the user has no password set.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['SetPasswordRequest'];
+				};
+			};
+			responses: {
+				/** @description No Content */
+				204: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	'/api/v1/admin/users': {
 		parameters: {
 			query?: never;
@@ -3234,6 +3533,53 @@ export interface components {
 			/** @description The user's current password for confirmation. */
 			password: string;
 		};
+		/** @description Request to handle the OAuth2 provider callback with authorization code and state. */
+		ExternalCallbackRequest: {
+			/** @description The authorization code received from the OAuth2 provider. */
+			code: string;
+			/** @description The state token for CSRF validation, matching the one sent in the challenge. */
+			state: string;
+		};
+		/** @description Response from the external OAuth2 callback handler. */
+		ExternalCallbackResponse: {
+			/** @description The JWT access token, or empty if this was a link-only operation. */
+			accessToken?: string;
+			/** @description The refresh token, or empty if this was a link-only operation. */
+			refreshToken?: string;
+			/** @description Whether a new user account was created during this flow. */
+			isNewUser?: boolean;
+			/** @description The provider name that was used. */
+			provider?: string;
+			/** @description Whether this was an account-linking operation (user was already logged in). */
+			isLinkOnly?: boolean;
+		};
+		/** @description Request to initiate an external OAuth2 authorization flow. */
+		ExternalChallengeRequest: {
+			/** @description The provider name (e.g. "Google", "GitHub"). */
+			provider: string;
+			/**
+			 * @description The client's callback URI where the provider will redirect after authorization.
+			 *     Must be in the server's AllowedRedirectUris whitelist.
+			 */
+			redirectUri: string;
+		};
+		/** @description Response containing the OAuth2 authorization URL to redirect the user to. */
+		ExternalChallengeResponse: {
+			/** @description The provider's authorization URL that the client should navigate to. */
+			authorizationUrl?: string;
+		};
+		/** @description Represents an available external authentication provider. */
+		ExternalProviderResponse: {
+			/** @description The provider identifier (e.g. "Google", "GitHub"). */
+			name?: string;
+			/** @description The human-readable display name. */
+			displayName?: string;
+		};
+		/** @description Request to unlink an external provider from the current user's account. */
+		ExternalUnlinkRequest: {
+			/** @description The provider name to unlink (e.g. "Google", "GitHub"). */
+			provider: string;
+		};
 		/** @description Represents a request to initiate a password reset flow. */
 		ForgotPasswordRequest: {
 			/** @description The email address associated with the account. */
@@ -3461,6 +3807,11 @@ export interface components {
 			 */
 			userCount?: number;
 		};
+		/** @description Request to set an initial password on a passwordless OAuth-created account. */
+		SetPasswordRequest: {
+			/** @description The new password to set. */
+			newPassword: string;
+		};
 		/** @description Request to replace all permissions on a role. */
 		SetPermissionsRequest: {
 			/** @description The full set of permission values to assign to the role. */
@@ -3554,6 +3905,10 @@ export interface components {
 			emailConfirmed?: boolean;
 			/** @description Whether the user has two-factor authentication enabled. */
 			twoFactorEnabled?: boolean;
+			/** @description External OAuth2 providers linked to this account. */
+			linkedProviders?: string[];
+			/** @description Whether the user has a password set (false for OAuth-only accounts). */
+			hasPassword?: boolean;
 		};
 		/** @description Represents a request to verify an email address using an opaque email token. */
 		VerifyEmailRequest: {

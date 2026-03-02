@@ -15,6 +15,7 @@
 	import { fly, scale } from 'svelte/transition';
 	import { Check, Loader2 } from '@lucide/svelte';
 	import { LoginBackground, RegisterDialog, TwoFactorStep } from '$lib/components/auth';
+	import { OAuthProviderButtons } from '$lib/components/oauth';
 	import { toast } from '$lib/components/ui/sonner';
 
 	interface Props {
@@ -213,6 +214,7 @@
 							{/if}
 						</Button>
 					</form>
+					<OAuthProviderButtons />
 					<div class="mt-4 text-center text-sm">
 						<span class="text-muted-foreground">{m.auth_login_noAccount()}</span>
 						<button
