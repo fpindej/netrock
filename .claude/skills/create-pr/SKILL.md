@@ -9,7 +9,7 @@ Create a pull request for the current branch.
 
 - **Never commit on master.** If on master, create a branch first. No exceptions.
 - **No Co-Authored-By lines** in commits. User mentions Claude on PRs, not on individual commits.
-- **Sign all commits** with `-S` flag. GPG signing via 1Password SSH agent is configured.
+- **Sign all commits** with `-S` flag.
 - **Session docs are immutable history** - never update old session docs to reflect current state.
 
 ## Steps
