@@ -35,6 +35,7 @@ public class AuthenticationServiceTests : IDisposable
     private readonly ITemplatedEmailSender _templatedEmailSender;
     private readonly IAuditService _auditService;
     private readonly MyProjectDbContext _dbContext;
+    private readonly ITokenSessionService _tokenSessionService;
     private readonly AuthenticationService _sut;
 
     public AuthenticationServiceTests()
@@ -75,21 +76,19 @@ public class AuthenticationServiceTests : IDisposable
         var emailTokenService = new EmailTokenService(_dbContext, _timeProvider, authOptions);
         _auditService = Substitute.For<IAuditService>();
 
-        var tokenSessionService = new TokenSessionService(
-            _tokenProvider, _timeProvider, _cookieService, authOptions, _dbContext);
+        _tokenSessionService = new TokenSessionService(
+            _tokenProvider, _timeProvider, _cookieService, _userManager, _hybridCache,
+            authOptions, _dbContext);
 
         _sut = new AuthenticationService(
             _userManager,
             _signInManager,
-            _tokenProvider,
             _timeProvider,
-            _cookieService,
             _userContext,
-            _hybridCache,
             _templatedEmailSender,
             emailTokenService,
             _auditService,
-            tokenSessionService,
+            _tokenSessionService,
             authOptions,
             emailOptions,
             Substitute.For<ILogger<AuthenticationService>>(),

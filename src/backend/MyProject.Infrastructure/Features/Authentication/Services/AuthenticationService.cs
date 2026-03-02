@@ -4,10 +4,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Caching.Hybrid;
-using MyProject.Application.Caching.Constants;
-using MyProject.Application.Cookies;
-using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Authentication.Dtos;
@@ -30,11 +26,8 @@ namespace MyProject.Infrastructure.Features.Authentication.Services;
 internal class AuthenticationService(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
-    ITokenProvider tokenProvider,
     TimeProvider timeProvider,
-    ICookieService cookieService,
     IUserContext userContext,
-    HybridCache hybridCache,
     ITemplatedEmailSender templatedEmailSender,
     EmailTokenService emailTokenService,
     IAuditService auditService,
@@ -230,105 +223,19 @@ internal class AuthenticationService(
         // Get user ID before clearing cookies
         var userId = userContext.UserId;
 
-        cookieService.DeleteCookie(CookieNames.AccessToken);
-        cookieService.DeleteCookie(CookieNames.RefreshToken);
+        tokenSessionService.DeleteAuthCookies();
 
         if (userId.HasValue)
         {
             await auditService.LogAsync(AuditActions.Logout, userId: userId.Value, ct: cancellationToken);
-            await RevokeUserTokens(userId.Value);
+            await tokenSessionService.RevokeUserTokensAsync(userId.Value, cancellationToken);
         }
     }
 
     /// <inheritdoc />
-    public async Task<Result<AuthenticationOutput>> RefreshTokenAsync(string refreshToken, bool useCookies = false, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrEmpty(refreshToken))
-        {
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.TokenMissing, ErrorType.Unauthorized);
-        }
-
-        var hashedToken = HashHelper.Sha256(refreshToken);
-        var storedToken = await dbContext.RefreshTokens
-            .Include(rt => rt.User)
-            .FirstOrDefaultAsync(rt => rt.Token == hashedToken, cancellationToken);
-
-        if (storedToken is null)
-        {
-            return Fail(ErrorMessages.Auth.TokenNotFound);
-        }
-
-        if (storedToken.IsInvalidated)
-        {
-            return Fail(ErrorMessages.Auth.TokenInvalidated);
-        }
-
-        if (storedToken.IsUsed)
-        {
-            // Security alert: Token reuse! Revoke all tokens for this user.
-            storedToken.IsInvalidated = true;
-            await RevokeUserTokens(storedToken.UserId, cancellationToken);
-            return Fail(ErrorMessages.Auth.TokenReused);
-        }
-
-        if (storedToken.ExpiredAt < timeProvider.GetUtcNow().UtcDateTime)
-        {
-            storedToken.IsInvalidated = true;
-            await dbContext.SaveChangesAsync(cancellationToken);
-            return Fail(ErrorMessages.Auth.TokenExpired);
-        }
-
-        // Mark current token as used
-        storedToken.IsUsed = true;
-
-        var user = storedToken.User;
-        if (user is null)
-        {
-            return Result<AuthenticationOutput>.Failure(ErrorMessages.Auth.TokenUserNotFound, ErrorType.Unauthorized);
-        }
-
-        var newAccessToken = await tokenProvider.GenerateAccessToken(user);
-        var newRefreshTokenString = tokenProvider.GenerateRefreshToken();
-        var utcNow = timeProvider.GetUtcNow();
-
-        var newRefreshTokenEntity = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            Token = HashHelper.Sha256(newRefreshTokenString),
-            UserId = user.Id,
-            CreatedAt = utcNow.UtcDateTime,
-            ExpiredAt = storedToken.ExpiredAt,
-            IsUsed = false,
-            IsInvalidated = false,
-            IsPersistent = storedToken.IsPersistent
-        };
-
-        dbContext.RefreshTokens.Add(newRefreshTokenEntity);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        if (useCookies)
-        {
-            tokenSessionService.SetAuthCookies(newAccessToken, newRefreshTokenString, storedToken.IsPersistent, utcNow,
-                new DateTimeOffset(storedToken.ExpiredAt, TimeSpan.Zero));
-        }
-
-        var output = new AuthenticationOutput(
-            AccessToken: newAccessToken,
-            RefreshToken: newRefreshTokenString
-        );
-
-        return Result<AuthenticationOutput>.Success(output);
-
-        Result<AuthenticationOutput> Fail(string message)
-        {
-            if (useCookies)
-            {
-                cookieService.DeleteCookie(CookieNames.AccessToken);
-                cookieService.DeleteCookie(CookieNames.RefreshToken);
-            }
-            return Result<AuthenticationOutput>.Failure(message, ErrorType.Unauthorized);
-        }
-    }
+    public Task<Result<AuthenticationOutput>> RefreshTokenAsync(
+        string refreshToken, bool useCookies = false, CancellationToken cancellationToken = default)
+        => tokenSessionService.RefreshTokenAsync(refreshToken, useCookies, cancellationToken);
 
     /// <inheritdoc />
     public async Task<Result> ChangePasswordAsync(ChangePasswordInput input, CancellationToken cancellationToken = default)
@@ -362,7 +269,7 @@ internal class AuthenticationService(
             return Result.Failure(errors);
         }
 
-        await RevokeUserTokens(userId.Value, cancellationToken);
+        await tokenSessionService.RevokeUserTokensAsync(userId.Value, cancellationToken);
 
         await auditService.LogAsync(AuditActions.PasswordChange, userId: userId.Value, ct: cancellationToken);
 
@@ -433,7 +340,7 @@ internal class AuthenticationService(
         emailToken.IsUsed = true;
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        await RevokeUserTokens(user.Id, cancellationToken);
+        await tokenSessionService.RevokeUserTokensAsync(user.Id, cancellationToken);
 
         await auditService.LogAsync(AuditActions.PasswordReset, userId: user.Id, ct: cancellationToken);
 
@@ -542,27 +449,6 @@ internal class AuthenticationService(
     {
         var bytes = RandomNumberGenerator.GetBytes(32);
         return Convert.ToBase64String(bytes);
-    }
-
-    private async Task RevokeUserTokens(Guid userId, CancellationToken cancellationToken = default)
-    {
-        var tokens = await dbContext.RefreshTokens
-            .Where(rt => rt.UserId == userId && !rt.IsInvalidated)
-            .ToListAsync(cancellationToken);
-
-        foreach (var token in tokens)
-        {
-            token.IsInvalidated = true;
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        var user = await userManager.FindByIdAsync(userId.ToString());
-        if (user != null)
-        {
-            await userManager.UpdateSecurityStampAsync(user);
-            await hybridCache.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
-        }
     }
 
     /// <summary>
