@@ -2,6 +2,8 @@
 
 NETrock - .NET 10 API (Clean Architecture) + SvelteKit frontend (Svelte 5), fully dockerized.
 
+**The backend API is the core of the project.** It is a public-facing API designed to serve any client - multiple frontends, mobile apps, other backends, third-party integrations. The SvelteKit frontend is a fully functional reference client, not a throwaway. Treat every API change as if unknown consumers depend on it. Breaking changes require careful migration strategy (see AGENTS.md).
+
 ```
 Frontend (SvelteKit :5173) → /api/* proxy → Backend API (.NET :8080) → PostgreSQL / MinIO
 Backend layers: WebApi → Application ← Infrastructure → Domain + Shared

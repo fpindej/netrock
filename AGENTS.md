@@ -112,7 +112,7 @@ Error messages flow: Backend `ErrorMessages.*` → `Result.Failure()` → `Probl
 
 ## Breaking Changes
 
-When modifying existing code (not creating new), follow these rules.
+The backend API is public-facing and may serve unknown consumers beyond the included SvelteKit frontend. Treat every API contract change with the same care as a published library. When modifying existing code (not creating new), follow these rules.
 
 ### What Counts as a Breaking Change
 
