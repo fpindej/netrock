@@ -80,7 +80,7 @@ The init script will ask for your project name and base port, then rename everyt
 dotnet run --project src/backend/MyProject.AppHost
 ```
 
-That's it. Aspire starts all infrastructure (PostgreSQL, MinIO) as containers and launches the API and frontend dev server. The Aspire Dashboard URL appears in the console — all service URLs (API docs, pgAdmin, MinIO) are linked from the Dashboard.
+That's it. Aspire starts all infrastructure (PostgreSQL, MinIO) as containers and launches the API and frontend dev server. The Aspire Dashboard URL appears in the console - all service URLs (API docs, pgAdmin, MinIO) are linked from the Dashboard.
 
 | Service | URL |
 |---|---|
@@ -107,11 +107,11 @@ Add your domain entities, services, and pages - the architecture guides you. Use
 | File | Purpose |
 |---|---|
 | [`CLAUDE.md`](CLAUDE.md) | Hard rules, pre-commit checks, architecture overview |
-| [`AGENTS.md`](AGENTS.md) | Full developer guide — security, git discipline, error handling, local dev |
-| [`src/backend/AGENTS.md`](src/backend/AGENTS.md) | Backend conventions — entities, Result pattern, EF Core, controllers, testing |
-| [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md) | Frontend conventions — routing, API client, components, styling, i18n |
+| [`AGENTS.md`](AGENTS.md) | Full developer guide - security, git discipline, error handling, local dev |
+| [`src/backend/AGENTS.md`](src/backend/AGENTS.md) | Backend conventions - entities, Result pattern, EF Core, controllers, testing |
+| [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md) | Frontend conventions - routing, API client, components, styling, i18n |
 | [`.claude/skills/`](.claude/skills/) | Step-by-step procedures for all operations (use `/` to list) |
-| [`FILEMAP.md`](FILEMAP.md) | Change impact tables — "when you change X, also update Y" |
+| [`FILEMAP.md`](FILEMAP.md) | Change impact tables - "when you change X, also update Y" |
 
 Deep dives: **[Features](docs/features.md)** · **[Security](docs/security.md)** · **[Architecture](docs/architecture.md)** · **[Development](docs/development.md)** · **[Before You Ship](docs/before-you-ship.md)** · **[Troubleshooting](docs/troubleshooting.md)**
 
@@ -119,7 +119,7 @@ Deep dives: **[Features](docs/features.md)** · **[Security](docs/security.md)**
 
 ## Localization
 
-i18n with [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) — type-safe keys, SSR-compatible, auto-detection via `Accept-Language`. Ships with English and Czech. Adding a language is a single JSON file.
+i18n with [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) - type-safe keys, SSR-compatible, auto-detection via `Accept-Language`. Ships with English and Czech. Adding a language is a single JSON file.
 
 ---
 
@@ -127,10 +127,10 @@ i18n with [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJ
 
 NETrock is opinionated by design. It's not:
 
-- **A generic starter** — it makes real choices (PostgreSQL, not "any database"; JWT cookies, not "pluggable auth")
-- **A microservices framework** — it's a monolith, because that's what 95% of products should start as
-- **A frontend framework** — SvelteKit is included, but you can use just the API with any other frontend
-- **Magic** — you still need to understand .NET (and SvelteKit if you keep it)
+- **A generic starter** - it makes real choices (PostgreSQL, not "any database"; JWT cookies, not "pluggable auth")
+- **A microservices framework** - it's a monolith, because that's what 95% of products should start as
+- **A frontend framework** - SvelteKit is included, but you can use just the API with any other frontend
+- **Magic** - you still need to understand .NET (and SvelteKit if you keep it)
 
 ---
 

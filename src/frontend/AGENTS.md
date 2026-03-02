@@ -15,7 +15,7 @@ src/
 │   │   ├── settings/              # ChangePasswordForm, DeleteAccountDialog, ActivityLog, TwoFactorCard, TwoFactorSetupDialog, TwoFactorDisableDialog, TwoFactorRecoveryCodesDialog
 │   │   ├── admin/                 # UserTable, UserDetailCards, UserManagementCard, RoleManagement, AccountActions, RoleCardGrid, RoleDetailsCard, RolePermissionsSection, RoleDeleteSection, JobTable, JobInfoCard, JobActionsCard, JobExecutionHistory, AuditTrailCard, ...
 │   │   └── common/                # StatusIndicator, WorkInProgress
-│   ├── config/                    # i18n.ts (client-safe), server.ts (server-only — never export from barrel)
+│   ├── config/                    # i18n.ts (client-safe), server.ts (server-only - never export from barrel)
 │   ├── state/                     # .svelte.ts files only (cooldown, health, shake, theme, sidebar, shortcuts)
 │   ├── types/index.ts             # Type aliases from API schemas
 │   └── utils/                     # ui.ts (cn()), permissions.ts, audit.ts, platform.ts, roles.ts, jobs.ts
@@ -35,13 +35,13 @@ Two layers: `lib/api/` (auth-agnostic client factory) and `lib/auth/` (all auth 
 | Export                                                 | Module                     | Purpose                                                                                    |
 | ------------------------------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------ |
 | `createApiClient(fetch?, baseUrl?, middleware?)`       | `$lib/api`                 | Creates typed openapi-fetch client. Server load functions pass `fetch` + `url.origin`.     |
-| `browserClient`                                        | `$lib/api`                 | Singleton for client-side code. Created bare — auth wired at runtime.                      |
+| `browserClient`                                        | `$lib/api`                 | Singleton for client-side code. Created bare - auth wired at runtime.                      |
 | `initBrowserAuth(middleware)`                          | `$lib/api`                 | Registers auth middleware on `browserClient` exactly once (idempotent guard).              |
 | `initBackendMonitor()`                                 | `$lib/api/backend-monitor` | Detects 502/503 → marks health offline → `invalidateAll()`. Not in barrel (direct import). |
 | `createAuthMiddleware(fetch, baseUrl, onAuthFailure?)` | `$lib/auth`                | 401 → deduplicated refresh → retry idempotent methods only.                                |
-| `getUser(fetch, origin)`                               | `$lib/auth`                | Returns `GetUserResult` — distinguishes "not authenticated" from "backend unavailable".    |
+| `getUser(fetch, origin)`                               | `$lib/auth`                | Returns `GetUserResult` - distinguishes "not authenticated" from "backend unavailable".    |
 
-**Auth middleware wiring** — the root layout calls `initBrowserAuth()` in `onMount`. The guard prevents middleware stacking on HMR/remounts. Server clients never get auth middleware (SvelteKit's `fetch` forwards cookies automatically).
+**Auth middleware wiring** - the root layout calls `initBrowserAuth()` in `onMount`. The guard prevents middleware stacking on HMR/remounts. Server clients never get auth middleware (SvelteKit's `fetch` forwards cookies automatically).
 
 **Auth middleware flow**: 401 → deduplicated refresh → retry GET/HEAD/OPTIONS only. Non-idempotent methods return 401 to caller (prevents double-submission). On refresh failure → `onAuthFailure` callback (toast + redirect to `/login`).
 
@@ -56,9 +56,9 @@ import type { components } from '$lib/api/v1';
 export type User = components['schemas']['UserResponse'];
 ```
 
-If the backend doesn't provide data you need — propose the endpoint, don't work around it.
+If the backend doesn't provide data you need - propose the endpoint, don't work around it.
 
-**File uploads**: Use native `fetch()` with `FormData` — not `browserClient`. The openapi-fetch typed client doesn't reliably handle multipart/`File` objects. After upload success, call `invalidateAll()` to refresh server data.
+**File uploads**: Use native `fetch()` with `FormData` - not `browserClient`. The openapi-fetch typed client doesn't reliably handle multipart/`File` objects. After upload success, call `invalidateAll()` to refresh server data.
 
 ## Error Handling
 
@@ -111,7 +111,7 @@ if (response.ok) {
 
 ### Props
 
-Use `interface Props` + destructure from `$props()` — this separates the type definition from the runtime call and makes props easier to document:
+Use `interface Props` + destructure from `$props()` - this separates the type definition from the runtime call and makes props easier to document:
 
 ```svelte
 <script lang="ts">
@@ -140,7 +140,7 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 
 ### Logical Properties Only
 
-| Physical (avoid — breaks RTL) | Logical (preferred)       |
+| Physical (avoid - breaks RTL) | Logical (preferred)       |
 | ----------------------------- | ------------------------- |
 | `ml-*` / `mr-*`               | `ms-*` / `me-*`           |
 | `pl-*` / `pr-*`               | `ps-*` / `pe-*`           |
@@ -162,11 +162,11 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 - Touch targets ≥ 40px (`h-10`), primary actions ≥ 44px (`h-11`)
 - `h-dvh` not `h-screen` for full-height layouts
 - `min-w-0` on flex children with text, `shrink-0` on icons/badges
-- **Content grids: `lg:grid-cols-2`** — the `max-w-7xl` constraint ensures sufficient column width even with the sidebar
-- **Page content max-width: `max-w-7xl mx-auto`** — prevents ultra-wide layouts; applied in the `(app)/+layout.svelte` wrapper
-- Scale padding with breakpoints (`p-4 sm:p-6 lg:p-8`) — flat large padding wastes space on mobile
-- Dialog grids: start with `grid-cols-1` base and add responsive breakpoints — dialogs are narrow on mobile
-- Min font: `text-xs` (12px) — going smaller hurts readability, especially on mobile
+- **Content grids: `lg:grid-cols-2`** - the `max-w-7xl` constraint ensures sufficient column width even with the sidebar
+- **Page content max-width: `max-w-7xl mx-auto`** - prevents ultra-wide layouts; applied in the `(app)/+layout.svelte` wrapper
+- Scale padding with breakpoints (`p-4 sm:p-6 lg:p-8`) - flat large padding wastes space on mobile
+- Dialog grids: start with `grid-cols-1` base and add responsive breakpoints - dialogs are narrow on mobile
+- Min font: `text-xs` (12px) - going smaller hurts readability, especially on mobile
 - Animations: always `motion-safe:` prefix
 
 ### Theming
@@ -181,14 +181,14 @@ hooks.server.ts → +layout.server.ts (root: getUser) → (app)/+layout.server.t
                                                           → login/+page.server.ts (redirect if user exists)
 ```
 
-Root layout fetches user **once** via `getUser()` which returns `GetUserResult` — distinguishes "not authenticated" (null user, no error) from "backend unavailable" (null user, error set). Both `(app)` and `(public)` layouts throw 503 when backend is down instead of incorrectly redirecting to login. Child layouts use `parent()` — never re-fetch.
+Root layout fetches user **once** via `getUser()` which returns `GetUserResult` - distinguishes "not authenticated" (null user, no error) from "backend unavailable" (null user, error set). Both `(app)` and `(public)` layouts throw 503 when backend is down instead of incorrectly redirecting to login. Child layouts use `parent()` - never re-fetch.
 
 ### Permission Guards
 
-1. **Admin layout**: broad gate — any admin permission
+1. **Admin layout**: broad gate - any admin permission
 2. **Individual pages**: specific permission check → redirect to `/`
 3. **Sidebar**: filters items per-permission via `hasPermission(user, item.permission)`
-4. **Backend is authoritative** — frontend guards are UX only
+4. **Backend is authoritative** - frontend guards are UX only
 
 ```typescript
 import { hasPermission, hasAnyPermission, Permissions } from '$lib/utils';
@@ -205,24 +205,24 @@ Keys: `{domain}_{feature}_{element}` (e.g., `auth_login_title`, `profile_persona
 
 Add to both `en.json` and `cs.json`. Use: `import * as m from '$lib/paraglide/messages'; m.key_name()`.
 
-`svelte-check` reports ~32 paraglide module errors — these are expected (generated at build time). Ignore them.
+`svelte-check` reports ~32 paraglide module errors - these are expected (generated at build time). Ignore them.
 
 ## State
 
-`.svelte.ts` files in `$lib/state/` only. Keep reactive state separate from pure utility functions — mixing them causes unexpected reactivity side effects in imports.
+`.svelte.ts` files in `$lib/state/` only. Keep reactive state separate from pure utility functions - mixing them causes unexpected reactivity side effects in imports.
 
 | File                  | Exports                                                       |
 | --------------------- | ------------------------------------------------------------- |
-| `cooldown.svelte.ts`  | `createCooldown()` — rate-limit countdown                     |
+| `cooldown.svelte.ts`  | `createCooldown()` - rate-limit countdown                     |
 | `shake.svelte.ts`     | `createShake()`, `createFieldShakes()`                        |
 | `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()`                   |
 | `sidebar.svelte.ts`   | `sidebarState`, `toggleSidebar()`                             |
-| `health.svelte.ts`    | `healthState`, `initHealthCheck()` — adaptive backend polling |
+| `health.svelte.ts`    | `healthState`, `initHealthCheck()` - adaptive backend polling |
 | `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()`                    |
 
 ## File Upload
 
-Use native `fetch()` with `FormData` for file uploads — `browserClient` (openapi-fetch) doesn't reliably handle multipart `File` objects.
+Use native `fetch()` with `FormData` for file uploads - `browserClient` (openapi-fetch) doesn't reliably handle multipart `File` objects.
 
 ```typescript
 const formData = new FormData();
@@ -230,7 +230,7 @@ formData.append('File', selectedFile); // Key must match C# property name
 const response = await fetch('/api/endpoint', { method: 'PUT', body: formData });
 ```
 
-**Avatar URLs:** If `user.hasAvatar` is true, construct `/api/users/${user.id}/avatar?v=${version}` where `version` is a `$state` variable bumped on avatar dialog close (see `ProfileHeader.svelte`). **Do NOT use `Date.now()` directly in `$derived`** — it re-evaluates on every Svelte render tick, causing excessive refetches. Otherwise show initials fallback via the `Avatar` component.
+**Avatar URLs:** If `user.hasAvatar` is true, construct `/api/users/${user.id}/avatar?v=${version}` where `version` is a `$state` variable bumped on avatar dialog close (see `ProfileHeader.svelte`). **Do NOT use `Date.now()` directly in `$derived`** - it re-evaluates on every Svelte render tick, causing excessive refetches. Otherwise show initials fallback via the `Avatar` component.
 
 **Client-side validation:** Validate file size and MIME type before upload to give instant feedback. Must match backend rules (5 MB, `image/jpeg|png|webp|gif`).
 
@@ -244,7 +244,7 @@ const response = await fetch('/api/endpoint', { method: 'PUT', body: formData })
 
 ### CSP (svelte.config.js)
 
-Nonce-based `script-src`. `style-src: unsafe-inline` required for Svelte transitions. `img-src: self https: data: blob:` — `data:` for Vite-inlined assets, `blob:` for `URL.createObjectURL()` previews (avatar upload). Cloudflare Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com`.
+Nonce-based `script-src`. `style-src: unsafe-inline` required for Svelte transitions. `img-src: self https: data: blob:` - `data:` for Vite-inlined assets, `blob:` for `URL.createObjectURL()` previews (avatar upload). Cloudflare Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com`.
 
 ### CSRF
 
@@ -252,7 +252,7 @@ API proxy validates `Origin` header on mutations. Same-origin + `ALLOWED_ORIGINS
 
 ## Testing
 
-Uses [vitest](https://vitest.dev/) with the SvelteKit vite config (aliases like `$lib/*` and `$app/*` resolve automatically — no separate vitest config needed).
+Uses [vitest](https://vitest.dev/) with the SvelteKit vite config (aliases like `$lib/*` and `$app/*` resolve automatically - no separate vitest config needed).
 
 ### Test Setup (`src/test-setup.ts`)
 
@@ -267,7 +267,7 @@ Global mocks for all `$app/*` modules used in the codebase, loaded automatically
 | `$app/environment` | `browser`, `dev`, `building`, `version`                                                               | `true`, `false`, `false`, `'test'`          |
 | `$app/state`       | `page`, `navigating`, `updated`                                                                       | Localhost URL, `null`, `{ check: vi.fn() }` |
 
-**`$env/*` modules are NOT globally mocked** — they contain project-specific values that vary per test. Mock them individually with `vi.mock('$env/dynamic/public', ...)`.
+**`$env/*` modules are NOT globally mocked** - they contain project-specific values that vary per test. Mock them individually with `vi.mock('$env/dynamic/public', ...)`.
 
 ### Overriding Mocks Per-Test
 
@@ -305,7 +305,7 @@ vi.mock('$app/state', () => ({
 
 ### Environment Strategy
 
-- **Default: `node`** — pure TS module tests (auth, middleware, utils) don't need DOM. Fastest startup.
+- **Default: `node`** - pure TS module tests (auth, middleware, utils) don't need DOM. Fastest startup.
 - **Per-file override:** add `// @vitest-environment jsdom` at the top of files that need DOM (component tests). This avoids making every test pay jsdom startup cost.
 - **When to add `@testing-library/svelte`:** install it when writing the first Svelte component test, not before. It provides `render()`, `fireEvent()`, and DOM queries for `.svelte` files.
 
@@ -318,9 +318,9 @@ For route-level (server load function) tests, import `MOCK_USER`, `createMockLoa
 - **Co-locate tests with source:** `foo.ts` → `foo.test.ts` in the same directory
 - **Structure:** `describe('moduleName')` → `it('does X')` with explicit imports from `vitest`
 - **Import from vitest:** `import { describe, it, expect, vi } from 'vitest'` (no implicit globals)
-- **`vi.mock('$lib/...')`** — mock internal modules by path
-- **`vi.fn()`** — mock individual functions; `vi.spyOn()` for partial mocks
-- **No manual mock cleanup needed** — `restoreMocks: true` handles it globally
+- **`vi.mock('$lib/...')`** - mock internal modules by path
+- **`vi.fn()`** - mock individual functions; `vi.spyOn()` for partial mocks
+- **No manual mock cleanup needed** - `restoreMocks: true` handles it globally
 
 ### Running
 
@@ -332,25 +332,25 @@ pnpm run test -- -t "name" # filter by test name
 
 ## TypeScript Strictness
 
-- **`noUncheckedIndexedAccess: true`** — array/object index access returns `T | undefined`. Guard with `if`, optional chaining, or nullish coalescing before using indexed values.
-- **`@typescript-eslint/no-explicit-any: 'error'`** — `any` is a lint error. Use `unknown`, generics, or proper interfaces.
+- **`noUncheckedIndexedAccess: true`** - array/object index access returns `T | undefined`. Guard with `if`, optional chaining, or nullish coalescing before using indexed values.
+- **`@typescript-eslint/no-explicit-any: 'error'`** - `any` is a lint error. Use `unknown`, generics, or proper interfaces.
 
 ## Don'ts
 
-- `export let` — use `$props()`
-- `$props<{...}>()` — use `interface Props` + `$props()`
-- `any` — define proper interfaces
+- `export let` - use `$props()`
+- `$props<{...}>()` - use `interface Props` + `$props()`
+- `any` - define proper interfaces
 - Physical CSS (`ml-`, `mr-`, `pl-`, `pr-`, `border-l`, `border-r`)
-- `space-x-*` on flex/grid — use `gap-*`
-- `h-screen` — use `h-dvh`
-- `xl:grid-cols-2` for content — use `lg:grid-cols-2` (max-w-7xl ensures sufficient width)
-- Unconstrained page content — always use `max-w-7xl mx-auto` wrapper
+- `space-x-*` on flex/grid - use `gap-*`
+- `h-screen` - use `h-dvh`
+- `xl:grid-cols-2` for content - use `lg:grid-cols-2` (max-w-7xl ensures sufficient width)
+- Unconstrained page content - always use `max-w-7xl mx-auto` wrapper
 - `size="sm"` or `size="lg"` on action/submit buttons - use default size with `w-full sm:w-auto`
 - Left-aligned action buttons - always right-align with `sm:justify-end` wrapper
 - `null!`, `as` casts when narrowing works
 - Import server config from barrel (`$lib/config`)
 - Hand-edit `v1.d.ts`
-- Components in `$lib/components/` root — use feature folders
+- Components in `$lib/components/` root - use feature folders
 - Mix `.svelte.ts` (reactive) with `.ts` (pure)
 - Build what shadcn already provides
-- Suppress `svelte/no-navigation-without-resolve` — use `resolve()` with `goto()`
+- Suppress `svelte/no-navigation-without-resolve` - use `resolve()` with `goto()`

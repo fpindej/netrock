@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-NETrock — .NET 10 API (Clean Architecture) + SvelteKit frontend (Svelte 5), fully dockerized.
+NETrock - .NET 10 API (Clean Architecture) + SvelteKit frontend (Svelte 5), fully dockerized.
 
 ```
 Frontend (SvelteKit :5173) → /api/* proxy → Backend API (.NET :8080) → PostgreSQL / MinIO
@@ -11,38 +11,40 @@ Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 
 ### Backend
 
-- `Result`/`Result<T>` for all fallible operations — never throw for business logic
-- `TimeProvider` (injected) — never `DateTime.UtcNow` or `DateTimeOffset.UtcNow`
+- `Result`/`Result<T>` for all fallible operations - never throw for business logic
+- `TimeProvider` (injected) - never `DateTime.UtcNow` or `DateTimeOffset.UtcNow`
 - C# 13 `extension(T)` syntax for new extension methods
-- Never `null!` — fix the design instead
-- `ProblemDetails` (RFC 9457) for all error responses — never anonymous objects or raw strings
+- Never `null!` - fix the design instead
+- `ProblemDetails` (RFC 9457) for all error responses - never anonymous objects or raw strings
 - `internal` on all Infrastructure service implementations
 - `/// <summary>` XML docs on all public and internal API surface
-- `System.Text.Json` only — never `Newtonsoft.Json`
-- NuGet versions in `Directory.Packages.props` only — never in `.csproj`
+- `System.Text.Json` only - never `Newtonsoft.Json`
+- NuGet versions in `Directory.Packages.props` only - never in `.csproj`
 
 ### Frontend
 
-- Never hand-edit `v1.d.ts` — run `pnpm run api:generate`
-- Svelte 5 Runes only — never `export let`
-- `interface Props` + `$props()` — never `$props<{...}>()`
-- Logical CSS only: `ms-*`/`me-*`/`ps-*`/`pe-*` — never `ml-*`/`mr-*`/`pl-*`/`pr-*`
-- No `any` — define proper interfaces
+- Never hand-edit `v1.d.ts` - run `pnpm run api:generate`
+- Svelte 5 Runes only - never `export let`
+- `interface Props` + `$props()` - never `$props<{...}>()`
+- Logical CSS only: `ms-*`/`me-*`/`ps-*`/`pe-*` - never `ml-*`/`mr-*`/`pl-*`/`pr-*`
+- No `any` - define proper interfaces
 - Feature folders in `$lib/components/{feature}/` with barrel `index.ts`
-- Use shadcn-svelte components (`pnpm dlx shadcn-svelte@latest add <name>`) — never build what shadcn already provides
-- Pixel-perfect responsiveness — mobile, tablet, desktop, ultrawide, landscape and portrait
+- Use shadcn-svelte components (`pnpm dlx shadcn-svelte@latest add <name>`) - never build what shadcn already provides
+- Pixel-perfect responsiveness - mobile, tablet, desktop, ultrawide, landscape and portrait
 - Touch targets minimum 44px on all interactive elements
-- Unified UX — reuse existing components and patterns so the app feels like one product, not five
+- Unified UX - reuse existing components and patterns so the app feels like one product, not five
+- No overflow - dialogs, modals, and pages must never show scrollbars. Fit content to viewport.
 
 ### Cross-Cutting
 
-- Security restrictive by default — deny first, open selectively
+- Security restrictive by default - deny first, open selectively
 - Atomic commits: `type(scope): imperative description` (Conventional Commits)
-- No dead code — remove unused imports, variables, functions, files, and stale references in the same commit
+- No dead code - remove unused imports, variables, functions, files, and stale references in the same commit
+- No em dashes - never use `—` anywhere (code, comments, docs, UI). Use `-` or rewrite the sentence.
 
 ## Verification
 
-Run before every commit. Fix all errors before committing. **Loop until green — never commit with failures.**
+Run before every commit. Fix all errors before committing. **Loop until green - never commit with failures.**
 
 ```bash
 # Backend (run when src/backend/ changed)
@@ -51,13 +53,13 @@ dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.sln
 # Frontend (run when src/frontend/ changed)
 cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check
 
-# Aspire (run to verify local orchestration — requires Docker)
+# Aspire (run to verify local orchestration - requires Docker)
 dotnet run --project src/backend/MyProject.AppHost
 ```
 
 ## Autonomous Behaviors
 
-Do these automatically — never wait to be asked:
+Do these automatically - never wait to be asked:
 
 | Trigger | Action |
 |---|---|
@@ -66,7 +68,7 @@ Do these automatically — never wait to be asked:
 | **Backend API change** (endpoint, DTO, response shape) | Regenerate frontend types (`pnpm run api:generate`), fix type errors. |
 | **Logically complete unit of work** | Commit immediately with Conventional Commit message. Don't batch, don't ask. |
 | **Creating a PR** (`/create-pr`) | Auto-generate session doc in `docs/sessions/` for non-trivial PRs (3+ commits or 5+ files). |
-| **Adding any feature** | Write tests alongside the implementation — component, API integration, validator as applicable. |
+| **Adding any feature** | Write tests alongside the implementation - component, API integration, validator as applicable. |
 | **Build/test failure** | Read the error, fix it, re-run. Repeat until green. Don't stop and report the error unless stuck after 3 attempts. |
 | **Unclear requirement** | Infer from context and existing patterns first. Ask the user only when genuinely ambiguous (multiple valid approaches with different tradeoffs). |
 
@@ -78,4 +80,4 @@ Do these automatically — never wait to be asked:
 | `src/backend/AGENTS.md` | Backend conventions: entities, Result, EF Core, controllers, auth, testing |
 | `src/frontend/AGENTS.md` | Frontend conventions: API client, components, styling, routing, i18n |
 | `.claude/skills/` | Step-by-step procedures for all operations (type `/` to list available skills) |
-| `FILEMAP.md` | "When you change X, also update Y" — change impact tables |
+| `FILEMAP.md` | "When you change X, also update Y" - change impact tables |

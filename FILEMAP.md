@@ -1,4 +1,4 @@
-# File Map — Change Impact Reference
+# File Map - Change Impact Reference
 
 Quick-reference for "when you change X, also update Y" and "where does X live?"
 
@@ -14,7 +14,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Add backend endpoint** | Controller + DTOs + validator + mapper → `pnpm run api:generate` → frontend types → frontend calls |
 | **Change WebApi response DTO** | Mapper, `Api.Tests/Contracts/ResponseContracts.cs`, `pnpm run api:generate`, frontend components |
 | **Add permission** | `AppPermissions.cs` → `[RequirePermission]` → seed in `ApplicationBuilderExtensions` → frontend `permissions.ts` → sidebar + page guards |
-| **Add i18n key** | Both `en.json` AND `cs.json` — always both files |
+| **Add i18n key** | Both `en.json` AND `cs.json` - always both files |
 
 ---
 
@@ -26,20 +26,20 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 |---|---|
 | **Domain entity** (add/rename property) | EF configuration, migration, Application DTOs, WebApi DTOs, mapper, frontend types (`pnpm run api:generate`) |
 | **Domain entity** (add enum property) | EF config (`.HasComment()`), `EnumSchemaTransformer` handles the rest automatically |
-| **`ErrorMessages.cs`** (Shared — add/rename constant) | Service that uses it; frontend may display message directly |
-| **`Result.cs`** (Shared — change pattern) | Every service + every controller that matches on `Result` |
+| **`ErrorMessages.cs`** (Shared - add/rename constant) | Service that uses it; frontend may display message directly |
+| **`Result.cs`** (Shared - change pattern) | Every service + every controller that matches on `Result` |
 | **Application interface** (change signature) | Infrastructure service implementation, controller calling the service |
 | **Application DTO** (add/rename/remove field) | Infrastructure service, WebApi mapper, WebApi request/response DTO, frontend types |
 | **Infrastructure EF config** (change mapping) | Run new migration |
 | **`MyProjectDbContext`** (add DbSet) | Run new migration |
 | **Infrastructure service** (change behavior) | Verify controller still maps correctly, verify error messages still apply |
-| **Infrastructure Options class** | `appsettings.json`, `appsettings.Development.json` (excluded from production publish — see `StripDevConfig`), `deploy/envs/production-example/api.env`, DI registration |
+| **Infrastructure Options class** | `appsettings.json`, `appsettings.Development.json` (excluded from production publish - see `StripDevConfig`), `deploy/envs/production-example/api.env`, DI registration |
 | **DI extension** (new service registration) | `Program.cs` must call the extension |
 | **WebApi controller** (change route/method) | Frontend API calls, `v1.d.ts` regeneration |
 | **WebApi request DTO** (add/rename/remove property) | Validator, mapper, frontend types, frontend form |
 | **WebApi response DTO** (add/rename/remove property) | Mapper, frontend types, frontend component displaying data, `Api.Tests/Contracts/ResponseContracts.cs` |
 | **WebApi validator** (change rules) | Consider matching frontend validation UX |
-| **`Program.cs`** (change middleware order) | Test full request pipeline — order matters for auth, CORS, rate limiting; update `CustomWebApplicationFactory` if new services need mocking |
+| **`Program.cs`** (change middleware order) | Test full request pipeline - order matters for auth, CORS, rate limiting; update `CustomWebApplicationFactory` if new services need mocking |
 | **`Directory.Packages.props`** (change version) | `dotnet build` to verify compatibility |
 | **`Directory.Build.props`** (change TFM/settings) | All projects in solution |
 | **`BaseEntity.cs`** | `BaseEntityConfiguration`, `AuditingInterceptor`, all entities |
@@ -62,14 +62,14 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Avatar endpoints** (`PUT/DELETE/GET`) | `UploadAvatarRequest`, `UploadAvatarRequestValidator`, `UserMapper`, frontend `AvatarDialog.svelte` |
 | **`AuditActions.cs`** (add action constant) | Service that logs it, frontend `$lib/utils/audit.ts` (label, color, icon), i18n keys in `en.json`/`cs.json` |
 | **`AuditEvent` entity** (change fields) | `AuditEventConfiguration`, `AuditService`, Application DTOs (`AuditEventOutput`), WebApi DTOs, `AuditMapper`, frontend types |
-| **`HybridCache`** (caching abstraction — change caching usage) | `NoOpHybridCache`, `UserCacheInvalidationInterceptor`, all services using `HybridCache` (`AdminService`, `AuthenticationService`, `UserService`, `RoleManagementService`), `CustomWebApplicationFactory` mock |
-| **`CacheKeys.cs`** (Application — rename/remove key) | All services referencing the changed key, `UserCacheInvalidationInterceptor` |
-| **`CachingOptions`** (Infrastructure — change config shape) | `appsettings.json`, `appsettings.Development.json`, `deploy/envs/production-example/api.env` |
-| **`ICookieService`** (Application — change cookie contract) | `CookieService`, `AuthenticationService`, `UserService` |
-| **`CookieNames`** (Application — rename/remove cookie name) | `AuthController`, `AuthenticationService`, `UserService` |
-| **`IUserService`** (Application/Identity — change user service contract) | `UserService`, `UsersController`, `CustomWebApplicationFactory` mock |
-| **`IUserContext`** (Application/Identity — change context contract) | `UserContext`, `AuthenticationService`, `UserService`, `AuditingInterceptor`, `UsersController`, `AdminController` |
-| **`EmailTemplateNames.cs`** (Application — add/rename template name) | Services constructing `SendSafeAsync()` calls, matching `.liquid` template files |
+| **`HybridCache`** (caching abstraction - change caching usage) | `NoOpHybridCache`, `UserCacheInvalidationInterceptor`, all services using `HybridCache` (`AdminService`, `AuthenticationService`, `UserService`, `RoleManagementService`), `CustomWebApplicationFactory` mock |
+| **`CacheKeys.cs`** (Application - rename/remove key) | All services referencing the changed key, `UserCacheInvalidationInterceptor` |
+| **`CachingOptions`** (Infrastructure - change config shape) | `appsettings.json`, `appsettings.Development.json`, `deploy/envs/production-example/api.env` |
+| **`ICookieService`** (Application - change cookie contract) | `CookieService`, `AuthenticationService`, `UserService` |
+| **`CookieNames`** (Application - rename/remove cookie name) | `AuthController`, `AuthenticationService`, `UserService` |
+| **`IUserService`** (Application/Identity - change user service contract) | `UserService`, `UsersController`, `CustomWebApplicationFactory` mock |
+| **`IUserContext`** (Application/Identity - change context contract) | `UserContext`, `AuthenticationService`, `UserService`, `AuditingInterceptor`, `UsersController`, `AdminController` |
+| **`EmailTemplateNames.cs`** (Application - add/rename template name) | Services constructing `SendSafeAsync()` calls, matching `.liquid` template files |
 | **Test fixture** (change shared helper) | All tests using that fixture |
 | **`AppRoles.cs`** (add role) | Role seeding picks up automatically; consider what permissions to seed for the new role; `RoleManagementService` checks `AppRoles.All` for system role collisions |
 | **`AppPermissions.cs`** (add permission) | Seed in `ApplicationBuilderExtensions.SeedRolePermissionsAsync()`, add `[RequirePermission]` to endpoints, update frontend `$lib/utils/permissions.ts` |
@@ -83,8 +83,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`RateLimiterExtensions.cs`** (add policy) | Requires matching constant in `RateLimitPolicies.cs` and config in `RateLimitingOptions.cs` |
 | **`HostingOptions.cs`** (change hosting config shape) | `HostingExtensions.cs`, `appsettings.json`, `appsettings.Development.json`, `deploy/docker-compose.yml` |
 | **`HostingExtensions.cs`** (change middleware behavior) | `Program.cs`, `AGENTS.md` Hosting Configuration section |
-| **`Dockerfile`** (backend — change build/publish steps) | `.dockerignore`, verify published files don't include dev/test config |
-| **`Dockerfile`** (frontend — change build steps) | `.dockerignore`, `.npmrc` (copied into image for install-affecting settings), `docker.yml` build args, `deploy/build.sh`/`deploy/build.ps1` build args. New `PUBLIC_*` SvelteKit env vars need `ARG`+`ENV` in Dockerfile (before `pnpm run build`), `--build-arg` in deploy scripts and `docker.yml` |
+| **`Dockerfile`** (backend - change build/publish steps) | `.dockerignore`, verify published files don't include dev/test config |
+| **`Dockerfile`** (frontend - change build steps) | `.dockerignore`, `.npmrc` (copied into image for install-affecting settings), `docker.yml` build args, `deploy/build.sh`/`deploy/build.ps1` build args. New `PUBLIC_*` SvelteKit env vars need `ARG`+`ENV` in Dockerfile (before `pnpm run build`), `--build-arg` in deploy scripts and `docker.yml` |
 | **`MyProject.WebApi.csproj`** (add appsettings file) | If non-production: add `CopyToPublishDirectory="Never"` and matching `rm -f` in `Dockerfile` |
 | **Route constraint** (add/modify in `Routing/`) | `Program.cs` constraint registration, route templates using that constraint |
 | **`HealthCheckExtensions.cs`** (change endpoints/checks) | `deploy/docker-compose.yml` healthcheck URLs, frontend health proxy `+server.ts` |
@@ -94,9 +94,9 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`MyProject.AppHost/Program.cs`** | Verify resource names match `ConnectionStrings:*` and `WithEnvironment` keys match `appsettings.json` option paths |
 | **`ProblemDetailsAuthorizationHandler`** | `ProblemDetails` shape, `ErrorMessages.Auth` constants, `Program.cs` registration |
 | **OpenAPI transformers** | Regenerate frontend types to verify; check Scalar UI |
-| **`CaptchaOptions`** (Infrastructure — Captcha config) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `TurnstileCaptchaService`, `ServiceCollectionExtensions` |
-| **`TurnstileCaptchaService`** (Infrastructure — Captcha service) | `ICaptchaService` interface, `CaptchaOptions`, `AuthController` captcha gate |
-| **`TurnstileWidget.svelte`** (Frontend — Captcha widget) | `RegisterDialog.svelte`, `ForgotPasswordForm.svelte`, `app.d.ts` (`Window.turnstile`), `TURNSTILE_SITE_KEY` env var (runtime-configurable via `$env/dynamic/private` and SSR layout data) |
+| **`CaptchaOptions`** (Infrastructure - Captcha config) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `TurnstileCaptchaService`, `ServiceCollectionExtensions` |
+| **`TurnstileCaptchaService`** (Infrastructure - Captcha service) | `ICaptchaService` interface, `CaptchaOptions`, `AuthController` captcha gate |
+| **`TurnstileWidget.svelte`** (Frontend - Captcha widget) | `RegisterDialog.svelte`, `ForgotPasswordForm.svelte`, `app.d.ts` (`Window.turnstile`), `TURNSTILE_SITE_KEY` env var (runtime-configurable via `$env/dynamic/private` and SSR layout data) |
 
 ### Frontend Changes
 
@@ -114,7 +114,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`hooks.server.ts`** | All server responses (security headers, locale) |
 | **`svelte.config.js`** (CSP) | Test that scripts/styles/images still load; Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com` |
 | **`app.html`** | FOUC prevention, nonce attribute, theme init |
-| **`UserManagementCard.svelte`** | Thin shell — delegates to `RoleManagement.svelte` and `AccountActions.svelte` |
+| **`UserManagementCard.svelte`** | Thin shell - delegates to `RoleManagement.svelte` and `AccountActions.svelte` |
 | **Component barrel `index.ts`** | All imports from that feature folder |
 | **i18n keys** (rename/remove in `en.json`) | Same key in `cs.json`, all `m.{key}()` usages |
 | **i18n keys** (add) | Add to both `en.json` and `cs.json` |
@@ -156,7 +156,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 
 ## Key Files Quick Reference
 
-Files that are frequently referenced in impact tables above. For anything not listed here, use Glob/Grep — the codebase follows predictable naming patterns documented in the AGENTS.md files.
+Files that are frequently referenced in impact tables above. For anything not listed here, use Glob/Grep - the codebase follows predictable naming patterns documented in the AGENTS.md files.
 
 ### Backend Naming Patterns
 
@@ -194,7 +194,7 @@ src/backend/MyProject.{Layer}/
 src/frontend/src/
   lib/api/          client.ts, error-handling.ts, mutation.ts, backend-monitor.ts, v1.d.ts (generated)
   lib/components/   {feature}/{Name}.svelte + index.ts (barrel)
-  lib/components/ui/{component}/  (shadcn — generated)
+  lib/components/ui/{component}/  (shadcn - generated)
   lib/state/        {feature}.svelte.ts
   lib/types/        index.ts (type aliases)
   lib/utils/        ui.ts (cn()), permissions.ts, audit.ts, platform.ts, roles.ts, jobs.ts
@@ -271,7 +271,7 @@ src/backend/tests/
     AccessModifierTests.cs                       Visibility rules
 ```
 
-### Singleton Files (no pattern — memorize these)
+### Singleton Files (no pattern - memorize these)
 
 | File | Why it matters |
 |---|---|
@@ -287,7 +287,7 @@ src/backend/tests/
 | `src/backend/Directory.Packages.props` | NuGet versions (never in .csproj) |
 | `src/frontend/src/lib/components/layout/SidebarNav.svelte` | Navigation entries |
 | `src/frontend/src/lib/api/v1.d.ts` | Generated types (never hand-edit) |
-| `deploy/envs/production-example/` | Production env template — `cp -r` to `deploy/envs/production/` |
+| `deploy/envs/production-example/` | Production env template - `cp -r` to `deploy/envs/production/` |
 | `deploy/docker-compose.yml` | Base service definitions (production only) |
 | `deploy/docker-compose.production.yml` | Production overlay |
 | `deploy/build.sh` / `deploy/build.ps1` | Build and push Docker images |

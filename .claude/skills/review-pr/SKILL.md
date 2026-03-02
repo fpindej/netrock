@@ -25,7 +25,7 @@ Argument: PR number or URL. If omitted, review the current branch's open PR.
 - **Conventions**: Matches project patterns (Props, logical CSS, Result pattern, etc.)
 - **Completeness**: Are new flags/props consumed where needed? No dead code introduced?
 - **Tests**: If behavior changed, are tests added or updated?
-- **No em dashes**: Flag any `—` (em dash) usage - it's an AI tell and a project rule violation. Use `-` or rewrite.
+- **No em dashes**: Flag any `-` (em dash) usage - it's an AI tell and a project rule violation. Use `-` or rewrite.
 - **No emojis**: Flag any emoji usage in code, UI text, or comments - project rule violation.
 - **Dockerfile**: If a new `.csproj` project was added that WebApi references, verify it has a COPY line in the Dockerfile restore layer.
 - **Production-grade**: This is production code. Every pattern, fix, and decision must be production-quality.

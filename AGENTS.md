@@ -1,6 +1,6 @@
 # Agent Guidelines
 
-> Hard rules and verification commands are in [`CLAUDE.md`](CLAUDE.md) — always loaded.
+> Hard rules and verification commands are in [`CLAUDE.md`](CLAUDE.md) - always loaded.
 
 ## Architecture
 
@@ -20,14 +20,14 @@ Backend API (.NET :8080)
 |---|---|---|
 | **Framework** | .NET 10 / C# 13 | SvelteKit / Svelte 5 (Runes) |
 | **Data** | PostgreSQL + EF Core | openapi-typescript (generated types) |
-| **Cache** | HybridCache (in-process L1) | — |
+| **Cache** | HybridCache (in-process L1) | - |
 | **Auth** | JWT in HttpOnly cookies + permission claims | Cookie-based (automatic via proxy) |
 | **Authorization** | `[RequirePermission]` + role hierarchy | `hasPermission()` utilities |
 | **Validation** | FluentValidation + Data Annotations | TypeScript strict mode |
-| **Styling** | — | Tailwind CSS 4 + shadcn-svelte |
-| **i18n** | — | paraglide-js (compile-time) |
+| **Styling** | - | Tailwind CSS 4 + shadcn-svelte |
+| **i18n** | - | paraglide-js (compile-time) |
 
-### Backend — Clean Architecture
+### Backend - Clean Architecture
 
 ```
 WebApi → Application ← Infrastructure
@@ -47,10 +47,10 @@ All layers reference Shared (Result, ErrorType, ErrorMessages)
 
 ## Code Quality
 
-- Public methods read like a table of contents — delegate to well-named private methods.
+- Public methods read like a table of contents - delegate to well-named private methods.
 - Extract duplication only when intent is identical and a change to one copy always means the same change to others.
 - Design for testability: small focused methods, constructor injection, pure logic where possible.
-- Don't wrap framework types just to mock them — use integration tests instead.
+- Don't wrap framework types just to mock them - use integration tests instead.
 
 ## Security
 
@@ -58,7 +58,7 @@ All layers reference Shared (Result, ErrorType, ErrorMessages)
 
 | Principle | Practice |
 |---|---|
-| Restrictive by default | Deny access, block origins, strip headers — open selectively |
+| Restrictive by default | Deny access, block origins, strip headers - open selectively |
 | Defense in depth | Validate frontend AND backend. Auth in middleware AND controllers. |
 | Least privilege | Minimum data and permissions in tokens, cookies, responses |
 | Fail closed | If validation/token/origin check fails → reject. Never fall through. |
@@ -68,9 +68,9 @@ When building features: think about abuse first, validate all input on backend, 
 
 ## Git Workflow
 
-**Commit continuously and atomically.** Every logically complete unit of work gets its own commit immediately — don't batch up changes.
+**Commit continuously and atomically.** Every logically complete unit of work gets its own commit immediately - don't batch up changes.
 
-Format: `type(scope): lowercase imperative description` — max 72 chars, no period.
+Format: `type(scope): lowercase imperative description` - max 72 chars, no period.
 
 ```
 feat(auth): add refresh token rotation
@@ -80,7 +80,7 @@ test(auth): add login integration tests
 
 One commit = one logical change that could be reverted independently.
 
-**Avoid committing broken code.** Run verification before each commit. If it fails, fix and re-run — keep the main branch green.
+**Avoid committing broken code.** Run verification before each commit. If it fails, fix and re-run - keep the main branch green.
 
 ### Labels (Issues & PRs)
 
@@ -151,6 +151,6 @@ Behavioral config (log levels, rate limits, JWT lifetimes, CORS, seed users) liv
 |---|---|
 | `appsettings.json` | Base/production defaults (placeholder values) |
 | `appsettings.Development.json` | Dev overrides (generous JWT, debug logging, seed users, permissive rate limits) |
-| `deploy/envs/production-example/` | Production template — `cp -r` to `deploy/envs/production/` |
+| `deploy/envs/production-example/` | Production template - `cp -r` to `deploy/envs/production/` |
 | `deploy/docker-compose.yml` | Base service definitions (production only) |
 | `deploy/docker-compose.production.yml` | Production overlay |

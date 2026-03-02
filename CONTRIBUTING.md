@@ -2,16 +2,16 @@
 
 Thanks for your interest in contributing! NETrock is a production-grade template, so we hold contributions to the same standard as the existing codebase.
 
-> **Security issues?** Please report them privately — see [SECURITY.md](SECURITY.md).
+> **Security issues?** Please report them privately - see [SECURITY.md](SECURITY.md).
 >
 > All participants are expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Getting Started
 
 1. **Fork the repository** and clone your fork
-2. **Run the init script** — `./init.sh` (macOS/Linux) or `.\init.ps1` (Windows)
-3. **Start Aspire** — `dotnet run --project src/backend/MyProject.AppHost`
-4. **Read the docs** — at minimum, read [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) before making changes
+2. **Run the init script** - `./init.sh` (macOS/Linux) or `.\init.ps1` (Windows)
+3. **Start Aspire** - `dotnet run --project src/backend/MyProject.AppHost`
+4. **Read the docs** - at minimum, read [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) before making changes
 
 ## How to Contribute
 
@@ -30,11 +30,11 @@ Open an issue with the `enhancement` label. Explain:
 - Why it belongs in a template (vs. being project-specific)
 - How it fits with the existing architecture
 
-Not every feature belongs in a template. NETrock provides a solid foundation — features that are highly project-specific or opinionated toward a particular business domain are better added after initialization.
+Not every feature belongs in a template. NETrock provides a solid foundation - features that are highly project-specific or opinionated toward a particular business domain are better added after initialization.
 
 ### Submitting Code
 
-1. **Create a branch** from `master` — never push directly to `master`
+1. **Create a branch** from `master` - never push directly to `master`
 2. **Follow the conventions** documented in [`AGENTS.md`](AGENTS.md), [`src/backend/AGENTS.md`](src/backend/AGENTS.md), and [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md)
 3. **Run all checks** before opening a PR:
 
@@ -59,30 +59,30 @@ These are non-negotiable. PRs that don't follow them will be requested to change
 
 ### Backend (.NET)
 
-- `Result`/`Result<T>` for all fallible operations — never throw for business logic
-- `TimeProvider` (injected) — never `DateTime.UtcNow` or `DateTimeOffset.UtcNow`
+- `Result`/`Result<T>` for all fallible operations - never throw for business logic
+- `TimeProvider` (injected) - never `DateTime.UtcNow` or `DateTimeOffset.UtcNow`
 - C# 13 `extension(T)` syntax for new extension methods
-- Never `null!` — fix the design instead
-- Typed DTOs only — `ProblemDetails` (RFC 9457) for all error responses, never anonymous objects or raw strings
+- Never `null!` - fix the design instead
+- Typed DTOs only - `ProblemDetails` (RFC 9457) for all error responses, never anonymous objects or raw strings
 - `internal` on all Infrastructure service implementations
 - XML docs (`/// <summary>`) on all public and internal API surface
-- `System.Text.Json` only — never `Newtonsoft.Json`
-- NuGet versions in `Directory.Packages.props` only — never in `.csproj` files
+- `System.Text.Json` only - never `Newtonsoft.Json`
+- NuGet versions in `Directory.Packages.props` only - never in `.csproj` files
 - All tests must pass
 
 ### Frontend (SvelteKit)
 
-- Svelte 5 Runes only: `$props`, `$state`, `$derived`, `$effect` — never `export let`
-- `interface Props` + `$props()` — never `$props<{...}>()`
-- Logical CSS only: `ms-*`/`me-*`/`ps-*`/`pe-*` — never `ml-*`/`mr-*`/`pl-*`/`pr-*`
-- No `any` type — define proper interfaces
+- Svelte 5 Runes only: `$props`, `$state`, `$derived`, `$effect` - never `export let`
+- `interface Props` + `$props()` - never `$props<{...}>()`
+- Logical CSS only: `ms-*`/`me-*`/`ps-*`/`pe-*` - never `ml-*`/`mr-*`/`pl-*`/`pr-*`
+- No `any` type - define proper interfaces
 - Feature folders in `$lib/components/{feature}/` with barrel `index.ts`
-- Never hand-edit `v1.d.ts` — regenerate with `pnpm run api:generate`
+- Never hand-edit `v1.d.ts` - regenerate with `pnpm run api:generate`
 
 ### Cross-Cutting
 
-- Security restrictive by default — deny first, open selectively
-- Don't introduce dependencies without discussion — open an issue first
+- Security restrictive by default - deny first, open selectively
+- Don't introduce dependencies without discussion - open an issue first
 - Update documentation if your change affects conventions, file maps, or workflows
 
 ## What Makes a Good Contribution
@@ -111,7 +111,7 @@ These are non-negotiable. PRs that don't follow them will be requested to change
 ## Development Tips
 
 - Use `.claude/skills/` procedures when adding entities, endpoints, or pages (type `/` to list available skills)
-- Check [FILEMAP.md](FILEMAP.md) for change impact — "when you change X, also update Y"
+- Check [FILEMAP.md](FILEMAP.md) for change impact - "when you change X, also update Y"
 - The architecture tests will catch dependency violations at build time
 - Run `pnpm run api:generate` after any backend API change
 
