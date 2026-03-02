@@ -66,6 +66,8 @@ All layers reference Shared (Result, ErrorType, ErrorMessages)
 
 When building features: think about abuse first, validate all input on backend, sanitize output, protect mutations with auth + CSRF, log security events, audit significant actions via `IAuditService.LogAsync`.
 
+**PII compliance is non-negotiable.** Never expose emails, phone numbers, or usernames to callers without `users.view_pii` permission. PII masking happens server-side via `PiiMasker` / `WithMaskedPii` - never rely on frontend hiding. Never log PII in plain text (use structured logging with masking). Never include PII in URLs, tokens, or error messages. Self-view exemption: users always see their own unmasked data.
+
 ## Git Workflow
 
 **Commit continuously and atomically.** Every logically complete unit of work gets its own commit immediately - don't batch up changes.

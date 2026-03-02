@@ -37,7 +37,7 @@ Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 
 ### Cross-Cutting
 
-- Security restrictive by default - deny first, open selectively
+- Security first - when convenience and security conflict, choose security. Deny by default, open selectively. Full PII compliance (`users.view_pii` permission, server-side masking, no PII in logs/URLs/errors).
 - Atomic commits: `type(scope): imperative description` (Conventional Commits). No `Co-Authored-By` lines.
 - No dead code - remove unused imports, variables, functions, files, and stale references in the same commit
 - No em dashes - never use `—` anywhere (code, comments, docs, UI). Use `-` or rewrite the sentence.
