@@ -66,8 +66,8 @@ internal sealed class GoogleAuthProvider(
         if (!tokenResponse.IsSuccessStatusCode)
         {
             var errorBody = await tokenResponse.Content.ReadAsStringAsync(cancellationToken);
-            logger.LogError("Google token exchange failed with {StatusCode}: {Body}",
-                tokenResponse.StatusCode, errorBody);
+            logger.LogWarning("Google token exchange failed with {StatusCode}: {Body}",
+                tokenResponse.StatusCode, Truncate(errorBody));
             throw new InvalidOperationException("Google token exchange failed.");
         }
 
@@ -97,8 +97,8 @@ internal sealed class GoogleAuthProvider(
         if (!response.IsSuccessStatusCode)
         {
             var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            logger.LogError("Google userinfo request failed with {StatusCode}: {Body}",
-                response.StatusCode, errorBody);
+            logger.LogWarning("Google userinfo request failed with {StatusCode}: {Body}",
+                response.StatusCode, Truncate(errorBody));
             throw new InvalidOperationException("Google userinfo request failed.");
         }
 
@@ -136,4 +136,10 @@ internal sealed class GoogleAuthProvider(
         [JsonPropertyName("family_name")]
         public string? FamilyName { get; init; }
     }
+
+    /// <summary>
+    /// Truncates provider error response bodies to prevent PII leakage in logs.
+    /// </summary>
+    private static string Truncate(string value, int maxLength = 200) =>
+        value.Length <= maxLength ? value : value[..maxLength] + "...[truncated]";
 }

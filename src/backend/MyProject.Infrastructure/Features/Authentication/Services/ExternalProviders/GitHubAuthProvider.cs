@@ -66,13 +66,20 @@ internal sealed class GitHubAuthProvider(
         if (!tokenResponse.IsSuccessStatusCode)
         {
             var errorBody = await tokenResponse.Content.ReadAsStringAsync(cancellationToken);
-            logger.LogError("GitHub token exchange failed with {StatusCode}: {Body}",
-                tokenResponse.StatusCode, errorBody);
+            logger.LogWarning("GitHub token exchange failed with {StatusCode}: {Body}",
+                tokenResponse.StatusCode, Truncate(errorBody));
             throw new InvalidOperationException("GitHub token exchange failed.");
         }
 
         var tokenResult = await tokenResponse.Content.ReadFromJsonAsync<GitHubTokenResponse>(cancellationToken)
             ?? throw new InvalidOperationException("GitHub returned an empty token response.");
+
+        if (!string.IsNullOrEmpty(tokenResult.Error))
+        {
+            logger.LogWarning("GitHub token exchange returned error: {Error} - {Description}",
+                tokenResult.Error, tokenResult.ErrorDescription);
+            throw new InvalidOperationException("GitHub token exchange failed.");
+        }
 
         if (string.IsNullOrEmpty(tokenResult.AccessToken))
         {
@@ -139,6 +146,12 @@ internal sealed class GitHubAuthProvider(
     {
         [JsonPropertyName("access_token")]
         public string? AccessToken { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+
+        [JsonPropertyName("error_description")]
+        public string? ErrorDescription { get; init; }
     }
 
     private sealed class GitHubUser
@@ -161,4 +174,10 @@ internal sealed class GitHubAuthProvider(
         [JsonPropertyName("verified")]
         public bool IsVerified { get; init; }
     }
+
+    /// <summary>
+    /// Truncates provider error response bodies to prevent PII leakage in logs.
+    /// </summary>
+    private static string Truncate(string value, int maxLength = 200) =>
+        value.Length <= maxLength ? value : value[..maxLength] + "...[truncated]";
 }
