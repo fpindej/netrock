@@ -286,6 +286,17 @@ internal class ExternalAuthService(
     {
         if (!authenticatedUserId.HasValue)
         {
+            // Check lockout before issuing tokens
+            if (await userManager.IsLockedOutAsync(linkedUser))
+            {
+                await auditService.LogAsync(AuditActions.ExternalLoginFailure, userId: linkedUser.Id,
+                    metadata: JsonSerializer.Serialize(new { provider, reason = "account_locked" }),
+                    ct: cancellationToken);
+
+                return Result<ExternalCallbackOutput>.Failure(
+                    ErrorMessages.Auth.LoginAccountLocked, ErrorType.Unauthorized);
+            }
+
             // Not logged in, existing link -> login
             var tokens = await GenerateTokensAsync(linkedUser, useCookies, cancellationToken);
             await auditService.LogAsync(AuditActions.ExternalLoginSuccess, userId: linkedUser.Id,
@@ -327,6 +338,8 @@ internal class ExternalAuthService(
                 ErrorMessages.ExternalAuth.ProviderError, ErrorType.Validation);
         }
 
+        await hybridCache.RemoveAsync(CacheKeys.User(userId), cancellationToken);
+
         await auditService.LogAsync(AuditActions.ExternalAccountLinked, userId: userId,
             metadata: JsonSerializer.Serialize(new { provider }), ct: cancellationToken);
 
@@ -352,6 +365,26 @@ internal class ExternalAuthService(
                     ErrorMessages.ExternalAuth.EmailNotVerified, ErrorType.Validation);
             }
 
+            if (!externalUser.EmailVerified)
+            {
+                await auditService.LogAsync(AuditActions.ExternalLoginFailure,
+                    metadata: JsonSerializer.Serialize(new { provider, email = externalUser.Email, reason = "provider_email_not_verified" }),
+                    ct: cancellationToken);
+
+                return Result<ExternalCallbackOutput>.Failure(
+                    ErrorMessages.ExternalAuth.EmailNotVerified, ErrorType.Validation);
+            }
+
+            if (await userManager.IsLockedOutAsync(existingUser))
+            {
+                await auditService.LogAsync(AuditActions.ExternalLoginFailure, userId: existingUser.Id,
+                    metadata: JsonSerializer.Serialize(new { provider, reason = "account_locked" }),
+                    ct: cancellationToken);
+
+                return Result<ExternalCallbackOutput>.Failure(
+                    ErrorMessages.Auth.LoginAccountLocked, ErrorType.Unauthorized);
+            }
+
             // Auto-link by verified email
             var addResult = await userManager.AddLoginAsync(existingUser,
                 new UserLoginInfo(provider, externalUser.ProviderKey, provider));
@@ -361,6 +394,8 @@ internal class ExternalAuthService(
                 return Result<ExternalCallbackOutput>.Failure(
                     ErrorMessages.ExternalAuth.ProviderError, ErrorType.Validation);
             }
+
+            await hybridCache.RemoveAsync(CacheKeys.User(existingUser.Id), cancellationToken);
 
             var tokens = await GenerateTokensAsync(existingUser, useCookies, cancellationToken);
 
