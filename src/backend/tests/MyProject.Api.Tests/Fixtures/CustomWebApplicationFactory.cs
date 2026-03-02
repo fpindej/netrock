@@ -36,6 +36,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     public IAuditService AuditService { get; } = Substitute.For<IAuditService>();
     public ITwoFactorService TwoFactorService { get; } = Substitute.For<ITwoFactorService>();
     public IExternalAuthService ExternalAuthService { get; } = Substitute.For<IExternalAuthService>();
+    public IProviderConfigService ProviderConfigService { get; } = Substitute.For<IProviderConfigService>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -110,6 +111,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IExternalAuthService>();
             services.AddSingleton(ExternalAuthService);
 
+            services.RemoveAll<IProviderConfigService>();
+            services.AddSingleton(ProviderConfigService);
+
             // Override auth scheme — PostConfigure runs after the app's Configure,
             // ensuring the test scheme wins over the JWT Bearer defaults.
             services.PostConfigure<AuthenticationOptions>(options =>
@@ -146,5 +150,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         AuditService.ClearSubstitute(ClearOptions.All);
         TwoFactorService.ClearSubstitute(ClearOptions.All);
         ExternalAuthService.ClearSubstitute(ClearOptions.All);
+        ProviderConfigService.ClearSubstitute(ClearOptions.All);
     }
 }

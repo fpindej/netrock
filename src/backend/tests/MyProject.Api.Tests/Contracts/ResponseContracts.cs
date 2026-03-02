@@ -38,6 +38,10 @@ internal record RecurringJobDetailResponse(string Id, string Cron, DateTimeOffse
 internal record JobExecutionResponse(string JobId, string Status, DateTimeOffset? StartedAt,
     TimeSpan? Duration, string? Error);
 
+// Admin - OAuth Providers
+internal record OAuthProviderConfigContract(string Provider, string DisplayName, bool IsEnabled,
+    string? ClientId, bool HasClientSecret, string Source, DateTime? UpdatedAt, Guid? UpdatedBy);
+
 // Audit
 internal record AuditEventContract(Guid Id, Guid? UserId, string Action, string? TargetEntityType,
     Guid? TargetEntityId, string? Metadata, DateTime CreatedAt);
