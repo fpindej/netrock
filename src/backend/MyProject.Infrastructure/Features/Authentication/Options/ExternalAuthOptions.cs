@@ -28,7 +28,7 @@ public sealed class ExternalAuthOptions : IValidatableObject
 
     /// <summary>
     /// Gets or sets the master encryption key used to protect OAuth client secrets at rest.
-    /// Must be at least 32 characters. The raw value is SHA-256 hashed to derive the AES-256 key.
+    /// Must be at least 32 characters. The raw value is fed through HKDF-SHA256 to derive the AES-256 key.
     /// </summary>
     [Required]
     [MinLength(32)]

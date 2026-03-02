@@ -96,7 +96,8 @@ internal sealed class ProviderConfigService(
         var utcNow = timeProvider.GetUtcNow().UtcDateTime;
 
         var existing = await dbContext.Set<ExternalProviderConfig>()
-            .FirstOrDefaultAsync(c => c.Provider == input.Provider, cancellationToken);
+            .FirstOrDefaultAsync(
+                c => c.Provider.ToLower() == input.Provider.ToLower(), cancellationToken);
 
         if (existing is not null)
         {
@@ -143,7 +144,8 @@ internal sealed class ProviderConfigService(
     {
         var dbConfig = await dbContext.Set<ExternalProviderConfig>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Provider == provider, cancellationToken);
+            .FirstOrDefaultAsync(
+                c => c.Provider.ToLower() == provider.ToLower(), cancellationToken);
 
         if (dbConfig is not null)
         {
@@ -152,9 +154,13 @@ internal sealed class ProviderConfigService(
                 return null;
             }
 
+            var clientSecret = string.IsNullOrEmpty(dbConfig.EncryptedClientSecret)
+                ? string.Empty
+                : encryptionService.Decrypt(dbConfig.EncryptedClientSecret);
+
             return new ProviderCredentialsOutput(
                 encryptionService.Decrypt(dbConfig.EncryptedClientId),
-                encryptionService.Decrypt(dbConfig.EncryptedClientSecret));
+                clientSecret);
         }
 
         // Fallback to appsettings
