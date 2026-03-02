@@ -44,7 +44,6 @@ internal class AuthenticationService(
     ILogger<AuthenticationService> logger,
     MyProjectDbContext dbContext) : IAuthenticationService
 {
-    private readonly AuthenticationOptions.JwtOptions _jwtOptions = authenticationOptions.Value.Jwt;
     private readonly AuthenticationOptions.TwoFactorOptions _twoFactorOptions = authenticationOptions.Value.TwoFactor;
     private readonly AuthenticationOptions.EmailTokenOptions _emailTokenOptions = authenticationOptions.Value.EmailToken;
     private readonly EmailOptions _emailOptions = emailOptions.Value;
@@ -309,7 +308,7 @@ internal class AuthenticationService(
 
         if (useCookies)
         {
-            SetAuthCookies(newAccessToken, newRefreshTokenString, storedToken.IsPersistent, utcNow,
+            tokenSessionService.SetAuthCookies(newAccessToken, newRefreshTokenString, storedToken.IsPersistent, utcNow,
                 new DateTimeOffset(storedToken.ExpiredAt, TimeSpan.Zero));
         }
 
@@ -543,25 +542,6 @@ internal class AuthenticationService(
     {
         var bytes = RandomNumberGenerator.GetBytes(32);
         return Convert.ToBase64String(bytes);
-    }
-
-    /// <summary>
-    /// Sets access and refresh token cookies. When <paramref name="persistent"/> is true,
-    /// cookies receive explicit expiry dates so they survive browser restarts.
-    /// When false, session cookies are used (no <c>Expires</c> header).
-    /// </summary>
-    private void SetAuthCookies(string accessToken, string refreshToken, bool persistent,
-        DateTimeOffset utcNow, DateTimeOffset refreshTokenExpiry)
-    {
-        cookieService.SetSecureCookie(
-            key: CookieNames.AccessToken,
-            value: accessToken,
-            expires: persistent ? utcNow.Add(_jwtOptions.AccessTokenLifetime) : null);
-
-        cookieService.SetSecureCookie(
-            key: CookieNames.RefreshToken,
-            value: refreshToken,
-            expires: persistent ? refreshTokenExpiry : null);
     }
 
     private async Task RevokeUserTokens(Guid userId, CancellationToken cancellationToken = default)

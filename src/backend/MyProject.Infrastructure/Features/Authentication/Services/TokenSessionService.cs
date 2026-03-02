@@ -26,6 +26,19 @@ internal interface ITokenSessionService
     /// <returns>The generated access and refresh tokens.</returns>
     Task<AuthenticationOutput> GenerateTokensAsync(
         ApplicationUser user, bool useCookies, bool rememberMe, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Sets access and refresh token cookies. When <paramref name="persistent"/> is true,
+    /// cookies receive explicit expiry dates so they survive browser restarts.
+    /// When false, session cookies are used (no <c>Expires</c> header).
+    /// </summary>
+    /// <param name="accessToken">The JWT access token value.</param>
+    /// <param name="refreshToken">The refresh token value.</param>
+    /// <param name="persistent">Whether to set persistent cookies with explicit expiry.</param>
+    /// <param name="utcNow">The current UTC time for computing access token cookie expiry.</param>
+    /// <param name="refreshTokenExpiry">The absolute expiry for the refresh token cookie.</param>
+    void SetAuthCookies(string accessToken, string refreshToken, bool persistent,
+        DateTimeOffset utcNow, DateTimeOffset refreshTokenExpiry);
 }
 
 /// <inheritdoc />
@@ -74,12 +87,8 @@ internal class TokenSessionService(
         return new AuthenticationOutput(AccessToken: accessToken, RefreshToken: refreshTokenString);
     }
 
-    /// <summary>
-    /// Sets access and refresh token cookies. When <paramref name="persistent"/> is true,
-    /// cookies receive explicit expiry dates so they survive browser restarts.
-    /// When false, session cookies are used (no <c>Expires</c> header).
-    /// </summary>
-    private void SetAuthCookies(string accessToken, string refreshToken, bool persistent,
+    /// <inheritdoc />
+    public void SetAuthCookies(string accessToken, string refreshToken, bool persistent,
         DateTimeOffset utcNow, DateTimeOffset refreshTokenExpiry)
     {
         cookieService.SetSecureCookie(
