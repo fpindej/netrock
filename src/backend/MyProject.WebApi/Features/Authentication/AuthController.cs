@@ -448,10 +448,10 @@ public class AuthController(
     /// </summary>
     [HttpPost("external/challenge")]
     [EnableRateLimiting(RateLimitPolicies.Auth)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ExternalChallengeResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult> ExternalChallenge(
+    public async Task<ActionResult<ExternalChallengeResponse>> ExternalChallenge(
         [FromBody] ExternalChallengeRequest request,
         CancellationToken cancellationToken)
     {
@@ -462,7 +462,7 @@ public class AuthController(
             return ProblemFactory.Create(result.Error, result.ErrorType);
         }
 
-        return Ok(new { result.Value.AuthorizationUrl });
+        return Ok(new ExternalChallengeResponse { AuthorizationUrl = result.Value.AuthorizationUrl });
     }
 
     /// <summary>
