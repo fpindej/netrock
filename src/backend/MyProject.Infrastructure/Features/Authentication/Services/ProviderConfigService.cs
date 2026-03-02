@@ -1,6 +1,8 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyProject.Application.Caching.Constants;
 using MyProject.Application.Cryptography;
@@ -26,7 +28,8 @@ internal sealed class ProviderConfigService(
     IEnumerable<IExternalAuthProvider> providers,
     HybridCache hybridCache,
     IAuditService auditService,
-    TimeProvider timeProvider) : IProviderConfigService
+    TimeProvider timeProvider,
+    ILogger<ProviderConfigService> logger) : IProviderConfigService
 {
     private static readonly HybridCacheEntryOptions CacheOptions = new()
     {
@@ -48,7 +51,17 @@ internal sealed class ProviderConfigService(
         {
             if (dbConfigs.TryGetValue(provider.Name, out var dbConfig))
             {
-                var clientId = encryptionService.Decrypt(dbConfig.EncryptedClientId);
+                string? clientId;
+                try
+                {
+                    clientId = encryptionService.Decrypt(dbConfig.EncryptedClientId);
+                }
+                catch (CryptographicException ex)
+                {
+                    logger.LogError(ex, "Failed to decrypt client ID for provider {Provider}", provider.Name);
+                    clientId = null;
+                }
+
                 result.Add(new ProviderConfigOutput(
                     provider.Name,
                     provider.DisplayName,
@@ -106,8 +119,7 @@ internal sealed class ProviderConfigService(
         var utcNow = timeProvider.GetUtcNow().UtcDateTime;
 
         var existing = await dbContext.Set<ExternalProviderConfig>()
-            .FirstOrDefaultAsync(
-                c => c.Provider.ToLower() == canonicalName.ToLower(), cancellationToken);
+            .FirstOrDefaultAsync(c => c.Provider == canonicalName, cancellationToken);
 
         if (existing is not null)
         {
@@ -154,8 +166,7 @@ internal sealed class ProviderConfigService(
     {
         var dbConfig = await dbContext.Set<ExternalProviderConfig>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(
-                c => c.Provider.ToLower() == provider.ToLower(), cancellationToken);
+            .FirstOrDefaultAsync(c => c.Provider == provider, cancellationToken);
 
         if (dbConfig is not null)
         {

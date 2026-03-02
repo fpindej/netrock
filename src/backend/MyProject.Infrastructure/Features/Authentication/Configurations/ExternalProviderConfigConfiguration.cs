@@ -26,11 +26,11 @@ internal class ExternalProviderConfigConfiguration : IEntityTypeConfiguration<Ex
 
         builder.Property(e => e.EncryptedClientId)
             .IsRequired()
-            .HasMaxLength(512);
+            .HasMaxLength(1024);
 
         builder.Property(e => e.EncryptedClientSecret)
             .IsRequired()
-            .HasMaxLength(512);
+            .HasMaxLength(1024);
 
         builder.Property(e => e.CreatedAt)
             .IsRequired();
