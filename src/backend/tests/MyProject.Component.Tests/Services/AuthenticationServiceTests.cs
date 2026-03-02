@@ -75,6 +75,9 @@ public class AuthenticationServiceTests : IDisposable
         var emailTokenService = new EmailTokenService(_dbContext, _timeProvider, authOptions);
         _auditService = Substitute.For<IAuditService>();
 
+        var tokenSessionService = new TokenSessionService(
+            _tokenProvider, _timeProvider, _cookieService, authOptions, _dbContext);
+
         _sut = new AuthenticationService(
             _userManager,
             _signInManager,
@@ -86,6 +89,7 @@ public class AuthenticationServiceTests : IDisposable
             _templatedEmailSender,
             emailTokenService,
             _auditService,
+            tokenSessionService,
             authOptions,
             emailOptions,
             Substitute.For<ILogger<AuthenticationService>>(),

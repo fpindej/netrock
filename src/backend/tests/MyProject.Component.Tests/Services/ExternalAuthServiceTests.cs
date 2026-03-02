@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using MyProject.Application.Caching.Constants;
-using MyProject.Application.Cookies;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Authentication.Dtos;
 using MyProject.Application.Identity;
@@ -24,9 +23,7 @@ namespace MyProject.Component.Tests.Services;
 public class ExternalAuthServiceTests : IDisposable
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly ITokenProvider _tokenProvider;
     private readonly FakeTimeProvider _timeProvider;
-    private readonly ICookieService _cookieService;
     private readonly IUserContext _userContext;
     private readonly IAuditService _auditService;
     private readonly HybridCache _hybridCache;
@@ -39,9 +36,7 @@ public class ExternalAuthServiceTests : IDisposable
     public ExternalAuthServiceTests()
     {
         _userManager = IdentityMockHelpers.CreateMockUserManager();
-        _tokenProvider = Substitute.For<ITokenProvider>();
         _timeProvider = new FakeTimeProvider(FixedTime);
-        _cookieService = Substitute.For<ICookieService>();
         _userContext = Substitute.For<IUserContext>();
         _auditService = Substitute.For<IAuditService>();
         _hybridCache = Substitute.For<HybridCache>();
@@ -51,40 +46,25 @@ public class ExternalAuthServiceTests : IDisposable
         _googleProvider.Name.Returns("Google");
         _googleProvider.DisplayName.Returns("Google");
 
-        var authOptions = Options.Create(new AuthenticationOptions
-        {
-            Jwt = new AuthenticationOptions.JwtOptions
-            {
-                Key = "ThisIsATestSigningKeyWithAtLeast32Chars!",
-                Issuer = "test-issuer",
-                Audience = "test-audience",
-                AccessTokenLifetime = TimeSpan.FromMinutes(10),
-                RefreshToken = new AuthenticationOptions.JwtOptions.RefreshTokenOptions
-                {
-                    PersistentLifetime = TimeSpan.FromDays(7),
-                    SessionLifetime = TimeSpan.FromHours(24)
-                }
-            }
-        });
-
         var externalOptions = Options.Create(new ExternalAuthOptions
         {
             AllowedRedirectUris = ["https://example.com/oauth/callback"],
             StateLifetime = TimeSpan.FromMinutes(10)
         });
 
-        _tokenProvider.GenerateAccessToken(Arg.Any<ApplicationUser>()).Returns("test-access-token");
-        _tokenProvider.GenerateRefreshToken().Returns("test-refresh-token");
+        var tokenSessionService = Substitute.For<ITokenSessionService>();
+        tokenSessionService
+            .GenerateTokensAsync(Arg.Any<ApplicationUser>(), Arg.Any<bool>(), Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .Returns(new AuthenticationOutput("test-access-token", "test-refresh-token"));
 
         _sut = new ExternalAuthService(
             _userManager,
-            _tokenProvider,
             _timeProvider,
-            _cookieService,
             _userContext,
             _auditService,
             _hybridCache,
-            authOptions,
+            tokenSessionService,
             externalOptions,
             [_googleProvider],
             Substitute.For<ILogger<ExternalAuthService>>(),

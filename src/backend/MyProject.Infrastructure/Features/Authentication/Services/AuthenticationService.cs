@@ -38,6 +38,7 @@ internal class AuthenticationService(
     ITemplatedEmailSender templatedEmailSender,
     EmailTokenService emailTokenService,
     IAuditService auditService,
+    ITokenSessionService tokenSessionService,
     IOptions<AuthenticationOptions> authenticationOptions,
     IOptions<EmailOptions> emailOptions,
     ILogger<AuthenticationService> logger,
@@ -99,7 +100,7 @@ internal class AuthenticationService(
                 RequiresTwoFactor: true));
         }
 
-        var tokens = await GenerateTokensAsync(user, useCookies, rememberMe, cancellationToken);
+        var tokens = await tokenSessionService.GenerateTokensAsync(user, useCookies, rememberMe, cancellationToken);
         await auditService.LogAsync(AuditActions.LoginSuccess, userId: user.Id, ct: cancellationToken);
 
         return Result<LoginOutput>.Success(new LoginOutput(
@@ -139,7 +140,7 @@ internal class AuthenticationService(
         challenge.IsUsed = true;
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var tokens = await GenerateTokensAsync(user, useCookies, challenge.IsRememberMe, cancellationToken);
+        var tokens = await tokenSessionService.GenerateTokensAsync(user, useCookies, challenge.IsRememberMe, cancellationToken);
 
         await auditService.LogAsync(AuditActions.TwoFactorLoginSuccess, userId: user.Id, ct: cancellationToken);
 
@@ -175,7 +176,7 @@ internal class AuthenticationService(
         challenge.IsUsed = true;
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var tokens = await GenerateTokensAsync(user, useCookies, challenge.IsRememberMe, cancellationToken);
+        var tokens = await tokenSessionService.GenerateTokensAsync(user, useCookies, challenge.IsRememberMe, cancellationToken);
 
         await auditService.LogAsync(AuditActions.TwoFactorRecoveryCodeUsed, userId: user.Id, ct: cancellationToken);
         await auditService.LogAsync(AuditActions.TwoFactorLoginSuccess, userId: user.Id, ct: cancellationToken);
@@ -504,44 +505,6 @@ internal class AuthenticationService(
         await auditService.LogAsync(AuditActions.ResendVerificationEmail, userId: userId.Value, ct: cancellationToken);
 
         return Result.Success();
-    }
-
-    /// <summary>
-    /// Generates access and refresh tokens for the user, stores the refresh token, and optionally sets cookies.
-    /// </summary>
-    private async Task<AuthenticationOutput> GenerateTokensAsync(
-        ApplicationUser user, bool useCookies, bool rememberMe, CancellationToken cancellationToken)
-    {
-        var accessToken = await tokenProvider.GenerateAccessToken(user);
-        var refreshTokenString = tokenProvider.GenerateRefreshToken();
-        var utcNow = timeProvider.GetUtcNow();
-
-        var refreshLifetime = rememberMe
-            ? _jwtOptions.RefreshToken.PersistentLifetime
-            : _jwtOptions.RefreshToken.SessionLifetime;
-
-        var refreshTokenEntity = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            Token = HashHelper.Sha256(refreshTokenString),
-            UserId = user.Id,
-            CreatedAt = utcNow.UtcDateTime,
-            ExpiredAt = utcNow.UtcDateTime.Add(refreshLifetime),
-            IsUsed = false,
-            IsInvalidated = false,
-            IsPersistent = rememberMe
-        };
-
-        dbContext.RefreshTokens.Add(refreshTokenEntity);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        if (useCookies)
-        {
-            SetAuthCookies(accessToken, refreshTokenString, rememberMe, utcNow,
-                utcNow.Add(refreshLifetime));
-        }
-
-        return new AuthenticationOutput(AccessToken: accessToken, RefreshToken: refreshTokenString);
     }
 
     /// <summary>

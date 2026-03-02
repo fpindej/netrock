@@ -6,8 +6,6 @@ using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyProject.Application.Caching.Constants;
-using MyProject.Application.Cookies;
-using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Audit;
 using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Authentication.Dtos;
@@ -28,19 +26,16 @@ namespace MyProject.Infrastructure.Features.Authentication.Services;
 /// </summary>
 internal class ExternalAuthService(
     UserManager<ApplicationUser> userManager,
-    ITokenProvider tokenProvider,
     TimeProvider timeProvider,
-    ICookieService cookieService,
     IUserContext userContext,
     IAuditService auditService,
     HybridCache hybridCache,
-    IOptions<AuthenticationOptions> authenticationOptions,
+    ITokenSessionService tokenSessionService,
     IOptions<ExternalAuthOptions> externalAuthOptions,
     IEnumerable<IExternalAuthProvider> providers,
     ILogger<ExternalAuthService> logger,
     MyProjectDbContext dbContext) : IExternalAuthService
 {
-    private readonly AuthenticationOptions.JwtOptions _jwtOptions = authenticationOptions.Value.Jwt;
     private readonly ExternalAuthOptions _externalOptions = externalAuthOptions.Value;
 
     /// <inheritdoc />
@@ -309,7 +304,7 @@ internal class ExternalAuthService(
             }
 
             // Not logged in, existing link -> login
-            var tokens = await GenerateTokensAsync(linkedUser, useCookies, cancellationToken);
+            var tokens = await tokenSessionService.GenerateTokensAsync(linkedUser, useCookies, rememberMe: false, cancellationToken);
             await auditService.LogAsync(AuditActions.ExternalLoginSuccess, userId: linkedUser.Id,
                 metadata: JsonSerializer.Serialize(new { provider }), ct: cancellationToken);
 
@@ -408,7 +403,7 @@ internal class ExternalAuthService(
 
             await hybridCache.RemoveAsync(CacheKeys.User(existingUser.Id), cancellationToken);
 
-            var tokens = await GenerateTokensAsync(existingUser, useCookies, cancellationToken);
+            var tokens = await tokenSessionService.GenerateTokensAsync(existingUser, useCookies, rememberMe: false, cancellationToken);
 
             await auditService.LogAsync(AuditActions.ExternalAccountLinked, userId: existingUser.Id,
                 metadata: JsonSerializer.Serialize(new { provider, autoLinked = true }), ct: cancellationToken);
@@ -466,53 +461,13 @@ internal class ExternalAuthService(
                 ErrorMessages.ExternalAuth.ProviderError, ErrorType.Validation);
         }
 
-        var tokens = await GenerateTokensAsync(user, useCookies, cancellationToken);
+        var tokens = await tokenSessionService.GenerateTokensAsync(user, useCookies, rememberMe: false, cancellationToken);
 
         await auditService.LogAsync(AuditActions.ExternalAccountCreated, userId: user.Id,
             metadata: JsonSerializer.Serialize(new { provider }), ct: cancellationToken);
 
         return Result<ExternalCallbackOutput>.Success(
             new ExternalCallbackOutput(tokens, IsNewUser: true, Provider: provider, IsLinkOnly: false));
-    }
-
-    private async Task<AuthenticationOutput> GenerateTokensAsync(
-        ApplicationUser user, bool useCookies, CancellationToken cancellationToken)
-    {
-        var accessToken = await tokenProvider.GenerateAccessToken(user);
-        var refreshTokenString = tokenProvider.GenerateRefreshToken();
-        var utcNow = timeProvider.GetUtcNow();
-
-        var refreshLifetime = _jwtOptions.RefreshToken.SessionLifetime;
-
-        var refreshTokenEntity = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            Token = HashHelper.Sha256(refreshTokenString),
-            UserId = user.Id,
-            CreatedAt = utcNow.UtcDateTime,
-            ExpiredAt = utcNow.UtcDateTime.Add(refreshLifetime),
-            IsUsed = false,
-            IsInvalidated = false,
-            IsPersistent = false
-        };
-
-        dbContext.RefreshTokens.Add(refreshTokenEntity);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        if (useCookies)
-        {
-            cookieService.SetSecureCookie(
-                key: CookieNames.AccessToken,
-                value: accessToken,
-                expires: null);
-
-            cookieService.SetSecureCookie(
-                key: CookieNames.RefreshToken,
-                value: refreshTokenString,
-                expires: null);
-        }
-
-        return new AuthenticationOutput(AccessToken: accessToken, RefreshToken: refreshTokenString);
     }
 
     private static string GenerateStateToken()
