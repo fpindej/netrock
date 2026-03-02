@@ -237,7 +237,7 @@
 	"settings_oauth_connect": "Propojit",
 	"settings_oauth_disconnect": "Odpojit",
 	"settings_oauth_disconnectTitle": "Odpojit účet",
-	"settings_oauth_disconnectDescription": "Opravdu chcete odpojit tento externí účet? Přihlášení přes něj již nebude možné.",
+	"settings_oauth_disconnectDescription": "Opravdu chcete odpojit {provider}? Přihlášení přes něj již nebude možné.",
 	"settings_oauth_disconnectConfirm": "Odpojit",
 	"settings_oauth_disconnectSuccess": "Účet byl úspěšně odpojen.",
 	"settings_oauth_disconnectError": "Nepodařilo se odpojit účet",
