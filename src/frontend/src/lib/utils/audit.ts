@@ -80,6 +80,8 @@ export function getAuditActionLabel(action: string | undefined): string {
 			return m.audit_action_adminUpdateOAuthProvider();
 		case 'AdminTestOAuthProvider':
 			return m.audit_action_adminTestOAuthProvider();
+		case 'AdminDisableTwoFactor':
+			return m.audit_action_adminDisableTwoFactor();
 		case 'PasswordSet':
 			return m.audit_action_passwordSet();
 		default:
@@ -106,6 +108,7 @@ export function getAuditActionVariant(action: string | undefined): TimelineVaria
 		case 'AdminDeleteUser':
 		case 'AdminDeleteRole':
 		case 'AdminLockUser':
+		case 'AdminDisableTwoFactor':
 		case 'TwoFactorLoginFailure':
 		case 'TwoFactorDisabled':
 		case 'ExternalLoginFailure':
