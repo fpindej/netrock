@@ -94,4 +94,13 @@ public class AesGcmEncryptionServiceTests
         var bytes = Convert.FromBase64String(ciphertext);
         Assert.True(bytes.Length > 28); // At least nonce(12) + tag(16) + 1 byte ciphertext
     }
+
+    [Fact]
+    public void Decrypt_WithTruncatedBlob_ThrowsCryptographicException()
+    {
+        var shortBlob = Convert.ToBase64String(new byte[10]); // Less than nonce(12) + tag(16)
+
+        Assert.Throws<System.Security.Cryptography.CryptographicException>(
+            () => _sut.Decrypt(shortBlob));
+    }
 }

@@ -1,4 +1,5 @@
 using MyProject.Application.Features.Authentication.Dtos;
+using MyProject.Shared;
 
 namespace MyProject.Application.Features.Authentication;
 
@@ -25,10 +26,12 @@ public interface IProviderConfigService
 
     /// <summary>
     /// Creates or updates a provider's configuration in the database.
-    /// Encrypts secrets before storing, invalidates cache, and logs an audit event.
+    /// Validates that the provider name is known, encrypts secrets before storing,
+    /// invalidates cache, and logs an audit event.
     /// </summary>
     /// <param name="callerUserId">The ID of the admin performing the update.</param>
     /// <param name="input">The provider configuration input.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    Task UpsertAsync(Guid callerUserId, UpsertProviderConfigInput input, CancellationToken cancellationToken);
+    /// <returns>A result indicating success or failure.</returns>
+    Task<Result> UpsertAsync(Guid callerUserId, UpsertProviderConfigInput input, CancellationToken cancellationToken);
 }

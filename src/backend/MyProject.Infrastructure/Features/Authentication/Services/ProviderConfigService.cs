@@ -11,6 +11,7 @@ using MyProject.Infrastructure.Features.Authentication.Models;
 using MyProject.Infrastructure.Features.Authentication.Options;
 using MyProject.Infrastructure.Features.Authentication.Services.ExternalProviders;
 using MyProject.Infrastructure.Persistence;
+using MyProject.Shared;
 
 namespace MyProject.Infrastructure.Features.Authentication.Services;
 
@@ -90,14 +91,23 @@ internal sealed class ProviderConfigService(
     }
 
     /// <inheritdoc />
-    public async Task UpsertAsync(
+    public async Task<Result> UpsertAsync(
         Guid callerUserId, UpsertProviderConfigInput input, CancellationToken cancellationToken)
     {
+        var knownProvider = providers.FirstOrDefault(
+            p => string.Equals(p.Name, input.Provider, StringComparison.OrdinalIgnoreCase));
+
+        if (knownProvider is null)
+        {
+            return Result.Failure(ErrorMessages.ExternalAuth.UnknownProvider, ErrorType.Validation);
+        }
+
+        var canonicalName = knownProvider.Name;
         var utcNow = timeProvider.GetUtcNow().UtcDateTime;
 
         var existing = await dbContext.Set<ExternalProviderConfig>()
             .FirstOrDefaultAsync(
-                c => c.Provider.ToLower() == input.Provider.ToLower(), cancellationToken);
+                c => c.Provider.ToLower() == canonicalName.ToLower(), cancellationToken);
 
         if (existing is not null)
         {
@@ -117,26 +127,26 @@ internal sealed class ProviderConfigService(
             dbContext.Set<ExternalProviderConfig>().Add(new ExternalProviderConfig
             {
                 Id = Guid.NewGuid(),
-                Provider = input.Provider,
+                Provider = canonicalName,
                 IsEnabled = input.IsEnabled,
                 EncryptedClientId = encryptionService.Encrypt(input.ClientId),
                 EncryptedClientSecret = input.ClientSecret is not null
                     ? encryptionService.Encrypt(input.ClientSecret)
                     : string.Empty,
-                CreatedAt = utcNow,
-                UpdatedAt = utcNow,
-                UpdatedBy = callerUserId
+                CreatedAt = utcNow
             });
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        await hybridCache.RemoveAsync(CacheKeys.ProviderConfig(input.Provider), cancellationToken);
+        await hybridCache.RemoveAsync(CacheKeys.ProviderConfig(canonicalName), cancellationToken);
 
         await auditService.LogAsync(
             AuditActions.AdminUpdateOAuthProvider,
             userId: callerUserId,
-            metadata: JsonSerializer.Serialize(new { provider = input.Provider, enabled = input.IsEnabled }),
+            metadata: JsonSerializer.Serialize(new { provider = canonicalName, enabled = input.IsEnabled }),
             ct: cancellationToken);
+
+        return Result.Success();
     }
 
     private async Task<ProviderCredentialsOutput?> LoadCredentialsAsync(
