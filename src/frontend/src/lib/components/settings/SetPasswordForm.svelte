@@ -28,7 +28,7 @@
 		fieldErrors = {};
 
 		if (newPassword !== confirmPassword) {
-			fieldErrors = { confirmPassword: m.settings_changePassword_mismatch() };
+			fieldErrors = { confirmPassword: m.settings_setPassword_mismatch() };
 			fieldShakes.triggerFields(['confirmPassword']);
 			isLoading = false;
 			return;
@@ -74,7 +74,7 @@
 		<form onsubmit={handleSubmit}>
 			<div class="grid gap-4">
 				<div class="grid gap-2">
-					<Label for="newPassword">{m.settings_changePassword_newPassword()}</Label>
+					<Label for="newPassword">{m.settings_setPassword_newPassword()}</Label>
 					<Input
 						id="newPassword"
 						type="password"
@@ -94,7 +94,7 @@
 				</div>
 
 				<div class="grid gap-2">
-					<Label for="confirmPassword">{m.settings_changePassword_confirmPassword()}</Label>
+					<Label for="confirmPassword">{m.settings_setPassword_confirmPassword()}</Label>
 					<Input
 						id="confirmPassword"
 						type="password"
@@ -117,7 +117,7 @@
 						{#if cooldown.active}
 							{m.common_waitSeconds({ seconds: cooldown.remaining })}
 						{:else}
-							{isLoading ? m.settings_changePassword_submitting() : m.settings_setPassword_submit()}
+							{isLoading ? m.settings_setPassword_submitting() : m.settings_setPassword_submit()}
 						{/if}
 					</Button>
 				</div>
