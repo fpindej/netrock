@@ -3,8 +3,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Switch } from '$lib/components/ui/switch';
+	import { ProviderIcon } from '$lib/components/oauth';
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
@@ -64,16 +64,15 @@
 	<Card.Header>
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-2">
+				<ProviderIcon provider={provider.provider ?? ''} class="h-5 w-5" />
 				<Card.Title>{provider.displayName}</Card.Title>
-				<Badge variant={provider.source === 'database' ? 'default' : 'secondary'}>
-					{provider.source === 'database'
-						? m.admin_oauthProviders_sourceDatabase()
-						: m.admin_oauthProviders_sourceAppsettings()}
-				</Badge>
 			</div>
-			<Badge variant={isEnabled ? 'default' : 'outline'}>
-				{isEnabled ? m.admin_oauthProviders_enabled() : m.admin_oauthProviders_disabled()}
-			</Badge>
+			<Switch
+				checked={isEnabled}
+				onCheckedChange={(v) => (isEnabled = v)}
+				disabled={!canManage}
+				aria-label={m.admin_oauthProviders_toggleEnabled()}
+			/>
 		</div>
 		<Card.Description>
 			{isEnabled
@@ -82,15 +81,6 @@
 		</Card.Description>
 	</Card.Header>
 	<Card.Content class="space-y-4">
-		<div class="flex items-center gap-2">
-			<Checkbox
-				id="{provider.provider}-enabled"
-				bind:checked={isEnabled}
-				disabled={!canManage}
-				aria-label={m.admin_oauthProviders_toggleEnabled()}
-			/>
-			<Label for="{provider.provider}-enabled">{m.admin_oauthProviders_toggleEnabled()}</Label>
-		</div>
 		<div class="space-y-2">
 			<Label for="{provider.provider}-client-id">{m.admin_oauthProviders_clientId()}</Label>
 			<Input
