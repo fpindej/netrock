@@ -4,7 +4,7 @@ using MyProject.Shared;
 namespace MyProject.Application.Features.Authentication;
 
 /// <summary>
-/// Manages OAuth provider configuration with DB storage and appsettings fallback.
+/// Manages OAuth provider configuration with DB storage as the single source of truth.
 /// </summary>
 public interface IProviderConfigService
 {
@@ -17,7 +17,6 @@ public interface IProviderConfigService
 
     /// <summary>
     /// Returns decrypted credentials for the given provider, or null if not configured or disabled.
-    /// Falls back to appsettings when no DB record exists.
     /// </summary>
     /// <param name="provider">The provider name (e.g. "Google").</param>
     /// <param name="cancellationToken">A cancellation token.</param>
