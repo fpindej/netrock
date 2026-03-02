@@ -237,7 +237,7 @@
 	"settings_oauth_connect": "Connect",
 	"settings_oauth_disconnect": "Disconnect",
 	"settings_oauth_disconnectTitle": "Disconnect Account",
-	"settings_oauth_disconnectDescription": "Are you sure you want to disconnect this external account? You will no longer be able to sign in with it.",
+	"settings_oauth_disconnectDescription": "Are you sure you want to disconnect {provider}? You will no longer be able to sign in with it.",
 	"settings_oauth_disconnectConfirm": "Disconnect",
 	"settings_oauth_disconnectSuccess": "Account disconnected successfully.",
 	"settings_oauth_disconnectError": "Failed to disconnect account",
