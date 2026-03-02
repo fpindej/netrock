@@ -18,7 +18,9 @@
 		<div class="sm:mx-auto sm:w-full sm:max-w-md">
 			<Card.Root class="border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm">
 				<Card.Header class="text-center">
-					<div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+					<div
+						class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10"
+					>
 						<CircleAlert class="h-6 w-6 text-destructive" />
 					</div>
 					<Card.Title>{m.oauth_callback_errorTitle()}</Card.Title>
