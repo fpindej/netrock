@@ -18,13 +18,14 @@
 <header
 	class="flex h-14 shrink-0 items-center gap-2 border-b bg-muted/40 px-4 pt-[env(safe-area-inset-top,0px)] md:hidden"
 >
-	<SidebarTrigger class="size-7" />
+	<SidebarTrigger class="min-h-11 min-w-11" />
 	<Separator orientation="vertical" class="h-4" />
 	<div class="flex-1"></div>
-	<nav class="flex items-center gap-2">
+	<nav class="flex items-center gap-1">
 		<Button
 			variant="ghost"
 			size="icon"
+			class="min-h-11 min-w-11"
 			onclick={() => (shortcutsState.isCommandPaletteOpen = true)}
 			aria-label={m.shortcuts_commandPalette()}
 		>
@@ -33,6 +34,7 @@
 		<Button
 			variant="ghost"
 			size="icon"
+			class="min-h-11 min-w-11"
 			onclick={() => (shortcutsState.isHelpOpen = true)}
 			aria-label={m.shortcuts_help()}
 		>
