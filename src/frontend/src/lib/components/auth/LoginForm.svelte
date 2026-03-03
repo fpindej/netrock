@@ -168,7 +168,7 @@
 									<Form.Label>{m.auth_login_password()}</Form.Label>
 									<a
 										href={resolve('/forgot-password')}
-										class="inline-flex min-h-10 items-center text-sm font-medium text-primary hover:underline"
+										class="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
 									>
 										{m.auth_login_forgotPassword()}
 									</a>
@@ -216,7 +216,7 @@
 				<span class="text-muted-foreground">{m.auth_login_noAccount()}</span>
 				<a
 					href={resolve('/register')}
-					class="ms-1 inline-flex min-h-10 items-center font-medium text-primary hover:underline"
+					class="ms-1 inline-flex min-h-11 items-center font-medium text-primary hover:underline"
 				>
 					{m.auth_login_signUp()}
 				</a>
