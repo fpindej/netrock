@@ -163,7 +163,7 @@
 		<div class="text-center">
 			<button
 				type="button"
-				class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline"
+				class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline focus-visible:text-primary focus-visible:underline focus-visible:outline-none"
 				onclick={() => {
 					useRecovery = true;
 					code = '';
@@ -208,7 +208,7 @@
 		<div class="text-center">
 			<button
 				type="button"
-				class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline"
+				class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline focus-visible:text-primary focus-visible:underline focus-visible:outline-none"
 				onclick={() => {
 					useRecovery = false;
 					recoveryCode = '';
@@ -222,7 +222,7 @@
 	<div class="text-center">
 		<button
 			type="button"
-			class="inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-primary hover:underline"
+			class="inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-primary hover:underline focus-visible:text-primary focus-visible:underline focus-visible:outline-none"
 			onclick={onBack}
 		>
 			<ArrowLeft class="h-3 w-3" />

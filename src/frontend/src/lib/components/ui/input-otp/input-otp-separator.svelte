@@ -14,6 +14,6 @@
 	{#if children}
 		{@render children?.()}
 	{:else}
-		<MinusIcon />
+		<MinusIcon class="size-4" />
 	{/if}
 </div>
