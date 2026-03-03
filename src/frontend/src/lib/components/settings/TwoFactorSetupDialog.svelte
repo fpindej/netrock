@@ -1,8 +1,8 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import * as InputOTP from '$lib/components/ui/input-otp';
 	import * as m from '$lib/paraglide/messages';
 	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
@@ -71,9 +71,16 @@
 		}
 	}
 
-	async function verifyCode(e: Event) {
-		e.preventDefault();
-		if (isLoading || cooldown.active) return;
+	function handleOtpComplete(value: string) {
+		code = value;
+		if (value.length === 6 && !isLoading && !cooldown.active) {
+			verifyCode();
+		}
+	}
+
+	async function verifyCode(e?: Event) {
+		e?.preventDefault();
+		if (isLoading || cooldown.active || code.length !== 6) return;
 		isLoading = true;
 
 		try {
@@ -180,20 +187,28 @@
 					</div>
 
 					<form onsubmit={verifyCode} class="space-y-3">
-						<div class="grid gap-2">
-							<Label for="setupVerifyCode">{m.settings_twoFactor_verifyCode()}</Label>
-							<Input
-								id="setupVerifyCode"
-								type="text"
-								inputmode="numeric"
-								autocomplete="one-time-code"
+						<div class="flex flex-col items-center gap-2">
+							<Label>{m.settings_twoFactor_verifyCode()}</Label>
+							<InputOTP.Root
 								maxlength={6}
-								placeholder="000000"
-								required
 								bind:value={code}
-								class="text-center text-lg tracking-widest"
+								onComplete={handleOtpComplete}
 								disabled={isLoading}
-							/>
+							>
+								{#snippet children({ cells })}
+									<InputOTP.Group>
+										{#each cells.slice(0, 3) as cell (cell)}
+											<InputOTP.Slot {cell} />
+										{/each}
+									</InputOTP.Group>
+									<InputOTP.Separator />
+									<InputOTP.Group>
+										{#each cells.slice(3, 6) as cell (cell)}
+											<InputOTP.Slot {cell} />
+										{/each}
+									</InputOTP.Group>
+								{/snippet}
+							</InputOTP.Root>
 						</div>
 						<Button
 							type="submit"

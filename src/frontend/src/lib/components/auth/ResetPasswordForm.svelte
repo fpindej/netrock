@@ -9,7 +9,6 @@
 	import { FieldError } from '$lib/components/common';
 	import { Label } from '$lib/components/ui/label';
 	import * as m from '$lib/paraglide/messages';
-	import { fly, scale } from 'svelte/transition';
 	import { Check, CircleAlert, TriangleAlert } from '@lucide/svelte';
 	import { AuthShell } from '$lib/components/auth';
 	import type { User } from '$lib/types';
@@ -95,161 +94,147 @@
 
 <AuthShell>
 	{#if user}
-		<div in:fly={{ y: 20, duration: 600, delay: 100 }}>
-			<div class="flex flex-col items-center gap-4 py-4">
-				<div
-					class="flex h-16 w-16 items-center justify-center rounded-full bg-warning/10 text-warning"
-				>
-					<TriangleAlert class="h-8 w-8" />
-				</div>
-				<div class="flex flex-col items-center gap-2 text-center">
-					<h1 class="text-2xl font-bold">
-						{m.auth_resetPassword_alreadySignedInTitle()}
-					</h1>
-					<p class="text-sm text-balance text-muted-foreground">
-						{invited
-							? m.auth_resetPassword_alreadySignedInInvitedDescription({
-									email: user.email ?? ''
-								})
-							: m.auth_resetPassword_alreadySignedInDescription({
-									email: user.email ?? ''
-								})}
-					</p>
-				</div>
-				<div class="flex w-full flex-col gap-2">
-					<Button class="w-full" disabled={isSigningOut} onclick={signOutAndContinue}>
-						{isSigningOut
-							? m.auth_resetPassword_signingOut()
-							: m.auth_resetPassword_signOutAndContinue()}
-					</Button>
-					<a href={resolve('/')} class="block">
-						<Button variant="outline" class="w-full">
-							{m.auth_resetPassword_goToDashboard()}
-						</Button>
-					</a>
-				</div>
+		<div class="flex flex-col items-center gap-4 py-4">
+			<div
+				class="flex h-16 w-16 items-center justify-center rounded-full bg-warning/10 text-warning"
+			>
+				<TriangleAlert class="h-8 w-8" />
 			</div>
-		</div>
-	{:else if isMissingParams}
-		<div in:fly={{ y: 20, duration: 600, delay: 100 }}>
-			<div class="flex flex-col items-center gap-4 py-4">
-				<div
-					class="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive"
-				>
-					<CircleAlert class="h-8 w-8" />
-				</div>
-				<div class="flex flex-col items-center gap-2 text-center">
-					<h1 class="text-2xl font-bold">
-						{m.auth_resetPassword_invalidLink()}
-					</h1>
-					<p class="text-sm text-balance text-muted-foreground">
-						{m.auth_resetPassword_invalidLinkDescription()}
-					</p>
-				</div>
-				<a
-					href={resolve('/forgot-password')}
-					class="inline-flex min-h-10 items-center text-sm font-medium text-primary hover:underline"
-				>
-					{m.auth_resetPassword_requestNew()}
+			<div class="flex flex-col items-center gap-2 text-center">
+				<h1 class="text-2xl font-bold">
+					{m.auth_resetPassword_alreadySignedInTitle()}
+				</h1>
+				<p class="text-sm text-balance text-muted-foreground">
+					{invited
+						? m.auth_resetPassword_alreadySignedInInvitedDescription({
+								email: user.email ?? ''
+							})
+						: m.auth_resetPassword_alreadySignedInDescription({
+								email: user.email ?? ''
+							})}
+				</p>
+			</div>
+			<div class="flex w-full flex-col gap-2">
+				<Button class="w-full" disabled={isSigningOut} onclick={signOutAndContinue}>
+					{isSigningOut
+						? m.auth_resetPassword_signingOut()
+						: m.auth_resetPassword_signOutAndContinue()}
+				</Button>
+				<a href={resolve('/')} class="block">
+					<Button variant="outline" class="w-full">
+						{m.auth_resetPassword_goToDashboard()}
+					</Button>
 				</a>
 			</div>
 		</div>
+	{:else if isMissingParams}
+		<div class="flex flex-col items-center gap-4 py-4">
+			<div
+				class="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive"
+			>
+				<CircleAlert class="h-8 w-8" />
+			</div>
+			<div class="flex flex-col items-center gap-2 text-center">
+				<h1 class="text-2xl font-bold">
+					{m.auth_resetPassword_invalidLink()}
+				</h1>
+				<p class="text-sm text-balance text-muted-foreground">
+					{m.auth_resetPassword_invalidLinkDescription()}
+				</p>
+			</div>
+			<a
+				href={resolve('/forgot-password')}
+				class="inline-flex min-h-10 items-center text-sm font-medium text-primary hover:underline"
+			>
+				{m.auth_resetPassword_requestNew()}
+			</a>
+		</div>
 	{:else if isError}
-		<div in:fly={{ y: 20, duration: 600, delay: 100 }}>
-			<div class="flex flex-col items-center gap-4 py-4">
-				<div
-					class="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive"
-				>
-					<CircleAlert class="h-8 w-8" />
-				</div>
-				<div class="flex flex-col items-center gap-2 text-center">
-					<h1 class="text-2xl font-bold">
-						{m.auth_resetPassword_errorTitle()}
-					</h1>
-					<p class="text-sm text-balance text-muted-foreground">
-						{errorMessage}
+		<div class="flex flex-col items-center gap-4 py-4">
+			<div
+				class="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive"
+			>
+				<CircleAlert class="h-8 w-8" />
+			</div>
+			<div class="flex flex-col items-center gap-2 text-center">
+				<h1 class="text-2xl font-bold">
+					{m.auth_resetPassword_errorTitle()}
+				</h1>
+				<p class="text-sm text-balance text-muted-foreground">
+					{errorMessage}
+				</p>
+			</div>
+			<div class="text-center text-sm">
+				{#if invited}
+					<p class="text-muted-foreground">
+						{m.auth_resetPassword_errorContactAdmin()}
 					</p>
-				</div>
-				<div class="text-center text-sm">
-					{#if invited}
-						<p class="text-muted-foreground">
-							{m.auth_resetPassword_errorContactAdmin()}
-						</p>
-					{:else}
-						<a
-							href={resolve('/forgot-password')}
-							class="inline-flex min-h-10 items-center font-medium text-primary hover:underline"
-						>
-							{m.auth_resetPassword_requestNew()}
-						</a>
-					{/if}
-				</div>
+				{:else}
+					<a
+						href={resolve('/forgot-password')}
+						class="inline-flex min-h-10 items-center font-medium text-primary hover:underline"
+					>
+						{m.auth_resetPassword_requestNew()}
+					</a>
+				{/if}
 			</div>
 		</div>
 	{:else if !isSuccess}
-		<div
-			in:fly={{ y: 20, duration: 600, delay: 100 }}
-			out:scale={{ duration: 400, start: 1, opacity: 0 }}
-		>
-			<div class="flex flex-col gap-6">
-				<div class="flex flex-col items-center gap-2 text-center">
-					<h1 class="text-2xl font-bold">
-						{invited ? m.auth_setPassword_title() : m.auth_resetPassword_title()}
-					</h1>
-					<p class="text-sm text-balance text-muted-foreground">
-						{invited ? m.auth_setPassword_subtitle() : m.auth_resetPassword_subtitle()}
-					</p>
+		<div class="flex flex-col gap-6">
+			<div class="flex flex-col items-center gap-2 text-center">
+				<h1 class="text-2xl font-bold">
+					{invited ? m.auth_setPassword_title() : m.auth_resetPassword_title()}
+				</h1>
+				<p class="text-sm text-balance text-muted-foreground">
+					{invited ? m.auth_setPassword_subtitle() : m.auth_resetPassword_subtitle()}
+				</p>
+			</div>
+
+			<form class="space-y-6" onsubmit={submit}>
+				<div class="grid gap-2">
+					<Label for="newPassword">{m.auth_resetPassword_newPassword()}</Label>
+					<Input
+						id="newPassword"
+						type="password"
+						autocomplete="new-password"
+						required
+						minlength={6}
+						bind:value={newPassword}
+						class={cn(fieldShakes.class('newPassword'))}
+						aria-invalid={!!fieldErrors.newPassword}
+						aria-describedby={fieldErrors.newPassword ? 'newPassword-error' : undefined}
+					/>
+					<FieldError id="newPassword-error" message={fieldErrors.newPassword} />
 				</div>
 
-				<form class="space-y-6" onsubmit={submit}>
-					<div class="grid gap-2">
-						<Label for="newPassword">{m.auth_resetPassword_newPassword()}</Label>
-						<Input
-							id="newPassword"
-							type="password"
-							autocomplete="new-password"
-							required
-							minlength={6}
-							bind:value={newPassword}
-							class={cn(fieldShakes.class('newPassword'))}
-							aria-invalid={!!fieldErrors.newPassword}
-							aria-describedby={fieldErrors.newPassword ? 'newPassword-error' : undefined}
-						/>
-						<FieldError id="newPassword-error" message={fieldErrors.newPassword} />
-					</div>
+				<div class="grid gap-2">
+					<Label for="confirmPassword">{m.auth_resetPassword_confirmPassword()}</Label>
+					<Input
+						id="confirmPassword"
+						type="password"
+						autocomplete="new-password"
+						required
+						bind:value={confirmPassword}
+						class={cn(fieldShakes.class('confirmPassword'))}
+						aria-invalid={!!fieldErrors.confirmPassword}
+						aria-describedby={fieldErrors.confirmPassword ? 'confirmPassword-error' : undefined}
+					/>
+					<FieldError id="confirmPassword-error" message={fieldErrors.confirmPassword} />
+				</div>
 
-					<div class="grid gap-2">
-						<Label for="confirmPassword">{m.auth_resetPassword_confirmPassword()}</Label>
-						<Input
-							id="confirmPassword"
-							type="password"
-							autocomplete="new-password"
-							required
-							bind:value={confirmPassword}
-							class={cn(fieldShakes.class('confirmPassword'))}
-							aria-invalid={!!fieldErrors.confirmPassword}
-							aria-describedby={fieldErrors.confirmPassword ? 'confirmPassword-error' : undefined}
-						/>
-						<FieldError id="confirmPassword-error" message={fieldErrors.confirmPassword} />
-					</div>
-
-					<Button type="submit" class="w-full" disabled={isLoading || cooldown.active}>
-						{#if cooldown.active}
-							{m.common_waitSeconds({ seconds: cooldown.remaining })}
-						{:else if isLoading}
-							{invited ? m.auth_setPassword_submitting() : m.auth_resetPassword_submitting()}
-						{:else}
-							{invited ? m.auth_setPassword_submit() : m.auth_resetPassword_submit()}
-						{/if}
-					</Button>
-				</form>
-			</div>
+				<Button type="submit" class="w-full" disabled={isLoading || cooldown.active}>
+					{#if cooldown.active}
+						{m.common_waitSeconds({ seconds: cooldown.remaining })}
+					{:else if isLoading}
+						{invited ? m.auth_setPassword_submitting() : m.auth_resetPassword_submitting()}
+					{:else}
+						{invited ? m.auth_setPassword_submit() : m.auth_resetPassword_submit()}
+					{/if}
+				</Button>
+			</form>
 		</div>
 	{:else}
-		<div
-			class="flex flex-col items-center gap-4 py-4"
-			in:scale={{ duration: 500, delay: 400, start: 0.8, opacity: 0 }}
-		>
+		<div class="flex flex-col items-center gap-4 py-4">
 			<div
 				class="flex h-16 w-16 items-center justify-center rounded-full bg-success text-success-foreground"
 			>

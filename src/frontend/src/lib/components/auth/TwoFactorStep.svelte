@@ -5,11 +5,10 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import * as InputOTP from '$lib/components/ui/input-otp';
 	import * as m from '$lib/paraglide/messages';
 	import { Loader2, ArrowLeft } from '@lucide/svelte';
 	import { toast } from '$lib/components/ui/sonner';
-	import { fly } from 'svelte/transition';
-	import { onMount, tick } from 'svelte';
 
 	interface Props {
 		challengeToken: string;
@@ -19,11 +18,6 @@
 
 	let { challengeToken, onSuccess, onBack }: Props = $props();
 
-	onMount(async () => {
-		await tick();
-		document.getElementById('twoFactorCode')?.focus();
-	});
-
 	let code = $state('');
 	let recoveryCode = $state('');
 	let isLoading = $state(false);
@@ -31,9 +25,16 @@
 	const shake = createShake();
 	const cooldown = createCooldown();
 
-	async function submitCode(e: Event) {
-		e.preventDefault();
-		if (isLoading || cooldown.active) return;
+	function handleOtpComplete(value: string) {
+		code = value;
+		if (value.length === 6 && !isLoading && !cooldown.active) {
+			submitCode();
+		}
+	}
+
+	async function submitCode(e?: Event) {
+		e?.preventDefault();
+		if (isLoading || cooldown.active || code.length !== 6) return;
 		isLoading = true;
 
 		try {
@@ -53,6 +54,7 @@
 							description: getErrorMessage(apiError, m.auth_twoFactor_invalidCode())
 						});
 						shake.trigger();
+						code = '';
 					}
 				});
 			}
@@ -61,6 +63,7 @@
 				description: m.auth_login_error()
 			});
 			shake.trigger();
+			code = '';
 		} finally {
 			isLoading = false;
 		}
@@ -105,10 +108,7 @@
 	}
 </script>
 
-<div
-	class={cn('flex flex-col gap-6', shake.active && 'animate-shake')}
-	in:fly={{ y: 20, duration: 600, delay: 100 }}
->
+<div class={cn('flex flex-col gap-6', shake.active && 'animate-shake')}>
 	<div class="flex flex-col items-center gap-2 text-center">
 		<h1 class="text-2xl font-bold">{m.auth_twoFactor_title()}</h1>
 		<p class="text-sm text-balance text-muted-foreground">
@@ -118,21 +118,28 @@
 
 	{#if !useRecovery}
 		<form class="space-y-6" onsubmit={submitCode}>
-			<div class="grid gap-2">
+			<div class="flex flex-col items-center gap-2">
 				<Label for="twoFactorCode">{m.auth_twoFactor_codeLabel()}</Label>
-				<Input
-					id="twoFactorCode"
-					type="text"
-					inputmode="numeric"
-					autocomplete="one-time-code"
+				<InputOTP.Root
 					maxlength={6}
-					placeholder={m.auth_twoFactor_codePlaceholder()}
-					required
 					bind:value={code}
-					class="text-center text-lg tracking-widest"
-					aria-invalid={shake.active}
+					onComplete={handleOtpComplete}
 					disabled={isLoading}
-				/>
+				>
+					{#snippet children({ cells })}
+						<InputOTP.Group>
+							{#each cells.slice(0, 3) as cell (cell)}
+								<InputOTP.Slot {cell} />
+							{/each}
+						</InputOTP.Group>
+						<InputOTP.Separator />
+						<InputOTP.Group>
+							{#each cells.slice(3, 6) as cell (cell)}
+								<InputOTP.Slot {cell} />
+							{/each}
+						</InputOTP.Group>
+					{/snippet}
+				</InputOTP.Root>
 			</div>
 
 			<Button
