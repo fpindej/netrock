@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { EmptyState } from '$lib/components/common';
 	import { Badge } from '$lib/components/ui/badge';
+	import * as Table from '$lib/components/ui/table';
 	import { Clock } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import * as m from '$lib/paraglide/messages';
@@ -44,47 +45,53 @@
 	</div>
 
 	<!-- Desktop: table -->
-	<div class="hidden overflow-x-auto md:block">
-		<table class="w-full text-sm">
-			<thead>
-				<tr class="border-b bg-muted/50 text-start">
-					<th class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground">
+	<div class="hidden md:block">
+		<Table.Root>
+			<Table.Header>
+				<Table.Row class="bg-muted/50">
+					<Table.Head class="px-4 py-3 text-xs tracking-wide">
 						{m.admin_jobs_col_name()}
-					</th>
-					<th class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground">
+					</Table.Head>
+					<Table.Head class="px-4 py-3 text-xs tracking-wide">
 						{m.admin_jobs_col_schedule()}
-					</th>
-					<th class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground">
+					</Table.Head>
+					<Table.Head class="px-4 py-3 text-xs tracking-wide">
 						{m.admin_jobs_col_lastRun()}
-					</th>
-					<th class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground">
+					</Table.Head>
+					<Table.Head class="px-4 py-3 text-xs tracking-wide">
 						{m.admin_jobs_col_nextRun()}
-					</th>
-					<th class="px-4 py-3 text-end text-xs font-medium tracking-wide text-muted-foreground">
+					</Table.Head>
+					<Table.Head class="px-4 py-3 text-end text-xs tracking-wide">
 						{m.admin_jobs_col_status()}
-					</th>
-				</tr>
-			</thead>
-			<tbody>
+					</Table.Head>
+				</Table.Row>
+			</Table.Header>
+			<Table.Body>
 				{#each jobs as job (job.id)}
 					<!-- eslint-disable svelte/no-navigation-without-resolve -- href is pre-resolved -->
-					<tr class="border-b transition-colors hover:bg-muted/50">
-						<td class="px-4 py-3">
+					<Table.Row>
+						<Table.Cell class="px-4 py-3">
 							<a href={resolve(`/admin/jobs/${job.id}`)} class="font-medium hover:underline">
 								{job.id}
 							</a>
-						</td>
-						<td class="px-4 py-3 font-mono text-xs text-muted-foreground">{job.cron}</td>
-						<td class="px-4 py-3 text-muted-foreground">{formatDate(job.lastExecution)}</td>
-						<td class="px-4 py-3 text-muted-foreground">{formatDate(job.nextExecution)}</td>
-						<td class="px-4 py-3 text-end">
+						</Table.Cell>
+						<Table.Cell class="px-4 py-3 font-mono text-xs text-muted-foreground">
+							{job.cron}
+						</Table.Cell>
+						<Table.Cell class="px-4 py-3 text-muted-foreground">
+							{formatDate(job.lastExecution)}
+						</Table.Cell>
+						<Table.Cell class="px-4 py-3 text-muted-foreground">
+							{formatDate(job.nextExecution)}
+						</Table.Cell>
+						<Table.Cell class="px-4 py-3 text-end">
 							<Badge variant={getJobStatusVariant(job.lastStatus, job.isPaused)}>
 								{getJobStatusLabel(job.lastStatus, job.isPaused)}
 							</Badge>
-						</td>
-					</tr>
+						</Table.Cell>
+					</Table.Row>
 				{/each}
-			</tbody>
-		</table>
+			</Table.Body>
+		</Table.Root>
 	</div>
 {/if}

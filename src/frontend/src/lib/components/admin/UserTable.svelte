@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { EmptyState } from '$lib/components/common';
 	import { Badge } from '$lib/components/ui/badge';
+	import * as Table from '$lib/components/ui/table';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { Users, ChevronRight, EyeOff } from '@lucide/svelte';
 	import type { AdminUser } from '$lib/types';
@@ -65,14 +66,14 @@
 	</div>
 
 	<!-- Desktop: table -->
-	<div class="hidden overflow-x-auto md:block">
-		<table class="w-full text-sm">
-			<thead>
-				<tr class="border-b bg-muted/50 text-start">
-					<th class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground">
+	<div class="hidden md:block">
+		<Table.Root>
+			<Table.Header>
+				<Table.Row class="bg-muted/50">
+					<Table.Head class="px-4 py-3 text-xs tracking-wide">
 						{m.admin_users_name()}
-					</th>
-					<th class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground">
+					</Table.Head>
+					<Table.Head class="px-4 py-3 text-xs tracking-wide">
 						<span class="inline-flex items-center gap-1.5">
 							{m.admin_users_email()}
 							{#if piiMasked}
@@ -88,24 +89,22 @@
 								</Tooltip.Root>
 							{/if}
 						</span>
-					</th>
-					<th class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground">
+					</Table.Head>
+					<Table.Head class="px-4 py-3 text-xs tracking-wide">
 						{m.admin_users_roles()}
-					</th>
-					<th
-						class="hidden px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground lg:table-cell"
-					>
+					</Table.Head>
+					<Table.Head class="hidden px-4 py-3 text-xs tracking-wide lg:table-cell">
 						{m.admin_users_status()}
-					</th>
-					<th class="w-10 px-4 py-3">
+					</Table.Head>
+					<Table.Head class="w-10 px-4 py-3">
 						<span class="sr-only">{m.admin_users_viewDetails()}</span>
-					</th>
-				</tr>
-			</thead>
-			<tbody>
+					</Table.Head>
+				</Table.Row>
+			</Table.Header>
+			<Table.Body>
 				{#each users as user (user.id)}
-					<tr
-						class="cursor-pointer border-b transition-colors hover:bg-muted/50"
+					<Table.Row
+						class="cursor-pointer"
 						onclick={() => navigateToUser(user.id)}
 						role="link"
 						aria-label={m.admin_users_viewDetails()}
@@ -117,13 +116,13 @@
 							}
 						}}
 					>
-						<td class="max-w-48 px-4 py-3 font-medium">
+						<Table.Cell class="max-w-48 px-4 py-3 font-medium">
 							<span class="block truncate">{displayName(user)}</span>
-						</td>
-						<td class="max-w-56 px-4 py-3 text-muted-foreground">
+						</Table.Cell>
+						<Table.Cell class="max-w-56 px-4 py-3 text-muted-foreground">
 							<span class="block truncate" class:italic={piiMasked}>{user.email}</span>
-						</td>
-						<td class="px-4 py-3">
+						</Table.Cell>
+						<Table.Cell class="px-4 py-3">
 							<div class="flex flex-wrap gap-1">
 								{#each user.roles ?? [] as role (role)}
 									<Badge variant="secondary" class="text-xs">{role}</Badge>
@@ -131,20 +130,20 @@
 									<span class="text-xs text-muted-foreground">&mdash;</span>
 								{/each}
 							</div>
-						</td>
-						<td class="hidden px-4 py-3 lg:table-cell">
+						</Table.Cell>
+						<Table.Cell class="hidden px-4 py-3 lg:table-cell">
 							{#if user.isLockedOut}
 								<Badge variant="destructive" class="text-xs">{m.admin_users_locked()}</Badge>
 							{:else}
 								<Badge variant="outline" class="text-xs">{m.admin_users_active()}</Badge>
 							{/if}
-						</td>
-						<td class="px-4 py-3 text-end">
+						</Table.Cell>
+						<Table.Cell class="px-4 py-3 text-end">
 							<ChevronRight class="h-4 w-4 text-muted-foreground" />
-						</td>
-					</tr>
+						</Table.Cell>
+					</Table.Row>
 				{/each}
-			</tbody>
-		</table>
+			</Table.Body>
+		</Table.Root>
 	</div>
 {/if}

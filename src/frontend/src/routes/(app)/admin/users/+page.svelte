@@ -95,8 +95,6 @@
 	<Pagination
 		pageNumber={data.users?.pageNumber ?? 1}
 		totalPages={data.users?.totalPages ?? 1}
-		hasPreviousPage={data.users?.hasPreviousPage ?? false}
-		hasNextPage={data.users?.hasNextPage ?? false}
 		onPageChange={handlePageChange}
 	/>
 </div>

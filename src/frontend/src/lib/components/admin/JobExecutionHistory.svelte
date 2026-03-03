@@ -2,6 +2,7 @@
 	import { EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
+	import * as Table from '$lib/components/ui/table';
 	import { History } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import type { JobExecution } from '$lib/types';
@@ -52,53 +53,45 @@
 			</div>
 
 			<!-- Desktop: table -->
-			<div class="hidden overflow-x-auto md:block">
-				<table class="w-full text-sm">
-					<thead>
-						<tr class="border-b bg-muted/50 text-start">
-							<th
-								class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground"
-							>
+			<div class="hidden md:block">
+				<Table.Root>
+					<Table.Header>
+						<Table.Row class="bg-muted/50">
+							<Table.Head class="px-4 py-3 text-xs tracking-wide">
 								{m.admin_jobDetail_col_startedAt()}
-							</th>
-							<th
-								class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground"
-							>
+							</Table.Head>
+							<Table.Head class="px-4 py-3 text-xs tracking-wide">
 								{m.admin_jobDetail_col_duration()}
-							</th>
-							<th
-								class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground"
-							>
+							</Table.Head>
+							<Table.Head class="px-4 py-3 text-xs tracking-wide">
 								{m.admin_jobDetail_col_status()}
-							</th>
-							<th
-								class="px-4 py-3 text-start text-xs font-medium tracking-wide text-muted-foreground"
-							>
+							</Table.Head>
+							<Table.Head class="px-4 py-3 text-xs tracking-wide">
 								{m.admin_jobDetail_col_error()}
-							</th>
-						</tr>
-					</thead>
-					<tbody>
+							</Table.Head>
+						</Table.Row>
+					</Table.Header>
+					<Table.Body>
 						{#each executions as execution (execution.jobId)}
-							<tr class="border-b">
-								<td class="px-4 py-3 text-muted-foreground">
+							<Table.Row>
+								<Table.Cell class="px-4 py-3 text-muted-foreground">
 									{formatJobDate(execution.startedAt)}
-								</td>
-								<td class="px-4 py-3 text-muted-foreground tabular-nums">
+								</Table.Cell>
+								<Table.Cell class="px-4 py-3 text-muted-foreground tabular-nums">
 									{formatJobDuration(execution.duration)}
-								</td>
-								<td class="px-4 py-3">
+								</Table.Cell>
+								<Table.Cell class="px-4 py-3">
 									<Badge variant={getJobStatusVariant(execution.status)}>
 										{getJobStatusLabel(execution.status)}
 									</Badge>
-								</td>
-								<td class="max-w-xs truncate px-4 py-3 text-muted-foreground">
+								</Table.Cell>
+								<Table.Cell class="max-w-xs truncate px-4 py-3 text-muted-foreground">
 									{execution.error ?? '-'}
-								</td>
-							</tr>
+								</Table.Cell>
+							</Table.Row>
 						{/each}
-					</tbody>
-				</table>
+					</Table.Body>
+				</Table.Root>
 			</div>
 		{/if}
 	</Card.Content>
