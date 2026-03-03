@@ -46,21 +46,26 @@ describe('login page server load', () => {
 
 	it('no reason param — returns reason: null', async () => {
 		const result = await load(mockLoadEvent());
-		expect(result).toEqual({ reason: null });
+		expect(result).toEqual({ reason: null, prefillEmail: undefined });
 	});
 
 	it('reason=session_expired — returns reason', async () => {
 		const result = await load(mockLoadEvent({ searchParams: { reason: 'session_expired' } }));
-		expect(result).toEqual({ reason: 'session_expired' });
+		expect(result).toEqual({ reason: 'session_expired', prefillEmail: undefined });
 	});
 
 	it('reason=password_changed — returns reason', async () => {
 		const result = await load(mockLoadEvent({ searchParams: { reason: 'password_changed' } }));
-		expect(result).toEqual({ reason: 'password_changed' });
+		expect(result).toEqual({ reason: 'password_changed', prefillEmail: undefined });
 	});
 
 	it('unrecognized reason param — returns reason: null', async () => {
 		const result = await load(mockLoadEvent({ searchParams: { reason: 'other' } }));
-		expect(result).toEqual({ reason: null });
+		expect(result).toEqual({ reason: null, prefillEmail: undefined });
+	});
+
+	it('email param — returns prefillEmail', async () => {
+		const result = await load(mockLoadEvent({ searchParams: { email: 'user@example.com' } }));
+		expect(result).toEqual({ reason: null, prefillEmail: 'user@example.com' });
 	});
 });

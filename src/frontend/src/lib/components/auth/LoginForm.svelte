@@ -22,9 +22,10 @@
 
 	interface Props {
 		apiUrl?: string;
+		prefillEmail?: string;
 	}
 
-	let { apiUrl }: Props = $props();
+	let { apiUrl, prefillEmail }: Props = $props();
 
 	const shake = createShake();
 	const cooldown = createCooldown();
@@ -92,6 +93,14 @@
 	});
 
 	const { form: formData, submitting, enhance } = superform;
+
+	let prefillApplied = false;
+	$effect(() => {
+		if (!prefillApplied && prefillEmail) {
+			$formData.email = prefillEmail;
+			prefillApplied = true;
+		}
+	});
 
 	async function completeLogin() {
 		isSuccess = true;

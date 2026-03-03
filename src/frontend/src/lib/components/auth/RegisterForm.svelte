@@ -52,7 +52,9 @@
 				if (response.ok) {
 					toast.success(m.auth_register_success());
 					clearDraft();
-					await goto(resolve('/login'));
+					const loginUrl = `${resolve('/login')}?email=${encodeURIComponent(form.data.email)}`;
+					// eslint-disable-next-line svelte/no-navigation-without-resolve -- path is resolved above, query string appended
+					await goto(loginUrl);
 				} else {
 					handleMutationError(response, apiError, {
 						cooldown,
