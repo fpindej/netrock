@@ -1,0 +1,87 @@
+<script lang="ts">
+	import { SidebarTrigger } from '$lib/components/ui/sidebar';
+	import { Separator } from '$lib/components/ui/separator';
+	import * as Breadcrumb from '$lib/components/ui/breadcrumb';
+	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+	import { breadcrumbState } from '$lib/state/breadcrumb.svelte';
+	import * as m from '$lib/paraglide/messages';
+
+	const segmentLabels: Record<string, () => string> = {
+		profile: m.nav_profile,
+		settings: m.nav_settings,
+		users: m.nav_adminUsers,
+		roles: m.nav_adminRoles,
+		jobs: m.nav_adminJobs,
+		'oauth-providers': m.nav_adminOAuthProviders
+	};
+
+	const segmentHrefs: Record<string, string> = {
+		profile: resolve('/profile'),
+		settings: resolve('/settings'),
+		users: resolve('/admin/users'),
+		roles: resolve('/admin/roles'),
+		jobs: resolve('/admin/jobs'),
+		'oauth-providers': resolve('/admin/oauth-providers')
+	};
+
+	interface Crumb {
+		label: string;
+		href?: string;
+	}
+
+	let crumbs = $derived.by((): Crumb[] => {
+		const pathname = page.url.pathname;
+		const segments = pathname.split('/').filter(Boolean);
+
+		// Root page
+		if (segments.length === 0) {
+			return [{ label: m.nav_dashboard() }];
+		}
+
+		// Filter out "admin" - it's not a navigable page
+		const meaningful = segments.filter((s) => s !== 'admin');
+
+		const result: Crumb[] = [];
+		for (let i = 0; i < meaningful.length; i++) {
+			const segment = meaningful[i] as string;
+			const isLast = i === meaningful.length - 1;
+			const labelFn = segmentLabels[segment];
+
+			if (labelFn) {
+				if (isLast) {
+					result.push({ label: labelFn() });
+				} else {
+					result.push({ label: labelFn(), href: segmentHrefs[segment] });
+				}
+			} else if (isLast && breadcrumbState.dynamicLabel) {
+				result.push({ label: breadcrumbState.dynamicLabel });
+			} else if (isLast) {
+				result.push({ label: segment });
+			}
+		}
+
+		return result;
+	});
+</script>
+
+<header class="hidden h-12 shrink-0 items-center gap-2 border-b bg-background px-4 md:flex">
+	<SidebarTrigger class="size-7" />
+	<Separator orientation="vertical" class="h-4" />
+	<Breadcrumb.Root>
+		<Breadcrumb.List>
+			{#each crumbs as crumb, i (i)}
+				<Breadcrumb.Item>
+					{#if crumb.href}
+						<Breadcrumb.Link href={crumb.href}>{crumb.label}</Breadcrumb.Link>
+					{:else}
+						<Breadcrumb.Page>{crumb.label}</Breadcrumb.Page>
+					{/if}
+				</Breadcrumb.Item>
+				{#if i < crumbs.length - 1}
+					<Breadcrumb.Separator />
+				{/if}
+			{/each}
+		</Breadcrumb.List>
+	</Breadcrumb.Root>
+</header>

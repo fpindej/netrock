@@ -6,9 +6,8 @@
 		RolePermissionsSection,
 		RoleDeleteSection
 	} from '$lib/components/admin';
-	import { AdminBreadcrumb } from '$lib/components/common';
-	import { resolve } from '$app/paths';
 	import { createCooldown } from '$lib/state';
+	import { setDynamicLabel, clearDynamicLabel } from '$lib/state/breadcrumb.svelte';
 	import { hasPermission, Permissions, SystemRoles } from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
 	import type { PageData } from './$types';
@@ -27,6 +26,11 @@
 	let selectedPermissions = $state<string[]>(data.role?.permissions ?? []);
 
 	const cooldown = createCooldown();
+
+	$effect(() => {
+		setDynamicLabel(data.role?.name ?? '');
+		return () => clearDynamicLabel();
+	});
 </script>
 
 <svelte:head>
@@ -35,12 +39,6 @@
 
 <div class="space-y-6">
 	<div class="space-y-1">
-		<AdminBreadcrumb
-			items={[
-				{ label: m.nav_adminRoles(), href: resolve('/admin/roles') },
-				{ label: data.role?.name ?? '' }
-			]}
-		/>
 		<div class="flex items-center gap-3">
 			{#if isSystem}
 				<Badge variant="outline">{m.admin_roles_system()}</Badge>

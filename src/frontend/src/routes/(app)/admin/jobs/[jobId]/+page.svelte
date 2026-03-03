@@ -1,15 +1,19 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
 	import { Separator } from '$lib/components/ui/separator';
 	import { JobInfoCard, JobActionsCard, JobExecutionHistory } from '$lib/components/admin';
-	import { AdminBreadcrumb } from '$lib/components/common';
 	import { hasPermission, Permissions } from '$lib/utils';
+	import { setDynamicLabel, clearDynamicLabel } from '$lib/state/breadcrumb.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	let canManageJobs = $derived(hasPermission(data.user, Permissions.Jobs.Manage));
+
+	$effect(() => {
+		setDynamicLabel(data.job?.id ?? '');
+		return () => clearDynamicLabel();
+	});
 </script>
 
 <svelte:head>
@@ -19,12 +23,6 @@
 
 <div class="space-y-6">
 	<div class="space-y-1">
-		<AdminBreadcrumb
-			items={[
-				{ label: m.nav_adminJobs(), href: resolve('/admin/jobs') },
-				{ label: data.job?.id ?? '' }
-			]}
-		/>
 		<p class="font-mono text-sm text-muted-foreground">{data.job?.cron}</p>
 	</div>
 	<Separator />

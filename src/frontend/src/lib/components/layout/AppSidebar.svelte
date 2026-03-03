@@ -11,7 +11,6 @@
 		KeyRound,
 		Package2,
 		CircleHelp,
-		PanelLeft,
 		Search,
 		type IconProps
 	} from '@lucide/svelte';
@@ -206,15 +205,6 @@
 						>
 							{getShortcutSymbol(ShortcutAction.Help)}
 						</kbd>
-					</Sidebar.MenuButton>
-				</Sidebar.MenuItem>
-				<Sidebar.MenuItem>
-					<Sidebar.MenuButton
-						tooltipContent={collapsed ? m.nav_expand() : m.nav_collapse()}
-						onclick={() => sidebar.toggle()}
-					>
-						<PanelLeft />
-						<span>{collapsed ? m.nav_expand() : m.nav_collapse()}</span>
 					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>
 			</Sidebar.Menu>

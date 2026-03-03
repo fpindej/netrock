@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { AppSidebar, Header, CommandPalette } from '$lib/components/layout';
+	import { AppSidebar, Header, ContentHeader, CommandPalette } from '$lib/components/layout';
 	import { EmailVerificationBanner } from '$lib/components/auth';
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
@@ -26,6 +26,7 @@
 	<AppSidebar user={data.user} />
 	<Sidebar.Inset>
 		<Header user={data.user} />
+		<ContentHeader />
 		{#if !data.user.emailConfirmed}
 			<EmailVerificationBanner />
 		{/if}

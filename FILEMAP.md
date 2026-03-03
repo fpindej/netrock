@@ -118,8 +118,9 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Component barrel `index.ts`** | All imports from that feature folder |
 | **i18n keys** (rename/remove in `en.json`) | Same key in `cs.json`, all `m.{key}()` usages |
 | **i18n keys** (add) | Add to both `en.json` and `cs.json` |
-| **Layout components** (Sidebar, Header) | All pages that use the app shell |
+| **Layout components** (Sidebar, Header, ContentHeader) | All pages that use the app shell |
 | **`AppSidebar.svelte`** | Navigation links for all pages; admin items are per-permission gated; search trigger opens command palette |
+| **`ContentHeader.svelte`** | Breadcrumb route-to-label mapping; segment labels must match sidebar nav items; detail pages set `dynamicLabel` via `$lib/state/breadcrumb.svelte` |
 | **`CommandPalette.svelte`** | Command palette navigation and actions; admin items are per-permission gated (must stay in sync with `AppSidebar.svelte` nav items) |
 | **Admin `+page.server.ts`** (add permission guard) | Must check specific permission and redirect if missing |
 | **Route `+layout.server.ts`** | All child routes that depend on parent data |
@@ -287,6 +288,7 @@ src/backend/tests/
 | `src/backend/MyProject.WebApi/Shared/RateLimitPolicies.cs` | Rate limit policy name constants |
 | `src/backend/Directory.Packages.props` | NuGet versions (never in .csproj) |
 | `src/frontend/src/lib/components/layout/AppSidebar.svelte` | Navigation entries + command palette trigger |
+| `src/frontend/src/lib/components/layout/ContentHeader.svelte` | Desktop breadcrumb header + sidebar toggle (keep route labels in sync with AppSidebar) |
 | `src/frontend/src/lib/components/layout/CommandPalette.svelte` | Command palette entries (keep in sync with AppSidebar) |
 | `src/frontend/src/lib/api/v1.d.ts` | Generated types (never hand-edit) |
 | `deploy/envs/production-example/` | Production env template - `cp -r` to `deploy/envs/production/` |

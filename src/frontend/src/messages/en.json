@@ -26,8 +26,6 @@
 	"nav_profile": "Profile",
 	"nav_settings": "Settings",
 	"nav_logout": "Logout",
-	"nav_collapse": "Collapse sidebar",
-	"nav_expand": "Expand sidebar",
 
 	"common_user": "User",
 	"common_language": "Language",
@@ -45,7 +43,7 @@
 	"shortcuts_logout": "Log out",
 	"shortcuts_toggleSidebar": "Toggle sidebar",
 	"shortcuts_commandPalette": "Open command palette",
-	"shortcuts_help": "Show keyboard shortcuts",
+	"shortcuts_help": "Keyboard shortcuts",
 
 	"commandPalette_placeholder": "Type a command or search...",
 	"commandPalette_noResults": "No results found.",
