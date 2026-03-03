@@ -17,6 +17,8 @@
 	"meta_forgotPassword_description": "Obnovte heslo ke svému účtu.",
 	"meta_resetPassword_title": "Obnovení hesla",
 	"meta_resetPassword_description": "Zvolte si nové heslo ke svému účtu.",
+	"meta_register_title": "Registrace",
+	"meta_register_description": "Vytvořte si nový účet.",
 	"meta_verifyEmail_title": "Ověření e-mailu",
 	"meta_verifyEmail_description": "Ověřte svou e-mailovou adresu.",
 
@@ -112,6 +114,8 @@
 	"auth_register_success": "Účet byl úspěšně vytvořen",
 	"auth_register_failed": "Registrace se nezdařila",
 	"auth_register_passwordMismatch": "Hesla se neshodují",
+	"auth_register_haveAccount": "Již máte účet?",
+	"auth_register_signIn": "Přihlásit se",
 	"auth_captcha_error": "Ověření CAPTCHA se nezdařilo. Zkuste to prosím znovu.",
 
 	"auth_forgotPassword_title": "Zapomenuté heslo?",

@@ -17,5 +17,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		? (raw as LoginReason)
 		: null;
 
-	return { reason };
+	const prefillEmail = url.searchParams.get('email') ?? undefined;
+
+	return { reason, prefillEmail };
 };

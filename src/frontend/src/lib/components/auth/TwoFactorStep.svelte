@@ -5,7 +5,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import * as Card from '$lib/components/ui/card';
 	import * as m from '$lib/paraglide/messages';
 	import { Loader2, ArrowLeft } from '@lucide/svelte';
 	import { toast } from '$lib/components/ui/sonner';
@@ -106,124 +105,119 @@
 	}
 </script>
 
-<div class="sm:mx-auto sm:w-full sm:max-w-md" in:fly={{ y: 20, duration: 600, delay: 100 }}>
-	<Card.Root
-		class={cn(
-			'border-muted/60 bg-card/50 shadow-xl backdrop-blur-sm transition-colors duration-300',
-			shake.active && 'animate-shake border-destructive'
-		)}
-	>
-		<Card.Header>
-			<Card.Title class="text-center text-2xl">{m.auth_twoFactor_title()}</Card.Title>
-			<Card.Description class="text-center">
-				{useRecovery ? m.auth_twoFactor_recoveryDescription() : m.auth_twoFactor_description()}
-			</Card.Description>
-		</Card.Header>
-		<Card.Content>
-			{#if !useRecovery}
-				<form class="space-y-6" onsubmit={submitCode}>
-					<div class="grid gap-2">
-						<Label for="twoFactorCode">{m.auth_twoFactor_codeLabel()}</Label>
-						<Input
-							id="twoFactorCode"
-							type="text"
-							inputmode="numeric"
-							autocomplete="one-time-code"
-							maxlength={6}
-							placeholder={m.auth_twoFactor_codePlaceholder()}
-							required
-							bind:value={code}
-							class="bg-background/50 text-center text-lg tracking-widest"
-							aria-invalid={shake.active}
-							disabled={isLoading}
-						/>
-					</div>
+<div
+	class={cn('flex flex-col gap-6', shake.active && 'animate-shake')}
+	in:fly={{ y: 20, duration: 600, delay: 100 }}
+>
+	<div class="flex flex-col items-center gap-2 text-center">
+		<h1 class="text-2xl font-bold">{m.auth_twoFactor_title()}</h1>
+		<p class="text-sm text-balance text-muted-foreground">
+			{useRecovery ? m.auth_twoFactor_recoveryDescription() : m.auth_twoFactor_description()}
+		</p>
+	</div>
 
-					<Button
-						type="submit"
-						class="w-full"
-						disabled={isLoading || cooldown.active || code.length !== 6}
-					>
-						{#if cooldown.active}
-							{m.common_waitSeconds({ seconds: cooldown.remaining })}
-						{:else}
-							{#if isLoading}
-								<Loader2 class="me-2 h-4 w-4 animate-spin" />
-							{/if}
-							{m.auth_twoFactor_submit()}
-						{/if}
-					</Button>
-				</form>
-
-				<div class="mt-4 text-center">
-					<button
-						type="button"
-						class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline"
-						onclick={() => {
-							useRecovery = true;
-							code = '';
-						}}
-					>
-						{m.auth_twoFactor_useRecoveryCode()}
-					</button>
-				</div>
-			{:else}
-				<form class="space-y-6" onsubmit={submitRecoveryCode}>
-					<div class="grid gap-2">
-						<Label for="recoveryCode">{m.auth_twoFactor_recoveryCodeLabel()}</Label>
-						<Input
-							id="recoveryCode"
-							type="text"
-							autocomplete="off"
-							placeholder={m.auth_twoFactor_recoveryCodePlaceholder()}
-							required
-							bind:value={recoveryCode}
-							class="bg-background/50 text-center tracking-wide"
-							aria-invalid={shake.active}
-							disabled={isLoading}
-						/>
-					</div>
-
-					<Button
-						type="submit"
-						class="w-full"
-						disabled={isLoading || cooldown.active || !recoveryCode.trim()}
-					>
-						{#if cooldown.active}
-							{m.common_waitSeconds({ seconds: cooldown.remaining })}
-						{:else}
-							{#if isLoading}
-								<Loader2 class="me-2 h-4 w-4 animate-spin" />
-							{/if}
-							{m.auth_twoFactor_submit()}
-						{/if}
-					</Button>
-				</form>
-
-				<div class="mt-4 text-center">
-					<button
-						type="button"
-						class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline"
-						onclick={() => {
-							useRecovery = false;
-							recoveryCode = '';
-						}}
-					>
-						{m.auth_twoFactor_backToCode()}
-					</button>
-				</div>
-			{/if}
-
-			<div class="mt-2 text-center">
-				<button
-					type="button"
-					class="inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-primary hover:underline"
-					onclick={onBack}
-				>
-					<ArrowLeft class="h-3 w-3" />
-					{m.common_backToLogin()}
-				</button>
+	{#if !useRecovery}
+		<form class="space-y-6" onsubmit={submitCode}>
+			<div class="grid gap-2">
+				<Label for="twoFactorCode">{m.auth_twoFactor_codeLabel()}</Label>
+				<Input
+					id="twoFactorCode"
+					type="text"
+					inputmode="numeric"
+					autocomplete="one-time-code"
+					maxlength={6}
+					placeholder={m.auth_twoFactor_codePlaceholder()}
+					required
+					bind:value={code}
+					class="text-center text-lg tracking-widest"
+					aria-invalid={shake.active}
+					disabled={isLoading}
+				/>
 			</div>
-		</Card.Content>
-	</Card.Root>
+
+			<Button
+				type="submit"
+				class="w-full"
+				disabled={isLoading || cooldown.active || code.length !== 6}
+			>
+				{#if cooldown.active}
+					{m.common_waitSeconds({ seconds: cooldown.remaining })}
+				{:else}
+					{#if isLoading}
+						<Loader2 class="me-2 h-4 w-4 animate-spin" />
+					{/if}
+					{m.auth_twoFactor_submit()}
+				{/if}
+			</Button>
+		</form>
+
+		<div class="text-center">
+			<button
+				type="button"
+				class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline"
+				onclick={() => {
+					useRecovery = true;
+					code = '';
+				}}
+			>
+				{m.auth_twoFactor_useRecoveryCode()}
+			</button>
+		</div>
+	{:else}
+		<form class="space-y-6" onsubmit={submitRecoveryCode}>
+			<div class="grid gap-2">
+				<Label for="recoveryCode">{m.auth_twoFactor_recoveryCodeLabel()}</Label>
+				<Input
+					id="recoveryCode"
+					type="text"
+					autocomplete="off"
+					placeholder={m.auth_twoFactor_recoveryCodePlaceholder()}
+					required
+					bind:value={recoveryCode}
+					class="text-center tracking-wide"
+					aria-invalid={shake.active}
+					disabled={isLoading}
+				/>
+			</div>
+
+			<Button
+				type="submit"
+				class="w-full"
+				disabled={isLoading || cooldown.active || !recoveryCode.trim()}
+			>
+				{#if cooldown.active}
+					{m.common_waitSeconds({ seconds: cooldown.remaining })}
+				{:else}
+					{#if isLoading}
+						<Loader2 class="me-2 h-4 w-4 animate-spin" />
+					{/if}
+					{m.auth_twoFactor_submit()}
+				{/if}
+			</Button>
+		</form>
+
+		<div class="text-center">
+			<button
+				type="button"
+				class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline"
+				onclick={() => {
+					useRecovery = false;
+					recoveryCode = '';
+				}}
+			>
+				{m.auth_twoFactor_backToCode()}
+			</button>
+		</div>
+	{/if}
+
+	<div class="text-center">
+		<button
+			type="button"
+			class="inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-primary hover:underline"
+			onclick={onBack}
+		>
+			<ArrowLeft class="h-3 w-3" />
+			{m.common_backToLogin()}
+		</button>
+	</div>
 </div>

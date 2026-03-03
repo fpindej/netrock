@@ -30,6 +30,7 @@
 		"eslint": "^9.39.1",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.15.0",
+		"formsnap": "^2.0.1",
 		"globals": "^17.3.0",
 		"openapi-typescript": "^7.13.0",
 		"prettier": "^3.8.1",
@@ -37,12 +38,14 @@
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"svelte": "^5.53.3",
 		"svelte-check": "^4.4.3",
+		"sveltekit-superforms": "^2.30.0",
 		"tailwindcss": "^4.2.1",
 		"tailwindcss-animate": "^1.0.7",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.56.1",
 		"vite": "^7.3.1",
-		"vitest": "^3.2.1"
+		"vitest": "^3.2.1",
+		"zod": "4.3.6"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

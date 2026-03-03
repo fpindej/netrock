@@ -1,0 +1,53 @@
+<script lang="ts">
+	import type { Snippet } from 'svelte';
+	import { cn } from '$lib/utils';
+	import { ThemeToggle, LanguageSelector } from '$lib/components/layout';
+	import * as m from '$lib/paraglide/messages';
+
+	interface Props {
+		children: Snippet;
+		extras?: Snippet;
+		cardClass?: string;
+	}
+
+	let { children, extras, cardClass }: Props = $props();
+</script>
+
+<div class="relative flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+	<div
+		class="absolute end-[max(1rem,env(safe-area-inset-right,0px))] top-[max(1rem,env(safe-area-inset-top,0px))] z-10 flex gap-2"
+	>
+		<LanguageSelector />
+		<ThemeToggle />
+	</div>
+
+	{#if extras}
+		{@render extras()}
+	{/if}
+
+	<div class="flex w-full max-w-sm flex-col gap-6 md:max-w-3xl">
+		<div
+			class={cn(
+				'overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-colors duration-300',
+				cardClass
+			)}
+		>
+			<div class="grid md:grid-cols-2">
+				<div class="p-6 md:p-8">
+					{@render children()}
+				</div>
+				<div class="relative hidden overflow-hidden bg-primary/5 md:block" aria-hidden="true">
+					<div class="pointer-events-none absolute inset-0">
+						<div class="glow-xl-top-end animate-glow-pulse"></div>
+						<div class="glow-xl-bottom-start animate-glow-pulse animation-delay-2000"></div>
+					</div>
+					<div class="flex h-full flex-col items-center justify-center p-8">
+						<h2 class="text-2xl font-bold tracking-tight text-foreground/80">
+							{m.app_name()}
+						</h2>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

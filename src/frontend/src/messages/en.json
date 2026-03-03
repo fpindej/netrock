@@ -17,6 +17,8 @@
 	"meta_forgotPassword_description": "Reset your account password.",
 	"meta_resetPassword_title": "Reset Password",
 	"meta_resetPassword_description": "Choose a new password for your account.",
+	"meta_register_title": "Register",
+	"meta_register_description": "Create a new account.",
 	"meta_verifyEmail_title": "Verify Email",
 	"meta_verifyEmail_description": "Verify your email address.",
 
@@ -112,6 +114,8 @@
 	"auth_register_success": "Account created successfully",
 	"auth_register_failed": "Registration failed",
 	"auth_register_passwordMismatch": "Passwords do not match",
+	"auth_register_haveAccount": "Already have an account?",
+	"auth_register_signIn": "Sign in",
 	"auth_captcha_error": "CAPTCHA verification failed. Please try again.",
 
 	"auth_forgotPassword_title": "Forgot password?",
