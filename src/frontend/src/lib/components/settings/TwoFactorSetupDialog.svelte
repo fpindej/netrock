@@ -163,7 +163,7 @@
 				{:else}
 					<div class="space-y-2">
 						<p class="text-sm text-muted-foreground">{m.settings_twoFactor_scanQr()}</p>
-						<div class="flex justify-center rounded-lg bg-white p-3">
+						<div class="flex justify-center rounded-lg border bg-white p-3">
 							<img
 								src={qrDataUrl}
 								alt="Two-factor authentication setup QR code"
