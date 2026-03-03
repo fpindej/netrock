@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { FieldError } from '$lib/components/common';
 	import { Switch } from '$lib/components/ui/switch';
 	import { ProviderIcon } from '$lib/components/oauth';
 	import { browserClient, handleMutationError } from '$lib/api';
@@ -122,11 +123,7 @@
 				aria-invalid={!!fieldErrors.clientId}
 				aria-describedby={fieldErrors.clientId ? `${provider.provider}-client-id-error` : undefined}
 			/>
-			{#if fieldErrors.clientId}
-				<p id="{provider.provider}-client-id-error" class="text-xs text-destructive">
-					{fieldErrors.clientId}
-				</p>
-			{/if}
+			<FieldError id="{provider.provider}-client-id-error" message={fieldErrors.clientId} />
 		</div>
 		<div class="space-y-2">
 			<Label for="{provider.provider}-client-secret">
@@ -146,11 +143,7 @@
 					? `${provider.provider}-client-secret-error`
 					: undefined}
 			/>
-			{#if fieldErrors.clientSecret}
-				<p id="{provider.provider}-client-secret-error" class="text-xs text-destructive">
-					{fieldErrors.clientSecret}
-				</p>
-			{/if}
+			<FieldError id="{provider.provider}-client-secret-error" message={fieldErrors.clientSecret} />
 		</div>
 	</Card.Content>
 	{#if canManage}

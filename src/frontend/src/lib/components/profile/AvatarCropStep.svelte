@@ -3,6 +3,7 @@
 	import type { CropArea } from 'svelte-easy-crop';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
+	import { Slider } from '$lib/components/ui/slider';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
@@ -54,17 +55,17 @@
 
 	<!-- Zoom slider -->
 	<div class="flex items-center gap-3 px-2">
-		<label for="zoom-slider" class="text-sm whitespace-nowrap text-muted-foreground">
+		<span class="text-sm whitespace-nowrap text-muted-foreground">
 			{m.profile_avatar_zoom()}
-		</label>
-		<input
-			id="zoom-slider"
-			type="range"
-			min="1"
-			max="3"
-			step="0.01"
-			bind:value={zoom}
-			class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary"
+		</span>
+		<Slider
+			type="single"
+			min={1}
+			max={3}
+			step={0.01}
+			value={zoom}
+			onValueChange={(v) => (zoom = v)}
+			aria-label={m.profile_avatar_zoom()}
 		/>
 	</div>
 </div>

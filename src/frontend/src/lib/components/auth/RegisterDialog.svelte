@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { FieldError } from '$lib/components/common';
 	import { PhoneInput } from '$lib/components/ui/phone-input';
 	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import * as m from '$lib/paraglide/messages';
@@ -182,9 +183,7 @@
 						class={fieldShakes.class('firstName')}
 						aria-invalid={!!fieldErrors.firstName}
 					/>
-					{#if fieldErrors.firstName}
-						<p class="text-xs text-destructive">{fieldErrors.firstName}</p>
-					{/if}
+					<FieldError message={fieldErrors.firstName} />
 				</div>
 				<div class="grid gap-2">
 					<Label for="lastName">{m.auth_register_lastName()}</Label>
@@ -196,9 +195,7 @@
 						class={fieldShakes.class('lastName')}
 						aria-invalid={!!fieldErrors.lastName}
 					/>
-					{#if fieldErrors.lastName}
-						<p class="text-xs text-destructive">{fieldErrors.lastName}</p>
-					{/if}
+					<FieldError message={fieldErrors.lastName} />
 				</div>
 			</div>
 			<div class="grid gap-2">
@@ -213,9 +210,7 @@
 					class={fieldShakes.class('email')}
 					aria-invalid={!!fieldErrors.email}
 				/>
-				{#if fieldErrors.email}
-					<p class="text-xs text-destructive">{fieldErrors.email}</p>
-				{/if}
+				<FieldError message={fieldErrors.email} />
 			</div>
 			<div class="grid gap-2">
 				<Label for="phone">{m.auth_register_phone()}</Label>
@@ -226,9 +221,7 @@
 					class={fieldShakes.class('phoneNumber')}
 					aria-invalid={!!fieldErrors.phoneNumber}
 				/>
-				{#if fieldErrors.phoneNumber}
-					<p class="text-xs text-destructive">{fieldErrors.phoneNumber}</p>
-				{/if}
+				<FieldError message={fieldErrors.phoneNumber} />
 			</div>
 			<div class="grid gap-2">
 				<Label for="password">{m.auth_register_password()}</Label>
@@ -243,9 +236,7 @@
 					class={fieldShakes.class('password')}
 					aria-invalid={!!fieldErrors.password}
 				/>
-				{#if fieldErrors.password}
-					<p class="text-xs text-destructive">{fieldErrors.password}</p>
-				{/if}
+				<FieldError message={fieldErrors.password} />
 			</div>
 			<div class="grid gap-2">
 				<Label for="confirmPassword">{m.auth_register_confirmPassword()}</Label>
@@ -260,9 +251,7 @@
 					class={fieldShakes.class('confirmPassword')}
 					aria-invalid={!!fieldErrors.confirmPassword}
 				/>
-				{#if fieldErrors.confirmPassword}
-					<p class="text-xs text-destructive">{fieldErrors.confirmPassword}</p>
-				{/if}
+				<FieldError message={fieldErrors.confirmPassword} />
 			</div>
 			<TurnstileWidget
 				siteKey={turnstileSiteKey}
