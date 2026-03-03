@@ -76,6 +76,26 @@
 }
 
 /* -----------------------------------------------------------------------------
+   Caret Blink Animation
+   Blinking cursor for OTP input slots (shadcn InputOTP).
+   ----------------------------------------------------------------------------- */
+@keyframes caret-blink {
+	0%,
+	70%,
+	100% {
+		opacity: 1;
+	}
+	20%,
+	50% {
+		opacity: 0;
+	}
+}
+
+.animate-caret-blink {
+	animation: caret-blink 1.2s ease-out infinite;
+}
+
+/* -----------------------------------------------------------------------------
    Status Ping Animation
    Pulsing effects for online/offline and status indicators.
    ----------------------------------------------------------------------------- */
@@ -99,6 +119,7 @@
 	.animate-shake,
 	.animate-glow-pulse,
 	.animate-pulse-ring,
+	.animate-caret-blink,
 	.status-indicator-ping,
 	.status-icon-ping {
 		animation: none;

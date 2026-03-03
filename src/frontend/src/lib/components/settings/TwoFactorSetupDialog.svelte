@@ -104,11 +104,13 @@
 						toast.error(m.settings_twoFactor_verifyError(), {
 							description: getErrorMessage(apiError, '')
 						});
+						code = '';
 					}
 				});
 			}
 		} catch {
 			toast.error(m.settings_twoFactor_verifyError());
+			code = '';
 		} finally {
 			isLoading = false;
 		}
@@ -191,6 +193,8 @@
 							<Label>{m.settings_twoFactor_verifyCode()}</Label>
 							<InputOTP.Root
 								maxlength={6}
+								inputmode="numeric"
+								autocomplete="one-time-code"
 								bind:value={code}
 								onComplete={handleOtpComplete}
 								disabled={isLoading}

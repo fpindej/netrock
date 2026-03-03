@@ -250,7 +250,7 @@
 						: m.auth_resetPassword_successDescription()}
 				</p>
 			</div>
-			<a href={resolve('/login')}>
+			<a href={resolve('/login')} class="block">
 				<Button class="w-full">{m.auth_resetPassword_signIn()}</Button>
 			</a>
 		</div>

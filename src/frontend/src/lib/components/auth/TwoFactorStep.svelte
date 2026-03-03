@@ -119,9 +119,11 @@
 	{#if !useRecovery}
 		<form class="space-y-6" onsubmit={submitCode}>
 			<div class="flex flex-col items-center gap-2">
-				<Label for="twoFactorCode">{m.auth_twoFactor_codeLabel()}</Label>
+				<Label>{m.auth_twoFactor_codeLabel()}</Label>
 				<InputOTP.Root
 					maxlength={6}
+					inputmode="numeric"
+					autocomplete="one-time-code"
 					bind:value={code}
 					onComplete={handleOtpComplete}
 					disabled={isLoading}
