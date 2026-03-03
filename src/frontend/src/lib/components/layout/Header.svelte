@@ -4,7 +4,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { LanguageSelector, ThemeToggle, UserNav } from '$lib/components/layout';
 	import { shortcutsState } from '$lib/state/shortcuts.svelte';
-	import { Search } from '@lucide/svelte';
+	import { Search, CircleHelp } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import type { User } from '$lib/types';
 
@@ -29,6 +29,14 @@
 			aria-label={m.shortcuts_commandPalette()}
 		>
 			<Search class="size-4" />
+		</Button>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			onclick={() => (shortcutsState.isHelpOpen = true)}
+			aria-label={m.shortcuts_help()}
+		>
+			<CircleHelp class="size-4" />
 		</Button>
 		<LanguageSelector />
 		<ThemeToggle />
