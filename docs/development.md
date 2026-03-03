@@ -28,7 +28,7 @@ MailPit captures all outgoing emails locally. Access the MailPit web UI from the
 
 ## Claude Code Skills
 
-NETrock ships with 20 native Claude Code skills that automate common development tasks. Type `/` in Claude Code to see all available skills.
+NETrock ships with 20+ native Claude Code skills that automate common development tasks. Type `/` in Claude Code to see all available skills.
 
 Key skills for daily development:
 

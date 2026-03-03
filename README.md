@@ -106,7 +106,7 @@ Add your domain entities, services, and pages - the architecture guides you.
 
 ## Claude Code Integration
 
-NETrock ships with 20 native [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills that automate common development workflows. Type `/` in Claude Code to see all available skills.
+NETrock ships with 20+ native [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills that automate common development workflows. Type `/` in Claude Code to see all available skills.
 
 | Skill | What it does |
 |---|---|
@@ -119,8 +119,9 @@ NETrock ships with 20 native [Claude Code](https://docs.anthropic.com/en/docs/cl
 | `/review-pr` | Review a PR for production-readiness |
 | `/review-design` | Review frontend components for UI/UX standards |
 | `/create-issue` | Create a GitHub issue with labels |
+| `/create-release` | Create a GitHub release with auto-generated notes |
 
-The project also includes `CLAUDE.md`, `AGENTS.md`, and `FILEMAP.md` - structured context files that give Claude Code deep understanding of the architecture, conventions, and change impact across the codebase. No separate onboarding needed - Claude Code reads the project and follows the rules.
+Skills are also loaded automatically when Claude Code plans work - it reads the relevant skill and follows the procedure without you having to invoke it. The project also includes `CLAUDE.md`, `AGENTS.md`, and `FILEMAP.md` - structured context files that give Claude Code deep understanding of the architecture, conventions, and change impact across the codebase. No separate onboarding needed.
 
 ---
 
