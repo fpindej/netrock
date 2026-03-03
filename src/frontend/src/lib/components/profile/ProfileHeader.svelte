@@ -74,9 +74,9 @@
 		</Avatar.Root>
 		<!-- Camera overlay on hover -->
 		<div
-			class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+			class="absolute inset-0 flex items-center justify-center rounded-full bg-foreground/50 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
 		>
-			<Camera class="text-white" size={24} />
+			<Camera class="text-background" size={24} />
 		</div>
 	</button>
 	<div class="flex flex-col gap-1 text-center sm:text-start">
