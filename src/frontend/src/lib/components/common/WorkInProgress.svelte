@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Construction } from '@lucide/svelte';
-	import * as Card from '$lib/components/ui/card';
+	import * as Alert from '$lib/components/ui/alert';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
@@ -20,26 +20,9 @@
 			<p class="text-sm text-muted-foreground">{description}</p>
 		{/if}
 	</div>
-	<Card.Root
-		class="relative flex min-h-96 flex-col items-center justify-center overflow-hidden p-6 text-center sm:p-10 lg:p-16"
-	>
-		<!-- Icon container with pulsing ring -->
-		<div class="relative mb-6">
-			<div class="glow-warning"></div>
-			<div
-				class="relative flex h-20 w-20 items-center justify-center rounded-full border border-warning/30 bg-gradient-to-br from-warning/10 to-warning/5"
-			>
-				<Construction class="h-10 w-10 text-warning" />
-			</div>
-			<!-- Pulsing ring effect -->
-			<div
-				class="animate-pulse-ring absolute inset-0 rounded-full border-2 border-warning/40"
-			></div>
-		</div>
-
-		<h2 class="relative text-2xl font-bold tracking-tight">{wipTitle ?? m.wip_title()}</h2>
-		<p class="relative mt-4 max-w-lg text-muted-foreground">
-			{wipDescription ?? m.wip_description()}
-		</p>
-	</Card.Root>
+	<Alert.Root>
+		<Construction class="h-5 w-5" />
+		<Alert.Title>{wipTitle ?? m.wip_title()}</Alert.Title>
+		<Alert.Description>{wipDescription ?? m.wip_description()}</Alert.Description>
+	</Alert.Root>
 </div>
