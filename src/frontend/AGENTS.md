@@ -9,7 +9,7 @@ src/
 │   ├── auth/                      # auth.ts (getUser, logout), middleware.ts (token refresh)
 │   ├── components/
 │   │   ├── ui/                    # shadcn (generated, customizable)
-│   │   ├── auth/                  # LoginForm, LoginBackground, RegisterDialog, ForgotPasswordForm, ResetPasswordForm, EmailVerificationBanner, TurnstileWidget, TwoFactorStep
+│   │   ├── auth/                  # AuthShell, LoginForm, RegisterForm, ForgotPasswordForm, ResetPasswordForm, EmailVerificationBanner, TurnstileWidget, TwoFactorStep
 │   │   ├── layout/                # Header, Sidebar, SidebarNav, UserNav, ThemeToggle, LanguageSelector, ShortcutsHelp
 │   │   ├── profile/               # ProfileForm, ProfileHeader, AvatarDialog, AccountDetails, InfoItem
 │   │   ├── settings/              # ChangePasswordForm, DeleteAccountDialog, ActivityLog, TwoFactorCard, TwoFactorSetupDialog, TwoFactorDisableDialog, TwoFactorRecoveryCodesDialog

@@ -96,7 +96,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **OpenAPI transformers** | Regenerate frontend types to verify; check Scalar UI |
 | **`CaptchaOptions`** (Infrastructure - Captcha config) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `TurnstileCaptchaService`, `ServiceCollectionExtensions` |
 | **`TurnstileCaptchaService`** (Infrastructure - Captcha service) | `ICaptchaService` interface, `CaptchaOptions`, `AuthController` captcha gate |
-| **`TurnstileWidget.svelte`** (Frontend - Captcha widget) | `RegisterDialog.svelte`, `ForgotPasswordForm.svelte`, `app.d.ts` (`Window.turnstile`), `TURNSTILE_SITE_KEY` env var (runtime-configurable via `$env/dynamic/private` and SSR layout data) |
+| **`TurnstileWidget.svelte`** (Frontend - Captcha widget) | `RegisterForm.svelte`, `ForgotPasswordForm.svelte`, `app.d.ts` (`Window.turnstile`), `TURNSTILE_SITE_KEY` env var (runtime-configurable via `$env/dynamic/private` and SSR layout data) |
 
 ### Frontend Changes
 
