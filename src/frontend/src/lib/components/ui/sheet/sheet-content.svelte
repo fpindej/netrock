@@ -1,16 +1,15 @@
 <script lang="ts" module>
-	import { type VariantProps, tv } from 'tailwind-variants';
-
+	import { tv, type VariantProps } from 'tailwind-variants';
 	export const sheetVariants = tv({
-		base: 'fixed z-50 gap-4 overflow-y-auto overscroll-contain bg-background p-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))] shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500',
+		base: 'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500',
 		variants: {
 			side: {
-				top: 'inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
+				top: 'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b',
 				bottom:
-					'inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
-				left: 'inset-y-0 start-0 h-full w-3/4 border-e data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm',
+					'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t',
+				left: 'data-[state=closed]:slide-out-to-start data-[state=open]:slide-in-from-start inset-y-0 start-0 h-full w-3/4 border-e sm:max-w-sm',
 				right:
-					'inset-y-0 end-0 h-full w-3/4 border-s data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm'
+					'data-[state=closed]:slide-out-to-end data-[state=open]:slide-in-from-end inset-y-0 end-0 h-full w-3/4 border-s sm:max-w-sm'
 			}
 		},
 		defaultVariants: {
@@ -23,11 +22,12 @@
 
 <script lang="ts">
 	import { Dialog as SheetPrimitive } from 'bits-ui';
-	import { X } from '@lucide/svelte';
-	import { cn } from '$lib/utils';
-	import * as m from '$lib/paraglide/messages';
-	import SheetOverlay from './sheet-overlay.svelte';
+	import XIcon from '@lucide/svelte/icons/x';
+	import type { Snippet } from 'svelte';
 	import SheetPortal from './sheet-portal.svelte';
+	import SheetOverlay from './sheet-overlay.svelte';
+	import { cn, type WithoutChildrenOrChild } from '$lib/utils';
+	import type { ComponentProps } from 'svelte';
 
 	let {
 		ref = $bindable(null),
@@ -36,21 +36,27 @@
 		portalProps,
 		children,
 		...restProps
-	}: SheetPrimitive.ContentProps & {
+	}: WithoutChildrenOrChild<SheetPrimitive.ContentProps> & {
+		portalProps?: WithoutChildrenOrChild<ComponentProps<typeof SheetPortal>>;
 		side?: Side;
-		portalProps?: SheetPrimitive.PortalProps;
+		children: Snippet;
 	} = $props();
 </script>
 
 <SheetPortal {...portalProps}>
 	<SheetOverlay />
-	<SheetPrimitive.Content bind:ref class={cn(sheetVariants({ side }), className)} {...restProps}>
+	<SheetPrimitive.Content
+		bind:ref
+		data-slot="sheet-content"
+		class={cn(sheetVariants({ side }), className)}
+		{...restProps}
+	>
 		{@render children?.()}
 		<SheetPrimitive.Close
-			class="absolute end-3 top-3 flex h-8 w-8 items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none data-[state=open]:bg-secondary"
+			class="absolute end-4 top-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none"
 		>
-			<X class="h-4 w-4" />
-			<span class="sr-only">{m.common_close()}</span>
+			<XIcon class="size-4" />
+			<span class="sr-only">Close</span>
 		</SheetPrimitive.Close>
 	</SheetPrimitive.Content>
 </SheetPortal>
