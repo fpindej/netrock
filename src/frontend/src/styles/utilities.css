@@ -34,40 +34,6 @@
 	-webkit-transform: translateZ(0); /* Safari compositing fix */
 }
 
-/* Status-specific glows - for status indicators and themed elements */
-.glow-success {
-	position: absolute;
-	top: -1rem;
-	inset-inline-end: -1rem;
-	width: 5rem;
-	height: 5rem;
-	border-radius: 9999px;
-	background: hsl(var(--success) / 0.2);
-	filter: blur(32px);
-	pointer-events: none;
-}
-
-.glow-destructive {
-	position: absolute;
-	top: -1rem;
-	inset-inline-end: -1rem;
-	width: 5rem;
-	height: 5rem;
-	border-radius: 9999px;
-	background: hsl(var(--destructive) / 0.2);
-	filter: blur(32px);
-	pointer-events: none;
-}
-
-.glow-warning {
-	position: absolute;
-	inset: -1rem;
-	border-radius: 9999px;
-	background: hsl(var(--warning) / 0.15);
-	filter: blur(24px);
-	pointer-events: none;
-}
-
 /* -----------------------------------------------------------------------------
    Card Hover Effects
    Interactive lift and glow effects for cards and interactive elements.

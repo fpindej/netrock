@@ -53,29 +53,6 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Pulse Ring Animation
-   Expanding ring effect for attention-drawing elements (work in progress, etc).
-   ----------------------------------------------------------------------------- */
-@keyframes pulse-ring {
-	0% {
-		transform: scale(1);
-		opacity: 0.6;
-	}
-	50% {
-		transform: scale(1.15);
-		opacity: 0.3;
-	}
-	100% {
-		transform: scale(1);
-		opacity: 0.6;
-	}
-}
-
-.animate-pulse-ring {
-	animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* -----------------------------------------------------------------------------
    Caret Blink Animation
    Blinking cursor for OTP input slots (shadcn InputOTP).
    ----------------------------------------------------------------------------- */
@@ -118,7 +95,6 @@
 @media (prefers-reduced-motion: reduce) {
 	.animate-shake,
 	.animate-glow-pulse,
-	.animate-pulse-ring,
 	.animate-caret-blink,
 	.status-indicator-ping,
 	.status-icon-ping {
