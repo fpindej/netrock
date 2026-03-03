@@ -8,9 +8,10 @@
 		children: Snippet;
 		extras?: Snippet;
 		cardClass?: string;
+		success?: boolean;
 	}
 
-	let { children, extras, cardClass }: Props = $props();
+	let { children, extras, cardClass, success = false }: Props = $props();
 </script>
 
 <div class="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
@@ -18,7 +19,9 @@
 		{@render extras()}
 	{/if}
 
-	<div class="flex w-full max-w-sm flex-col gap-6 lg:max-w-3xl">
+	<div
+		class={cn('flex w-full max-w-sm flex-col gap-6 lg:max-w-3xl', success && 'animate-auth-exit')}
+	>
 		<div class="flex items-center justify-end gap-2">
 			<LanguageSelector />
 			<ThemeToggle />

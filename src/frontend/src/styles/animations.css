@@ -31,6 +31,25 @@
 }
 
 /* -----------------------------------------------------------------------------
+   Auth Exit Animation
+   Smooth exit transition on successful login.
+   ----------------------------------------------------------------------------- */
+@keyframes auth-exit {
+	from {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(-8px) scale(0.97);
+	}
+}
+
+.animate-auth-exit {
+	animation: auth-exit 400ms ease-out forwards;
+}
+
+/* -----------------------------------------------------------------------------
    Caret Blink Animation
    Blinking cursor for OTP input slots (shadcn InputOTP).
    ----------------------------------------------------------------------------- */
@@ -72,6 +91,7 @@
    ----------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
 	.animate-shake,
+	.animate-auth-exit,
 	.animate-caret-blink,
 	.status-indicator-ping,
 	.status-icon-ping {
