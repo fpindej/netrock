@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { ChevronDown, Check } from '@lucide/svelte';
+	import { Check } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { cn } from '$lib/utils';
 	import {
@@ -112,14 +112,9 @@
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger {disabled}>
 			{#snippet child({ props })}
-				<Button
-					variant="outline"
-					class="flex w-20 shrink-0 items-center justify-between gap-1 px-2 sm:w-[100px]"
-					{...props}
-				>
+				<Button variant="outline" class="flex shrink-0 items-center gap-1.5 px-2.5" {...props}>
 					<span class={`fi fi-${selectedCountry.code} h-3 w-4 shrink-0 rounded-sm`}></span>
 					<span class="text-xs font-normal text-muted-foreground">{selectedCountry.dialCode}</span>
-					<ChevronDown class="h-3 w-3 shrink-0 opacity-50" />
 				</Button>
 			{/snippet}
 		</DropdownMenu.Trigger>
