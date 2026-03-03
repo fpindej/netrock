@@ -33,7 +33,7 @@ This chains entity -> service/API -> frontend. Commit atomically after each logi
 13. Create components in `$lib/components/{feature}/` with barrel `index.ts`
 14. Create page in `routes/(app)/{feature}/`
 15. Add i18n keys to both `en.json` and `cs.json`
-16. Add sidebar navigation entry
+16. Add sidebar navigation entry and command palette entry (both with permission if guarded)
 17. Verify: `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check` - loop until green
 18. Commit: `feat({feature}): add {feature} frontend page`
 

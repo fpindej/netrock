@@ -33,10 +33,11 @@ Infers route, route group, components needed, and data requirements from context
 
 8. Add i18n keys to both `en.json` and `cs.json`
 9. Add navigation entry in `AppSidebar.svelte` (with `permission` field if guarded)
+10. Add matching entry in `CommandPalette.svelte` (with `permission` field if admin-guarded)
 
 **Verify and commit:**
 
-10. `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check` - fix errors, loop until green
-11. Commit: `feat({feature}): add {feature} page`
+11. `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check` - fix errors, loop until green
+12. Commit: `feat({feature}): add {feature} page`
 
 Paraglide module errors (~32) are expected at check time - ignore those. Fix everything else.
