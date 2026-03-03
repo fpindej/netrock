@@ -8,6 +8,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as m from '$lib/paraglide/messages';
 	import { MailCheck } from '@lucide/svelte';
+	import { IconCircle } from '$lib/components/common';
 	import { AuthShell, TurnstileWidget } from '$lib/components/auth';
 	import { toast } from '$lib/components/ui/sonner';
 
@@ -105,7 +106,7 @@
 			<div class="text-center text-sm">
 				<a
 					href={resolve('/login')}
-					class="inline-flex min-h-10 items-center font-medium text-primary hover:underline"
+					class="inline-flex min-h-11 items-center font-medium text-primary hover:underline"
 				>
 					{m.common_backToLogin()}
 				</a>
@@ -113,11 +114,7 @@
 		</div>
 	{:else}
 		<div class="flex flex-col items-center gap-4 py-4">
-			<div
-				class="flex h-16 w-16 items-center justify-center rounded-full bg-success/10 text-success"
-			>
-				<MailCheck class="h-8 w-8" />
-			</div>
+			<IconCircle icon={MailCheck} variant="success" />
 			<div class="flex flex-col items-center gap-2 text-center">
 				<h1 class="text-2xl font-bold">{m.auth_forgotPassword_successTitle()}</h1>
 				<p class="text-sm text-balance text-muted-foreground">
@@ -126,7 +123,7 @@
 			</div>
 			<a
 				href={resolve('/login')}
-				class="inline-flex min-h-10 items-center text-sm font-medium text-primary hover:underline"
+				class="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
 			>
 				{m.common_backToLogin()}
 			</a>

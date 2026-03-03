@@ -161,16 +161,16 @@
 		</form>
 
 		<div class="text-center">
-			<button
-				type="button"
-				class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline focus-visible:text-primary focus-visible:underline focus-visible:outline-none"
+			<Button
+				variant="link"
+				class="min-h-11 text-muted-foreground hover:text-primary"
 				onclick={() => {
 					useRecovery = true;
 					code = '';
 				}}
 			>
 				{m.auth_twoFactor_useRecoveryCode()}
-			</button>
+			</Button>
 		</div>
 	{:else}
 		<form class="space-y-6" onsubmit={submitRecoveryCode}>
@@ -206,27 +206,27 @@
 		</form>
 
 		<div class="text-center">
-			<button
-				type="button"
-				class="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-primary hover:underline focus-visible:text-primary focus-visible:underline focus-visible:outline-none"
+			<Button
+				variant="link"
+				class="min-h-11 text-muted-foreground hover:text-primary"
 				onclick={() => {
 					useRecovery = false;
 					recoveryCode = '';
 				}}
 			>
 				{m.auth_twoFactor_backToCode()}
-			</button>
+			</Button>
 		</div>
 	{/if}
 
 	<div class="text-center">
-		<button
-			type="button"
-			class="inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-primary hover:underline focus-visible:text-primary focus-visible:underline focus-visible:outline-none"
+		<Button
+			variant="link"
+			class="min-h-11 gap-1 text-muted-foreground hover:text-primary"
 			onclick={onBack}
 		>
 			<ArrowLeft class="h-3 w-3" />
 			{m.common_backToLogin()}
-		</button>
+		</Button>
 	</div>
 </div>

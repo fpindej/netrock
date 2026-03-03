@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { PageHeader } from '$lib/components/common';
+	import { PageHeader, EmptyState } from '$lib/components/common';
 	import { OAuthProviderCard } from '$lib/components/admin';
 	import { hasPermission, Permissions } from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
+	import { KeyRound } from '@lucide/svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -22,7 +23,7 @@
 	/>
 
 	{#if data.providers.length === 0}
-		<p class="text-sm text-muted-foreground">{m.admin_oauthProviders_noProviders()}</p>
+		<EmptyState icon={KeyRound} message={m.admin_oauthProviders_noProviders()} />
 	{:else}
 		<div class="grid gap-6 lg:grid-cols-2">
 			{#each data.providers as provider (provider.provider)}

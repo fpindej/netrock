@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import * as m from '$lib/paraglide/messages';
 	import { Loader2, CircleAlert } from '@lucide/svelte';
+	import { IconCircle } from '$lib/components/common';
 	import { AuthShell } from '$lib/components/auth';
 
 	let { data } = $props();
@@ -38,9 +39,7 @@
 <AuthShell>
 	{#if data.error}
 		<div class="flex flex-col items-center gap-4 py-4">
-			<div class="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-				<CircleAlert class="h-6 w-6 text-destructive" />
-			</div>
+			<IconCircle icon={CircleAlert} variant="error" size="md" />
 			<div class="flex flex-col items-center gap-2 text-center">
 				<h1 class="text-xl font-bold">{m.oauth_callback_errorTitle()}</h1>
 				<p class="text-sm text-balance text-muted-foreground">

@@ -272,7 +272,7 @@
 			<span class="text-muted-foreground">{m.auth_register_haveAccount()}</span>
 			<a
 				href={resolve('/login')}
-				class="ms-1 inline-flex min-h-10 items-center font-medium text-primary hover:underline"
+				class="ms-1 inline-flex min-h-11 items-center font-medium text-primary hover:underline"
 			>
 				{m.auth_register_signIn()}
 			</a>

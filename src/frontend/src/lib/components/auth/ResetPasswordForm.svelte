@@ -6,7 +6,7 @@
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import { FieldError } from '$lib/components/common';
+	import { FieldError, IconCircle } from '$lib/components/common';
 	import { Label } from '$lib/components/ui/label';
 	import * as m from '$lib/paraglide/messages';
 	import { Check, CircleAlert, TriangleAlert } from '@lucide/svelte';
@@ -95,11 +95,7 @@
 <AuthShell>
 	{#if user}
 		<div class="flex flex-col items-center gap-4 py-4">
-			<div
-				class="flex h-16 w-16 items-center justify-center rounded-full bg-warning/10 text-warning"
-			>
-				<TriangleAlert class="h-8 w-8" />
-			</div>
+			<IconCircle icon={TriangleAlert} variant="warning" />
 			<div class="flex flex-col items-center gap-2 text-center">
 				<h1 class="text-2xl font-bold">
 					{m.auth_resetPassword_alreadySignedInTitle()}
@@ -129,11 +125,7 @@
 		</div>
 	{:else if isMissingParams}
 		<div class="flex flex-col items-center gap-4 py-4">
-			<div
-				class="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive"
-			>
-				<CircleAlert class="h-8 w-8" />
-			</div>
+			<IconCircle icon={CircleAlert} variant="error" />
 			<div class="flex flex-col items-center gap-2 text-center">
 				<h1 class="text-2xl font-bold">
 					{m.auth_resetPassword_invalidLink()}
@@ -144,18 +136,14 @@
 			</div>
 			<a
 				href={resolve('/forgot-password')}
-				class="inline-flex min-h-10 items-center text-sm font-medium text-primary hover:underline"
+				class="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
 			>
 				{m.auth_resetPassword_requestNew()}
 			</a>
 		</div>
 	{:else if isError}
 		<div class="flex flex-col items-center gap-4 py-4">
-			<div
-				class="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive"
-			>
-				<CircleAlert class="h-8 w-8" />
-			</div>
+			<IconCircle icon={CircleAlert} variant="error" />
 			<div class="flex flex-col items-center gap-2 text-center">
 				<h1 class="text-2xl font-bold">
 					{m.auth_resetPassword_errorTitle()}
@@ -172,7 +160,7 @@
 				{:else}
 					<a
 						href={resolve('/forgot-password')}
-						class="inline-flex min-h-10 items-center font-medium text-primary hover:underline"
+						class="inline-flex min-h-11 items-center font-medium text-primary hover:underline"
 					>
 						{m.auth_resetPassword_requestNew()}
 					</a>
@@ -235,11 +223,7 @@
 		</div>
 	{:else}
 		<div class="flex flex-col items-center gap-4 py-4">
-			<div
-				class="flex h-16 w-16 items-center justify-center rounded-full bg-success text-success-foreground"
-			>
-				<Check class="h-8 w-8" />
-			</div>
+			<IconCircle icon={Check} variant="success" />
 			<div class="flex flex-col items-center gap-2 text-center">
 				<h1 class="text-2xl font-bold">
 					{invited ? m.auth_setPassword_successTitle() : m.auth_resetPassword_successTitle()}

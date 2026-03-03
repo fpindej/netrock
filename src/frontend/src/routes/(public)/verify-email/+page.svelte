@@ -6,6 +6,7 @@
 	import * as m from '$lib/paraglide/messages';
 	import { Button } from '$lib/components/ui/button';
 	import { AuthShell } from '$lib/components/auth';
+	import { IconCircle } from '$lib/components/common';
 	import { fly } from 'svelte/transition';
 	import { Check, CircleAlert, LoaderCircle } from '@lucide/svelte';
 
@@ -59,11 +60,7 @@
 			</div>
 		{:else if status === 'success'}
 			<div class="flex flex-col items-center gap-4 py-4">
-				<div
-					class="flex h-16 w-16 items-center justify-center rounded-full bg-success text-success-foreground"
-				>
-					<Check class="h-8 w-8" />
-				</div>
+				<IconCircle icon={Check} variant="success" />
 				<div class="flex flex-col items-center gap-2 text-center">
 					<h1 class="text-2xl font-bold">
 						{m.auth_verifyEmail_successTitle()}
@@ -79,7 +76,7 @@
 					<div class="text-center text-sm">
 						<a
 							href={resolve('/login')}
-							class="inline-flex min-h-10 items-center font-medium text-primary hover:underline"
+							class="inline-flex min-h-11 items-center font-medium text-primary hover:underline"
 						>
 							{m.auth_verifyEmail_goToLogin()}
 						</a>
@@ -88,11 +85,7 @@
 			</div>
 		{:else}
 			<div class="flex flex-col items-center gap-4 py-4">
-				<div
-					class="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive"
-				>
-					<CircleAlert class="h-8 w-8" />
-				</div>
+				<IconCircle icon={CircleAlert} variant="error" />
 				<div class="flex flex-col items-center gap-2 text-center">
 					<h1 class="text-2xl font-bold">
 						{m.auth_verifyEmail_error()}
@@ -103,7 +96,7 @@
 				</div>
 				<a
 					href={resolve('/login')}
-					class="inline-flex min-h-10 items-center text-sm font-medium text-primary hover:underline"
+					class="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
 				>
 					{m.common_backToLogin()}
 				</a>

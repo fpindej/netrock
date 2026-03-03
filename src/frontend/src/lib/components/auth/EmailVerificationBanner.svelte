@@ -57,13 +57,14 @@
 				{m.auth_emailBanner_resend()}
 			{/if}
 		</Button>
-		<button
-			type="button"
-			class="rounded-sm p-0.5 text-warning-foreground/60 hover:text-warning-foreground"
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			class="text-warning-foreground/60 hover:bg-warning/20 hover:text-warning-foreground"
 			onclick={() => (isDismissed = true)}
 			aria-label={m.common_close()}
 		>
 			<X class="h-4 w-4" />
-		</button>
+		</Button>
 	</div>
 {/if}
