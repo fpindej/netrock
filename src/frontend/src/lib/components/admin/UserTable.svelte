@@ -108,7 +108,7 @@
 						onclick={() => navigateToUser(user.id)}
 						role="link"
 						aria-label={m.admin_users_viewDetails()}
-						tabindex="0"
+						tabindex={0}
 						onkeydown={(e: KeyboardEvent) => {
 							if (e.key === 'Enter' || e.key === ' ') {
 								e.preventDefault();
