@@ -163,7 +163,7 @@
 		<div class="text-center">
 			<Button
 				variant="link"
-				class="min-h-11 text-muted-foreground hover:text-primary"
+				class="min-h-11 text-muted-foreground hover:text-primary focus-visible:text-primary focus-visible:underline"
 				onclick={() => {
 					useRecovery = true;
 					code = '';
@@ -208,7 +208,7 @@
 		<div class="text-center">
 			<Button
 				variant="link"
-				class="min-h-11 text-muted-foreground hover:text-primary"
+				class="min-h-11 text-muted-foreground hover:text-primary focus-visible:text-primary focus-visible:underline"
 				onclick={() => {
 					useRecovery = false;
 					recoveryCode = '';
@@ -222,7 +222,7 @@
 	<div class="text-center">
 		<Button
 			variant="link"
-			class="min-h-11 gap-1 text-muted-foreground hover:text-primary"
+			class="min-h-11 gap-1 text-muted-foreground hover:text-primary focus-visible:text-primary focus-visible:underline"
 			onclick={onBack}
 		>
 			<ArrowLeft class="h-3 w-3" />
