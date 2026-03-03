@@ -37,21 +37,34 @@
 
 	type AdminCommandItem = CommandItem & { permission: string };
 
+	function close() {
+		shortcutsState.isCommandPaletteOpen = false;
+	}
+
 	const navItems: CommandItem[] = [
 		{
 			label: m.nav_dashboard,
 			icon: LayoutDashboard,
-			action: () => navigate(resolve('/'))
+			action: () => {
+				close();
+				goto(resolve('/'));
+			}
 		},
 		{
 			label: m.profile_title,
 			icon: User,
-			action: () => navigate(resolve('/profile'))
+			action: () => {
+				close();
+				goto(resolve('/profile'));
+			}
 		},
 		{
 			label: m.nav_settings,
 			icon: Settings,
-			action: () => navigate(resolve('/settings')),
+			action: () => {
+				close();
+				goto(resolve('/settings'));
+			},
 			shortcut: getShortcutSymbol(ShortcutAction.Settings)
 		}
 	];
@@ -60,25 +73,37 @@
 		{
 			label: m.nav_adminUsers,
 			icon: Users,
-			action: () => navigate(resolve('/admin/users')),
+			action: () => {
+				close();
+				goto(resolve('/admin/users'));
+			},
 			permission: Permissions.Users.View
 		},
 		{
 			label: m.nav_adminRoles,
 			icon: Shield,
-			action: () => navigate(resolve('/admin/roles')),
+			action: () => {
+				close();
+				goto(resolve('/admin/roles'));
+			},
 			permission: Permissions.Roles.View
 		},
 		{
 			label: m.nav_adminJobs,
 			icon: Clock,
-			action: () => navigate(resolve('/admin/jobs')),
+			action: () => {
+				close();
+				goto(resolve('/admin/jobs'));
+			},
 			permission: Permissions.Jobs.View
 		},
 		{
 			label: m.nav_adminOAuthProviders,
 			icon: KeyRound,
-			action: () => navigate(resolve('/admin/oauth-providers')),
+			action: () => {
+				close();
+				goto(resolve('/admin/oauth-providers'));
+			},
 			permission: Permissions.OAuthProviders.View
 		}
 	];
@@ -89,14 +114,14 @@
 			icon: Sun,
 			action: () => {
 				toggleTheme();
-				shortcutsState.isCommandPaletteOpen = false;
+				close();
 			}
 		},
 		{
 			label: m.nav_logout,
 			icon: LogOut,
 			action: () => {
-				shortcutsState.isCommandPaletteOpen = false;
+				close();
 				logout();
 			},
 			shortcut: getShortcutSymbol(ShortcutAction.Logout)
@@ -106,11 +131,6 @@
 	let visibleAdminItems = $derived(
 		adminItems.filter((item) => hasPermission(user, item.permission))
 	);
-
-	function navigate(href: string) {
-		shortcutsState.isCommandPaletteOpen = false;
-		goto(href);
-	}
 </script>
 
 <Command.Dialog
