@@ -1,4 +1,5 @@
 export { default as AppSidebar } from './AppSidebar.svelte';
+export { default as CommandPalette } from './CommandPalette.svelte';
 export { default as Header } from './Header.svelte';
 export { default as LanguageSelector } from './LanguageSelector.svelte';
 export { default as ThemeToggle } from './ThemeToggle.svelte';

@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { tinykeys } from 'tinykeys';
 import { IS_MAC } from '$lib/utils/platform';
 import * as m from '$lib/paraglide/messages';
 
@@ -6,6 +7,7 @@ import * as m from '$lib/paraglide/messages';
 
 class ShortcutsState {
 	isHelpOpen = $state(false);
+	isCommandPaletteOpen = $state(false);
 }
 
 export const shortcutsState = new ShortcutsState();
@@ -13,6 +15,7 @@ export const shortcutsState = new ShortcutsState();
 // --- Configuration ---
 
 export const ShortcutAction = {
+	CommandPalette: 'commandPalette',
 	Settings: 'settings',
 	Logout: 'logout',
 	Help: 'help',
@@ -22,40 +25,47 @@ export const ShortcutAction = {
 export type ShortcutActionType = (typeof ShortcutAction)[keyof typeof ShortcutAction];
 
 export interface ShortcutConfig {
-	key: string;
-	meta?: boolean; // Cmd on Mac, Ctrl on Windows/Linux
-	shift?: boolean;
-	alt?: boolean;
-	ctrl?: boolean; // Explicit Ctrl
+	/** tinykeys key binding string (e.g. "$mod+k", "$mod+Shift+l") */
+	binding: string;
 	action: ShortcutActionType;
 	description: () => string;
+	/** Display label for the shortcut (platform-aware) */
+	display: () => string;
+	/** Allow this shortcut to fire even when an input/textarea is focused */
+	allowInInput?: boolean;
 }
 
 const SHORTCUTS: ShortcutConfig[] = [
 	{
-		key: ',',
-		meta: true,
+		binding: '$mod+k',
+		action: ShortcutAction.CommandPalette,
+		description: m.shortcuts_commandPalette,
+		display: () => (IS_MAC ? '⌘ K' : 'Ctrl+K'),
+		allowInInput: true
+	},
+	{
+		binding: '$mod+Comma',
 		action: ShortcutAction.Settings,
-		description: m.shortcuts_settings
+		description: m.shortcuts_settings,
+		display: () => (IS_MAC ? '⌘ ,' : 'Ctrl+,')
 	},
 	{
-		key: 'l',
-		meta: true,
-		shift: true,
+		binding: '$mod+Shift+l',
 		action: ShortcutAction.Logout,
-		description: m.shortcuts_logout
+		description: m.shortcuts_logout,
+		display: () => (IS_MAC ? '⌘ ⇧ L' : 'Ctrl+Shift+L')
 	},
 	{
-		key: '[',
-		meta: true,
+		binding: '$mod+BracketLeft',
 		action: ShortcutAction.ToggleSidebar,
-		description: m.shortcuts_toggleSidebar
+		description: m.shortcuts_toggleSidebar,
+		display: () => (IS_MAC ? '⌘ [' : 'Ctrl+[')
 	},
 	{
-		key: '?',
-		shift: true,
+		binding: 'Shift+?',
 		action: ShortcutAction.Help,
-		description: m.shortcuts_help
+		description: m.shortcuts_help,
+		display: () => (IS_MAC ? '⇧ ?' : 'Shift+?')
 	}
 ];
 
@@ -66,67 +76,15 @@ export function getAllShortcuts(): ShortcutConfig[] {
 export function getShortcutSymbol(action: ShortcutActionType): string {
 	if (!browser) return '';
 	const config = SHORTCUTS.find((s) => s.action === action);
-	if (!config) return '';
-
-	const parts: string[] = [];
-
-	if (config.meta) parts.push(IS_MAC ? '⌘' : 'Ctrl');
-	if (config.ctrl) parts.push('Ctrl');
-	if (config.alt) parts.push(IS_MAC ? '⌥' : 'Alt');
-	if (config.shift) parts.push(IS_MAC ? '⇧' : 'Shift');
-
-	const key = config.key.toUpperCase();
-	parts.push(key);
-
-	return parts.join(IS_MAC ? ' ' : '+');
+	return config?.display() ?? '';
 }
 
 // --- Action ---
 
-// Map actions to handler functions directly
 export type ShortcutHandlers = Partial<Record<ShortcutActionType, () => void>>;
 
-export function globalShortcuts(node: Window, handlers: ShortcutHandlers = {}) {
-	let currentHandlers = handlers;
-
-	function handleKeydown(event: KeyboardEvent) {
-		if (!browser) return;
-
-		const target = event.target as HTMLElement;
-		if (isInput(target)) return;
-
-		for (const sc of SHORTCUTS) {
-			// Map abstract modifiers to physical keys based on platform
-			const pressedMeta = IS_MAC ? event.metaKey : event.ctrlKey;
-			const pressedCtrl = IS_MAC ? event.ctrlKey : false; // Explicit Control (rare on Win if mapped to meta)
-
-			if (!!sc.meta !== pressedMeta) continue;
-			if (!!sc.ctrl !== pressedCtrl) continue;
-			if (!!sc.shift !== event.shiftKey) continue;
-			if (!!sc.alt !== event.altKey) continue;
-
-			// Check key (case-insensitive to handle Shift+L vs l)
-			if (event.key.toLowerCase() !== sc.key.toLowerCase()) continue;
-
-			event.preventDefault();
-			executeAction(sc.action, currentHandlers);
-			return;
-		}
-	}
-
-	window.addEventListener('keydown', handleKeydown);
-
-	return {
-		update(newHandlers: ShortcutHandlers) {
-			currentHandlers = newHandlers;
-		},
-		destroy() {
-			window.removeEventListener('keydown', handleKeydown);
-		}
-	};
-}
-
-function isInput(target: HTMLElement) {
+function isInput(target: EventTarget | null): boolean {
+	if (!(target instanceof HTMLElement)) return false;
 	return (
 		target.tagName === 'INPUT' ||
 		target.tagName === 'TEXTAREA' ||
@@ -135,11 +93,42 @@ function isInput(target: HTMLElement) {
 	);
 }
 
+export function globalShortcuts(node: Window, handlers: ShortcutHandlers = {}) {
+	let currentHandlers = handlers;
+
+	function createHandler(config: ShortcutConfig) {
+		return (event: KeyboardEvent) => {
+			if (!config.allowInInput && isInput(event.target)) return;
+			event.preventDefault();
+			executeAction(config.action, currentHandlers);
+		};
+	}
+
+	const bindings: Record<string, (event: KeyboardEvent) => void> = {};
+	for (const sc of SHORTCUTS) {
+		bindings[sc.binding] = createHandler(sc);
+	}
+
+	const unsubscribe = tinykeys(window, bindings);
+
+	return {
+		update(newHandlers: ShortcutHandlers) {
+			currentHandlers = newHandlers;
+		},
+		destroy() {
+			unsubscribe();
+		}
+	};
+}
+
 function executeAction(action: ShortcutActionType, handlers: ShortcutHandlers) {
 	if (action === ShortcutAction.Help) {
 		shortcutsState.isHelpOpen = !shortcutsState.isHelpOpen;
 		return;
 	}
-	// Execute the handler if provided
+	if (action === ShortcutAction.CommandPalette) {
+		shortcutsState.isCommandPaletteOpen = !shortcutsState.isCommandPaletteOpen;
+		return;
+	}
 	handlers[action]?.();
 }

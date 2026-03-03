@@ -44,7 +44,15 @@
 	"shortcuts_settings": "Open Settings",
 	"shortcuts_logout": "Log out",
 	"shortcuts_toggleSidebar": "Toggle sidebar",
+	"shortcuts_commandPalette": "Open command palette",
 	"shortcuts_help": "Show keyboard shortcuts",
+
+	"commandPalette_placeholder": "Type a command or search...",
+	"commandPalette_noResults": "No results found.",
+	"commandPalette_navigation": "Navigation",
+	"commandPalette_admin": "Admin",
+	"commandPalette_actions": "Actions",
+	"commandPalette_toggleTheme": "Toggle theme",
 
 	"wip_title": "Coming Soon",
 	"wip_description": "This feature is currently under development. Stay tuned for updates!",

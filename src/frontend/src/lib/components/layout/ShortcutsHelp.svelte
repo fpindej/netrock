@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as m from '$lib/paraglide/messages';
-	import { shortcutsState, getAllShortcuts, getShortcutSymbol } from '$lib/state/shortcuts.svelte';
+	import { shortcutsState, getAllShortcuts } from '$lib/state/shortcuts.svelte';
 </script>
 
 <Dialog.Root bind:open={shortcutsState.isHelpOpen}>
@@ -18,7 +18,7 @@
 					<kbd
 						class="pointer-events-none inline-flex h-5 shrink-0 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-xs font-medium text-muted-foreground opacity-100 select-none"
 					>
-						{getShortcutSymbol(shortcut.action)}
+						{shortcut.display()}
 					</kbd>
 				</div>
 			{/each}

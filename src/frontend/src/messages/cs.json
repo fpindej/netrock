@@ -44,7 +44,15 @@
 	"shortcuts_settings": "Otevřít nastavení",
 	"shortcuts_logout": "Odhlásit se",
 	"shortcuts_toggleSidebar": "Přepnout postranní panel",
+	"shortcuts_commandPalette": "Otevřít příkazovou paletu",
 	"shortcuts_help": "Zobrazit klávesové zkratky",
+
+	"commandPalette_placeholder": "Zadejte příkaz nebo hledejte...",
+	"commandPalette_noResults": "Žádné výsledky.",
+	"commandPalette_navigation": "Navigace",
+	"commandPalette_admin": "Administrace",
+	"commandPalette_actions": "Akce",
+	"commandPalette_toggleTheme": "Přepnout motiv",
 
 	"wip_title": "Již brzy",
 	"wip_description": "Na této funkci právě pracujeme. Brzy se dozvíte více!",

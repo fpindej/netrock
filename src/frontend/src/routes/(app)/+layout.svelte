@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { AppSidebar, Header } from '$lib/components/layout';
+	import { AppSidebar, Header, CommandPalette } from '$lib/components/layout';
 	import { EmailVerificationBanner } from '$lib/components/auth';
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
@@ -19,6 +19,8 @@
 		if (healthState.checked) wasOnline = healthState.online;
 	});
 </script>
+
+<CommandPalette user={data.user} />
 
 <Sidebar.Provider open={data.sidebarOpen} class="h-dvh overflow-hidden">
 	<AppSidebar user={data.user} />
