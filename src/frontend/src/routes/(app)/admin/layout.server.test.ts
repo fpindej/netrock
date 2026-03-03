@@ -1,5 +1,5 @@
 /**
- * Tests for the admin layout server guard — the permission boundary for admin routes.
+ * Tests for the admin layout server guard - the permission boundary for admin routes.
  *
  * The admin layout requires at least one of: users.view, roles.view, jobs.view, or oauth_providers.view.
  * Users without any of these permissions are redirected to /.
@@ -98,47 +98,47 @@ async function expectRedirect(fn: () => ReturnType<typeof load>, status: number,
 describe('admin layout server load', () => {
 	// ── Allowed access ──────────────────────────────────────────────
 
-	it('user with all admin permissions — returns user data', async () => {
+	it('user with all admin permissions - returns user data', async () => {
 		const result = await load(mockLoadEvent(MOCK_ADMIN_USER));
 		expect(result).toEqual({ user: MOCK_ADMIN_USER });
 	});
 
-	it('user with only users.view — returns user data', async () => {
+	it('user with only users.view - returns user data', async () => {
 		const user = { ...MOCK_REGULAR_USER, permissions: ['users.view'] };
 		const result = await load(mockLoadEvent(user));
 		expect(result).toEqual({ user });
 	});
 
-	it('user with only roles.view — returns user data', async () => {
+	it('user with only roles.view - returns user data', async () => {
 		const user = { ...MOCK_REGULAR_USER, permissions: ['roles.view'] };
 		const result = await load(mockLoadEvent(user));
 		expect(result).toEqual({ user });
 	});
 
-	it('user with only jobs.view — returns user data', async () => {
+	it('user with only jobs.view - returns user data', async () => {
 		const user = { ...MOCK_REGULAR_USER, permissions: ['jobs.view'] };
 		const result = await load(mockLoadEvent(user));
 		expect(result).toEqual({ user });
 	});
 
-	it('user with only oauth_providers.view — returns user data', async () => {
+	it('user with only oauth_providers.view - returns user data', async () => {
 		const user = { ...MOCK_REGULAR_USER, permissions: ['oauth_providers.view'] };
 		const result = await load(mockLoadEvent(user));
 		expect(result).toEqual({ user });
 	});
 
-	it('SuperAdmin without explicit permissions — returns user data (implicit all)', async () => {
+	it('SuperAdmin without explicit permissions - returns user data (implicit all)', async () => {
 		const result = await load(mockLoadEvent(MOCK_SUPERADMIN_USER));
 		expect(result).toEqual({ user: MOCK_SUPERADMIN_USER });
 	});
 
 	// ── Denied access ───────────────────────────────────────────────
 
-	it('user without admin permissions — redirects to /', async () => {
+	it('user without admin permissions - redirects to /', async () => {
 		await expectRedirect(() => load(mockLoadEvent(MOCK_REGULAR_USER)), 303, '/');
 	});
 
-	it('user with unrelated permissions — redirects to /', async () => {
+	it('user with unrelated permissions - redirects to /', async () => {
 		const user = { ...MOCK_REGULAR_USER, permissions: ['some.other.permission'] };
 		await expectRedirect(() => load(mockLoadEvent(user)), 303, '/');
 	});

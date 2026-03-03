@@ -7,7 +7,7 @@
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock document before importing the module — node environment has no DOM.
+// Mock document before importing the module - node environment has no DOM.
 vi.stubGlobal('document', {
 	visibilityState: 'visible',
 	addEventListener: vi.fn(),
@@ -21,7 +21,7 @@ describe('health state', () => {
 
 	beforeEach(() => {
 		vi.useFakeTimers();
-		// Re-stub document before each test — afterEach's unstubAllGlobals removes it.
+		// Re-stub document before each test - afterEach's unstubAllGlobals removes it.
 		vi.stubGlobal('document', {
 			visibilityState: 'visible',
 			addEventListener: vi.fn(),
@@ -83,7 +83,7 @@ describe('health state', () => {
 		await vi.advanceTimersByTimeAsync(0);
 		expect(healthState.online).toBe(false);
 
-		// Offline interval is 5s — next check should recover
+		// Offline interval is 5s - next check should recover
 		await vi.advanceTimersByTimeAsync(5_000);
 		expect(healthState.online).toBe(true);
 	});

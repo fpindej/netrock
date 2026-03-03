@@ -1,5 +1,5 @@
 /**
- * Tests for the root layout server load — the entry point for all routes.
+ * Tests for the root layout server load - the entry point for all routes.
  *
  * The critical behavior tested here is that `hadSession` is determined from
  * the refresh token cookie BEFORE `getUser()` runs. This matters because
@@ -12,7 +12,7 @@ import { MOCK_USER, createMockLoadEvent, createMockCookies } from '../test-utils
 vi.mock('$app/environment', () => ({ dev: false }));
 vi.mock('$lib/config/server', () => ({ SERVER_CONFIG: { API_URL: '' } }));
 
-/** Mock getUser — we test its behavior separately in auth.test.ts. */
+/** Mock getUser - we test its behavior separately in auth.test.ts. */
 const mockGetUser = vi.fn();
 vi.mock('$lib/auth', async (importOriginal) => {
 	const actual = await importOriginal<typeof import('$lib/auth')>();
@@ -44,7 +44,7 @@ async function loadResult(event: LoadEvent) {
 }
 
 describe('root layout server load', () => {
-	it('no refresh cookie — hadSession is false', async () => {
+	it('no refresh cookie - hadSession is false', async () => {
 		mockGetUser.mockResolvedValueOnce({ user: null, error: null });
 
 		const result = await loadResult(mockLoadEvent());
@@ -52,7 +52,7 @@ describe('root layout server load', () => {
 		expect(result.hadSession).toBe(false);
 	});
 
-	it('refresh cookie present — hadSession is true', async () => {
+	it('refresh cookie present - hadSession is true', async () => {
 		mockGetUser.mockResolvedValueOnce({ user: null, error: null });
 
 		const result = await loadResult(mockLoadEvent('some-token-value'));
@@ -66,12 +66,12 @@ describe('root layout server load', () => {
 
 		await load(event);
 
-		// Literal string intentional — contract test against the backend's
+		// Literal string intentional - contract test against the backend's
 		// CookieNames.RefreshToken. If the exported constant drifts, this catches it.
 		expect(event.cookies.get).toHaveBeenCalledWith('__Secure-REFRESH-TOKEN');
 	});
 
-	it('authenticated user — returns user data with hadSession true', async () => {
+	it('authenticated user - returns user data with hadSession true', async () => {
 		mockGetUser.mockResolvedValueOnce({ user: MOCK_USER, error: null });
 
 		const result = await loadResult(mockLoadEvent('token'));
@@ -80,7 +80,7 @@ describe('root layout server load', () => {
 		expect(result.hadSession).toBe(true);
 	});
 
-	it('backend unavailable — returns error with hadSession', async () => {
+	it('backend unavailable - returns error with hadSession', async () => {
 		mockGetUser.mockResolvedValueOnce({ user: null, error: 'backend_unavailable' });
 
 		const result = await loadResult(mockLoadEvent('token'));

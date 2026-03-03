@@ -31,7 +31,7 @@ const MOCK_USER = {
 describe('getUser', () => {
 	// ── Basic response handling (no refresh involved) ───────────────
 
-	it('200 with user data — returns { user, error: null }', async () => {
+	it('200 with user data - returns { user, error: null }', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockResolvedValueOnce(jsonResponse(MOCK_USER));
 
@@ -40,11 +40,11 @@ describe('getUser', () => {
 		expect(result).toEqual({ user: MOCK_USER, error: null });
 	});
 
-	it('401 — returns { user: null, error: null }', async () => {
+	it('401 - returns { user: null, error: null }', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		// Initial request returns 401
 		fetchFn.mockResolvedValueOnce(emptyResponse(401));
-		// Middleware triggers refresh — refresh also fails with 401
+		// Middleware triggers refresh - refresh also fails with 401
 		fetchFn.mockResolvedValueOnce(emptyResponse(401));
 
 		const result = await getUser(fetchFn, ORIGIN);
@@ -52,7 +52,7 @@ describe('getUser', () => {
 		expect(result).toEqual({ user: null, error: null });
 	});
 
-	it('403 — returns { user: null, error: null }', async () => {
+	it('403 - returns { user: null, error: null }', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockResolvedValueOnce(emptyResponse(403));
 
@@ -61,7 +61,7 @@ describe('getUser', () => {
 		expect(result).toEqual({ user: null, error: null });
 	});
 
-	it('5xx — returns { user: null, error: backend_unavailable }', async () => {
+	it('5xx - returns { user: null, error: backend_unavailable }', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockResolvedValueOnce(emptyResponse(500));
 
@@ -70,7 +70,7 @@ describe('getUser', () => {
 		expect(result).toEqual({ user: null, error: 'backend_unavailable' });
 	});
 
-	it('network error — returns { user: null, error: backend_unavailable }', async () => {
+	it('network error - returns { user: null, error: backend_unavailable }', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockRejectedValueOnce(new TypeError('Failed to fetch'));
 

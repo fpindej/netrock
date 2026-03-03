@@ -28,7 +28,7 @@ const REFRESH_INIT = { method: 'POST', credentials: 'same-origin' };
 describe('createAuthMiddleware', () => {
 	// ── Pass-through ────────────────────────────────────────────────
 
-	it('non-401 response — returns undefined', async () => {
+	it('non-401 response - returns undefined', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		const mw = createAuthMiddleware(fetchFn, '');
 
@@ -40,7 +40,7 @@ describe('createAuthMiddleware', () => {
 		expect(fetchFn).not.toHaveBeenCalled();
 	});
 
-	it('401 on refresh endpoint — returns undefined', async () => {
+	it('401 on refresh endpoint - returns undefined', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		const onAuthFailure = vi.fn();
 		const mw = createAuthMiddleware(fetchFn, '', onAuthFailure);
@@ -54,7 +54,7 @@ describe('createAuthMiddleware', () => {
 		expect(onAuthFailure).not.toHaveBeenCalled();
 	});
 
-	it('401 on path containing refresh substring — triggers refresh normally', async () => {
+	it('401 on path containing refresh substring - triggers refresh normally', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockResolvedValueOnce(mockResponse(200)); // refresh
 		fetchFn.mockResolvedValueOnce(mockResponse(200)); // retry
@@ -70,10 +70,10 @@ describe('createAuthMiddleware', () => {
 		expect(result).toBeInstanceOf(Response);
 	});
 
-	// ── Successful refresh — method routing ─────────────────────────
+	// ── Successful refresh - method routing ─────────────────────────
 
 	it.each(['GET', 'HEAD', 'OPTIONS'])(
-		'401 + successful refresh + %s — retries the request',
+		'401 + successful refresh + %s - retries the request',
 		async (method) => {
 			const retryResponse = mockResponse(200);
 			const fetchFn = vi.fn<typeof fetch>();
@@ -92,7 +92,7 @@ describe('createAuthMiddleware', () => {
 	);
 
 	it.each(['POST', 'PUT', 'PATCH', 'DELETE'])(
-		'401 + successful refresh + %s — does not retry',
+		'401 + successful refresh + %s - does not retry',
 		async (method) => {
 			const fetchFn = vi.fn<typeof fetch>();
 			fetchFn.mockResolvedValueOnce(mockResponse(200)); // refresh
@@ -126,7 +126,7 @@ describe('createAuthMiddleware', () => {
 		expect(result).toBe(retryResponse);
 	});
 
-	it('baseUrl with trailing slash — normalized correctly', async () => {
+	it('baseUrl with trailing slash - normalized correctly', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockResolvedValueOnce(mockResponse(200)); // refresh
 		fetchFn.mockResolvedValueOnce(mockResponse(200)); // retry
@@ -142,7 +142,7 @@ describe('createAuthMiddleware', () => {
 
 	// ── Refresh failure ─────────────────────────────────────────────
 
-	it('refresh returns non-ok — calls onAuthFailure', async () => {
+	it('refresh returns non-ok - calls onAuthFailure', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockResolvedValueOnce(mockResponse(401)); // refresh fails
 
@@ -157,7 +157,7 @@ describe('createAuthMiddleware', () => {
 		expect(result).toBeUndefined();
 	});
 
-	it('refresh network error — calls onAuthFailure', async () => {
+	it('refresh network error - calls onAuthFailure', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
@@ -172,7 +172,7 @@ describe('createAuthMiddleware', () => {
 		expect(result).toBeUndefined();
 	});
 
-	it('onAuthFailure not provided — does not throw', async () => {
+	it('onAuthFailure not provided - does not throw', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockResolvedValueOnce(mockResponse(401)); // refresh fails
 
@@ -183,7 +183,7 @@ describe('createAuthMiddleware', () => {
 		).resolves.toBeUndefined();
 	});
 
-	it('onAuthFailure throws synchronously — does not break middleware', async () => {
+	it('onAuthFailure throws synchronously - does not break middleware', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockResolvedValueOnce(mockResponse(401)); // refresh fails
 
@@ -200,7 +200,7 @@ describe('createAuthMiddleware', () => {
 		expect(result).toBeUndefined();
 	});
 
-	it('onAuthFailure rejects — does not break middleware', async () => {
+	it('onAuthFailure rejects - does not break middleware', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		fetchFn.mockRejectedValueOnce(new TypeError('Failed to fetch')); // refresh network error
 
@@ -217,7 +217,7 @@ describe('createAuthMiddleware', () => {
 
 	// ── Deduplication and guards ────────────────────────────────────
 
-	it('concurrent 401s — single refresh request', async () => {
+	it('concurrent 401s - single refresh request', async () => {
 		let resolveRefresh: (value: Response) => void;
 		const pendingRefresh = new Promise<Response>((r) => {
 			resolveRefresh = r;
@@ -279,7 +279,7 @@ describe('createAuthMiddleware', () => {
 		expect(onAuthFailure).toHaveBeenCalledOnce();
 	});
 
-	it('second 401 after completed refresh cycle — triggers new refresh', async () => {
+	it('second 401 after completed refresh cycle - triggers new refresh', async () => {
 		const fetchFn = vi.fn<typeof fetch>();
 		// First cycle: refresh + retry
 		fetchFn.mockResolvedValueOnce(mockResponse(200));
@@ -287,7 +287,7 @@ describe('createAuthMiddleware', () => {
 
 		const mw = createAuthMiddleware(fetchFn, '');
 
-		// First 401 — triggers first refresh cycle
+		// First 401 - triggers first refresh cycle
 		await mw.onResponse!(responseParams(mockRequest('http://localhost/api/a'), mockResponse(401)));
 		expect(fetchFn).toHaveBeenCalledTimes(2);
 

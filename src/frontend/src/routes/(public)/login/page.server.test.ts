@@ -29,7 +29,7 @@ function mockLoadEvent(
 describe('login page server load', () => {
 	// ── Already authenticated ───────────────────────────────────────
 
-	it('authenticated user — redirects to /', async () => {
+	it('authenticated user - redirects to /', async () => {
 		try {
 			await load(mockLoadEvent({ user: MOCK_USER }));
 			expect.fail('Expected redirect to be thrown');
@@ -44,27 +44,27 @@ describe('login page server load', () => {
 
 	// ── Reason query param parsing ──────────────────────────────────
 
-	it('no reason param — returns reason: null', async () => {
+	it('no reason param - returns reason: null', async () => {
 		const result = await load(mockLoadEvent());
 		expect(result).toEqual({ reason: null, prefillEmail: undefined });
 	});
 
-	it('reason=session_expired — returns reason', async () => {
+	it('reason=session_expired - returns reason', async () => {
 		const result = await load(mockLoadEvent({ searchParams: { reason: 'session_expired' } }));
 		expect(result).toEqual({ reason: 'session_expired', prefillEmail: undefined });
 	});
 
-	it('reason=password_changed — returns reason', async () => {
+	it('reason=password_changed - returns reason', async () => {
 		const result = await load(mockLoadEvent({ searchParams: { reason: 'password_changed' } }));
 		expect(result).toEqual({ reason: 'password_changed', prefillEmail: undefined });
 	});
 
-	it('unrecognized reason param — returns reason: null', async () => {
+	it('unrecognized reason param - returns reason: null', async () => {
 		const result = await load(mockLoadEvent({ searchParams: { reason: 'other' } }));
 		expect(result).toEqual({ reason: null, prefillEmail: undefined });
 	});
 
-	it('email param — returns prefillEmail', async () => {
+	it('email param - returns prefillEmail', async () => {
 		const result = await load(mockLoadEvent({ searchParams: { email: 'user@example.com' } }));
 		expect(result).toEqual({ reason: null, prefillEmail: 'user@example.com' });
 	});

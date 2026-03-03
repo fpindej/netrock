@@ -3,7 +3,7 @@
  *
  * After a 429 response, call `start(seconds)` with the value from
  * `getRetryAfterSeconds()`. While active, `active` is true and
- * `remaining` counts down every second — use `active` to disable
+ * `remaining` counts down every second - use `active` to disable
  * submit buttons.
  *
  * @example

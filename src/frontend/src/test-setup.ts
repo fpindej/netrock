@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 
 // Global mocks for SvelteKit $app/* modules.
 // These provide sensible defaults that individual tests can override via vi.mocked().
-// $env/* modules are NOT mocked here — they vary per test and should be mocked individually.
+// $env/* modules are NOT mocked here - they vary per test and should be mocked individually.
 
 vi.mock('$app/navigation', () => ({
 	goto: vi.fn(),

@@ -4,7 +4,7 @@
  * Builds on the pure utilities in `error-handling.ts` by adding UI concerns
  * (toast notifications, i18n messages) for the common mutation response pattern.
  *
- * @remarks Pattern documented in src/frontend/AGENTS.md — update both when changing.
+ * @remarks Pattern documented in src/frontend/AGENTS.md - update both when changing.
  */
 
 import { toast } from '$lib/components/ui/sonner';
@@ -77,7 +77,7 @@ export function handleMutationError(
 	error: unknown,
 	{ cooldown, fallback, onRateLimited, onValidationError, onError }: MutationErrorOptions
 ): void {
-	// Backend/proxy failure — the backend-monitor middleware already triggers
+	// Backend/proxy failure - the backend-monitor middleware already triggers
 	// the 503 error page transition via invalidateAll(). Suppress the toast
 	// so the user sees the error page, not a confusing component-level message.
 	if (response.status === 502 || response.status === 503) {

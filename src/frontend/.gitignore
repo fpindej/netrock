@@ -25,7 +25,7 @@ vite.config.ts.timestamp-*
 # Test coverage
 coverage
 
-# Inlang (auto-generated — only settings.json is tracked)
+# Inlang (auto-generated - only settings.json is tracked)
 project.inlang/.meta.json
 project.inlang/README.md
 project.inlang/cache/

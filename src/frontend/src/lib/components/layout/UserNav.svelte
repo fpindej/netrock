@@ -15,7 +15,7 @@
 
 	let { user }: Props = $props();
 
-	// Avatar URL — stable until user object changes via invalidateAll
+	// Avatar URL - stable until user object changes via invalidateAll
 	const avatarUrl = $derived(user?.hasAvatar && user?.id ? `/api/users/${user.id}/avatar` : null);
 
 	function getInitials(name: string) {

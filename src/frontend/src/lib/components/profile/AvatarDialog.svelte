@@ -37,7 +37,7 @@
 	let zoom = $state(1);
 	let pixelCrop: CropArea | null = $state(null);
 
-	// Reset state when dialog opens — untrack inner reads so only `open` is a dependency
+	// Reset state when dialog opens - untrack inner reads so only `open` is a dependency
 	$effect(() => {
 		if (open) {
 			untrack(() => {

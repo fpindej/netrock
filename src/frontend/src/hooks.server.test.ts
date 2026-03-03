@@ -1,5 +1,5 @@
 /**
- * Tests for the SvelteKit server hooks — security headers and API proxy bypass.
+ * Tests for the SvelteKit server hooks - security headers and API proxy bypass.
  *
  * The handle function applies security headers to all page responses but
  * skips them for API proxy routes (/api/*) where the backend sets its own.
@@ -74,7 +74,7 @@ function mockResolve(): (event: RequestEvent, opts?: ResolveOptions) => Promise<
 	});
 }
 
-describe('hooks.server handle — production mode (dev: false)', () => {
+describe('hooks.server handle - production mode (dev: false)', () => {
 	let handle: Handle;
 
 	beforeEach(async () => {
@@ -106,7 +106,7 @@ describe('hooks.server handle — production mode (dev: false)', () => {
 
 	// ── Security headers on page responses ──────────────────────────
 
-	it('page response — includes X-Content-Type-Options', async () => {
+	it('page response - includes X-Content-Type-Options', async () => {
 		const response = await handle({
 			event: mockRequestEvent('/dashboard'),
 			resolve: mockResolve()
@@ -116,7 +116,7 @@ describe('hooks.server handle — production mode (dev: false)', () => {
 		);
 	});
 
-	it('page response — includes X-Frame-Options', async () => {
+	it('page response - includes X-Frame-Options', async () => {
 		const response = await handle({
 			event: mockRequestEvent('/dashboard'),
 			resolve: mockResolve()
@@ -124,7 +124,7 @@ describe('hooks.server handle — production mode (dev: false)', () => {
 		expect(response.headers.get('X-Frame-Options')).toBe(EXPECTED_HEADERS['X-Frame-Options']);
 	});
 
-	it('page response — includes Referrer-Policy', async () => {
+	it('page response - includes Referrer-Policy', async () => {
 		const response = await handle({
 			event: mockRequestEvent('/dashboard'),
 			resolve: mockResolve()
@@ -132,7 +132,7 @@ describe('hooks.server handle — production mode (dev: false)', () => {
 		expect(response.headers.get('Referrer-Policy')).toBe(EXPECTED_HEADERS['Referrer-Policy']);
 	});
 
-	it('page response — includes Permissions-Policy', async () => {
+	it('page response - includes Permissions-Policy', async () => {
 		const response = await handle({
 			event: mockRequestEvent('/dashboard'),
 			resolve: mockResolve()
@@ -140,7 +140,7 @@ describe('hooks.server handle — production mode (dev: false)', () => {
 		expect(response.headers.get('Permissions-Policy')).toBe(EXPECTED_HEADERS['Permissions-Policy']);
 	});
 
-	it('page response — includes all expected security headers', async () => {
+	it('page response - includes all expected security headers', async () => {
 		const response = await handle({ event: mockRequestEvent('/'), resolve: mockResolve() });
 		for (const [header, value] of Object.entries(EXPECTED_HEADERS)) {
 			expect(response.headers.get(header)).toBe(value);
@@ -149,14 +149,14 @@ describe('hooks.server handle — production mode (dev: false)', () => {
 
 	// ── HSTS in production ──────────────────────────────────────────
 
-	it('production mode — includes HSTS header', async () => {
+	it('production mode - includes HSTS header', async () => {
 		const response = await handle({ event: mockRequestEvent('/'), resolve: mockResolve() });
 		expect(response.headers.get('Strict-Transport-Security')).toBe(HSTS_VALUE);
 	});
 
 	// ── API proxy bypass ────────────────────────────────────────────
 
-	it('/api route — does not add security headers', async () => {
+	it('/api route - does not add security headers', async () => {
 		const resolve = mockResolve();
 		const response = await handle({ event: mockRequestEvent('/api/v1/users'), resolve });
 		expect(response.headers.get('X-Content-Type-Options')).toBeNull();
@@ -166,13 +166,13 @@ describe('hooks.server handle — production mode (dev: false)', () => {
 		expect(response.headers.get('Strict-Transport-Security')).toBeNull();
 	});
 
-	it('/api root — does not add security headers', async () => {
+	it('/api root - does not add security headers', async () => {
 		const resolve = mockResolve();
 		const response = await handle({ event: mockRequestEvent('/api'), resolve });
 		expect(response.headers.get('X-Content-Type-Options')).toBeNull();
 	});
 
-	it('/api route — calls resolve directly without paraglide middleware', async () => {
+	it('/api route - calls resolve directly without paraglide middleware', async () => {
 		const resolve = mockResolve();
 		await handle({ event: mockRequestEvent('/api/v1/health'), resolve });
 		expect(resolve).toHaveBeenCalledOnce();
@@ -180,44 +180,44 @@ describe('hooks.server handle — production mode (dev: false)', () => {
 
 	// ── Non-API routes still get headers ────────────────────────────
 
-	it('root path — gets security headers', async () => {
+	it('root path - gets security headers', async () => {
 		const response = await handle({ event: mockRequestEvent('/'), resolve: mockResolve() });
 		expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
 	});
 
-	it('/login path — gets security headers', async () => {
+	it('/login path - gets security headers', async () => {
 		const response = await handle({ event: mockRequestEvent('/login'), resolve: mockResolve() });
 		expect(response.headers.get('X-Frame-Options')).toBe('DENY');
 	});
 
-	it('/admin path — gets security headers', async () => {
+	it('/admin path - gets security headers', async () => {
 		const response = await handle({ event: mockRequestEvent('/admin'), resolve: mockResolve() });
 		expect(response.headers.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
 	});
 
 	// ── Locale handling ─────────────────────────────────────────────
 
-	it('page response — replaces %lang% with locale', async () => {
+	it('page response - replaces %lang% with locale', async () => {
 		const response = await handle({ event: mockRequestEvent('/'), resolve: mockResolve() });
 		const html = await response.text();
 		expect(html).toContain('lang="en"');
 		expect(html).not.toContain('%lang%');
 	});
 
-	it('page response — sets locals.locale', async () => {
+	it('page response - sets locals.locale', async () => {
 		const event = mockRequestEvent('/');
 		await handle({ event, resolve: mockResolve() });
 		expect(event.locals.locale).toBe('en');
 	});
 
-	it('page response — sets locals.user to null', async () => {
+	it('page response - sets locals.user to null', async () => {
 		const event = mockRequestEvent('/');
 		await handle({ event, resolve: mockResolve() });
 		expect(event.locals.user).toBeNull();
 	});
 });
 
-describe('hooks.server handle — dev mode (dev: true)', () => {
+describe('hooks.server handle - dev mode (dev: true)', () => {
 	let handle: Handle;
 
 	beforeEach(async () => {
@@ -247,12 +247,12 @@ describe('hooks.server handle — dev mode (dev: true)', () => {
 		handle = mod.handle;
 	});
 
-	it('dev mode — does not include HSTS header', async () => {
+	it('dev mode - does not include HSTS header', async () => {
 		const response = await handle({ event: mockRequestEvent('/'), resolve: mockResolve() });
 		expect(response.headers.get('Strict-Transport-Security')).toBeNull();
 	});
 
-	it('dev mode — still includes other security headers', async () => {
+	it('dev mode - still includes other security headers', async () => {
 		const response = await handle({ event: mockRequestEvent('/'), resolve: mockResolve() });
 		expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
 		expect(response.headers.get('X-Frame-Options')).toBe('DENY');

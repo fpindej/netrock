@@ -9,7 +9,7 @@
  * Initialize once in the root layout's `onMount`. Any component can read
  * `healthState.online` reactively.
  *
- * Client-only singleton — never import in `.server.ts` files. Module-level
+ * Client-only singleton - never import in `.server.ts` files. Module-level
  * state would leak across SSR requests.
  */
 
@@ -53,7 +53,7 @@ function handleVisibility() {
 
 /**
  * Start health polling. Call in `onMount`; returns a cleanup function.
- * Idempotent — safe to call during HMR re-mounts.
+ * Idempotent - safe to call during HMR re-mounts.
  */
 export function initHealthCheck() {
 	if (initialized) return () => {};

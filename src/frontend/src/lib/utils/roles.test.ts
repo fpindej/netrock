@@ -22,7 +22,7 @@ describe('getRoleRank', () => {
 		expect(getRoleRank('')).toBe(0);
 	});
 
-	it('is case-sensitive — lowercase variants return 0', () => {
+	it('is case-sensitive - lowercase variants return 0', () => {
 		expect(getRoleRank('superadmin')).toBe(0);
 		expect(getRoleRank('admin')).toBe(0);
 		expect(getRoleRank('user')).toBe(0);
@@ -76,15 +76,15 @@ describe('canManageUser', () => {
 		expect(canManageUser(['User'], ['Admin'])).toBe(false);
 	});
 
-	it('User cannot manage User — equal rank is not sufficient', () => {
+	it('User cannot manage User - equal rank is not sufficient', () => {
 		expect(canManageUser(['User'], ['User'])).toBe(false);
 	});
 
-	it('Admin cannot manage Admin — equal rank is not sufficient', () => {
+	it('Admin cannot manage Admin - equal rank is not sufficient', () => {
 		expect(canManageUser(['Admin'], ['Admin'])).toBe(false);
 	});
 
-	it('SuperAdmin cannot manage SuperAdmin — equal rank is not sufficient', () => {
+	it('SuperAdmin cannot manage SuperAdmin - equal rank is not sufficient', () => {
 		expect(canManageUser(['SuperAdmin'], ['SuperAdmin'])).toBe(false);
 	});
 
@@ -96,7 +96,7 @@ describe('canManageUser', () => {
 		expect(canManageUser(['User'], [])).toBe(true);
 	});
 
-	it('empty caller cannot manage empty target — both rank 0', () => {
+	it('empty caller cannot manage empty target - both rank 0', () => {
 		expect(canManageUser([], [])).toBe(false);
 	});
 

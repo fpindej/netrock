@@ -46,7 +46,7 @@
 		return new Promise((resolve, reject) => {
 			const existing = document.getElementById(SCRIPT_ID);
 			if (existing) {
-				// Script tag exists — it may still be loading
+				// Script tag exists - it may still be loading
 				if (window.turnstile) {
 					resolve();
 				} else {

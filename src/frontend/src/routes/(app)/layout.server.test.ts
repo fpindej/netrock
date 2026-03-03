@@ -1,9 +1,9 @@
 /**
- * Tests for the (app) layout server guard — the auth boundary for protected routes.
+ * Tests for the (app) layout server guard - the auth boundary for protected routes.
  *
  * These cover the server-side load function only. The client-side behavior
  * (toast + replaceState in login/+page.svelte) is inside an `onMount` callback
- * whose logic is a trivial conditional — verifying it would test Svelte's
+ * whose logic is a trivial conditional - verifying it would test Svelte's
  * lifecycle rather than application logic. If component testing infrastructure
  * (e.g. @testing-library/svelte) is added later, a smoke test for the toast
  * would be a reasonable addition.
@@ -59,7 +59,7 @@ describe('(app) layout server load', () => {
 
 	// ── Backend unavailable ─────────────────────────────────────────
 
-	it('backend unavailable — throws 503 error', async () => {
+	it('backend unavailable - throws 503 error', async () => {
 		try {
 			await load(mockLoadEvent({ backendError: 'backend_unavailable' }));
 			expect.fail('Expected error to be thrown');
@@ -73,7 +73,7 @@ describe('(app) layout server load', () => {
 			await load(mockLoadEvent({ backendError: 'backend_unavailable', hadSession: true }));
 			expect.fail('Expected error to be thrown');
 		} catch (e) {
-			// Should throw 503, not redirect — backend error is checked first
+			// Should throw 503, not redirect - backend error is checked first
 			expect(isHttpError(e, 503)).toBe(true);
 			expect(isRedirect(e)).toBe(false);
 		}
@@ -81,11 +81,11 @@ describe('(app) layout server load', () => {
 
 	// ── Session expired detection ───────────────────────────────────
 
-	it('no user, no prior session — redirects to /login', async () => {
+	it('no user, no prior session - redirects to /login', async () => {
 		await expectRedirect(() => load(mockLoadEvent()), 303, '/login');
 	});
 
-	it('no user, had session — redirects with session_expired reason', async () => {
+	it('no user, had session - redirects with session_expired reason', async () => {
 		await expectRedirect(
 			() => load(mockLoadEvent({ hadSession: true })),
 			303,

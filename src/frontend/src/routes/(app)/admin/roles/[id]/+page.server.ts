@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ fetch, url, params, parent }) => {
 	const permissionsLoadFailed = !permissionsResult.response.ok;
 	if (permissionsLoadFailed) {
 		console.warn(
-			`Failed to load permissions list (HTTP ${permissionsResult.response.status}) — ` +
+			`Failed to load permissions list (HTTP ${permissionsResult.response.status}) - ` +
 				'role detail page will render without permission editing'
 		);
 	}

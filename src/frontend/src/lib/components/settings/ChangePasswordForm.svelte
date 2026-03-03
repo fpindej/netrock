@@ -43,7 +43,7 @@
 
 			if (response.ok) {
 				// Hard navigation clears all client-side state (cached JWT, SvelteKit
-				// load data). The backend already revoked all refresh tokens — the
+				// load data). The backend already revoked all refresh tokens - the
 				// first SSR load will fail to authenticate and show the login page.
 				window.location.href = `${resolve('/login')}?reason=password_changed`;
 			} else {

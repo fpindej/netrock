@@ -1,7 +1,7 @@
 /**
  * Tests for the canvas-based crop utility.
  *
- * Runs in node environment — DOM APIs (document, Image) are stubbed globally.
+ * Runs in node environment - DOM APIs (document, Image) are stubbed globally.
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 

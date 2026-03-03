@@ -1,11 +1,11 @@
 /**
- * Tests for the BFF API proxy — the catch-all route that forwards requests
+ * Tests for the BFF API proxy - the catch-all route that forwards requests
  * from the SvelteKit frontend to the .NET backend.
  *
  * The proxy has three main responsibilities:
- * 1. CSRF protection — reject cross-origin state-changing requests
- * 2. Header filtering — allowlist request headers, strip response headers
- * 3. Error handling — return ProblemDetails for connection failures
+ * 1. CSRF protection - reject cross-origin state-changing requests
+ * 2. Header filtering - allowlist request headers, strip response headers
+ * 3. Error handling - return ProblemDetails for connection failures
  *
  * All helper functions (isOriginAllowed, filterRequestHeaders, stripResponseHeaders)
  * are module-private, so they are tested indirectly through the fallback handler.
@@ -118,16 +118,16 @@ function getProxiedRequest(event: FallbackEvent[0]): Request {
 	return call[0] as Request;
 }
 
-describe('API proxy — CSRF origin validation', () => {
+describe('API proxy - CSRF origin validation', () => {
 	// ── Safe methods pass through without origin check ──────────────
 
-	it('GET request without origin — allowed', async () => {
+	it('GET request without origin - allowed', async () => {
 		const event = mockProxyEvent({ method: 'GET' });
 		const response = await fallback(event);
 		expect(response.status).toBe(200);
 	});
 
-	it('GET request with cross-origin — allowed (safe method)', async () => {
+	it('GET request with cross-origin - allowed (safe method)', async () => {
 		const event = mockProxyEvent({
 			method: 'GET',
 			origin: 'https://evil.example.com'
@@ -138,7 +138,7 @@ describe('API proxy — CSRF origin validation', () => {
 
 	// ── Unsafe methods with matching origins ────────────────────────
 
-	it('POST with same origin — allowed', async () => {
+	it('POST with same origin - allowed', async () => {
 		const event = mockProxyEvent({
 			method: 'POST',
 			origin: 'http://localhost:5173',
@@ -149,7 +149,7 @@ describe('API proxy — CSRF origin validation', () => {
 		expect(response.status).toBe(200);
 	});
 
-	it('PUT with same origin — allowed', async () => {
+	it('PUT with same origin - allowed', async () => {
 		const event = mockProxyEvent({
 			method: 'PUT',
 			origin: 'http://localhost:5173',
@@ -160,7 +160,7 @@ describe('API proxy — CSRF origin validation', () => {
 		expect(response.status).toBe(200);
 	});
 
-	it('DELETE with same origin — allowed', async () => {
+	it('DELETE with same origin - allowed', async () => {
 		const event = mockProxyEvent({
 			method: 'DELETE',
 			origin: 'http://localhost:5173'
@@ -169,7 +169,7 @@ describe('API proxy — CSRF origin validation', () => {
 		expect(response.status).toBe(200);
 	});
 
-	it('PATCH with same origin — allowed', async () => {
+	it('PATCH with same origin - allowed', async () => {
 		const event = mockProxyEvent({
 			method: 'PATCH',
 			origin: 'http://localhost:5173',
@@ -182,7 +182,7 @@ describe('API proxy — CSRF origin validation', () => {
 
 	// ── Unsafe methods without origin (non-browser or same-origin older browser) ─
 
-	it('POST without origin header — allowed (non-browser or legacy same-origin)', async () => {
+	it('POST without origin header - allowed (non-browser or legacy same-origin)', async () => {
 		const event = mockProxyEvent({
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
@@ -194,7 +194,7 @@ describe('API proxy — CSRF origin validation', () => {
 
 	// ── Unsafe methods with explicitly allowed origin ───────────────
 
-	it('POST with explicitly allowed origin — allowed', async () => {
+	it('POST with explicitly allowed origin - allowed', async () => {
 		const event = mockProxyEvent({
 			method: 'POST',
 			origin: 'https://allowed.example.com',
@@ -205,7 +205,7 @@ describe('API proxy — CSRF origin validation', () => {
 		expect(response.status).toBe(200);
 	});
 
-	it('DELETE with second allowed origin — allowed', async () => {
+	it('DELETE with second allowed origin - allowed', async () => {
 		const event = mockProxyEvent({
 			method: 'DELETE',
 			origin: 'https://ngrok.example.com'
@@ -214,9 +214,9 @@ describe('API proxy — CSRF origin validation', () => {
 		expect(response.status).toBe(200);
 	});
 
-	// ── Unsafe methods with disallowed origin — CSRF rejection ──────
+	// ── Unsafe methods with disallowed origin - CSRF rejection ──────
 
-	it('POST with cross-origin — returns 403 ProblemDetails', async () => {
+	it('POST with cross-origin - returns 403 ProblemDetails', async () => {
 		const event = mockProxyEvent({
 			method: 'POST',
 			origin: 'https://evil.example.com',
@@ -233,7 +233,7 @@ describe('API proxy — CSRF origin validation', () => {
 		expect(body.detail).toBe('Cross-origin requests are not allowed');
 	});
 
-	it('PUT with cross-origin — returns 403', async () => {
+	it('PUT with cross-origin - returns 403', async () => {
 		const event = mockProxyEvent({
 			method: 'PUT',
 			origin: 'https://attacker.com',
@@ -244,7 +244,7 @@ describe('API proxy — CSRF origin validation', () => {
 		expect(response.status).toBe(403);
 	});
 
-	it('DELETE with cross-origin — returns 403', async () => {
+	it('DELETE with cross-origin - returns 403', async () => {
 		const event = mockProxyEvent({
 			method: 'DELETE',
 			origin: 'https://attacker.com'
@@ -253,7 +253,7 @@ describe('API proxy — CSRF origin validation', () => {
 		expect(response.status).toBe(403);
 	});
 
-	it('PATCH with cross-origin — returns 403', async () => {
+	it('PATCH with cross-origin - returns 403', async () => {
 		const event = mockProxyEvent({
 			method: 'PATCH',
 			origin: 'https://attacker.com',
@@ -264,7 +264,7 @@ describe('API proxy — CSRF origin validation', () => {
 		expect(response.status).toBe(403);
 	});
 
-	it('origin comparison is exact — port mismatch is rejected', async () => {
+	it('origin comparison is exact - port mismatch is rejected', async () => {
 		const event = mockProxyEvent({
 			method: 'POST',
 			origin: 'http://localhost:9999',
@@ -275,7 +275,7 @@ describe('API proxy — CSRF origin validation', () => {
 		expect(response.status).toBe(403);
 	});
 
-	it('origin comparison is case-sensitive — uppercase scheme rejected', async () => {
+	it('origin comparison is case-sensitive - uppercase scheme rejected', async () => {
 		const event = mockProxyEvent({
 			method: 'POST',
 			origin: 'HTTP://LOCALHOST:5173',
@@ -300,7 +300,7 @@ describe('API proxy — CSRF origin validation', () => {
 	});
 });
 
-describe('API proxy — request header filtering', () => {
+describe('API proxy - request header filtering', () => {
 	it('forwards allowlisted headers to backend', async () => {
 		const event = mockProxyEvent({
 			headers: {
@@ -380,7 +380,7 @@ describe('API proxy — request header filtering', () => {
 	});
 });
 
-describe('API proxy — response header stripping', () => {
+describe('API proxy - response header stripping', () => {
 	it('preserves content-type from backend response', async () => {
 		const event = mockProxyEvent({
 			fetchResponse: new Response('{}', {
@@ -461,7 +461,7 @@ describe('API proxy — response header stripping', () => {
 	});
 });
 
-describe('API proxy — URL construction and cookie auth paths', () => {
+describe('API proxy - URL construction and cookie auth paths', () => {
 	it('proxies to the correct backend URL', async () => {
 		const event = mockProxyEvent({ path: 'users/123' });
 
@@ -555,12 +555,12 @@ describe('API proxy — URL construction and cookie auth paths', () => {
 	});
 });
 
-describe('API proxy — error handling', () => {
+describe('API proxy - error handling', () => {
 	beforeEach(() => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 	});
 
-	it('ECONNREFUSED — returns 503 ProblemDetails', async () => {
+	it('ECONNREFUSED - returns 503 ProblemDetails', async () => {
 		const connRefusedError = new TypeError('fetch failed');
 		Object.assign(connRefusedError, { cause: { code: 'ECONNREFUSED' } });
 
@@ -575,7 +575,7 @@ describe('API proxy — error handling', () => {
 		expect(body.detail).toBe('Backend unavailable');
 	});
 
-	it('unexpected fetch error — returns 502 ProblemDetails', async () => {
+	it('unexpected fetch error - returns 502 ProblemDetails', async () => {
 		const event = mockProxyEvent({
 			fetchError: new Error('DNS resolution failed')
 		});

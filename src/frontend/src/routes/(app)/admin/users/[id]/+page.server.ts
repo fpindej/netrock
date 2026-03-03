@@ -29,7 +29,7 @@ export const load: PageServerLoad = async ({ fetch, url, params, parent }) => {
 	const rolesLoadFailed = !rolesResult.response.ok;
 	if (rolesLoadFailed) {
 		console.warn(
-			`Failed to load roles list (HTTP ${rolesResult.response.status}) — ` +
+			`Failed to load roles list (HTTP ${rolesResult.response.status}) - ` +
 				'user detail page will render without role assignment options'
 		);
 	}

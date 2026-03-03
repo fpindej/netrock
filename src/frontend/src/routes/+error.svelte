@@ -78,7 +78,7 @@
 	let is503 = $derived(status === 503);
 
 	// Auto-recover: when health polling detects the backend is back, reload.
-	// invalidateAll re-runs server loads — if they succeed, SvelteKit exits the
+	// invalidateAll re-runs server loads - if they succeed, SvelteKit exits the
 	// error boundary automatically. The hard reload is only a fallback for when
 	// the boundary doesn't clear (e.g. stale client state).
 	let recovering = $state(false);

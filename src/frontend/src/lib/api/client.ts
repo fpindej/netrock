@@ -5,7 +5,7 @@ import type { paths } from './v1';
 /**
  * Creates a typed openapi-fetch client.
  *
- * The client is middleware-agnostic — callers inject behaviour (auth, logging,
+ * The client is middleware-agnostic - callers inject behaviour (auth, logging,
  * etc.) via the `middleware` array. `getUser()` wires auth middleware for
  * server-side token refresh; the browser client has it wired in the root layout.
  *
@@ -28,7 +28,7 @@ export function createApiClient(
 /**
  * Singleton client for browser-side usage.
  *
- * Created without middleware — the root layout wires auth middleware
+ * Created without middleware - the root layout wires auth middleware
  * via {@link initBrowserAuth} in `onMount`. For server-side usage
  * (load functions), call `createApiClient(fetch, url.origin)` instead.
  */
@@ -36,7 +36,7 @@ export const browserClient = createApiClient();
 
 /**
  * Registers auth middleware on the browser client exactly once.
- * Safe to call from `onMount` — subsequent calls (HMR, error recovery
+ * Safe to call from `onMount` - subsequent calls (HMR, error recovery
  * remounts) are no-ops. The guard prevents middleware stacking.
  */
 let authInitialized = false;

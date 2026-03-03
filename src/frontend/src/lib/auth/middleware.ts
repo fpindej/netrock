@@ -5,7 +5,7 @@ import type { paths } from '$lib/api/v1';
  * HTTP methods that are safe to automatically retry after a token refresh.
  *
  * `DELETE` and `PUT` are technically idempotent per RFC 9110 but are excluded
- * intentionally — they mutate server state and automatic retry without
+ * intentionally - they mutate server state and automatic retry without
  * explicit user intent could be surprising.
  */
 const IDEMPOTENT_METHODS = ['GET', 'HEAD', 'OPTIONS'];
@@ -19,14 +19,14 @@ const REFRESH_PATHNAME = '/api/auth/refresh' satisfies keyof paths;
  *
  * Works on both browser-side and server-side (SvelteKit load functions).
  * On the browser, `onAuthFailure` typically calls `goto`/`invalidateAll`.
- * On the server, omit `onAuthFailure` — a failed refresh simply passes
+ * On the server, omit `onAuthFailure` - a failed refresh simply passes
  * through the original 401 for the caller to handle.
  *
  * - On 401: triggers a single `POST /api/auth/refresh` (deduplicated across
  *   concurrent requests via a shared promise).
  * - If refresh succeeds: retries the original request for idempotent methods
  *   (GET/HEAD/OPTIONS). Non-idempotent methods (POST/PUT/PATCH/DELETE) return
- *   the original 401 to the caller — the session **is** refreshed, so a
+ *   the original 401 to the caller - the session **is** refreshed, so a
  *   manual retry by the caller will succeed.
  * - If refresh fails: invokes the `onAuthFailure` callback (e.g. to redirect
  *   to login) and returns the original 401.
@@ -82,7 +82,7 @@ export function createAuthMiddleware(
 					try {
 						await onAuthFailure?.();
 					} catch {
-						// Callback errors must not break the middleware — the caller
+						// Callback errors must not break the middleware - the caller
 						// still needs the original 401 response for error handling.
 					}
 				}
@@ -101,7 +101,7 @@ export function createAuthMiddleware(
 				return undefined;
 			}
 
-			// Only retry idempotent methods — non-idempotent requests (POST, PUT,
+			// Only retry idempotent methods - non-idempotent requests (POST, PUT,
 			// PATCH, DELETE) could cause double-submission if retried automatically.
 			// The session IS refreshed; returning `undefined` passes through the
 			// original 401 so the caller can decide whether to retry manually.

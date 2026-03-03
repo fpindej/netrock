@@ -209,12 +209,12 @@ Add to both `en.json` and `cs.json`. Use: `import * as m from '$lib/paraglide/me
 
 `.svelte.ts` files in `$lib/state/` only. Keep reactive state separate from pure utility functions - mixing them causes unexpected reactivity side effects in imports.
 
-| File                  | Exports                                                       |
-| --------------------- | ------------------------------------------------------------- |
-| `cooldown.svelte.ts`  | `createCooldown()` - rate-limit countdown                     |
-| `shake.svelte.ts`     | `createShake()`, `createFieldShakes()`                        |
-| `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()`                   |
-| `health.svelte.ts`    | `healthState`, `initHealthCheck()` - adaptive backend polling |
+| File                  | Exports                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| `cooldown.svelte.ts`  | `createCooldown()` - rate-limit countdown                                                |
+| `shake.svelte.ts`     | `createShake()`, `createFieldShakes()`                                                   |
+| `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()`                                              |
+| `health.svelte.ts`    | `healthState`, `initHealthCheck()` - adaptive backend polling                            |
 | `shortcuts.svelte.ts` | `shortcutsState`, `globalShortcuts()` action, `getAllShortcuts()`, `getShortcutSymbol()` |
 
 ## File Upload

@@ -12,7 +12,7 @@ const SECURITY_HEADERS: Record<string, string> = {
 };
 
 /**
- * HSTS header — only applied in production.
+ * HSTS header - only applied in production.
  * HSTS over plain HTTP in local dev would cause browsers to refuse future HTTP connections.
  */
 if (!dev) {
@@ -20,7 +20,7 @@ if (!dev) {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// API proxy routes — backend sets its own security headers
+	// API proxy routes - backend sets its own security headers
 	if (event.url.pathname.startsWith('/api')) {
 		return resolve(event);
 	}

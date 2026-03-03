@@ -8,7 +8,7 @@
    ============================================================================= */
 
 :root {
-	/* Core colors — warm off-white, not pure white */
+	/* Core colors - warm off-white, not pure white */
 	--background: 40 20% 97%;
 	--foreground: 20 15% 15%;
 	--card: 40 15% 98.5%;
@@ -16,7 +16,7 @@
 	--popover: 40 20% 99%;
 	--popover-foreground: 20 15% 15%;
 
-	/* Brand colors — refined slate-blue */
+	/* Brand colors - refined slate-blue */
 	--primary: 220 25% 20%;
 	--primary-foreground: 40 20% 97%;
 	--secondary: 35 15% 93%;
@@ -28,7 +28,7 @@
 	--accent: 35 12% 91%;
 	--accent-foreground: 220 25% 20%;
 
-	/* Semantic colors — toned down, still clearly distinct */
+	/* Semantic colors - toned down, still clearly distinct */
 	--destructive: 0 55% 55%;
 	--destructive-foreground: 40 20% 97%;
 	--success: 150 40% 38%;
@@ -44,7 +44,7 @@
 	/* Layout */
 	--radius: 0.5rem;
 
-	/* Sidebar — slightly cooler than content for visual separation */
+	/* Sidebar - slightly cooler than content for visual separation */
 	--sidebar-background: 30 10% 95.5%;
 	--sidebar-foreground: 20 10% 28%;
 	--sidebar-primary: 220 25% 20%;
@@ -56,7 +56,7 @@
 }
 
 .dark {
-	/* Core colors — warm charcoal, not blue-black */
+	/* Core colors - warm charcoal, not blue-black */
 	--background: 24 8% 10%;
 	--foreground: 30 6% 82%;
 	--card: 24 7% 12.5%;
@@ -64,7 +64,7 @@
 	--popover: 24 7% 11%;
 	--popover-foreground: 30 6% 82%;
 
-	/* Brand colors — soft light for primary, reversed contrast */
+	/* Brand colors - soft light for primary, reversed contrast */
 	--primary: 30 6% 82%;
 	--primary-foreground: 24 8% 12%;
 	--secondary: 24 5% 17%;
@@ -76,7 +76,7 @@
 	--accent: 24 5% 19%;
 	--accent-foreground: 30 6% 82%;
 
-	/* Semantic colors — muted but readable on dark backgrounds */
+	/* Semantic colors - muted but readable on dark backgrounds */
 	--destructive: 0 40% 35%;
 	--destructive-foreground: 30 6% 82%;
 	--success: 150 35% 28%;
@@ -89,7 +89,7 @@
 	--input: 24 5% 18%;
 	--ring: 30 5% 70%;
 
-	/* Sidebar — slightly darker than content for depth */
+	/* Sidebar - slightly darker than content for depth */
 	--sidebar-background: 24 8% 9%;
 	--sidebar-foreground: 30 5% 85%;
 	--sidebar-primary: 220 50% 55%;

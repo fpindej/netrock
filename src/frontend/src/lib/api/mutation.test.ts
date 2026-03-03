@@ -1,5 +1,5 @@
 /**
- * Tests for handleMutationError — the orchestrator that routes mutation failures
+ * Tests for handleMutationError - the orchestrator that routes mutation failures
  * to the appropriate UI response (rate-limit toast, validation error mapping,
  * or generic error toast).
  *
@@ -46,26 +46,26 @@ function defaultOptions(overrides: Partial<MutationErrorOptions> = {}): Mutation
 
 // ── 502/503 suppression ─────────────────────────────────────────────
 
-describe('handleMutationError — 502/503 suppression', () => {
-	it('502 status — suppresses toast entirely', () => {
+describe('handleMutationError - 502/503 suppression', () => {
+	it('502 status - suppresses toast entirely', () => {
 		const options = defaultOptions();
 		handleMutationError(mockResponse(502), null, options);
 		expect(toast.error).not.toHaveBeenCalled();
 	});
 
-	it('503 status — suppresses toast entirely', () => {
+	it('503 status - suppresses toast entirely', () => {
 		const options = defaultOptions();
 		handleMutationError(mockResponse(503), null, options);
 		expect(toast.error).not.toHaveBeenCalled();
 	});
 
-	it('502 status — does not call onError', () => {
+	it('502 status - does not call onError', () => {
 		const onError = vi.fn();
 		handleMutationError(mockResponse(502), null, defaultOptions({ onError }));
 		expect(onError).not.toHaveBeenCalled();
 	});
 
-	it('503 status — does not call onRateLimited', () => {
+	it('503 status - does not call onRateLimited', () => {
 		const onRateLimited = vi.fn();
 		handleMutationError(mockResponse(503), null, defaultOptions({ onRateLimited }));
 		expect(onRateLimited).not.toHaveBeenCalled();
@@ -74,40 +74,40 @@ describe('handleMutationError — 502/503 suppression', () => {
 
 // ── 429 rate-limit path ─────────────────────────────────────────────
 
-describe('handleMutationError — 429 rate-limit', () => {
-	it('429 with Retry-After — starts cooldown with parsed seconds', () => {
+describe('handleMutationError - 429 rate-limit', () => {
+	it('429 with Retry-After - starts cooldown with parsed seconds', () => {
 		const options = defaultOptions();
 		handleMutationError(mockResponse(429, '30'), null, options);
 		expect(options.cooldown.start).toHaveBeenCalledWith(30);
 	});
 
-	it('429 with Retry-After — shows rate-limit toast with retry description', () => {
+	it('429 with Retry-After - shows rate-limit toast with retry description', () => {
 		handleMutationError(mockResponse(429, '30'), null, defaultOptions());
 		expect(toast.error).toHaveBeenCalledWith('Too many requests', {
 			description: 'Please wait 30 seconds and try again.'
 		});
 	});
 
-	it('429 without Retry-After — shows rate-limit toast with generic description', () => {
+	it('429 without Retry-After - shows rate-limit toast with generic description', () => {
 		handleMutationError(mockResponse(429), null, defaultOptions());
 		expect(toast.error).toHaveBeenCalledWith('Too many requests', {
 			description: 'Please try again later.'
 		});
 	});
 
-	it('429 without Retry-After — does not start cooldown', () => {
+	it('429 without Retry-After - does not start cooldown', () => {
 		const options = defaultOptions();
 		handleMutationError(mockResponse(429), null, options);
 		expect(options.cooldown.start).not.toHaveBeenCalled();
 	});
 
-	it('429 with onRateLimited callback — calls it after toast', () => {
+	it('429 with onRateLimited callback - calls it after toast', () => {
 		const onRateLimited = vi.fn();
 		handleMutationError(mockResponse(429, '10'), null, defaultOptions({ onRateLimited }));
 		expect(onRateLimited).toHaveBeenCalledOnce();
 	});
 
-	it('429 without onRateLimited — does not throw', () => {
+	it('429 without onRateLimited - does not throw', () => {
 		expect(() => {
 			handleMutationError(mockResponse(429, '10'), null, defaultOptions());
 		}).not.toThrow();
@@ -116,8 +116,8 @@ describe('handleMutationError — 429 rate-limit', () => {
 
 // ── Validation error path ───────────────────────────────────────────
 
-describe('handleMutationError — validation errors', () => {
-	it('validation error with onValidationError — calls handler with mapped field errors', () => {
+describe('handleMutationError - validation errors', () => {
+	it('validation error with onValidationError - calls handler with mapped field errors', () => {
 		const onValidationError = vi.fn();
 		const error = {
 			title: 'Validation failed',
@@ -131,20 +131,20 @@ describe('handleMutationError — validation errors', () => {
 		});
 	});
 
-	it('validation error with onValidationError — does not show toast', () => {
+	it('validation error with onValidationError - does not show toast', () => {
 		const onValidationError = vi.fn();
 		const error = { errors: { Email: ['Required'] } };
 		handleMutationError(mockResponse(422), error, defaultOptions({ onValidationError }));
 		expect(toast.error).not.toHaveBeenCalled();
 	});
 
-	it('validation error without onValidationError — falls through to generic error', () => {
+	it('validation error without onValidationError - falls through to generic error', () => {
 		const error = { errors: { Email: ['Required'] }, detail: 'Validation failed' };
 		handleMutationError(mockResponse(422), error, defaultOptions());
 		expect(toast.error).toHaveBeenCalledWith('Validation failed');
 	});
 
-	it('non-validation error with onValidationError — falls through to generic error', () => {
+	it('non-validation error with onValidationError - falls through to generic error', () => {
 		const onValidationError = vi.fn();
 		const error = { detail: 'Not found' };
 		handleMutationError(mockResponse(404), error, defaultOptions({ onValidationError }));
@@ -155,26 +155,26 @@ describe('handleMutationError — validation errors', () => {
 
 // ── Generic error path ──────────────────────────────────────────────
 
-describe('handleMutationError — generic errors', () => {
-	it('generic error without onError — shows toast with error message', () => {
+describe('handleMutationError - generic errors', () => {
+	it('generic error without onError - shows toast with error message', () => {
 		const error = { detail: 'Invalid credentials' };
 		handleMutationError(mockResponse(401), error, defaultOptions());
 		expect(toast.error).toHaveBeenCalledWith('Invalid credentials');
 	});
 
-	it('generic error without detail — shows toast with fallback message', () => {
+	it('generic error without detail - shows toast with fallback message', () => {
 		handleMutationError(mockResponse(500), {}, defaultOptions({ fallback: 'Save failed' }));
 		expect(toast.error).toHaveBeenCalledWith('Save failed');
 	});
 
-	it('generic error with onError — calls onError instead of toast', () => {
+	it('generic error with onError - calls onError instead of toast', () => {
 		const onError = vi.fn();
 		handleMutationError(mockResponse(400), { detail: 'Bad request' }, defaultOptions({ onError }));
 		expect(onError).toHaveBeenCalledOnce();
 		expect(toast.error).not.toHaveBeenCalled();
 	});
 
-	it('null error — shows toast with fallback', () => {
+	it('null error - shows toast with fallback', () => {
 		handleMutationError(mockResponse(500), null, defaultOptions({ fallback: 'Unexpected error' }));
 		expect(toast.error).toHaveBeenCalledWith('Unexpected error');
 	});

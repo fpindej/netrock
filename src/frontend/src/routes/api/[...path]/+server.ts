@@ -5,7 +5,7 @@ import { isFetchErrorWithCode } from '$lib/api';
 /**
  * Auth endpoint paths that receive the `?useCookies=true` query parameter.
  * These are the only endpoints where the backend needs to set/read HttpOnly
- * cookies — all other endpoints rely on the cookie being forwarded
+ * cookies - all other endpoints rely on the cookie being forwarded
  * automatically by the browser.
  */
 const COOKIE_AUTH_PATHS = [
@@ -21,7 +21,7 @@ const UNSAFE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
 /**
  * Request headers forwarded to the backend.
- * Only headers the API needs are proxied — everything else is stripped
+ * Only headers the API needs are proxied - everything else is stripped
  * to avoid leaking browser metadata to internal services.
  */
 const FORWARDED_REQUEST_HEADERS = [
@@ -55,7 +55,7 @@ const STRIPPED_RESPONSE_HEADERS = [
  * This prevents cross-site request forgery for cookie-authenticated requests
  * proxied through SvelteKit (SameSite=None cookies are sent cross-origin).
  *
- * Only enforced for state-changing methods — GET/HEAD/OPTIONS pass through.
+ * Only enforced for state-changing methods - GET/HEAD/OPTIONS pass through.
  * Does not affect mobile or API-key clients since they call the backend directly.
  */
 function isOriginAllowed(request: Request, url: URL): boolean {
