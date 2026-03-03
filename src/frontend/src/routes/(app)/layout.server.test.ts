@@ -52,9 +52,9 @@ async function expectRedirect(fn: () => ReturnType<typeof load>, status: number,
 describe('(app) layout server load', () => {
 	// ── Authenticated ───────────────────────────────────────────────
 
-	it('authenticated user — returns user data', async () => {
+	it('authenticated user - returns user data with sidebar state', async () => {
 		const result = await load(mockLoadEvent({ user: MOCK_USER }));
-		expect(result).toEqual({ user: MOCK_USER });
+		expect(result).toEqual({ user: MOCK_USER, sidebarOpen: true });
 	});
 
 	// ── Backend unavailable ─────────────────────────────────────────

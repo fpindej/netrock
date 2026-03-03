@@ -5,15 +5,13 @@
 	let {
 		ref = $bindable(null),
 		class: className,
-		children,
 		...restProps
 	}: SheetPrimitive.TitleProps = $props();
 </script>
 
 <SheetPrimitive.Title
 	bind:ref
-	class={cn('text-lg font-semibold text-foreground', className)}
+	data-slot="sheet-title"
+	class={cn('font-semibold text-foreground', className)}
 	{...restProps}
->
-	{@render children?.()}
-</SheetPrimitive.Title>
+/>
