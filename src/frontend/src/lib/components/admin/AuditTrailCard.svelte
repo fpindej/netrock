@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { EmptyState } from '$lib/components/common';
+	import { EmptyState, LoadingSpinner } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Badge } from '$lib/components/ui/badge';
@@ -94,11 +94,7 @@
 	</Card.Header>
 	<Card.Content>
 		{#if loading}
-			<div class="flex items-center justify-center py-12">
-				<div
-					class="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"
-				></div>
-			</div>
+			<LoadingSpinner />
 		{:else if events.length === 0}
 			<EmptyState icon={History} message={m.audit_trail_empty()} />
 		{:else}

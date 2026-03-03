@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { EmptyState } from '$lib/components/common';
+	import { EmptyState, LoadingSpinner } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Timeline, TimelineItem, TimelineContent } from '$lib/components/ui/timeline';
@@ -66,11 +66,7 @@
 	</Card.Header>
 	<Card.Content>
 		{#if loading}
-			<div class="flex items-center justify-center py-12">
-				<div
-					class="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"
-				></div>
-			</div>
+			<LoadingSpinner />
 		{:else if events.length === 0}
 			<EmptyState icon={History} message={m.settings_activityLog_empty()} />
 		{:else}
