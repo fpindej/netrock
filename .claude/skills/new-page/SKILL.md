@@ -32,7 +32,7 @@ Infers route, route group, components needed, and data requirements from context
 **Integration:**
 
 8. Add i18n keys to both `en.json` and `cs.json`
-9. Add navigation entry in `SidebarNav.svelte` (with `permission` field if guarded)
+9. Add navigation entry in `AppSidebar.svelte` (with `permission` field if guarded)
 
 **Verify and commit:**
 

@@ -119,7 +119,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **i18n keys** (rename/remove in `en.json`) | Same key in `cs.json`, all `m.{key}()` usages |
 | **i18n keys** (add) | Add to both `en.json` and `cs.json` |
 | **Layout components** (Sidebar, Header) | All pages that use the app shell |
-| **`SidebarNav.svelte`** | Navigation links for all pages; admin items are per-permission gated |
+| **`AppSidebar.svelte`** | Navigation links for all pages; admin items are per-permission gated |
 | **Admin `+page.server.ts`** (add permission guard) | Must check specific permission and redirect if missing |
 | **Route `+layout.server.ts`** | All child routes that depend on parent data |
 | **Route `+page.server.ts`** | The corresponding `+page.svelte` |
@@ -285,7 +285,7 @@ src/backend/tests/
 | `src/frontend/src/lib/utils/permissions.ts` | Frontend permission constants + helpers |
 | `src/backend/MyProject.WebApi/Shared/RateLimitPolicies.cs` | Rate limit policy name constants |
 | `src/backend/Directory.Packages.props` | NuGet versions (never in .csproj) |
-| `src/frontend/src/lib/components/layout/SidebarNav.svelte` | Navigation entries |
+| `src/frontend/src/lib/components/layout/AppSidebar.svelte` | Navigation entries |
 | `src/frontend/src/lib/api/v1.d.ts` | Generated types (never hand-edit) |
 | `deploy/envs/production-example/` | Production env template - `cp -r` to `deploy/envs/production/` |
 | `deploy/docker-compose.yml` | Base service definitions (production only) |

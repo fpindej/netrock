@@ -35,5 +35,5 @@ Adds a permission constant across backend and frontend.
    ```typescript
    if (!hasPermission(user, Permissions.Orders.View)) throw redirect(303, '/');
    ```
-8. If adding a sidebar nav item: add `permission: Permissions.Orders.View` to the nav item in `SidebarNav.svelte` - items are filtered per-permission, not as a group
+8. If adding a sidebar nav item: add `permission: Permissions.Orders.View` to the nav item in `AppSidebar.svelte` - items are filtered per-permission, not as a group
 9. Verify: `cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check`

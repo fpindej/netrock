@@ -10,7 +10,7 @@ src/
 │   ├── components/
 │   │   ├── ui/                    # shadcn (generated, customizable)
 │   │   ├── auth/                  # AuthShell, LoginForm, RegisterForm, ForgotPasswordForm, ResetPasswordForm, EmailVerificationBanner, TurnstileWidget, TwoFactorStep
-│   │   ├── layout/                # Header, Sidebar, SidebarNav, UserNav, ThemeToggle, LanguageSelector, ShortcutsHelp
+│   │   ├── layout/                # Header, AppSidebar, UserNav, ThemeToggle, LanguageSelector, ShortcutsHelp
 │   │   ├── profile/               # ProfileForm, ProfileHeader, AvatarDialog, AccountDetails, InfoItem
 │   │   ├── settings/              # ChangePasswordForm, DeleteAccountDialog, ActivityLog, TwoFactorCard, TwoFactorSetupDialog, TwoFactorDisableDialog, TwoFactorRecoveryCodesDialog
 │   │   ├── admin/                 # UserTable, UserDetailCards, UserManagementCard, RoleManagement, AccountActions, RoleCardGrid, RoleDetailsCard, RolePermissionsSection, RoleDeleteSection, JobTable, JobInfoCard, JobActionsCard, JobExecutionHistory, AuditTrailCard, ...
@@ -214,9 +214,8 @@ Add to both `en.json` and `cs.json`. Use: `import * as m from '$lib/paraglide/me
 | `cooldown.svelte.ts`  | `createCooldown()` - rate-limit countdown                     |
 | `shake.svelte.ts`     | `createShake()`, `createFieldShakes()`                        |
 | `theme.svelte.ts`     | `getTheme()`, `setTheme()`, `toggleTheme()`                   |
-| `sidebar.svelte.ts`   | `sidebarState`, `toggleSidebar()`                             |
 | `health.svelte.ts`    | `healthState`, `initHealthCheck()` - adaptive backend polling |
-| `shortcuts.svelte.ts` | `shortcuts` action, `getShortcutDisplay()`                    |
+| `shortcuts.svelte.ts` | `shortcutsState`, `globalShortcuts()` action, `getAllShortcuts()`, `getShortcutSymbol()` |
 
 ## File Upload
 
