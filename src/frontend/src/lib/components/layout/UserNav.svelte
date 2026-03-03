@@ -31,7 +31,7 @@
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
-			<Button variant="ghost" size="icon" class="rounded-full" {...props}>
+			<Button variant="ghost" size="icon" class="min-h-11 min-w-11 rounded-full" {...props}>
 				<Avatar.Root class="h-7 w-7">
 					{#if avatarUrl}
 						<Avatar.Image src={avatarUrl} alt={user?.username || m.common_user()} />

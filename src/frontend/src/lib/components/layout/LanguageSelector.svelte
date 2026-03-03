@@ -25,7 +25,13 @@
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
-			<Button variant="ghost" size="icon" aria-label={m.common_language()} {...props}>
+			<Button
+				variant="ghost"
+				size="icon"
+				class="min-h-11 min-w-11"
+				aria-label={m.common_language()}
+				{...props}
+			>
 				<span
 					class={`fi fi-${languages.find((l: LanguageEntry) => l.code === getLocale())?.flag ?? fallbackFlag} rounded-sm`}
 				></span>

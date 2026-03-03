@@ -24,6 +24,7 @@
 			<Button
 				variant="ghost"
 				size="icon"
+				class="min-h-11 min-w-11"
 				aria-label={`${m.common_theme()} (${themeLabels[getTheme()]()})`}
 				{...props}
 				onclick={toggleTheme}

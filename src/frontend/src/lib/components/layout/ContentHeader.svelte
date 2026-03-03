@@ -30,6 +30,12 @@
 		href?: string;
 	}
 
+	let isDetailPage = $derived.by(() => {
+		const segments = page.url.pathname.split('/').filter(Boolean);
+		const meaningful = segments.filter((s) => s !== 'admin');
+		return meaningful.length > 1;
+	});
+
 	let crumbs = $derived.by((): Crumb[] => {
 		const pathname = page.url.pathname;
 		const segments = pathname.split('/').filter(Boolean);
@@ -65,23 +71,29 @@
 	});
 </script>
 
-<header class="hidden h-12 shrink-0 items-center gap-2 border-b bg-background px-4 md:flex">
-	<SidebarTrigger class="size-7" />
-	<Separator orientation="vertical" class="h-4" />
-	<Breadcrumb.Root>
-		<Breadcrumb.List>
-			{#each crumbs as crumb, i (i)}
-				<Breadcrumb.Item>
-					{#if crumb.href}
-						<Breadcrumb.Link href={crumb.href}>{crumb.label}</Breadcrumb.Link>
-					{:else}
-						<Breadcrumb.Page>{crumb.label}</Breadcrumb.Page>
+<header
+	class={isDetailPage
+		? 'flex h-10 shrink-0 items-center gap-2 border-b bg-background px-4 md:h-12'
+		: 'hidden h-12 shrink-0 items-center gap-2 border-b bg-background px-4 md:flex'}
+>
+	<SidebarTrigger class="hidden size-7 md:inline-flex" />
+	<Separator orientation="vertical" class="hidden h-4 md:block" />
+	{#key page.url.pathname}
+		<Breadcrumb.Root class="motion-safe:duration-200 motion-safe:animate-in motion-safe:fade-in">
+			<Breadcrumb.List>
+				{#each crumbs as crumb, i (crumb.href ?? crumb.label)}
+					<Breadcrumb.Item>
+						{#if crumb.href}
+							<Breadcrumb.Link href={crumb.href}>{crumb.label}</Breadcrumb.Link>
+						{:else}
+							<Breadcrumb.Page>{crumb.label}</Breadcrumb.Page>
+						{/if}
+					</Breadcrumb.Item>
+					{#if i < crumbs.length - 1}
+						<Breadcrumb.Separator />
 					{/if}
-				</Breadcrumb.Item>
-				{#if i < crumbs.length - 1}
-					<Breadcrumb.Separator />
-				{/if}
-			{/each}
-		</Breadcrumb.List>
-	</Breadcrumb.Root>
+				{/each}
+			</Breadcrumb.List>
+		</Breadcrumb.Root>
+	{/key}
 </header>
