@@ -13,7 +13,7 @@
 	import { initBrowserAuth } from '$lib/api';
 	import { initBackendMonitor } from '$lib/api/backend-monitor';
 	import { ShortcutsHelp } from '$lib/components/layout';
-	import { toggleSidebar, initHealthCheck } from '$lib/state';
+	import { initHealthCheck } from '$lib/state';
 
 	let { children } = $props();
 
@@ -44,8 +44,7 @@
 <svelte:window
 	use:globalShortcuts={{
 		settings: handleSettings,
-		logout: logout,
-		toggleSidebar: toggleSidebar
+		logout: logout
 	}}
 />
 
