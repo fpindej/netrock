@@ -24,7 +24,7 @@
 	<nav class="flex items-center gap-2">
 		<Button
 			variant="ghost"
-			size="icon-sm"
+			size="icon"
 			onclick={() => (shortcutsState.isCommandPaletteOpen = true)}
 			aria-label={m.shortcuts_commandPalette()}
 		>
@@ -32,7 +32,7 @@
 		</Button>
 		<Button
 			variant="ghost"
-			size="icon-sm"
+			size="icon"
 			onclick={() => (shortcutsState.isHelpOpen = true)}
 			aria-label={m.shortcuts_help()}
 		>
