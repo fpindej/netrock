@@ -20,7 +20,10 @@
 	{/if}
 
 	<div
-		class={cn('flex w-full max-w-sm flex-col gap-6 lg:max-w-3xl', success && 'animate-auth-exit')}
+		class={cn(
+			'flex w-full max-w-sm flex-col gap-6 lg:max-w-3xl',
+			success ? 'animate-auth-exit' : 'animate-auth-enter'
+		)}
 	>
 		<div class="flex items-center justify-end gap-2">
 			<LanguageSelector />
