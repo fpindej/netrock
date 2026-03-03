@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { FieldError } from '$lib/components/common';
 	import * as m from '$lib/paraglide/messages';
 	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
@@ -97,15 +98,10 @@
 						class={fieldShakes.class('password')}
 						disabled={isLoading}
 					/>
-					{#if fieldErrors.password}
-						<p id="disableTwoFactorPasswordError" class="text-xs text-destructive">
-							{fieldErrors.password}
-						</p>
-					{:else if generalError}
-						<p id="disableTwoFactorPasswordError" class="text-xs text-destructive">
-							{generalError}
-						</p>
-					{/if}
+					<FieldError
+						id="disableTwoFactorPasswordError"
+						message={fieldErrors.password || generalError}
+					/>
 				</div>
 			</div>
 			<Dialog.Footer class="flex-col-reverse gap-2 sm:flex-row">

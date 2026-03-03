@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { FieldError } from '$lib/components/common';
 	import * as m from '$lib/paraglide/messages';
 	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
@@ -88,11 +89,7 @@
 						aria-invalid={!!fieldErrors.newPassword}
 						aria-describedby={fieldErrors.newPassword ? 'newPassword-error' : undefined}
 					/>
-					{#if fieldErrors.newPassword}
-						<p id="newPassword-error" class="text-xs text-destructive">
-							{fieldErrors.newPassword}
-						</p>
-					{/if}
+					<FieldError id="newPassword-error" message={fieldErrors.newPassword} />
 				</div>
 
 				<div class="grid gap-2">
@@ -107,11 +104,7 @@
 						aria-invalid={!!fieldErrors.confirmPassword}
 						aria-describedby={fieldErrors.confirmPassword ? 'confirmPassword-error' : undefined}
 					/>
-					{#if fieldErrors.confirmPassword}
-						<p id="confirmPassword-error" class="text-xs text-destructive">
-							{fieldErrors.confirmPassword}
-						</p>
-					{/if}
+					<FieldError id="confirmPassword-error" message={fieldErrors.confirmPassword} />
 				</div>
 
 				<div class="flex flex-col gap-2 sm:flex-row sm:justify-end">

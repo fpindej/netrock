@@ -5,6 +5,7 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Label } from '$lib/components/ui/label';
 	import { PhoneInput } from '$lib/components/ui/phone-input';
+	import { FieldError } from '$lib/components/common';
 	import { ProfileHeader } from '$lib/components/profile';
 	import type { User } from '$lib/types';
 	import * as m from '$lib/paraglide/messages';
@@ -115,9 +116,7 @@
 							aria-invalid={!!fieldErrors.firstName}
 							aria-describedby={fieldErrors.firstName ? 'firstName-error' : undefined}
 						/>
-						{#if fieldErrors.firstName}
-							<p id="firstName-error" class="text-xs text-destructive">{fieldErrors.firstName}</p>
-						{/if}
+						<FieldError id="firstName-error" message={fieldErrors.firstName} />
 					</div>
 					<div class="grid gap-2">
 						<Label for="lastName">{m.profile_personalInfo_lastName()}</Label>
@@ -130,9 +129,7 @@
 							aria-invalid={!!fieldErrors.lastName}
 							aria-describedby={fieldErrors.lastName ? 'lastName-error' : undefined}
 						/>
-						{#if fieldErrors.lastName}
-							<p id="lastName-error" class="text-xs text-destructive">{fieldErrors.lastName}</p>
-						{/if}
+						<FieldError id="lastName-error" message={fieldErrors.lastName} />
 					</div>
 				</div>
 
@@ -146,9 +143,7 @@
 						aria-invalid={!!fieldErrors.phoneNumber}
 						aria-describedby={fieldErrors.phoneNumber ? 'phoneNumber-error' : undefined}
 					/>
-					{#if fieldErrors.phoneNumber}
-						<p id="phoneNumber-error" class="text-xs text-destructive">{fieldErrors.phoneNumber}</p>
-					{/if}
+					<FieldError id="phoneNumber-error" message={fieldErrors.phoneNumber} />
 				</div>
 
 				<div class="grid gap-2">
@@ -161,9 +156,7 @@
 						aria-invalid={!!fieldErrors.bio}
 						aria-describedby={fieldErrors.bio ? 'bio-error' : undefined}
 					/>
-					{#if fieldErrors.bio}
-						<p id="bio-error" class="text-xs text-destructive">{fieldErrors.bio}</p>
-					{/if}
+					<FieldError id="bio-error" message={fieldErrors.bio} />
 				</div>
 
 				<div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
