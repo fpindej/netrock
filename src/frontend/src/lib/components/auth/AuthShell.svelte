@@ -35,8 +35,8 @@
 				</div>
 				<div class="relative hidden overflow-hidden bg-primary/5 lg:block" aria-hidden="true">
 					<div class="pointer-events-none absolute inset-0">
-						<div class="glow-xl-top-end animate-glow-pulse"></div>
-						<div class="glow-xl-bottom-start animate-glow-pulse animation-delay-2000"></div>
+						<div class="glow-xl-top-end"></div>
+						<div class="glow-xl-bottom-start"></div>
 					</div>
 					<div class="flex h-full flex-col items-center justify-center p-8">
 						<h2 class="text-2xl font-bold tracking-tight text-foreground/80">

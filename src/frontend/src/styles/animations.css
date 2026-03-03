@@ -31,28 +31,6 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Glow Pulse Animation
-   Slow, ambient pulsing for background glows on specific pages (login, etc).
-   ----------------------------------------------------------------------------- */
-@keyframes glow-pulse {
-	0%,
-	100% {
-		opacity: 0.4;
-	}
-	50% {
-		opacity: 0.7;
-	}
-}
-
-.animate-glow-pulse {
-	animation: glow-pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animation-delay-2000 {
-	animation-delay: 2s;
-}
-
-/* -----------------------------------------------------------------------------
    Caret Blink Animation
    Blinking cursor for OTP input slots (shadcn InputOTP).
    ----------------------------------------------------------------------------- */
@@ -94,7 +72,6 @@
    ----------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
 	.animate-shake,
-	.animate-glow-pulse,
 	.animate-caret-blink,
 	.status-indicator-ping,
 	.status-icon-ping {
