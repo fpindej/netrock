@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { buttonVariants } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator';
 	import { JobInfoCard, JobActionsCard, JobExecutionHistory } from '$lib/components/admin';
-	import { ArrowLeft } from '@lucide/svelte';
-	import { hasPermission, Permissions, cn } from '$lib/utils';
+	import { AdminBreadcrumb } from '$lib/components/common';
+	import { hasPermission, Permissions } from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
 	import type { PageData } from './$types';
 
@@ -13,25 +12,20 @@
 	let canManageJobs = $derived(hasPermission(data.user, Permissions.Jobs.Manage));
 </script>
 
-<!-- eslint-disable svelte/no-navigation-without-resolve -- hrefs are pre-resolved using resolve() -->
 <svelte:head>
 	<title>{m.meta_titleTemplate({ title: data.job?.id ?? m.meta_adminJobDetail_title() })}</title>
 	<meta name="description" content={m.meta_adminJobDetail_description()} />
 </svelte:head>
 
 <div class="space-y-6">
-	<div class="flex items-center gap-4">
-		<a
-			href={resolve('/admin/jobs')}
-			class={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'h-10 w-10')}
-			aria-label={m.admin_jobDetail_back()}
-		>
-			<ArrowLeft class="h-4 w-4" />
-		</a>
-		<div>
-			<h3 class="text-lg font-medium">{data.job?.id}</h3>
-			<p class="font-mono text-sm text-muted-foreground">{data.job?.cron}</p>
-		</div>
+	<div class="space-y-1">
+		<AdminBreadcrumb
+			items={[
+				{ label: m.nav_adminJobs(), href: resolve('/admin/jobs') },
+				{ label: data.job?.id ?? '' }
+			]}
+		/>
+		<p class="font-mono text-sm text-muted-foreground">{data.job?.cron}</p>
 	</div>
 	<Separator />
 

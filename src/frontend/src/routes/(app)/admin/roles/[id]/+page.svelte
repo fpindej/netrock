@@ -6,7 +6,7 @@
 		RolePermissionsSection,
 		RoleDeleteSection
 	} from '$lib/components/admin';
-	import { ArrowLeft } from '@lucide/svelte';
+	import { AdminBreadcrumb } from '$lib/components/common';
 	import { resolve } from '$app/paths';
 	import { createCooldown } from '$lib/state';
 	import { hasPermission, Permissions, SystemRoles } from '$lib/utils';
@@ -34,23 +34,21 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<!-- eslint-disable svelte/no-navigation-without-resolve -- href is pre-resolved -->
-	<a
-		href={resolve('/admin/roles')}
-		class="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-	>
-		<ArrowLeft class="me-1 h-4 w-4" />
-		{m.admin_roles_backToRoles()}
-	</a>
-
-	<div class="flex items-center gap-3">
-		<h3 class="text-lg font-medium">{data.role?.name}</h3>
-		{#if isSystem}
-			<Badge variant="outline">{m.admin_roles_system()}</Badge>
-		{/if}
-		<span class="text-sm text-muted-foreground">
-			{m.admin_roles_userCountLabel({ count: data.role?.userCount ?? 0 })}
-		</span>
+	<div class="space-y-1">
+		<AdminBreadcrumb
+			items={[
+				{ label: m.nav_adminRoles(), href: resolve('/admin/roles') },
+				{ label: data.role?.name ?? '' }
+			]}
+		/>
+		<div class="flex items-center gap-3">
+			{#if isSystem}
+				<Badge variant="outline">{m.admin_roles_system()}</Badge>
+			{/if}
+			<span class="text-sm text-muted-foreground">
+				{m.admin_roles_userCountLabel({ count: data.role?.userCount ?? 0 })}
+			</span>
+		</div>
 	</div>
 	<Separator />
 
