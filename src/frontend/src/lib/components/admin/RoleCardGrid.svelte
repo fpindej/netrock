@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Shield, Users } from '@lucide/svelte';
@@ -31,12 +32,7 @@
 </script>
 
 {#if roles.length === 0}
-	<div class="flex flex-col items-center justify-center py-12 text-center">
-		<div class="mb-3 rounded-full bg-muted p-3">
-			<Shield class="h-6 w-6 text-muted-foreground" />
-		</div>
-		<p class="text-sm text-muted-foreground">{m.admin_roles_noResults()}</p>
-	</div>
+	<EmptyState icon={Shield} message={m.admin_roles_noResults()} />
 {:else}
 	<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 		{#each roles as role (role.id)}

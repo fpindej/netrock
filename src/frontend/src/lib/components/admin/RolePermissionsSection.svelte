@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { ReadOnlyNotice } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import { RolePermissionEditor } from '$lib/components/admin';
-	import { Lock, Loader2, Save, TriangleAlert } from '@lucide/svelte';
+	import { Loader2, Save, TriangleAlert } from '@lucide/svelte';
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
@@ -64,12 +65,7 @@
 			</Alert.Root>
 		{/if}
 		{#if !canEditPermissions}
-			<div
-				class="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground"
-			>
-				<Lock class="h-4 w-4 shrink-0" />
-				<span>{m.common_readOnlyNotice()}</span>
-			</div>
+			<ReadOnlyNotice message={m.common_readOnlyNotice()} />
 		{/if}
 		<RolePermissionEditor
 			{permissionGroups}

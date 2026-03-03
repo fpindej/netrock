@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { buttonVariants } from '$lib/components/ui/button';
+	import { Separator } from '$lib/components/ui/separator';
 	import { JobInfoCard, JobActionsCard, JobExecutionHistory } from '$lib/components/admin';
 	import { ArrowLeft } from '@lucide/svelte';
 	import { hasPermission, Permissions, cn } from '$lib/utils';
@@ -32,7 +33,7 @@
 			<p class="font-mono text-sm text-muted-foreground">{data.job?.cron}</p>
 		</div>
 	</div>
-	<div class="h-px w-full bg-border"></div>
+	<Separator />
 
 	{#if data.job}
 		<div class="grid gap-6 lg:grid-cols-2">

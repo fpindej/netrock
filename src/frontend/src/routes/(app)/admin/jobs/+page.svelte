@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PageHeader } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -43,46 +44,43 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-		<div>
-			<h3 class="text-lg font-medium">{m.admin_jobs_title()}</h3>
-			<p class="text-sm text-muted-foreground">{m.admin_jobs_description()}</p>
-		</div>
-		{#if canManageJobs}
-			<Dialog.Root bind:open={restoreDialogOpen}>
-				<Dialog.Trigger>
-					{#snippet child({ props })}
-						<Button variant="outline" class="w-full sm:w-auto" {...props}>
-							<RefreshCw class="me-2 h-4 w-4" />
-							{m.admin_jobs_restore()}
-						</Button>
-					{/snippet}
-				</Dialog.Trigger>
-				<Dialog.Content>
-					<Dialog.Header>
-						<Dialog.Title>{m.admin_jobs_restore()}</Dialog.Title>
-						<Dialog.Description>{m.admin_jobs_restoreConfirm()}</Dialog.Description>
-					</Dialog.Header>
-					<Dialog.Footer class="flex-col-reverse sm:flex-row">
-						<Button variant="outline" onclick={() => (restoreDialogOpen = false)}>
-							{m.common_cancel()}
-						</Button>
-						<Button disabled={isRestoring || cooldown.active} onclick={restoreJobs}>
-							{#if cooldown.active}
-								{m.common_waitSeconds({ seconds: cooldown.remaining })}
-							{:else}
-								{#if isRestoring}
-									<Loader2 class="me-2 h-4 w-4 animate-spin" />
-								{/if}
+	<PageHeader title={m.admin_jobs_title()} description={m.admin_jobs_description()}>
+		{#snippet actions()}
+			{#if canManageJobs}
+				<Dialog.Root bind:open={restoreDialogOpen}>
+					<Dialog.Trigger>
+						{#snippet child({ props })}
+							<Button variant="outline" class="w-full sm:w-auto" {...props}>
+								<RefreshCw class="me-2 h-4 w-4" />
 								{m.admin_jobs_restore()}
-							{/if}
-						</Button>
-					</Dialog.Footer>
-				</Dialog.Content>
-			</Dialog.Root>
-		{/if}
-	</div>
-	<div class="h-px w-full bg-border"></div>
+							</Button>
+						{/snippet}
+					</Dialog.Trigger>
+					<Dialog.Content>
+						<Dialog.Header>
+							<Dialog.Title>{m.admin_jobs_restore()}</Dialog.Title>
+							<Dialog.Description>{m.admin_jobs_restoreConfirm()}</Dialog.Description>
+						</Dialog.Header>
+						<Dialog.Footer class="flex-col-reverse sm:flex-row">
+							<Button variant="outline" onclick={() => (restoreDialogOpen = false)}>
+								{m.common_cancel()}
+							</Button>
+							<Button disabled={isRestoring || cooldown.active} onclick={restoreJobs}>
+								{#if cooldown.active}
+									{m.common_waitSeconds({ seconds: cooldown.remaining })}
+								{:else}
+									{#if isRestoring}
+										<Loader2 class="me-2 h-4 w-4 animate-spin" />
+									{/if}
+									{m.admin_jobs_restore()}
+								{/if}
+							</Button>
+						</Dialog.Footer>
+					</Dialog.Content>
+				</Dialog.Root>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
 	<Card.Root>
 		<Card.Content class="p-0">

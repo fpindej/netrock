@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { EmptyState } from '$lib/components/common';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Clock } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
@@ -18,12 +19,7 @@
 </script>
 
 {#if jobs.length === 0}
-	<div class="flex flex-col items-center justify-center py-12 text-center">
-		<div class="mb-3 rounded-full bg-muted p-3">
-			<Clock class="h-6 w-6 text-muted-foreground" />
-		</div>
-		<p class="text-sm text-muted-foreground">{m.admin_jobs_noJobs()}</p>
-	</div>
+	<EmptyState icon={Clock} message={m.admin_jobs_noJobs()} />
 {:else}
 	<!-- Mobile: card list -->
 	<div class="divide-y md:hidden">

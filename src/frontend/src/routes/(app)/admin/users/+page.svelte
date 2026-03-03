@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import { PageHeader } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
@@ -54,11 +55,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div>
-		<h3 class="text-lg font-medium">{m.admin_users_title()}</h3>
-		<p class="text-sm text-muted-foreground">{m.admin_users_description()}</p>
-	</div>
-	<div class="h-px w-full bg-border"></div>
+	<PageHeader title={m.admin_users_title()} description={m.admin_users_description()} />
 
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class="relative max-w-sm flex-1">

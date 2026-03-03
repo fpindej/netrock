@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { ReadOnlyNotice } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Lock, Loader2, Save } from '@lucide/svelte';
+	import { Loader2, Save } from '@lucide/svelte';
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { invalidateAll } from '$app/navigation';
@@ -70,12 +71,7 @@
 	</Card.Header>
 	<Card.Content class="space-y-4">
 		{#if !canManageRoles}
-			<div
-				class="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground"
-			>
-				<Lock class="h-4 w-4 shrink-0" />
-				<span>{m.common_readOnlyNotice()}</span>
-			</div>
+			<ReadOnlyNotice message={m.common_readOnlyNotice()} />
 		{/if}
 		<div>
 			<Label for="role-name">{m.admin_roles_name()}</Label>

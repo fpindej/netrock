@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PageHeader } from '$lib/components/common';
 	import {
 		ChangePasswordForm,
 		SetPasswordForm,
@@ -26,11 +27,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div>
-		<h3 class="text-lg font-medium">{m.settings_title()}</h3>
-		<p class="text-sm text-muted-foreground">{m.settings_description()}</p>
-	</div>
-	<div class="h-px w-full bg-border"></div>
+	<PageHeader title={m.settings_title()} description={m.settings_description()} />
 	<div class="space-y-8">
 		{#if hasPassword}
 			<ChangePasswordForm />

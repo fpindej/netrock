@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { EmptyState } from '$lib/components/common';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { Users, ChevronRight, EyeOff } from '@lucide/svelte';
@@ -29,12 +30,7 @@
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -- hrefs are pre-resolved using resolve() -->
 {#if users.length === 0}
-	<div class="flex flex-col items-center justify-center py-12 text-center">
-		<div class="mb-3 rounded-full bg-muted p-3">
-			<Users class="h-6 w-6 text-muted-foreground" />
-		</div>
-		<p class="text-sm text-muted-foreground">{m.admin_users_noResults()}</p>
-	</div>
+	<EmptyState icon={Users} message={m.admin_users_noResults()} />
 {:else}
 	<!-- Mobile: card list -->
 	<div class="divide-y md:hidden">

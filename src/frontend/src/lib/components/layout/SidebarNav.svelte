@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { cn, hasPermission, Permissions } from '$lib/utils';
 	import { buttonVariants } from '$lib/components/ui/button';
+	import { Separator } from '$lib/components/ui/separator';
 	import { LayoutDashboard, Users, Shield, Clock, KeyRound, type IconProps } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import * as Tooltip from '$lib/components/ui/tooltip';
@@ -125,7 +126,7 @@
 	{/each}
 
 	{#if visibleAdminItems.length > 0}
-		<div class="my-2 h-px w-full bg-border"></div>
+		<Separator class="my-2" />
 		{#if !collapsed}
 			<span class="mb-1 px-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
 				{m.nav_admin()}

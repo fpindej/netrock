@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Badge } from '$lib/components/ui/badge';
@@ -99,12 +100,7 @@
 				></div>
 			</div>
 		{:else if events.length === 0}
-			<div class="flex flex-col items-center justify-center py-12 text-center">
-				<div class="mb-3 rounded-full bg-muted p-3">
-					<History class="h-6 w-6 text-muted-foreground" />
-				</div>
-				<p class="text-sm text-muted-foreground">{m.audit_trail_empty()}</p>
-			</div>
+			<EmptyState icon={History} message={m.audit_trail_empty()} />
 		{:else}
 			<Timeline>
 				{#each events as event, i (event.id)}

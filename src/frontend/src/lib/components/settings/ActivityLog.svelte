@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Timeline, TimelineItem, TimelineContent } from '$lib/components/ui/timeline';
@@ -71,12 +72,7 @@
 				></div>
 			</div>
 		{:else if events.length === 0}
-			<div class="flex flex-col items-center justify-center py-12 text-center">
-				<div class="mb-3 rounded-full bg-muted p-3">
-					<History class="h-6 w-6 text-muted-foreground" />
-				</div>
-				<p class="text-sm text-muted-foreground">{m.settings_activityLog_empty()}</p>
-			</div>
+			<EmptyState icon={History} message={m.settings_activityLog_empty()} />
 		{:else}
 			<Timeline>
 				{#each events as event, i (event.id)}

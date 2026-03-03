@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { History } from '@lucide/svelte';
@@ -24,12 +25,7 @@
 	</Card.Header>
 	<Card.Content class="p-0">
 		{#if executions.length === 0}
-			<div class="flex flex-col items-center justify-center py-12 text-center">
-				<div class="mb-3 rounded-full bg-muted p-3">
-					<History class="h-6 w-6 text-muted-foreground" />
-				</div>
-				<p class="text-sm text-muted-foreground">{m.admin_jobDetail_noHistory()}</p>
-			</div>
+			<EmptyState icon={History} message={m.admin_jobDetail_noHistory()} />
 		{:else}
 			<!-- Mobile: card list -->
 			<div class="divide-y md:hidden">

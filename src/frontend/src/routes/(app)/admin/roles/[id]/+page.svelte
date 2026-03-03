@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Badge } from '$lib/components/ui/badge';
+	import { Separator } from '$lib/components/ui/separator';
 	import {
 		RoleDetailsCard,
 		RolePermissionsSection,
@@ -51,7 +52,7 @@
 			{m.admin_roles_userCountLabel({ count: data.role?.userCount ?? 0 })}
 		</span>
 	</div>
-	<div class="h-px w-full bg-border"></div>
+	<Separator />
 
 	<RoleDetailsCard
 		roleId={data.role?.id ?? ''}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PageHeader } from '$lib/components/common';
 	import * as m from '$lib/paraglide/messages';
 </script>
 
@@ -8,9 +9,5 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div>
-		<h3 class="text-lg font-medium">{m.meta_dashboard_title()}</h3>
-		<p class="text-sm text-muted-foreground">{m.meta_dashboard_description()}</p>
-	</div>
-	<div class="h-px w-full bg-border"></div>
+	<PageHeader title={m.meta_dashboard_title()} description={m.meta_dashboard_description()} />
 </div>

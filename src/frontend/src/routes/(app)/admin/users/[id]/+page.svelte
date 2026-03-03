@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { buttonVariants } from '$lib/components/ui/button';
+	import { Separator } from '$lib/components/ui/separator';
 	import { UserDetailCards, AuditTrailCard } from '$lib/components/admin';
 	import { ArrowLeft, EyeOff } from '@lucide/svelte';
 	import { hasPermission, Permissions, cn } from '$lib/utils';
@@ -45,7 +46,7 @@
 			{/if}
 		</div>
 	</div>
-	<div class="h-px w-full bg-border"></div>
+	<Separator />
 
 	{#if data.adminUser && data.user}
 		<UserDetailCards

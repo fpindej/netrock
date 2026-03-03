@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { ReadOnlyNotice } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import * as Alert from '$lib/components/ui/alert';
 	import { RoleManagement, AccountActions } from '$lib/components/admin';
-	import { Lock, TriangleAlert } from '@lucide/svelte';
+	import { TriangleAlert } from '@lucide/svelte';
 	import type { AdminUser, AdminRole } from '$lib/types';
 	import type { Cooldown } from '$lib/state';
 	import * as m from '$lib/paraglide/messages';
@@ -41,12 +42,7 @@
 			</Alert.Root>
 		{/if}
 		{#if !canManage && !canAssignRoles}
-			<div
-				class="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground"
-			>
-				<Lock class="h-4 w-4 shrink-0" />
-				<span>{m.admin_userDetail_cannotManage()}</span>
-			</div>
+			<ReadOnlyNotice message={m.admin_userDetail_cannotManage()} />
 		{/if}
 
 		<div class={!canManage && !canAssignRoles ? 'opacity-60' : ''}>

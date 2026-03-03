@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PageHeader } from '$lib/components/common';
 	import { OAuthProviderCard } from '$lib/components/admin';
 	import { hasPermission, Permissions } from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
@@ -15,11 +16,10 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div>
-		<h3 class="text-lg font-medium">{m.admin_oauthProviders_title()}</h3>
-		<p class="text-sm text-muted-foreground">{m.admin_oauthProviders_description()}</p>
-	</div>
-	<div class="h-px w-full bg-border"></div>
+	<PageHeader
+		title={m.admin_oauthProviders_title()}
+		description={m.admin_oauthProviders_description()}
+	/>
 
 	{#if data.providers.length === 0}
 		<p class="text-sm text-muted-foreground">{m.admin_oauthProviders_noProviders()}</p>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PageHeader } from '$lib/components/common';
 	import { Button } from '$lib/components/ui/button';
 	import { RoleCardGrid, CreateRoleDialog } from '$lib/components/admin';
 	import { hasPermission, Permissions } from '$lib/utils';
@@ -18,19 +19,16 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-		<div>
-			<h3 class="text-lg font-medium">{m.admin_roles_title()}</h3>
-			<p class="text-sm text-muted-foreground">{m.admin_roles_description()}</p>
-		</div>
-		{#if canManageRoles}
-			<Button size="sm" onclick={() => (createDialogOpen = true)}>
-				<Plus class="me-1 h-4 w-4" />
-				{m.admin_roles_createRole()}
-			</Button>
-		{/if}
-	</div>
-	<div class="h-px w-full bg-border"></div>
+	<PageHeader title={m.admin_roles_title()} description={m.admin_roles_description()}>
+		{#snippet actions()}
+			{#if canManageRoles}
+				<Button onclick={() => (createDialogOpen = true)}>
+					<Plus class="me-1 h-4 w-4" />
+					{m.admin_roles_createRole()}
+				</Button>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
 	<RoleCardGrid roles={data.roles} />
 </div>
