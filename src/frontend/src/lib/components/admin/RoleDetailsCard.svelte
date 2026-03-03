@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ReadOnlyNotice } from '$lib/components/common';
+	import { FieldError, ReadOnlyNotice } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -84,9 +84,8 @@
 				aria-invalid={!!fieldErrors.name}
 				aria-describedby={fieldErrors.name ? 'role-name-error' : undefined}
 			/>
-			{#if fieldErrors.name}
-				<p id="role-name-error" class="mt-1 text-xs text-destructive">{fieldErrors.name}</p>
-			{:else if isSystem}
+			<FieldError id="role-name-error" message={fieldErrors.name} class="mt-1" />
+			{#if isSystem}
 				<p class="mt-1 text-xs text-muted-foreground">{m.admin_roles_systemNameReadonly()}</p>
 			{/if}
 		</div>
@@ -102,11 +101,7 @@
 				aria-invalid={!!fieldErrors.description}
 				aria-describedby={fieldErrors.description ? 'role-desc-error' : undefined}
 			/>
-			{#if fieldErrors.description}
-				<p id="role-desc-error" class="mt-1 text-xs text-destructive">
-					{fieldErrors.description}
-				</p>
-			{/if}
+			<FieldError id="role-desc-error" message={fieldErrors.description} class="mt-1" />
 		</div>
 		{#if canManageRoles}
 			<div class="flex flex-col gap-2 sm:flex-row sm:justify-end">

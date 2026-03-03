@@ -2,6 +2,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import { Button } from '$lib/components/ui/button';
+	import { FieldError } from '$lib/components/common';
 	import * as m from '$lib/paraglide/messages';
 	import { Upload } from '@lucide/svelte';
 
@@ -106,9 +107,7 @@
 		onchange={handleInputChange}
 	/>
 
-	{#if fileError}
-		<p class="text-xs text-destructive">{fileError}</p>
-	{/if}
+	<FieldError message={fileError} />
 </div>
 <Dialog.Footer class="flex-col gap-2 sm:flex-row sm:justify-between">
 	<div>

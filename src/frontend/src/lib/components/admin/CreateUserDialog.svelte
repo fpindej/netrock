@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { FieldError } from '$lib/components/common';
 	import { Loader2 } from '@lucide/svelte';
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
@@ -85,11 +86,7 @@
 						aria-invalid={!!fieldErrors.email}
 						aria-describedby={fieldErrors.email ? 'user-email-error' : undefined}
 					/>
-					{#if fieldErrors.email}
-						<p id="user-email-error" class="mt-1 text-xs text-destructive">
-							{fieldErrors.email}
-						</p>
-					{/if}
+					<FieldError id="user-email-error" message={fieldErrors.email} class="mt-1" />
 				</div>
 				<div>
 					<Label for="user-firstName">{m.admin_users_inviteFirstName()}</Label>
@@ -102,11 +99,7 @@
 						aria-invalid={!!fieldErrors.firstName}
 						aria-describedby={fieldErrors.firstName ? 'user-firstName-error' : undefined}
 					/>
-					{#if fieldErrors.firstName}
-						<p id="user-firstName-error" class="mt-1 text-xs text-destructive">
-							{fieldErrors.firstName}
-						</p>
-					{/if}
+					<FieldError id="user-firstName-error" message={fieldErrors.firstName} class="mt-1" />
 				</div>
 				<div>
 					<Label for="user-lastName">{m.admin_users_inviteLastName()}</Label>
@@ -119,11 +112,7 @@
 						aria-invalid={!!fieldErrors.lastName}
 						aria-describedby={fieldErrors.lastName ? 'user-lastName-error' : undefined}
 					/>
-					{#if fieldErrors.lastName}
-						<p id="user-lastName-error" class="mt-1 text-xs text-destructive">
-							{fieldErrors.lastName}
-						</p>
-					{/if}
+					<FieldError id="user-lastName-error" message={fieldErrors.lastName} class="mt-1" />
 				</div>
 			</div>
 			<Dialog.Footer class="flex-col-reverse sm:flex-row">

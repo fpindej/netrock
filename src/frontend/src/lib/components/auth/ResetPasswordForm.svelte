@@ -6,6 +6,7 @@
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import { FieldError } from '$lib/components/common';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import { ThemeToggle, LanguageSelector } from '$lib/components/layout';
@@ -223,11 +224,7 @@
 								aria-invalid={!!fieldErrors.newPassword}
 								aria-describedby={fieldErrors.newPassword ? 'newPassword-error' : undefined}
 							/>
-							{#if fieldErrors.newPassword}
-								<p id="newPassword-error" class="text-xs text-destructive">
-									{fieldErrors.newPassword}
-								</p>
-							{/if}
+							<FieldError id="newPassword-error" message={fieldErrors.newPassword} />
 						</div>
 
 						<div class="grid gap-2">
@@ -242,11 +239,7 @@
 								aria-invalid={!!fieldErrors.confirmPassword}
 								aria-describedby={fieldErrors.confirmPassword ? 'confirmPassword-error' : undefined}
 							/>
-							{#if fieldErrors.confirmPassword}
-								<p id="confirmPassword-error" class="text-xs text-destructive">
-									{fieldErrors.confirmPassword}
-								</p>
-							{/if}
+							<FieldError id="confirmPassword-error" message={fieldErrors.confirmPassword} />
 						</div>
 
 						<Button type="submit" class="w-full" disabled={isLoading || cooldown.active}>

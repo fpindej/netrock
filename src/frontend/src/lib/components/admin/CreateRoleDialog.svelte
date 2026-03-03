@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { FieldError } from '$lib/components/common';
 	import { Loader2 } from '@lucide/svelte';
 	import { browserClient, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
@@ -78,11 +79,7 @@
 						aria-invalid={!!fieldErrors.name}
 						aria-describedby={fieldErrors.name ? 'role-name-error' : undefined}
 					/>
-					{#if fieldErrors.name}
-						<p id="role-name-error" class="mt-1 text-xs text-destructive">
-							{fieldErrors.name}
-						</p>
-					{/if}
+					<FieldError id="role-name-error" message={fieldErrors.name} class="mt-1" />
 				</div>
 				<div>
 					<Label for="role-description">{m.admin_roles_descriptionLabel()}</Label>
@@ -95,11 +92,7 @@
 						aria-invalid={!!fieldErrors.description}
 						aria-describedby={fieldErrors.description ? 'role-description-error' : undefined}
 					/>
-					{#if fieldErrors.description}
-						<p id="role-description-error" class="mt-1 text-xs text-destructive">
-							{fieldErrors.description}
-						</p>
-					{/if}
+					<FieldError id="role-description-error" message={fieldErrors.description} class="mt-1" />
 				</div>
 			</div>
 			<Dialog.Footer class="flex-col-reverse sm:flex-row">
