@@ -2,9 +2,9 @@
 
 # NETrock
 
-**Full-stack .NET 10 + SvelteKit foundation. Auth, permissions, background jobs, admin panel - wired up so you can skip the boilerplate.**
+**Full-stack .NET 10 + SvelteKit foundation for building real products.**
 
-Clean Architecture. 1000+ tests. Dockerized. API-first - use the included frontend or bring your own.
+OAuth with 8 providers. TOTP two-factor auth. Admin-configurable everything. 1000+ tests. API-first - use the included frontend or bring your own.
 
 [![CI](https://github.com/fpindej/netrock/actions/workflows/ci.yml/badge.svg)](https://github.com/fpindej/netrock/actions/workflows/ci.yml)
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
@@ -25,7 +25,9 @@ Clean Architecture. 1000+ tests. Dockerized. API-first - use the included fronte
 
 Every project starts the same way: authentication, role management, rate limiting, validation, API documentation, Docker setup... You spend weeks on infrastructure before writing a single line of business logic.
 
-**NETrock skips all of that.** It ships a .NET 10 API with a SvelteKit frontend - auth that actually works, documented conventions, and the kind of infrastructure you'd build anyway. Login works. Token rotation works. The permission system enforces role hierarchy. The admin panel manages users, roles, and background jobs. The Docker stack spins up with health checks. CI runs your tests.
+**NETrock skips all of that.** It ships a production-grade .NET 10 API with a SvelteKit frontend that goes far beyond boilerplate. Users can log in with Google, GitHub, Discord, Apple, Microsoft, Facebook, LinkedIn, or X - configured by admins from the UI, no redeploy needed. Two-factor authentication with TOTP and recovery codes is built in. The permission system enforces role hierarchy. The admin panel manages users, roles, background jobs, and OAuth providers with AES-256-GCM encrypted credentials. Full audit trail, PII compliance, and rate limiting are part of the foundation.
+
+**For developers**, every convention is documented, the architecture is tested at the layer boundary, and Claude Code skills automate common workflows. **For end users**, the product they interact with has dark mode, i18n, a command palette, responsive design, and security features they expect from a real application.
 
 **Fork it, init it, own it.** After initialization, there is no dependency on "the template." It's your code, your architecture, your product. Every decision is documented so you can understand it, change it, or throw it away.
 
@@ -33,13 +35,13 @@ Every project starts the same way: authentication, role management, rate limitin
 
 ## What You Get
 
-**Backend** - JWT auth with token rotation and reuse detection, TOTP two-factor authentication, permission-based authorization with role hierarchy, transactional email delivery (MailKit), rate limiting, HybridCache with stampede protection, PostgreSQL with soft delete and audit trails, S3-compatible file storage (MinIO locally, any S3 provider in production), Hangfire background jobs, OpenAPI docs, health checks, Result pattern with ProblemDetails everywhere. [See full details ->](docs/features.md#backend--net-10--c-13)
+**Backend** - JWT auth with token rotation and reuse detection, TOTP two-factor authentication with recovery codes, OAuth/OIDC external login with 8 providers (admin-configurable from the UI), permission-based authorization with role hierarchy, transactional email with Fluid templates, rate limiting, HybridCache, PostgreSQL with soft delete and audit trails, S3-compatible file storage, Hangfire background jobs, OpenAPI docs, health checks, Result pattern with ProblemDetails. [See full details ->](docs/features.md#backend--net-10--c-13)
 
-**Frontend** - Svelte 5 runes, type-safe API client generated from OpenAPI, automatic token refresh, Tailwind CSS 4 with shadcn-svelte, BFF proxy with CSRF protection, i18n, security headers, permission guards, dark mode, admin panel with user/role/job management. [See full details ->](docs/features.md#frontend--sveltekit--svelte-5)
+**Frontend** - Svelte 5 runes, type-safe API client from OpenAPI, Tailwind CSS 4 with shadcn-svelte component library, Cmd+K command palette with permission-gated navigation, BFF proxy with CSRF protection, i18n (English + Czech, add more with a single JSON file), dark mode, responsive design with 44px touch targets, admin panel with user/role/job/OAuth provider management. [See full details ->](docs/features.md#frontend--sveltekit--svelte-5)
 
-**Infrastructure** - Aspire AppHost for local development (one command, full OTEL dashboard, MailPit for local email testing), structured logs, metrics, and traces via OpenTelemetry, Docker Compose for production deployment, init script for project bootstrapping, build script with multi-registry support, GitHub Actions CI with smart path filtering, Dependabot. [See full details ->](docs/features.md#infrastructure--devops)
+**Infrastructure** - Aspire AppHost for local development (one command for the full stack with OTEL dashboard and MailPit for email testing), Docker Compose for production, init script for project bootstrapping, build script with multi-registry support, GitHub Actions CI with smart path filtering, Claude Code skills for development workflows. [See full details ->](docs/features.md#infrastructure--devops)
 
-**Security** - Security-first design with HttpOnly JWT cookies, refresh token rotation with reuse detection, TOTP two-factor authentication with challenge tokens and recovery codes, security stamp propagation, CSP with nonces, CORS startup guard, rate limiting, and input validation everywhere. [See full details ->](docs/security.md)
+**Security** - HttpOnly JWT cookies, refresh token rotation with reuse detection, TOTP 2FA with challenge tokens and recovery codes, OAuth state tokens with TOCTOU protection, AES-256-GCM encrypted provider credentials, PII compliance with server-side masking, security stamp propagation, CSP with nonces, rate limiting, input validation everywhere. [See full details ->](docs/security.md)
 
 ---
 
@@ -98,7 +100,27 @@ Three test users are seeded (configured in `appsettings.Development.json`):
 
 ### 3. Start Building
 
-Add your domain entities, services, and pages - the architecture guides you. Use `/` skills (`.claude/skills/`) for step-by-step procedures.
+Add your domain entities, services, and pages - the architecture guides you.
+
+---
+
+## Claude Code Integration
+
+NETrock ships with 20 native [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills that automate common development workflows. Type `/` in Claude Code to see all available skills.
+
+| Skill | What it does |
+|---|---|
+| `/new-feature` | Scaffold a full-stack feature - entity, service, controller, frontend page |
+| `/new-endpoint` | Add an API endpoint to an existing feature |
+| `/new-entity` | Create a domain entity with EF Core configuration |
+| `/new-page` | Create a frontend page with routing, i18n, and navigation |
+| `/gen-types` | Regenerate frontend TypeScript types from the OpenAPI spec |
+| `/create-pr` | Create a PR with session docs, reviews, and labels |
+| `/review-pr` | Review a PR for production-readiness |
+| `/review-design` | Review frontend components for UI/UX standards |
+| `/create-issue` | Create a GitHub issue with labels |
+
+The project also includes `CLAUDE.md`, `AGENTS.md`, and `FILEMAP.md` - structured context files that give Claude Code deep understanding of the architecture, conventions, and change impact across the codebase. No separate onboarding needed - Claude Code reads the project and follows the rules.
 
 ---
 
