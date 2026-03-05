@@ -24,7 +24,7 @@ public class AuthenticationResponse
 
     /// <summary>
     /// Whether two-factor authentication is required to complete the login.
-    /// When true, use the <see cref="ChallengeToken"/> with POST /api/auth/login/2fa.
+    /// When true, use the <see cref="ChallengeToken"/> with POST /api/auth/two-factor/login.
     /// </summary>
     public bool RequiresTwoFactor { [UsedImplicitly] get; [UsedImplicitly] init; }
 

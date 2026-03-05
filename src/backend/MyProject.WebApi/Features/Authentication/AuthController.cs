@@ -5,31 +5,22 @@ using MyProject.Application.Cookies.Constants;
 using MyProject.Application.Features.Authentication;
 using MyProject.Application.Features.Captcha;
 using MyProject.Shared;
-using MyProject.WebApi.Features.Authentication.Dtos.ChangePassword;
-using MyProject.WebApi.Features.Authentication.Dtos.External;
-using MyProject.WebApi.Features.Authentication.Dtos.ForgotPassword;
 using MyProject.WebApi.Features.Authentication.Dtos.Login;
 using MyProject.WebApi.Features.Authentication.Dtos.Register;
-using MyProject.WebApi.Features.Authentication.Dtos.ResetPassword;
-using MyProject.WebApi.Features.Authentication.Dtos.SetPassword;
-using MyProject.WebApi.Features.Authentication.Dtos.TwoFactor;
-using MyProject.WebApi.Features.Authentication.Dtos.VerifyEmail;
 using MyProject.WebApi.Shared;
 
 namespace MyProject.WebApi.Features.Authentication;
 
 /// <summary>
-/// Controller for authentication operations including login, registration, and token management.
+/// Core authentication operations: login, registration, token refresh, and logout.
 /// Supports both cookie-based (web) and Bearer token (mobile/API) authentication.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 [Tags("Auth")]
 public class AuthController(
     IAuthenticationService authenticationService,
-    ITwoFactorService twoFactorService,
-    ICaptchaService captchaService,
-    IExternalAuthService externalAuthService) : ControllerBase
+    ICaptchaService captchaService) : ControllerBase
 {
     /// <summary>
     /// Authenticates a user and returns JWT tokens, or a 2FA challenge if two-factor is enabled.
@@ -61,12 +52,6 @@ public class AuthController(
     /// For web clients, the refresh token is read from cookies. For mobile/API clients, pass it in the request body.
     /// When useCookies is true, new tokens are also set as HttpOnly cookies.
     /// </summary>
-    /// <param name="request">Optional request body containing the refresh token (for mobile/API clients)</param>
-    /// <param name="useCookies">When true, sets tokens in HttpOnly cookies for web clients. Defaults to false (stateless).</param>
-    /// <returns>Authentication response containing new access and refresh tokens</returns>
-    /// <response code="200">Returns new authentication tokens (optionally also set in HttpOnly cookies)</response>
-    /// <response code="400">If the request body is malformed</response>
-    /// <response code="401">If the refresh token is invalid, expired, or missing</response>
     [HttpPost("refresh")]
     [EnableRateLimiting(RateLimitPolicies.Auth)]
     [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
@@ -78,8 +63,6 @@ public class AuthController(
         [FromQuery] bool useCookies = false,
         CancellationToken cancellationToken = default)
     {
-        // Priority 1: Request body (mobile/API clients)
-        // Priority 2: Cookie (web clients)
         var refreshToken = request?.RefreshToken;
         if (string.IsNullOrEmpty(refreshToken))
         {
@@ -104,9 +87,6 @@ public class AuthController(
     /// <summary>
     /// Logs out the current user by revoking refresh tokens and clearing authentication cookies.
     /// </summary>
-    /// <returns>A 204 No Content response</returns>
-    /// <response code="204">Successfully logged out</response>
-    /// <response code="401">If the user is not authenticated</response>
     [Authorize]
     [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -118,13 +98,8 @@ public class AuthController(
     }
 
     /// <summary>
-    /// Registers a new user account
+    /// Registers a new user account.
     /// </summary>
-    /// <param name="request">The registration details</param>
-    /// <returns>Created response with the new user's ID</returns>
-    /// <response code="201">User successfully created</response>
-    /// <response code="400">If the registration data is invalid</response>
-    /// <response code="429">If too many registration requests have been made</response>
     [HttpPost("register")]
     [EnableRateLimiting(RateLimitPolicies.Registration)]
     [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
@@ -146,396 +121,5 @@ public class AuthController(
 
         var response = new RegisterResponse { Id = result.Value };
         return Created(string.Empty, response);
-    }
-
-    /// <summary>
-    /// Initiates a password reset flow by sending a reset link to the provided email address.
-    /// Always returns 200 regardless of whether the email exists to prevent user enumeration.
-    /// </summary>
-    /// <param name="request">The forgot password request containing the email address</param>
-    /// <response code="200">Request accepted (email sent if account exists)</response>
-    /// <response code="400">If the request is invalid</response>
-    /// <response code="429">If too many requests have been made</response>
-    [HttpPost("forgot-password")]
-    [EnableRateLimiting(RateLimitPolicies.Auth)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
-    {
-        if (!await captchaService.ValidateTokenAsync(request.CaptchaToken, cancellationToken))
-        {
-            return ProblemFactory.Create(ErrorMessages.Auth.CaptchaInvalid, ErrorType.Validation);
-        }
-
-        await authenticationService.ForgotPasswordAsync(request.Email, cancellationToken);
-        return Ok();
-    }
-
-    /// <summary>
-    /// Resets a user's password using a token received via email.
-    /// Revokes all existing refresh tokens to force re-authentication on other devices.
-    /// </summary>
-    /// <param name="request">The reset password request containing email, token, and new password</param>
-    /// <response code="200">Password reset successfully</response>
-    /// <response code="400">If the request is invalid or the token is expired/invalid</response>
-    /// <response code="429">If too many requests have been made</response>
-    [HttpPost("reset-password")]
-    [EnableRateLimiting(RateLimitPolicies.Auth)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
-    {
-        var result = await authenticationService.ResetPasswordAsync(request.ToResetPasswordInput(), cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return Ok();
-    }
-
-    /// <summary>
-    /// Verifies a user's email address using a confirmation token received via email.
-    /// </summary>
-    /// <param name="request">The email verification request containing email and token</param>
-    /// <response code="200">Email verified successfully</response>
-    /// <response code="400">If the request is invalid or the token is expired/invalid</response>
-    /// <response code="429">If too many requests have been made</response>
-    [HttpPost("verify-email")]
-    [EnableRateLimiting(RateLimitPolicies.Auth)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult> VerifyEmail([FromBody] VerifyEmailRequest request, CancellationToken cancellationToken)
-    {
-        var result = await authenticationService.VerifyEmailAsync(request.ToVerifyEmailInput(), cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return Ok();
-    }
-
-    /// <summary>
-    /// Resends a verification email to the current authenticated user.
-    /// Fails if the user's email is already verified.
-    /// </summary>
-    /// <response code="200">Verification email sent</response>
-    /// <response code="400">If the email is already verified</response>
-    /// <response code="401">If the user is not authenticated</response>
-    /// <response code="429">If too many requests have been made</response>
-    [Authorize]
-    [HttpPost("resend-verification")]
-    [EnableRateLimiting(RateLimitPolicies.Sensitive)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult> ResendVerification(CancellationToken cancellationToken)
-    {
-        var result = await authenticationService.ResendVerificationEmailAsync(cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return Ok();
-    }
-
-    /// <summary>
-    /// Changes the current authenticated user's password.
-    /// Revokes all existing refresh tokens to force re-authentication on other devices.
-    /// </summary>
-    /// <param name="request">The change password request containing current and new passwords</param>
-    /// <returns>A 204 No Content response on success</returns>
-    /// <response code="204">Password changed successfully</response>
-    /// <response code="400">If the request is invalid or the current password is incorrect</response>
-    /// <response code="401">If the user is not authenticated</response>
-    [Authorize]
-    [HttpPost("change-password")]
-    [EnableRateLimiting(RateLimitPolicies.Sensitive)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
-    {
-        var result = await authenticationService.ChangePasswordAsync(request.ToChangePasswordInput(), cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return NoContent();
-    }
-
-    // ────────── Two-Factor Authentication: Login ──────────
-
-    /// <summary>
-    /// Completes a two-factor login using a TOTP code from an authenticator app.
-    /// </summary>
-    [HttpPost("login/2fa")]
-    [EnableRateLimiting(RateLimitPolicies.Auth)]
-    [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult<AuthenticationResponse>> TwoFactorLogin(
-        [FromBody] TwoFactorLoginRequest request,
-        [FromQuery] bool useCookies = false,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await authenticationService.CompleteTwoFactorLoginAsync(
-            request.ChallengeToken, request.Code, useCookies, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return Ok(result.Value.ToResponse());
-    }
-
-    /// <summary>
-    /// Completes a two-factor login using a one-time recovery code.
-    /// </summary>
-    [HttpPost("login/2fa/recovery")]
-    [EnableRateLimiting(RateLimitPolicies.Auth)]
-    [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult<AuthenticationResponse>> TwoFactorRecoveryLogin(
-        [FromBody] TwoFactorRecoveryLoginRequest request,
-        [FromQuery] bool useCookies = false,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await authenticationService.CompleteTwoFactorRecoveryLoginAsync(
-            request.ChallengeToken, request.RecoveryCode, useCookies, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return Ok(result.Value.ToResponse());
-    }
-
-    // ────────── Two-Factor Authentication: Management ──────────
-
-    /// <summary>
-    /// Generates an authenticator key and URI for setting up 2FA.
-    /// </summary>
-    [Authorize]
-    [HttpPost("2fa/setup")]
-    [EnableRateLimiting(RateLimitPolicies.Sensitive)]
-    [ProducesResponseType(typeof(TwoFactorSetupResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult<TwoFactorSetupResponse>> TwoFactorSetup(CancellationToken cancellationToken)
-    {
-        var result = await twoFactorService.SetupAsync(cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return Ok(result.Value.ToResponse());
-    }
-
-    /// <summary>
-    /// Verifies a TOTP code to complete 2FA setup and returns recovery codes.
-    /// </summary>
-    [Authorize]
-    [HttpPost("2fa/verify-setup")]
-    [EnableRateLimiting(RateLimitPolicies.Sensitive)]
-    [ProducesResponseType(typeof(TwoFactorVerifySetupResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult<TwoFactorVerifySetupResponse>> TwoFactorVerifySetup(
-        [FromBody] TwoFactorVerifySetupRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await twoFactorService.VerifySetupAsync(request.Code, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return Ok(result.Value.ToResponse());
-    }
-
-    /// <summary>
-    /// Disables two-factor authentication for the current user. Requires password confirmation.
-    /// </summary>
-    [Authorize]
-    [HttpPost("2fa/disable")]
-    [EnableRateLimiting(RateLimitPolicies.Sensitive)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult> TwoFactorDisable(
-        [FromBody] TwoFactorDisableRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await twoFactorService.DisableAsync(request.Password, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return NoContent();
-    }
-
-    /// <summary>
-    /// Regenerates two-factor recovery codes. Requires password confirmation.
-    /// </summary>
-    [Authorize]
-    [HttpPost("2fa/recovery-codes")]
-    [EnableRateLimiting(RateLimitPolicies.Sensitive)]
-    [ProducesResponseType(typeof(TwoFactorVerifySetupResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult<TwoFactorVerifySetupResponse>> TwoFactorRegenerateCodes(
-        [FromBody] TwoFactorRegenerateCodesRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await twoFactorService.RegenerateRecoveryCodesAsync(request.Password, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return Ok(result.Value.ToResponse());
-    }
-
-    // ────────── External Authentication (OAuth2) ──────────
-
-    /// <summary>
-    /// Returns the list of enabled external authentication providers.
-    /// Clients should call this on startup to determine which OAuth buttons to render.
-    /// </summary>
-    [HttpGet("providers")]
-    [ProducesResponseType(typeof(IReadOnlyList<ExternalProviderResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<ExternalProviderResponse>>> GetProviders(
-        CancellationToken cancellationToken)
-    {
-        var providers = await externalAuthService.GetAvailableProvidersAsync(cancellationToken);
-        var response = providers.Select(p => p.ToResponse()).ToList();
-
-        return Ok(response);
-    }
-
-    /// <summary>
-    /// Initiates an external OAuth2 authorization flow by creating a state token
-    /// and returning the provider's authorization URL.
-    /// </summary>
-    [HttpPost("external/challenge")]
-    [EnableRateLimiting(RateLimitPolicies.Auth)]
-    [ProducesResponseType(typeof(ExternalChallengeResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult<ExternalChallengeResponse>> ExternalChallenge(
-        [FromBody] ExternalChallengeRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await externalAuthService.CreateChallengeAsync(request.ToChallengeInput(), cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return Ok(new ExternalChallengeResponse { AuthorizationUrl = result.Value.AuthorizationUrl });
-    }
-
-    /// <summary>
-    /// Handles the OAuth2 callback after provider authorization.
-    /// Validates state, exchanges the code, and performs login/linking/creation.
-    /// </summary>
-    [HttpPost("external/callback")]
-    [EnableRateLimiting(RateLimitPolicies.Auth)]
-    [ProducesResponseType(typeof(ExternalCallbackResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult<ExternalCallbackResponse>> ExternalCallback(
-        [FromBody] ExternalCallbackRequest request,
-        [FromQuery] bool useCookies = false,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await externalAuthService.HandleCallbackAsync(
-            request.ToCallbackInput(), useCookies, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return Ok(result.Value.ToResponse());
-    }
-
-    /// <summary>
-    /// Unlinks an external provider from the current user's account.
-    /// Fails if this is the user's only authentication method.
-    /// </summary>
-    [Authorize]
-    [HttpPost("external/unlink")]
-    [EnableRateLimiting(RateLimitPolicies.Sensitive)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult> ExternalUnlink(
-        [FromBody] ExternalUnlinkRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await externalAuthService.UnlinkProviderAsync(request.Provider, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return NoContent();
-    }
-
-    /// <summary>
-    /// Sets an initial password for a passwordless OAuth-created account.
-    /// Only available when the user has no password set.
-    /// </summary>
-    [Authorize]
-    [HttpPost("set-password")]
-    [EnableRateLimiting(RateLimitPolicies.Sensitive)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult> SetPassword(
-        [FromBody] SetPasswordRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await externalAuthService.SetPasswordAsync(request.ToSetPasswordInput(), cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            return ProblemFactory.Create(result.Error, result.ErrorType);
-        }
-
-        return NoContent();
     }
 }
