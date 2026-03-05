@@ -1,19 +1,31 @@
 import type { RequestHandler } from './$types';
+import type { paths } from '$lib/api/v1';
 import { SERVER_CONFIG } from '$lib/config/server';
 import { isFetchErrorWithCode } from '$lib/api';
+
+/**
+ * Strips the `/api/` prefix from a generated API path to produce the proxy
+ * route parameter.  The `satisfies` constraint ensures a compile error if
+ * the path is renamed or removed from the OpenAPI spec.
+ */
+function proxyPath<P extends keyof paths>(path: P): string {
+	return (path as string).replace(/^\/api\//, '');
+}
 
 /**
  * Auth endpoint paths that receive the `?useCookies=true` query parameter.
  * These are the only endpoints where the backend needs to set/read HttpOnly
  * cookies - all other endpoints rely on the cookie being forwarded
  * automatically by the browser.
+ *
+ * Derived from the generated `paths` type so route renames cause compile errors.
  */
 const COOKIE_AUTH_PATHS = [
-	'auth/login',
-	'auth/refresh',
-	'auth/login/2fa',
-	'auth/login/2fa/recovery',
-	'auth/external/callback'
+	proxyPath('/api/auth/login'),
+	proxyPath('/api/auth/refresh'),
+	proxyPath('/api/auth/two-factor/login'),
+	proxyPath('/api/auth/two-factor/login/recovery'),
+	proxyPath('/api/auth/external/callback')
 ];
 
 /** HTTP methods that can mutate state and are vulnerable to CSRF */
