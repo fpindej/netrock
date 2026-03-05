@@ -38,9 +38,12 @@
 		isLoading = true;
 
 		try {
-			const { response, error: apiError } = await browserClient.POST('/api/auth/two-factor/disable', {
-				body: { password }
-			});
+			const { response, error: apiError } = await browserClient.POST(
+				'/api/auth/two-factor/disable',
+				{
+					body: { password }
+				}
+			);
 
 			if (response.ok) {
 				open = false;

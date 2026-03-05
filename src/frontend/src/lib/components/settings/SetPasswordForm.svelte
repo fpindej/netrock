@@ -36,9 +36,12 @@
 		}
 
 		try {
-			const { response, error: apiError } = await browserClient.POST('/api/auth/external/set-password', {
-				body: { newPassword }
-			});
+			const { response, error: apiError } = await browserClient.POST(
+				'/api/auth/external/set-password',
+				{
+					body: { newPassword }
+				}
+			);
 
 			if (response.ok) {
 				newPassword = '';
