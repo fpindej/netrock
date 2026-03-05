@@ -59,7 +59,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
                 new("GitHub", "GitHub")
             });
 
-        var response = await _client.SendAsync(Get("/api/auth/providers"));
+        var response = await _client.SendAsync(Get("/api/auth/external/providers"));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<List<ExternalProviderContract>>();
@@ -75,7 +75,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
         _factory.ExternalAuthService.GetAvailableProvidersAsync(Arg.Any<CancellationToken>())
             .Returns(new List<ExternalProviderInfo>());
 
-        var response = await _client.SendAsync(Get("/api/auth/providers"));
+        var response = await _client.SendAsync(Get("/api/auth/external/providers"));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<List<ExternalProviderContract>>();
@@ -294,7 +294,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
             .Returns(Result.Success());
 
         var response = await _client.SendAsync(
-            Post("/api/auth/set-password",
+            Post("/api/auth/external/set-password",
                 JsonContent.Create(new { NewPassword = "Password1!" }),
                 TestAuth.User()));
 
@@ -310,7 +310,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
                 ErrorMessages.ExternalAuth.PasswordAlreadySet, ErrorType.Validation));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/set-password",
+            Post("/api/auth/external/set-password",
                 JsonContent.Create(new { NewPassword = "Password1!" }),
                 TestAuth.User()));
 
@@ -322,7 +322,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
     public async Task SetPassword_Unauthenticated_Returns401()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/set-password",
+            Post("/api/auth/external/set-password",
                 JsonContent.Create(new { NewPassword = "Password1!" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -332,7 +332,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
     public async Task SetPassword_InvalidPassword_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/set-password",
+            Post("/api/auth/external/set-password",
                 JsonContent.Create(new { NewPassword = "" }),
                 TestAuth.User()));
 

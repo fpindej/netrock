@@ -294,7 +294,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result.Success());
 
         var response = await _client.SendAsync(
-            Post("/api/auth/change-password",
+            Post("/api/auth/password/change",
                 JsonContent.Create(new { CurrentPassword = "OldPass1!", NewPassword = "NewPass1!" }),
                 TestAuth.User()));
 
@@ -305,7 +305,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task ChangePassword_Unauthenticated_Returns401()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/change-password",
+            Post("/api/auth/password/change",
                 JsonContent.Create(new { CurrentPassword = "OldPass1!", NewPassword = "NewPass1!" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -319,7 +319,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result.Failure("Current password is incorrect."));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/change-password",
+            Post("/api/auth/password/change",
                 JsonContent.Create(new { CurrentPassword = "WrongPass1!", NewPassword = "NewPass1!" }),
                 TestAuth.User()));
 
@@ -341,7 +341,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result.Success());
 
         var response = await _client.SendAsync(
-            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "test@example.com", CaptchaToken = "valid-token" })));
+            Post("/api/auth/password/forgot", JsonContent.Create(new { Email = "test@example.com", CaptchaToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -350,7 +350,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task ForgotPassword_InvalidEmail_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "not-an-email", CaptchaToken = "valid-token" })));
+            Post("/api/auth/password/forgot", JsonContent.Create(new { Email = "not-an-email", CaptchaToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -359,7 +359,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task ForgotPassword_EmptyEmail_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "", CaptchaToken = "valid-token" })));
+            Post("/api/auth/password/forgot", JsonContent.Create(new { Email = "", CaptchaToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -371,7 +371,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(false);
 
         var response = await _client.SendAsync(
-            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "test@example.com", CaptchaToken = "invalid-token" })));
+            Post("/api/auth/password/forgot", JsonContent.Create(new { Email = "test@example.com", CaptchaToken = "invalid-token" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.CaptchaInvalid);
@@ -381,7 +381,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task ForgotPassword_MissingCaptcha_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/forgot-password", JsonContent.Create(new { Email = "test@example.com" })));
+            Post("/api/auth/password/forgot", JsonContent.Create(new { Email = "test@example.com" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -398,7 +398,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result.Success());
 
         var response = await _client.SendAsync(
-            Post("/api/auth/reset-password", JsonContent.Create(new
+            Post("/api/auth/password/reset", JsonContent.Create(new
             {
                 Token = "valid-token",
                 NewPassword = "NewPassword1!"
@@ -415,7 +415,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result.Failure(ErrorMessages.Auth.ResetPasswordTokenInvalid));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/reset-password", JsonContent.Create(new
+            Post("/api/auth/password/reset", JsonContent.Create(new
             {
                 Token = "invalid-token",
                 NewPassword = "NewPassword1!"
@@ -429,7 +429,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task ResetPassword_WeakPassword_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/reset-password", JsonContent.Create(new
+            Post("/api/auth/password/reset", JsonContent.Create(new
             {
                 Token = "valid-token",
                 NewPassword = "weak"
@@ -442,7 +442,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task ResetPassword_MissingToken_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/reset-password", JsonContent.Create(new
+            Post("/api/auth/password/reset", JsonContent.Create(new
             {
                 NewPassword = "NewPassword1!"
             })));
@@ -462,7 +462,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result.Success());
 
         var response = await _client.SendAsync(
-            Post("/api/auth/verify-email", JsonContent.Create(new
+            Post("/api/auth/email/verify", JsonContent.Create(new
             {
                 Token = "valid-token"
             })));
@@ -478,7 +478,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result.Failure(ErrorMessages.Auth.EmailVerificationFailed));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/verify-email", JsonContent.Create(new
+            Post("/api/auth/email/verify", JsonContent.Create(new
             {
                 Token = "invalid-token"
             })));
@@ -491,7 +491,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task VerifyEmail_MissingToken_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/verify-email", JsonContent.Create(new { })));
+            Post("/api/auth/email/verify", JsonContent.Create(new { })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -507,7 +507,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result.Success());
 
         var response = await _client.SendAsync(
-            Post("/api/auth/resend-verification", auth: TestAuth.User()));
+            Post("/api/auth/email/resend-verification", auth: TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -516,7 +516,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task ResendVerification_Unauthenticated_Returns401()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/resend-verification"));
+            Post("/api/auth/email/resend-verification"));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -528,7 +528,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result.Failure(ErrorMessages.Auth.EmailAlreadyVerified));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/resend-verification", auth: TestAuth.User()));
+            Post("/api/auth/email/resend-verification", auth: TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.EmailAlreadyVerified);
@@ -572,7 +572,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result<AuthenticationOutput>.Success(new AuthenticationOutput("access", "refresh")));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/login/2fa", JsonContent.Create(new { ChallengeToken = "challenge-token", Code = "123456" })));
+            Post("/api/auth/two-factor/login", JsonContent.Create(new { ChallengeToken = "challenge-token", Code = "123456" })));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<AuthTokensResponse>();
@@ -590,7 +590,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 ErrorMessages.TwoFactor.InvalidCode, ErrorType.Unauthorized));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/login/2fa", JsonContent.Create(new { ChallengeToken = "challenge-token", Code = "000000" })));
+            Post("/api/auth/two-factor/login", JsonContent.Create(new { ChallengeToken = "challenge-token", Code = "000000" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         await AssertProblemDetailsAsync(response, 401, ErrorMessages.TwoFactor.InvalidCode);
@@ -600,7 +600,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task TwoFactorLogin_MissingCode_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/login/2fa", JsonContent.Create(new { ChallengeToken = "challenge-token", Code = "" })));
+            Post("/api/auth/two-factor/login", JsonContent.Create(new { ChallengeToken = "challenge-token", Code = "" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -609,7 +609,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task TwoFactorLogin_MissingChallengeToken_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/login/2fa", JsonContent.Create(new { ChallengeToken = "", Code = "123456" })));
+            Post("/api/auth/two-factor/login", JsonContent.Create(new { ChallengeToken = "", Code = "123456" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -626,7 +626,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result<AuthenticationOutput>.Success(new AuthenticationOutput("access", "refresh")));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/login/2fa/recovery", JsonContent.Create(new { ChallengeToken = "challenge-token", RecoveryCode = "RECOV-12345" })));
+            Post("/api/auth/two-factor/login/recovery", JsonContent.Create(new { ChallengeToken = "challenge-token", RecoveryCode = "RECOV-12345" })));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<AuthTokensResponse>();
@@ -644,7 +644,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 ErrorMessages.TwoFactor.RecoveryCodeInvalid, ErrorType.Unauthorized));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/login/2fa/recovery", JsonContent.Create(new { ChallengeToken = "challenge-token", RecoveryCode = "BAD-CODE" })));
+            Post("/api/auth/two-factor/login/recovery", JsonContent.Create(new { ChallengeToken = "challenge-token", RecoveryCode = "BAD-CODE" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         await AssertProblemDetailsAsync(response, 401, ErrorMessages.TwoFactor.RecoveryCodeInvalid);
@@ -654,7 +654,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task TwoFactorRecoveryLogin_MissingRecoveryCode_Returns400()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/login/2fa/recovery", JsonContent.Create(new { ChallengeToken = "challenge-token", RecoveryCode = "" })));
+            Post("/api/auth/two-factor/login/recovery", JsonContent.Create(new { ChallengeToken = "challenge-token", RecoveryCode = "" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -671,7 +671,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 new TwoFactorSetupOutput("SHARED-KEY", "otpauth://totp/app:user?secret=SHARED-KEY")));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/2fa/setup", auth: TestAuth.User()));
+            Post("/api/auth/two-factor/setup", auth: TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<TwoFactorSetupContract>();
@@ -684,7 +684,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task TwoFactorSetup_Unauthenticated_Returns401()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/2fa/setup"));
+            Post("/api/auth/two-factor/setup"));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
@@ -702,7 +702,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 new TwoFactorVerifySetupOutput(["CODE1", "CODE2", "CODE3"])));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/2fa/verify-setup",
+            Post("/api/auth/two-factor/verify-setup",
                 JsonContent.Create(new { Code = "123456" }),
                 TestAuth.User()));
 
@@ -720,7 +720,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 ErrorMessages.TwoFactor.VerificationFailed));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/2fa/verify-setup",
+            Post("/api/auth/two-factor/verify-setup",
                 JsonContent.Create(new { Code = "000000" }),
                 TestAuth.User()));
 
@@ -732,7 +732,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task TwoFactorVerifySetup_Unauthenticated_Returns401()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/2fa/verify-setup",
+            Post("/api/auth/two-factor/verify-setup",
                 JsonContent.Create(new { Code = "123456" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -750,7 +750,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result.Success());
 
         var response = await _client.SendAsync(
-            Post("/api/auth/2fa/disable",
+            Post("/api/auth/two-factor/disable",
                 JsonContent.Create(new { Password = "Password1!" }),
                 TestAuth.User()));
 
@@ -761,7 +761,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task TwoFactorDisable_Unauthenticated_Returns401()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/2fa/disable",
+            Post("/api/auth/two-factor/disable",
                 JsonContent.Create(new { Password = "Password1!" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -775,7 +775,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result.Failure(ErrorMessages.TwoFactor.NotEnabled));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/2fa/disable",
+            Post("/api/auth/two-factor/disable",
                 JsonContent.Create(new { Password = "Password1!" }),
                 TestAuth.User()));
 
@@ -795,7 +795,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 new TwoFactorVerifySetupOutput(["NEW1", "NEW2", "NEW3"])));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/2fa/recovery-codes",
+            Post("/api/auth/two-factor/recovery-codes",
                 JsonContent.Create(new { Password = "Password1!" }),
                 TestAuth.User()));
 
@@ -809,7 +809,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     public async Task TwoFactorRegenerateCodes_Unauthenticated_Returns401()
     {
         var response = await _client.SendAsync(
-            Post("/api/auth/2fa/recovery-codes",
+            Post("/api/auth/two-factor/recovery-codes",
                 JsonContent.Create(new { Password = "Password1!" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -823,7 +823,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             .Returns(Result<TwoFactorVerifySetupOutput>.Failure(ErrorMessages.TwoFactor.NotEnabled));
 
         var response = await _client.SendAsync(
-            Post("/api/auth/2fa/recovery-codes",
+            Post("/api/auth/two-factor/recovery-codes",
                 JsonContent.Create(new { Password = "Password1!" }),
                 TestAuth.User()));
 
