@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MyProject.Application.Features.Authentication;
-using MyProject.Shared;
 using MyProject.WebApi.Features.Authentication.Dtos.External;
 using MyProject.WebApi.Features.Authentication.Dtos.SetPassword;
 using MyProject.WebApi.Shared;

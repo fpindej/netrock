@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using MyProject.Application.Features.Email;
 using MyProject.Infrastructure.Features.Email.Options;
 using MyProject.Infrastructure.Features.Email.Services;
-using NSubstitute;
 
 namespace MyProject.Component.Tests.Services;
 
