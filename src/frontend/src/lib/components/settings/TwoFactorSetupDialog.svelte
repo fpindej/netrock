@@ -47,7 +47,7 @@
 	async function fetchSetup() {
 		isLoading = true;
 		try {
-			const { response, data, error: apiError } = await browserClient.POST('/api/auth/2fa/setup');
+			const { response, data, error: apiError } = await browserClient.POST('/api/auth/two-factor/setup');
 
 			if (response.ok && data) {
 				sharedKey = data.sharedKey ?? '';
@@ -88,7 +88,7 @@
 				response,
 				data,
 				error: apiError
-			} = await browserClient.POST('/api/auth/2fa/verify-setup', {
+			} = await browserClient.POST('/api/auth/two-factor/verify-setup', {
 				body: { code }
 			});
 

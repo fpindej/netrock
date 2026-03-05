@@ -49,7 +49,7 @@
 				response,
 				data,
 				error: apiError
-			} = await browserClient.POST('/api/auth/2fa/recovery-codes', {
+			} = await browserClient.POST('/api/auth/two-factor/recovery-codes', {
 				body: { password }
 			});
 

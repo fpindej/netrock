@@ -14,7 +14,7 @@
 
 	onMount(async () => {
 		try {
-			const { response, data } = await browserClient.GET('/api/auth/providers');
+			const { response, data } = await browserClient.GET('/api/auth/external/providers');
 			if (response.ok && data) {
 				providers = data;
 			}

@@ -37,7 +37,7 @@
 		}
 
 		try {
-			const { response, error: apiError } = await browserClient.POST('/api/auth/change-password', {
+			const { response, error: apiError } = await browserClient.POST('/api/auth/password/change', {
 				body: { currentPassword, newPassword }
 			});
 

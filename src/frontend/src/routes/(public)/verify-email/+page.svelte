@@ -26,7 +26,7 @@
 
 	async function verify() {
 		try {
-			const { response, error: apiError } = await browserClient.POST('/api/auth/verify-email', {
+			const { response, error: apiError } = await browserClient.POST('/api/auth/email/verify', {
 				body: { token: data.token }
 			});
 

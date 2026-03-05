@@ -38,7 +38,7 @@
 		isLoading = true;
 
 		try {
-			const { response, error: apiError } = await browserClient.POST('/api/auth/login/2fa', {
+			const { response, error: apiError } = await browserClient.POST('/api/auth/two-factor/login', {
 				body: { challengeToken, code }
 			});
 
@@ -76,7 +76,7 @@
 
 		try {
 			const { response, error: apiError } = await browserClient.POST(
-				'/api/auth/login/2fa/recovery',
+				'/api/auth/two-factor/login/recovery',
 				{
 					body: { challengeToken, recoveryCode }
 				}

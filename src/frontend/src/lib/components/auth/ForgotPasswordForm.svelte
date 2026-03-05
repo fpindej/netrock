@@ -33,7 +33,7 @@
 		isLoading = true;
 
 		try {
-			const { response, error: apiError } = await browserClient.POST('/api/auth/forgot-password', {
+			const { response, error: apiError } = await browserClient.POST('/api/auth/password/forgot', {
 				body: { email, captchaToken }
 			});
 

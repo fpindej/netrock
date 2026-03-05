@@ -36,7 +36,7 @@
 		}
 
 		try {
-			const { response, error: apiError } = await browserClient.POST('/api/auth/set-password', {
+			const { response, error: apiError } = await browserClient.POST('/api/auth/external/set-password', {
 				body: { newPassword }
 			});
 

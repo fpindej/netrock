@@ -60,7 +60,7 @@
 		isLoading = true;
 
 		try {
-			const { response, error: apiError } = await browserClient.POST('/api/auth/reset-password', {
+			const { response, error: apiError } = await browserClient.POST('/api/auth/password/reset', {
 				body: { token, newPassword }
 			});
 

@@ -16,7 +16,7 @@
 		isResending = true;
 
 		try {
-			const { response } = await browserClient.POST('/api/auth/resend-verification');
+			const { response } = await browserClient.POST('/api/auth/email/resend-verification');
 
 			if (response.ok) {
 				toast.success(m.auth_emailBanner_resendSuccess());
