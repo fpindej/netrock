@@ -647,35 +647,60 @@ if ($CreateMigration) {
     }
 }
 
-# Step 5: Delete init scripts (always — fire and forget)
-Write-Step "Cleaning up init scripts..."
+# Step 5: Delete template-specific files (always — fire and forget)
+Write-Step "Cleaning up template files..."
 
 $initPs1 = Join-Path $ScriptDir "init.ps1"
-$initSh = Join-Path $ScriptDir "init.sh"
+$templateFiles = @(
+    "init.sh"
+    ".github/workflows/claude.yml"
+    ".github/workflows/claude-code-review.yml"
+)
+
+$templateDirs = @(
+    "docs/sessions"
+)
 
 $ErrorActionPreference = "Continue"
 
-# Stage both files for deletion in git BEFORE physically removing them
+# Stage files for deletion in git BEFORE physically removing them
 if ($DoCommit) {
-    if (Test-Path $initSh) {
-        $null = git rm -f "init.sh" 2>&1
+    foreach ($f in $templateFiles) {
+        $fullPath = Join-Path $ScriptDir $f
+        if (Test-Path $fullPath) {
+            $null = git rm -f $f 2>&1
+        }
+    }
+    foreach ($d in $templateDirs) {
+        $fullPath = Join-Path $ScriptDir $d
+        if (Test-Path $fullPath) {
+            $null = git rm -rf $d 2>&1
+        }
     }
     # Stage init.ps1 for deletion but keep it on disk for now (script is still running)
     $null = git rm --cached "init.ps1" 2>&1
 
-    $null = git commit -m "chore: remove initialization scripts" 2>&1
+    $null = git commit -m "chore: remove template-specific files" 2>&1
     Write-Success "Deletion committed to git"
 }
 else {
-    # No commit - just delete init.sh directly
-    if (Test-Path $initSh) {
-        Remove-Item $initSh -Force
+    foreach ($f in $templateFiles) {
+        $fullPath = Join-Path $ScriptDir $f
+        if (Test-Path $fullPath) {
+            Remove-Item $fullPath -Force
+        }
+    }
+    foreach ($d in $templateDirs) {
+        $fullPath = Join-Path $ScriptDir $d
+        if (Test-Path $fullPath) {
+            Remove-Item $fullPath -Recurse -Force
+        }
     }
 }
 
 $ErrorActionPreference = "Stop"
 
-Write-Success "Init scripts removed"
+Write-Success "Template files removed"
 
 # Schedule self-deletion after script exits (cross-platform)
 $pwshExe = (Get-Process -Id $PID).Path

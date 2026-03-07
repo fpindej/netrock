@@ -629,20 +629,41 @@ if [[ "$CREATE_MIGRATION" == "y" ]]; then
     fi
 fi
 
-# Step 5: Delete init scripts (always — fire and forget)
-print_step "Cleaning up init scripts..."
+# Step 5: Delete template-specific files (always — fire and forget)
+print_step "Cleaning up template files..."
+
+TEMPLATE_FILES=(
+    "init.sh"
+    "init.ps1"
+    ".github/workflows/claude.yml"
+    ".github/workflows/claude-code-review.yml"
+)
+
+TEMPLATE_DIRS=(
+    "docs/sessions"
+)
 
 if git rev-parse --git-dir > /dev/null 2>&1; then
-    git rm -f init.sh init.ps1 >/dev/null 2>&1 || rm -f init.sh init.ps1
+    for f in "${TEMPLATE_FILES[@]}"; do
+        git rm -f "$f" >/dev/null 2>&1 || rm -f "$f"
+    done
+    for d in "${TEMPLATE_DIRS[@]}"; do
+        git rm -rf "$d" >/dev/null 2>&1 || rm -rf "$d"
+    done
 else
-    rm -f init.sh init.ps1
+    for f in "${TEMPLATE_FILES[@]}"; do
+        rm -f "$f"
+    done
+    for d in "${TEMPLATE_DIRS[@]}"; do
+        rm -rf "$d"
+    done
 fi
 
 if [[ "$DO_COMMIT" == "y" ]]; then
-    git commit -m "chore: remove initialization scripts" >/dev/null 2>&1
+    git commit -m "chore: remove template-specific files" >/dev/null 2>&1
 fi
 
-print_success "Init scripts removed"
+print_success "Template files removed"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Complete!
