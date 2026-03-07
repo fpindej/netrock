@@ -639,13 +639,23 @@ TEMPLATE_FILES=(
     ".github/workflows/claude-code-review.yml"
 )
 
+TEMPLATE_DIRS=(
+    "docs/sessions"
+)
+
 if git rev-parse --git-dir > /dev/null 2>&1; then
     for f in "${TEMPLATE_FILES[@]}"; do
         git rm -f "$f" >/dev/null 2>&1 || rm -f "$f"
     done
+    for d in "${TEMPLATE_DIRS[@]}"; do
+        git rm -rf "$d" >/dev/null 2>&1 || rm -rf "$d"
+    done
 else
     for f in "${TEMPLATE_FILES[@]}"; do
         rm -f "$f"
+    done
+    for d in "${TEMPLATE_DIRS[@]}"; do
+        rm -rf "$d"
     done
 fi
 

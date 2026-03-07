@@ -657,6 +657,10 @@ $templateFiles = @(
     ".github/workflows/claude-code-review.yml"
 )
 
+$templateDirs = @(
+    "docs/sessions"
+)
+
 $ErrorActionPreference = "Continue"
 
 # Stage files for deletion in git BEFORE physically removing them
@@ -665,6 +669,12 @@ if ($DoCommit) {
         $fullPath = Join-Path $ScriptDir $f
         if (Test-Path $fullPath) {
             $null = git rm -f $f 2>&1
+        }
+    }
+    foreach ($d in $templateDirs) {
+        $fullPath = Join-Path $ScriptDir $d
+        if (Test-Path $fullPath) {
+            $null = git rm -rf $d 2>&1
         }
     }
     # Stage init.ps1 for deletion but keep it on disk for now (script is still running)
@@ -678,6 +688,12 @@ else {
         $fullPath = Join-Path $ScriptDir $f
         if (Test-Path $fullPath) {
             Remove-Item $fullPath -Force
+        }
+    }
+    foreach ($d in $templateDirs) {
+        $fullPath = Join-Path $ScriptDir $d
+        if (Test-Path $fullPath) {
+            Remove-Item $fullPath -Recurse -Force
         }
     }
 }
