@@ -30,10 +30,10 @@
     Don't launch Aspire after setup.
 
 .PARAMETER Email
-    SuperAdmin email address. Default is admin@localhost.
+    Superuser email address. Default is admin@localhost.
 
 .PARAMETER Password
-    SuperAdmin password. Default is Admin123!.
+    Superuser password. Default is Admin123!.
 
 .EXAMPLE
     .\init.ps1
@@ -49,7 +49,7 @@
 
 .EXAMPLE
     .\init.ps1 -Name "MyApi" -Email "me@example.com" -Password "MyPass123!"
-    # Custom SuperAdmin credentials
+    # Custom Superuser credentials
 #>
 
 param (

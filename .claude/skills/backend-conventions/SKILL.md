@@ -164,13 +164,13 @@ FluentValidation auto-discovered from WebApi assembly. Co-locate validators with
 Atomic permissions via `[RequirePermission("permission.name")]` on controller actions. Permissions stored as role claims, embedded in JWT as `"permission"` claims.
 
 - `AppPermissions.cs`: constants discovered via reflection (`AppPermissions.All`)
-- `PermissionAuthorizationHandler`: SuperAdmin bypass -> claim match -> deny
+- `PermissionAuthorizationHandler`: Superuser bypass -> claim match -> deny
 - Never class-level `[Authorize(Roles)]` on controllers using permissions
 - To add a role: add `public const string` to `AppRoles.cs` - reflection discovers it, seeding picks it up automatically.
 
 ### Role Hierarchy
 
-`SuperAdmin` (3) > `Admin` (2) > `User` (1) > Custom (0). Enforced by Admin service:
+`Superuser` (3) > `Admin` (2) > `User` (1) > Custom (0). Enforced by Admin service:
 - Cannot manage users at/above your rank
 - Cannot assign/remove roles at/above your rank
 - Cannot modify your own roles, lock yourself, or delete yourself
@@ -236,7 +236,7 @@ Register with `BindConfiguration`, `ValidateDataAnnotations`, `ValidateOnStart`.
 | `Api.Tests` | Full HTTP pipeline (routes, auth, status codes) | `CustomWebApplicationFactory`, `TestAuthHandler` |
 | `Architecture.Tests` | Layer deps, naming, visibility | NetArchTest |
 
-API test auth: `"Authorization", "Test"` (basic user), `TestAuth.WithPermissions(...)` (specific perms), `TestAuth.SuperAdmin()`.
+API test auth: `"Authorization", "Test"` (basic user), `TestAuth.WithPermissions(...)` (specific perms), `TestAuth.Superuser()`.
 
 Response contracts: frozen records in `Contracts/ResponseContracts.cs` - deserialize and assert key fields.
 

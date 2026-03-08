@@ -9,7 +9,7 @@ user-invocable: false
 
 - JWT access tokens in HttpOnly cookies, refresh token rotation
 - Permission-based authorization via `[RequirePermission]` attributes
-- Role hierarchy: SuperAdmin > Admin > User > Custom
+- Role hierarchy: Superuser > Admin > User > Custom
 - PII masking server-side via `PiiMasker` / `WithMaskedPii` - requires `users.view_pii` permission
 - CSRF protection via Origin header validation on mutations
 - CSP with nonce-based script-src

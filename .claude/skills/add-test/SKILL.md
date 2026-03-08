@@ -51,7 +51,7 @@ For testing the full HTTP pipeline (routes, auth, validation, status codes).
 3. Auth per-request via `Authorization` header:
    - `"Test"` - basic authenticated user
    - `TestAuth.WithPermissions(AppPermissions.Users.View)` - specific permissions
-   - `TestAuth.SuperAdmin()` - bypasses all checks
+   - `TestAuth.Superuser()` - bypasses all checks
    - No header - unauthenticated (401)
 4. Configure mock returns: `_factory.AdminService.Method(...).Returns(...);`
 5. If service interface not mocked in `CustomWebApplicationFactory`, add it there first

@@ -33,9 +33,9 @@ NETrock is built **security-first**. Every decision defaults to the most restric
 ## Authorization & Access Control
 
 - **Permission-based authorization** - atomic permissions (`users.view`, `users.manage`, `roles.manage`, ...) enforced on every endpoint via `[RequirePermission]`
-- **Role hierarchy protection** - SuperAdmin > Admin > User, with privilege escalation prevention (can't assign roles at or above your own rank, can't grant permissions you don't have)
+- **Role hierarchy protection** - Superuser > Admin > User, with privilege escalation prevention (can't assign roles at or above your own rank, can't grant permissions you don't have)
 - **Self-protection rules** - can't lock your own account, can't delete yourself, can't remove your own roles
-- **System role guards** - SuperAdmin/Admin/User cannot be deleted or renamed, SuperAdmin permissions are implicit (never stored in DB)
+- **System role guards** - Superuser/Admin/User cannot be deleted or renamed, Superuser permissions are implicit (never stored in DB)
 - **Frontend mirrors backend** - route guards, nav filtering, and conditional rendering use the same permission claims, but the backend is always authoritative
 
 ## PII Compliance
