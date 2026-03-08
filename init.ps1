@@ -30,10 +30,10 @@
     Don't launch Aspire after setup.
 
 .PARAMETER Email
-    Superuser email address. Default is admin@localhost.
+    Superuser email address. Default is superuser@test.com.
 
 .PARAMETER Password
-    Superuser password. Default is Admin123!.
+    Superuser password. Default is Superuser123!.
 
 .EXAMPLE
     .\init.ps1
@@ -63,9 +63,9 @@ param (
     [switch]$Yes,
 
     [Alias("e")]
-    [string]$Email = "admin@localhost",
+    [string]$Email = "superuser@test.com",
 
-    [string]$Password = "Admin123!",
+    [string]$Password = "Superuser123!",
 
     [switch]$NoMigration,
     [switch]$NoCommit,

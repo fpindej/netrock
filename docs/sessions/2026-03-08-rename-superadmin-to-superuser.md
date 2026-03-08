@@ -44,7 +44,7 @@ Renamed the `SuperAdmin` role to `Superuser` across backend, frontend, tests, do
 
 ### Init script credential prompting
 
-- **Choice**: Prompt for Superuser email/password during init with defaults (`admin@localhost` / `Admin123!`)
+- **Choice**: Prompt for Superuser email/password during init with defaults (`superuser@test.com` / `Superuser123!`)
 - **Alternatives considered**: Keep hardcoded credentials, generate random password
 - **Reasoning**: Prompting personalizes the dev environment from the start. Sensible defaults keep the non-interactive (`--yes`) flow fast. Random passwords would require users to look up credentials every time.
 

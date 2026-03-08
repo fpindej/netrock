@@ -416,7 +416,7 @@ See `appsettings.json` for the full configuration structure and [Before You Ship
 
 ### Which user should I log in as?
 
-A single Superuser is seeded with credentials you provided during `init.sh` / `init.ps1` (defaults: `admin@localhost` / `Admin123!`). Configured in `appsettings.Development.json` under `Seed:Users`. You can add more seed users there if needed.
+A single Superuser is seeded with credentials you provided during `init.sh` / `init.ps1` (defaults: `superuser@test.com` / `Superuser123!`). Configured in `appsettings.Development.json` under `Seed:Users`. You can add more seed users there if needed.
 
 Use the Superuser for full access. Create additional users with lower roles to test authorization guards.
 

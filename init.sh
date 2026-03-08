@@ -11,8 +11,8 @@
 #  Flags:
 #    --name, -n     Project name (required in non-interactive mode)
 #    --port, -p     Base port (default: 13000)
-#    --email, -e    Superuser email (default: admin@localhost)
-#    --password     Superuser password (default: Admin123!)
+#    --email, -e    Superuser email (default: superuser@test.com)
+#    --password     Superuser password (default: Superuser123!)
 #    --yes, -y      Accept all defaults, no prompts
 #    --no-migration Skip migration creation
 #    --no-commit    Skip git commits
@@ -118,8 +118,8 @@ show_help() {
     echo "Options:"
     echo "  -n, --name NAME       Project name (e.g., MyAwesomeApi)"
     echo "  -p, --port PORT       Base port for services (default: 13000)"
-    echo "  -e, --email EMAIL     Superuser email (default: admin@localhost)"
-    echo "      --password PASS   Superuser password (default: Admin123!)"
+    echo "  -e, --email EMAIL     Superuser email (default: superuser@test.com)"
+    echo "      --password PASS   Superuser password (default: Superuser123!)"
     echo "  -y, --yes             Accept all defaults without prompting"
     echo "      --no-migration    Skip creating initial migration"
     echo "      --no-commit       Skip git commits"
@@ -264,8 +264,8 @@ prompt_checklist() {
 # ─────────────────────────────────────────────────────────────────────────────
 PROJECT_NAME=""
 BASE_PORT=13000
-ADMIN_EMAIL="admin@localhost"
-ADMIN_PASSWORD="Admin123!"
+ADMIN_EMAIL="superuser@test.com"
+ADMIN_PASSWORD="Superuser123!"
 YES_TO_ALL="false"
 CREATE_MIGRATION="ask"
 DO_COMMIT="ask"
