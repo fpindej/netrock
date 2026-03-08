@@ -14,7 +14,7 @@
   <Project Path="MyProject.WebApi/MyProject.WebApi.csproj" />
   <Project Path="MyProject.ServiceDefaults/MyProject.ServiceDefaults.csproj" />
   <Project Path="MyProject.AppHost/MyProject.AppHost.csproj" />
-  <Folder Name="/deploy/">
+  <Folder Name="/tools/">
     <Project Path="HealthProbe/HealthProbe.csproj" />
   </Folder>
   <Folder Name="/tests/">

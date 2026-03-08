@@ -60,7 +60,7 @@ var api = builder.AddProject<Projects.MyProject_WebApi>("api")
     .WithEnvironment("FileStorage__BucketName", "{INIT_PROJECT_SLUG}-files")
     .WithEnvironment("FileStorage__UseSSL", "false");
 
-// Mailpit only for local development - production uses real SMTP (configured in api.env)
+// Mailpit only for local development - production uses real SMTP (configured via environment variables)
 if (builder.ExecutionContext.IsRunMode)
 {
     var mailpit = builder.AddMailPit("mailpit", httpPort: mailpitHttpPort, smtpPort: mailpitSmtpPort);

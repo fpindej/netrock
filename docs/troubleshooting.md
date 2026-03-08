@@ -373,7 +373,7 @@ If your changes don't match these paths, the corresponding jobs won't run.
 
 **Cause:** Dockerfile paths or build contexts may not match what `docker.yml` expects.
 
-**Fix:** Verify that your Dockerfile is in the expected location (`src/backend/Dockerfile` or `src/frontend/Dockerfile`) and that the build context matches the workflow configuration in `.github/workflows/docker.yml`.
+**Fix:** Verify that your Dockerfile is in the expected location (`src/backend/MyProject.WebApi/Dockerfile` or `src/frontend/Dockerfile`) and that the build context matches the workflow configuration in `.github/workflows/docker.yml`.
 
 ### Coverage report not posted on PR
 

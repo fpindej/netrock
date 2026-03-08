@@ -61,7 +61,6 @@
 | **Aspire Local Dev** | One `dotnet run` for the full stack - API, frontend (hot-reload), PostgreSQL, MinIO (S3 storage), MailPit (email testing), OpenTelemetry Dashboard with traces, logs, and metrics |
 | **Production Docker** | Multi-stage Dockerfiles for API (.NET) and frontend (Node), dev config stripping, non-root users, health probe binary. Deploy to any platform - Docker Compose, Coolify, Railway, Kubernetes |
 | **Init Script** | Interactive project bootstrapping - renames solution, configures ports, creates migration, launches Aspire. Works on macOS, Linux, and Windows |
-| **Dockerfiles** | Multi-stage builds for API and frontend, dev config stripping, non-root users, health probe binary |
 | **CI Pipeline** | GitHub Actions with smart path filtering - backend-only PRs skip frontend checks and vice versa. Coverage reports with ReportGenerator |
 | **Docker Validation** | CI validates image builds on Dockerfile/dependency changes, with layer caching |
 | **Dependabot** | Weekly NuGet, npm, and GitHub Actions updates with grouped minor+patch PRs |

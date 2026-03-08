@@ -456,5 +456,5 @@ $RECYCLE.BIN/
 ## Data from docker
 /data/attachments/*
 
-# Legacy root .env from before the deploy/ restructure
+# Legacy root .env (not used - config is in appsettings.json and src/frontend/.env.local)
 /.env
