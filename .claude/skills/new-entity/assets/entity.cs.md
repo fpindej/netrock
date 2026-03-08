@@ -1,8 +1,6 @@
 # Entity Template
 
 ```csharp
-using MyProject.Domain.Entities;
-
 namespace MyProject.Domain.Entities;
 
 /// <summary>

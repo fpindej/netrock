@@ -21,7 +21,7 @@ if echo "$COMMAND" | grep -qE '(^|[;&|])\s*npm\s+install\b'; then
 fi
 
 # Block force push
-if echo "$COMMAND" | grep -qE 'git\s+push\s+.*--force\b'; then
+if echo "$COMMAND" | grep -qE 'git\s+push\s+.*--force($|\s)'; then
     echo "Force push blocked. Use --force-with-lease if you must, or ask the user first." >&2
     exit 2
 fi

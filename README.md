@@ -121,7 +121,7 @@ NETrock ships with 20+ native [Claude Code](https://docs.anthropic.com/en/docs/c
 | `/create-issue` | Create a GitHub issue with labels |
 | `/create-release` | Create a GitHub release with auto-generated notes |
 
-Skills are also loaded automatically when Claude Code plans work - it reads the relevant skill and follows the procedure without you having to invoke it. The project also includes `CLAUDE.md` and `FILEMAP.md` as structured context files, plus 10 specialized agents (`.claude/agents/`) and lifecycle hooks (`.claude/hooks/`) for auto-formatting, safety gates, and quality checks. No separate onboarding needed.
+Skills are also loaded automatically when Claude Code plans work - it reads the relevant skill and follows the procedure without you having to invoke it. The project also includes `CLAUDE.md` and `FILEMAP.md` as structured context files, plus 12 specialized agents (`.claude/agents/`) and lifecycle hooks (`.claude/hooks/`) for auto-formatting, safety gates, and quality checks. No separate onboarding needed.
 
 ---
 

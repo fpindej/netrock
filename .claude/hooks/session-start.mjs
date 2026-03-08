@@ -49,7 +49,7 @@ try {
   run('docker info');
   console.log('OK Docker');
 } catch {
-  console.log('MISSING Docker not running');
+  console.log('MISSING Docker');
 }
 
 console.log('=== Ready ===');

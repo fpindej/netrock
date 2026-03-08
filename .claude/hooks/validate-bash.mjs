@@ -20,7 +20,7 @@ const blocks = [
     msg: 'Use pnpm, not npm. Run: pnpm install',
   },
   {
-    pattern: /git\s+push\s+.*--force\b/,
+    pattern: /git\s+push\s+.*--force(?!-)/,
     msg: 'Force push blocked. Use --force-with-lease if you must, or ask the user first.',
   },
   {
