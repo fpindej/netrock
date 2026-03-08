@@ -8,7 +8,7 @@ namespace MyProject.WebApi.Features.OpenApi.Transformers;
 /// Ensures all enum types appear as string enums in the OpenAPI spec with every member listed.
 /// Handles both non-nullable (<c>MyEnum</c>) and nullable (<c>MyEnum?</c>) enum properties.
 /// </summary>
-/// <remarks>See AGENTS.md → Enum Handling for conventions.</remarks>
+/// <remarks>See .claude/skills/backend-conventions/SKILL.md for conventions.</remarks>
 internal sealed class EnumSchemaTransformer : IOpenApiSchemaTransformer
 {
     /// <inheritdoc />

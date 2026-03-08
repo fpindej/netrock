@@ -5,7 +5,7 @@
  * parsing and mapping of validation errors, and user-friendly error
  * message extraction from ProblemDetails responses.
  *
- * @remarks Pattern documented in src/frontend/AGENTS.md - update both when changing.
+ * @remarks Pattern documented in .claude/skills/frontend-conventions/SKILL.md.
  */
 
 /**

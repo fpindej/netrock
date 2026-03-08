@@ -19,7 +19,7 @@ namespace MyProject.WebApi.Middlewares;
 /// unsafe method means either a same-origin request from an older browser or a non-browser client —
 /// neither of which is vulnerable to CSRF.
 /// </para>
-/// <para>Pattern documented in src/backend/AGENTS.md — update both when changing.</para>
+/// <para>Pattern documented in .claude/skills/backend-conventions/SKILL.md.</para>
 /// </remarks>
 public class OriginValidationMiddleware(
     RequestDelegate next,

@@ -6,6 +6,11 @@ Creates a new frontend page with routing, i18n, and navigation.
 
 Infers route, route group, components needed, and data requirements from context. Defaults to `(app)` (authenticated). Asks only if genuinely ambiguous.
 
+## Templates
+
+Use these as starting points - fill in the specifics from context:
+- [Page and component templates](assets/page.svelte.md)
+
 ## Conventions
 
 - **Button layout**: All action/submit buttons use `w-full sm:w-auto` with wrapper `flex flex-col gap-2 sm:flex-row sm:justify-end`. Default size only (no `size="sm"` or `size="lg"`).

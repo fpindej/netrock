@@ -30,22 +30,12 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`Result.cs`** (Shared - change pattern) | Every service + every controller that matches on `Result` |
 | **Application interface** (change signature) | Infrastructure service implementation, controller calling the service |
 | **Application DTO** (add/rename/remove field) | Infrastructure service, WebApi mapper, WebApi request/response DTO, frontend types |
-| **Infrastructure EF config** (change mapping) | Run new migration |
-| **`MyProjectDbContext`** (add DbSet) | Run new migration |
-| **Infrastructure service** (change behavior) | Verify controller still maps correctly, verify error messages still apply |
 | **Infrastructure Options class** | `appsettings.json`, `appsettings.Development.json` (excluded from production publish - see `StripDevConfig`), `deploy/envs/production-example/api.env`, DI registration |
-| **DI extension** (new service registration) | `Program.cs` must call the extension |
 | **WebApi controller** (change route/method) | Frontend API calls, `v1.d.ts` regeneration |
 | **WebApi request DTO** (add/rename/remove property) | Validator, mapper, frontend types, frontend form |
 | **WebApi response DTO** (add/rename/remove property) | Mapper, frontend types, frontend component displaying data, `Api.Tests/Contracts/ResponseContracts.cs` |
-| **WebApi validator** (change rules) | Consider matching frontend validation UX |
 | **`Program.cs`** (change middleware order) | Test full request pipeline - order matters for auth, CORS, rate limiting; update `CustomWebApplicationFactory` if new services need mocking |
-| **`Directory.Packages.props`** (change version) | `dotnet build` to verify compatibility |
-| **`Directory.Build.props`** (change TFM/settings) | All projects in solution |
 | **`BaseEntity.cs`** | `BaseEntityConfiguration`, `AuditingInterceptor`, all entities |
-| **`BaseEntityConfiguration.cs`** | All entity configurations that extend it |
-| **`CustomWebApplicationFactory.cs`** (change mock setup) | All API integration tests that depend on factory mocks |
-| **`appsettings.Testing.json`** (change test config) | `CustomWebApplicationFactory` behavior; all API integration tests |
 | **`FileStorageOptions`** (change S3/MinIO config) | `appsettings.json`, `deploy/envs/production-example/compose.env`, `deploy/docker-compose.yml`, `appsettings.Testing.json` |
 | **`EmailOptions`** (change config shape) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `deploy/envs/production-example/api.env`, `ServiceCollectionExtensions` (email DI), `EmailOptionsValidationTests` |
 | **`IEmailService`** (change sending contract) | `NoOpEmailService`, `SmtpEmailService`, `CustomWebApplicationFactory` |
@@ -70,7 +60,6 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`IUserService`** (Application/Identity - change user service contract) | `UserService`, `UsersController`, `CustomWebApplicationFactory` mock |
 | **`IUserContext`** (Application/Identity - change context contract) | `UserContext`, `AuthenticationService`, `UserService`, `AuditingInterceptor`, `UsersController`, `AdminController` |
 | **`EmailTemplateNames.cs`** (Application - add/rename template name) | Services constructing `SendSafeAsync()` calls, matching `.liquid` template files |
-| **Test fixture** (change shared helper) | All tests using that fixture |
 | **`AppRoles.cs`** (add role) | Role seeding picks up automatically; consider what permissions to seed for the new role; `RoleManagementService` checks `AppRoles.All` for system role collisions |
 | **`AppPermissions.cs`** (add permission) | Seed in `ApplicationBuilderExtensions.SeedRolePermissionsAsync()`, add `[RequirePermission]` to endpoints, update frontend `$lib/utils/permissions.ts` |
 | **`PiiMasker.cs`** (change masking rules) | `AdminMapper.WithMaskedPii` extensions, `PiiMaskerTests`, `AdminMapperPiiTests` |
@@ -82,18 +71,15 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`RateLimitingOptions.cs`** (add/rename option class) | `RateLimiterExtensions.cs`, `appsettings.json`, `appsettings.Development.json` |
 | **`RateLimiterExtensions.cs`** (add policy) | Requires matching constant in `RateLimitPolicies.cs` and config in `RateLimitingOptions.cs` |
 | **`HostingOptions.cs`** (change hosting config shape) | `HostingExtensions.cs`, `appsettings.json`, `appsettings.Development.json`, `deploy/docker-compose.yml` |
-| **`HostingExtensions.cs`** (change middleware behavior) | `Program.cs`, `AGENTS.md` Hosting Configuration section |
 | **`Dockerfile`** (backend - change build/publish steps) | `.dockerignore`, verify published files don't include dev/test config |
 | **`Dockerfile`** (frontend - change build steps) | `.dockerignore`, `.npmrc` (copied into image for install-affecting settings), `docker.yml` build args, `deploy/build.sh`/`deploy/build.ps1` build args. New `PUBLIC_*` SvelteKit env vars need `ARG`+`ENV` in Dockerfile (before `pnpm run build`), `--build-arg` in deploy scripts and `docker.yml` |
 | **`MyProject.WebApi.csproj`** (add appsettings file) | If non-production: add `CopyToPublishDirectory="Never"` and matching `rm -f` in `Dockerfile` |
-| **Route constraint** (add/modify in `Routing/`) | `Program.cs` constraint registration, route templates using that constraint |
 | **`HealthCheckExtensions.cs`** (change endpoints/checks) | `deploy/docker-compose.yml` healthcheck URLs, frontend health proxy `+server.ts` |
 | **New infrastructure dependency** (DB, cache, storage, etc.) | `MyProject.AppHost/Program.cs` (add resource + `.WithReference()`/`.WithEnvironment()`), `deploy/docker-compose.yml` (add service), `deploy/envs/` (add env vars) |
 | **Connection string config** (change format/name) | Verify `MyProject.AppHost/Program.cs` environment variable mapping still works, `deploy/envs/` env files |
 | **`MyProject.ServiceDefaults/Extensions.cs`** | All projects referencing ServiceDefaults, `Program.cs` `AddServiceDefaults()` call |
 | **`MyProject.AppHost/Program.cs`** | Verify resource names match `ConnectionStrings:*` and `WithEnvironment` keys match `appsettings.json` option paths |
 | **`ProblemDetailsAuthorizationHandler`** | `ProblemDetails` shape, `ErrorMessages.Auth` constants, `Program.cs` registration |
-| **OpenAPI transformers** | Regenerate frontend types to verify; check Scalar UI |
 | **`CaptchaOptions`** (Infrastructure - Captcha config) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `TurnstileCaptchaService`, `ServiceCollectionExtensions` |
 | **`TurnstileCaptchaService`** (Infrastructure - Captcha service) | `ICaptchaService` interface, `CaptchaOptions`, `AuthController` captcha gate |
 | **`TurnstileWidget.svelte`** (Frontend - Captcha widget) | `RegisterForm.svelte`, `ForgotPasswordForm.svelte`, `app.d.ts` (`Window.turnstile`), `TURNSTILE_SITE_KEY` env var (runtime-configurable via `$env/dynamic/private` and SSR layout data) |
@@ -104,7 +90,6 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 |---|---|
 | **`$lib/utils/permissions.ts`** (add permission) | Backend `AppPermissions.cs` must have matching constant; update components checking that permission |
 | **`v1.d.ts`** (regenerated) | Type aliases in `$lib/types/index.ts`, any component using changed schemas |
-| **`$lib/types/index.ts`** (add/rename alias) | All imports of the changed type |
 | **`$lib/api/client.ts`** | Every component using `browserClient` or `createApiClient` |
 | **`$lib/api/error-handling.ts`** | Components that call `getErrorMessage`, `mapFieldErrors`, `isValidationProblemDetails`, `isRateLimited`, `getRetryAfterSeconds`; `mutation.ts` (wraps these utilities) |
 | **`$lib/api/mutation.ts`** | All form components using `handleMutationError()` for rate-limit, validation, and generic error handling |
@@ -115,7 +100,6 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`svelte.config.js`** (CSP) | Test that scripts/styles/images still load; Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com` |
 | **`app.html`** | FOUC prevention, nonce attribute, theme init |
 | **`UserManagementCard.svelte`** | Thin shell - delegates to `RoleManagement.svelte` and `AccountActions.svelte` |
-| **Component barrel `index.ts`** | All imports from that feature folder |
 | **i18n keys** (rename/remove in `en.json`) | Same key in `cs.json`, all `m.{key}()` usages |
 | **i18n keys** (add) | Add to both `en.json` and `cs.json` |
 | **Layout components** (Sidebar, Header, ContentHeader) | All pages that use the app shell |
@@ -124,16 +108,13 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`CommandPalette.svelte`** | Command palette navigation and actions; admin items are per-permission gated (must stay in sync with `AppSidebar.svelte` nav items) |
 | **Admin `+page.server.ts`** (add permission guard) | Must check specific permission and redirect if missing |
 | **Route `+layout.server.ts`** | All child routes that depend on parent data |
-| **Route `+page.server.ts`** | The corresponding `+page.svelte` |
 | **Styles (`themes.css`)** | `tailwind.css` mappings, components using the variables |
 | **Styles (`tailwind.css`)** | Components using custom Tailwind tokens |
 | **`components.json`** (shadcn config) | Future `pnpm dlx shadcn-svelte@latest add` commands |
 | **`.npmrc`** (pnpm settings) | `Dockerfile`, `Dockerfile.local` (both COPY it), CI `--frozen-lockfile` behavior |
-| **`package.json`** (scripts) | CI/CD references, CLAUDE.md pre-commit checks |
 | **`src/test-setup.ts`** | All test files (provides global `$app/*` mocks; changes here affect every test) |
 | **`src/test-utils.ts`** (shared test utilities) | All route-level test files that import `MOCK_USER`, `createMockLoadEvent`, `createMockCookies` |
 | **`$lib/utils/jobs.ts`** (job formatting) | `JobTable.svelte`, `JobInfoCard.svelte`, `JobExecutionHistory.svelte` |
-| **`vite.config.ts`** (`test` block) | vitest test runner config (include patterns, environment, setupFiles) |
 
 ### Cross-Stack Changes
 
@@ -151,14 +132,13 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **CORS config** (`CorsExtensions.cs`) | Frontend dev server origin, `ALLOWED_ORIGINS` env var |
 | **Rate limiting config** | Frontend may need retry/backoff logic |
 | **`appsettings.json`** structure | Options class, `deploy/envs/production-example/api.env`, `deploy/docker-compose.yml` |
-| **Security headers** (backend or frontend) | Verify both sides are consistent |
 | **CI workflows** (`.github/workflows/`) | Verify `dorny/paths-filter` patterns match project structure |
 
 ---
 
 ## Key Files Quick Reference
 
-Files that are frequently referenced in impact tables above. For anything not listed here, use Glob/Grep - the codebase follows predictable naming patterns documented in the AGENTS.md files.
+Files that are frequently referenced in impact tables above. For anything not listed here, use Glob/Grep - the codebase follows predictable naming patterns documented in the convention skills.
 
 ### Backend Naming Patterns
 

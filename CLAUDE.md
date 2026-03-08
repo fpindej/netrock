@@ -2,7 +2,7 @@
 
 NETrock - .NET 10 API (Clean Architecture) + SvelteKit frontend (Svelte 5), fully dockerized.
 
-**The backend API is the core of the project.** It is a public-facing API designed to serve any client - multiple frontends, mobile apps, other backends, third-party integrations. The SvelteKit frontend is a fully functional reference client, not a throwaway. Treat every API change as if unknown consumers depend on it. Breaking changes require careful migration strategy (see AGENTS.md).
+**The backend API is the core of the project.** It is a public-facing API designed to serve any client - multiple frontends, mobile apps, other backends, third-party integrations. The SvelteKit frontend is a fully functional reference client, not a throwaway. Treat every API change as if unknown consumers depend on it.
 
 ```
 Frontend (SvelteKit :5173) → /api/* proxy → Backend API (.NET :8080) → PostgreSQL / MinIO
@@ -44,6 +44,20 @@ Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 - No dead code - remove unused imports, variables, functions, files, and stale references in the same commit
 - No em dashes - never use `—` anywhere (code, comments, docs, UI). Use `-` or rewrite the sentence.
 
+## Breaking Changes
+
+The backend API is public-facing. Treat every contract change with the same care as a published library.
+
+| Layer | Breaking change |
+|---|---|
+| **Domain entity** | Renaming/removing a property, changing a type |
+| **Application interface/DTO** | Changing a method signature, renaming/removing a field, changing nullability |
+| **WebApi endpoint** | Changing route, method, request/response shape, status codes |
+| **Frontend API types** | Always regenerated - broken by any backend DTO change |
+| **i18n keys** | Renaming a key (all usages break) |
+
+**Pre-modification checklist:** (1) Check FILEMAP.md for impact, (2) Search all usages, (3) Regenerate frontend types if API changed, (4) Update i18n in both JSON files, (5) Document in commit body. Prefer additive changes. If breaking, update all consumers in the same PR.
+
 ## Verification
 
 Run before every commit. Fix all errors before committing. **Loop until green - never commit with failures.**
@@ -74,12 +88,40 @@ Do these automatically - never wait to be asked:
 | **Build/test failure** | Read the error, fix it, re-run. Repeat until green. Don't stop and report the error unless stuck after 3 attempts. |
 | **Unclear requirement** | Infer from context and existing patterns first. Ask the user only when genuinely ambiguous (multiple valid approaches with different tradeoffs). |
 
+## Agent Team
+
+Delegate to the right agent for the task. Run reviewers in parallel when reviewing.
+
+| Agent | Role | When to use |
+|---|---|---|
+| `backend-engineer` | Implements .NET features | Task stays within `src/backend/` |
+| `frontend-engineer` | Implements SvelteKit features | Task stays within `src/frontend/` |
+| `fullstack-engineer` | Implements cross-stack features | Task touches both backend and frontend |
+| `backend-reviewer` | Audits C# code (read-only) | Reviewing backend changes |
+| `frontend-reviewer` | Audits Svelte code (read-only) | Reviewing frontend changes |
+| `ux-designer` | Audits UI/UX design quality (read-only) | Checking responsiveness, visual consistency, theming |
+| `security-reviewer` | Audits for vulnerabilities (read-only) | Auth, permissions, PII, tokens, middleware changes |
+| `devops-reviewer` | Audits infra/deployment (read-only) | Dockerfiles, compose, Aspire, CI/CD changes |
+| `test-writer` | Writes tests | Tests needed alongside implementation |
+| `filemap-checker` | Verifies downstream updates (read-only) | After modifying files with known consumers |
+| `tech-writer` | Writes documentation | READMEs, session docs, guides |
+| `product-owner` | Proposes prioritized work items (read-only) | Deciding what to work on next, backlog review |
+
+**Delegation patterns:**
+- **New backend feature**: `backend-engineer` implements, then `backend-reviewer` + `security-reviewer` audit in parallel
+- **New frontend feature**: `frontend-engineer` implements, then `frontend-reviewer` + `ux-designer` audit in parallel
+- **Full-stack feature**: `fullstack-engineer` implements end-to-end
+- **PR review** (`/review-pr`): `backend-reviewer` + `frontend-reviewer` + `security-reviewer` in parallel, add `ux-designer` for UI changes
+- **Design review**: `ux-designer` validates responsiveness and visual consistency
+- **Pre-release check**: `devops-reviewer` validates deployment readiness
+- **What to work on next**: `product-owner` analyzes codebase, issues, and TODOs to propose prioritized work
+- **After modifying shared files**: `filemap-checker` verifies all consumers updated
+
 ## File Roles
 
 | File | Contains |
 |---|---|
-| `AGENTS.md` | Architecture, security, code quality, git workflow |
-| `src/backend/AGENTS.md` | Backend conventions: entities, Result, EF Core, controllers, auth, testing |
-| `src/frontend/AGENTS.md` | Frontend conventions: API client, components, styling, routing, i18n |
-| `.claude/skills/` | Step-by-step procedures for all operations (type `/` to list available skills) |
+| `.claude/agents/` | Specialized agents for delegation (engineers, reviewers, designers, writers) |
+| `.claude/skills/` | Step-by-step procedures and convention references (type `/` to list user-invocable skills) |
+| `.claude/hooks/` | Lifecycle hooks: safety gates, auto-format, quality checks |
 | `FILEMAP.md` | "When you change X, also update Y" - change impact tables |

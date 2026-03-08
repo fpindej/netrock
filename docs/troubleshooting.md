@@ -303,7 +303,7 @@ Then edit `.env.local` to set the correct API port.
 - `ms-*` / `me-*` instead of `ml-*` / `mr-*` (margin)
 - `ps-*` / `pe-*` instead of `pl-*` / `pr-*` (padding)
 
-Run `pnpm run lint` to catch violations. See [frontend conventions](../src/frontend/AGENTS.md) for the full style guide.
+Run `pnpm run lint` to catch violations. See the frontend conventions skill in `.claude/skills/frontend-conventions/` for the full style guide.
 
 ### i18n key not found
 

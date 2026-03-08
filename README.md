@@ -121,7 +121,7 @@ NETrock ships with 20+ native [Claude Code](https://docs.anthropic.com/en/docs/c
 | `/create-issue` | Create a GitHub issue with labels |
 | `/create-release` | Create a GitHub release with auto-generated notes |
 
-Skills are also loaded automatically when Claude Code plans work - it reads the relevant skill and follows the procedure without you having to invoke it. The project also includes `CLAUDE.md`, `AGENTS.md`, and `FILEMAP.md` - structured context files that give Claude Code deep understanding of the architecture, conventions, and change impact across the codebase. No separate onboarding needed.
+Skills are also loaded automatically when Claude Code plans work - it reads the relevant skill and follows the procedure without you having to invoke it. The project also includes `CLAUDE.md` and `FILEMAP.md` as structured context files, plus 12 specialized agents (`.claude/agents/`) and lifecycle hooks (`.claude/hooks/`) for auto-formatting, safety gates, and quality checks. No separate onboarding needed.
 
 ---
 
@@ -129,11 +129,10 @@ Skills are also loaded automatically when Claude Code plans work - it reads the 
 
 | File | Purpose |
 |---|---|
-| [`CLAUDE.md`](CLAUDE.md) | Hard rules, pre-commit checks, architecture overview |
-| [`AGENTS.md`](AGENTS.md) | Full developer guide - security, git discipline, error handling, local dev |
-| [`src/backend/AGENTS.md`](src/backend/AGENTS.md) | Backend conventions - entities, Result pattern, EF Core, controllers, testing |
-| [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md) | Frontend conventions - routing, API client, components, styling, i18n |
-| [`.claude/skills/`](.claude/skills/) | Step-by-step procedures for all operations (use `/` to list) |
+| [`CLAUDE.md`](CLAUDE.md) | Hard rules, verification, agent team guide, architecture overview |
+| [`.claude/agents/`](.claude/agents/) | Specialized agents - engineers, reviewers, designers, devops, tech writer |
+| [`.claude/skills/`](.claude/skills/) | Procedures, convention references, and design tokens (use `/` to list) |
+| [`.claude/hooks/`](.claude/hooks/) | Lifecycle hooks - auto-format, safety gates, quality checks |
 | [`FILEMAP.md`](FILEMAP.md) | Change impact tables - "when you change X, also update Y" |
 
 Deep dives: **[Features](docs/features.md)** · **[Security](docs/security.md)** · **[Architecture](docs/architecture.md)** · **[Development](docs/development.md)** · **[Before You Ship](docs/before-you-ship.md)** · **[Troubleshooting](docs/troubleshooting.md)**

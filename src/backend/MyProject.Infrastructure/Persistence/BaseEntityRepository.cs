@@ -12,7 +12,7 @@ namespace MyProject.Infrastructure.Persistence;
 /// <summary>
 /// Generic EF Core implementation of <see cref="IBaseEntityRepository{TEntity}"/> with soft-delete support.
 /// </summary>
-/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
+/// <remarks>Pattern documented in .claude/skills/backend-conventions/SKILL.md.</remarks>
 internal class BaseEntityRepository<TEntity>(
     MyProjectDbContext dbContext,
     ILogger<BaseEntityRepository<TEntity>> logger)

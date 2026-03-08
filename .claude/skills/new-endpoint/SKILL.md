@@ -6,6 +6,12 @@ Adds an API endpoint to an existing feature.
 
 Infers the feature, operation, HTTP method, route, shapes, and auth from context. Asks only if multiple valid approaches exist and the tradeoffs matter.
 
+## Templates
+
+Use these as starting points - fill in the specifics from context:
+- [Controller action template](assets/controller-action.cs.md)
+- [Validator template](assets/validator.cs.md)
+
 ## Steps
 
 1. Determine: feature, operation name, HTTP method, route, request/response shape, auth requirements

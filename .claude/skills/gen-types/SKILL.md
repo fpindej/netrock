@@ -4,6 +4,9 @@ disable-model-invocation: true
 
 Regenerates frontend API types from the backend OpenAPI spec.
 
+**Recently changed backend files:**
+!`git diff --name-only HEAD~3 -- src/backend/ 2>/dev/null | grep -E '\.(cs)$' | head -20 || echo "(no recent backend changes)"`
+
 ## Steps
 
 1. Try generating types:
