@@ -1,9 +1,9 @@
 ---
 disable-model-invocation: true
-argument-hint: "[unit|component|api|validator]"
+argument-hint: "[unit|component|api|validator|frontend-unit|frontend-component]"
 ---
 
-Adds backend tests. Specify test type or infer from context.
+Adds tests. Specify test type or infer from context.
 
 ## Unit Test
 
@@ -87,3 +87,26 @@ For FluentValidation rules without starting the test server.
    }
    ```
 3. Verify: `dotnet test src/backend/tests/MyProject.Api.Tests -c Release`
+
+## Frontend Unit Test
+
+For utility functions, state modules, and pure logic in `$lib/`.
+
+1. Create `src/frontend/src/lib/{module}/{file}.test.ts` (co-located with source)
+2. Import explicitly: `import { describe, it, expect, vi } from 'vitest'`
+3. Default environment is `node`. For DOM tests, add `// @vitest-environment jsdom` at top of file
+4. `restoreMocks: true` is configured globally - no manual cleanup needed
+5. Verify: `cd src/frontend && pnpm run test`
+
+## Frontend Component Test
+
+For Svelte components with DOM interactions.
+
+1. Create `src/frontend/src/lib/components/{feature}/{Component}.test.ts` (co-located)
+2. Add `// @vitest-environment jsdom` at top of file
+3. Mock SvelteKit modules as needed:
+   ```typescript
+   vi.mock('$app/navigation', () => ({ goto: vi.fn(), invalidateAll: vi.fn() }));
+   vi.mock('$lib/paraglide/messages', () => new Proxy({}, { get: (_, key) => () => String(key) }));
+   ```
+4. Verify: `cd src/frontend && pnpm run test`

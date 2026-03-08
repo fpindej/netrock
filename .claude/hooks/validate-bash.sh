@@ -56,4 +56,16 @@ if echo "$COMMAND" | grep -qE 'git\s+branch\s+-D\b'; then
     exit 2
 fi
 
+# Block piping remote scripts to shell
+if echo "$COMMAND" | grep -qE '(curl|wget)\s+.*\|\s*(ba)?sh'; then
+    echo "Piping remote scripts to shell blocked. Download and review first." >&2
+    exit 2
+fi
+
+# Block remote branch deletion via push
+if echo "$COMMAND" | grep -qE 'git\s+push\s+\S+\s+:[^-]'; then
+    echo "Remote branch deletion blocked. Ask the user first." >&2
+    exit 2
+fi
+
 exit 0
