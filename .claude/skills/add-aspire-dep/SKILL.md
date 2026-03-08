@@ -29,5 +29,5 @@ Adds an infrastructure dependency to Aspire AppHost.
    ```csharp
    .WaitFor(myResource)
    ```
-6. Also add the service to `deploy/docker-compose.yml` for production.
+6. Add a `.PublishAsDockerComposeService()` callback with production hardening (see `ApplyHardened` pattern in `Program.cs`), then re-run `./deploy/publish.sh`.
 7. Verify: `dotnet build src/backend/MyProject.slnx`

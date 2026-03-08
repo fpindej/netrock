@@ -9,9 +9,8 @@ Adds an environment variable (backend or frontend).
 1. Add to `appsettings.Development.json` if it needs a dev-specific value (Aspire injects infrastructure connection strings automatically - only add behavioral config here)
 2. Add to `deploy/envs/production-example/api.env` with a placeholder for production
 3. If it maps to an Options class: use `Section:Key` naming in appsettings (e.g., `Authentication:Jwt:AccessTokenLifetime`)
-4. If it needs Docker wiring for production: add to `deploy/docker-compose.yml` `environment` block with `${VAR}` interpolation, and place the variable in `compose.env`
-5. If it needs Aspire wiring: add `.WithEnvironment("Section__Key", value)` in `MyProject.AppHost/Program.cs`
-6. If it needs an Options class: use `/add-options-class`
+4. If it needs production wiring: add via `.WithEnvironment()` or `.PublishAsDockerComposeService()` in `MyProject.AppHost/Program.cs`, then re-run `./deploy/publish.sh`
+5. If it needs an Options class: use `/add-options-class`
 
 ## Frontend-consumed variable
 
@@ -25,7 +24,7 @@ Adds an environment variable (backend or frontend).
 1. Steps 1-2 above
 2. Add `ARG` + `ENV` to `src/frontend/Dockerfile` (before `pnpm run build`)
 3. Add `--build-arg` to `deploy/build.sh`, `deploy/build.ps1`, and `.github/workflows/docker.yml`
-4. Add to the `frontend` service `environment` block in `deploy/docker-compose.yml`
+4. Add in the frontend's `PublishAsDockerComposeService` callback in `MyProject.AppHost/Program.cs`, then re-run `./deploy/publish.sh`
 5. Import: `import { PUBLIC_VAR } from '$env/static/public';`
 
 > For secrets or keys that differ per environment (like Turnstile site keys), prefer runtime configuration via `$env/dynamic/private` with SSR layout data instead of build-time `PUBLIC_*` args.

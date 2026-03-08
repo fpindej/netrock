@@ -82,7 +82,7 @@ pwsh -ExecutionPolicy Bypass -File init.ps1
 
 ### Name validation fails (`must be PascalCase`)
 
-**Cause:** The project name must match `^[A-Z][a-zA-Z0-9]*$` — start with an uppercase letter, alphanumeric only. No hyphens, underscores, or spaces.
+**Cause:** The project name must match `^[A-Z][a-zA-Z0-9]*$` - start with an uppercase letter, alphanumeric only. No hyphens, underscores, or spaces.
 
 **Valid:** `MyAwesomeApi`, `TodoApp`, `WebApi`
 **Invalid:** `my-app`, `todo_app`, `123App`
@@ -128,7 +128,7 @@ This restores tools declared in `.config/dotnet-tools.json`, including `dotnet-e
 **Fix:**
 
 ```bash
-docker info    # Must succeed — if not, start Docker Desktop
+docker info    # Must succeed - if not, start Docker Desktop
 ```
 
 ### Port already in use
@@ -156,15 +156,15 @@ dotnet run --project src/backend/MyProject.AppHost
 
 ### Database connection fails under Aspire
 
-**Cause:** Aspire injects `ConnectionStrings:Database` via environment variables. If `appsettings.Development.json` has a stale `ConnectionStrings` section, it can override the Aspire-injected value.
+**Cause:** Aspire injects `ConnectionStrings:Database` via environment variables, which take precedence over `appsettings.Development.json`. If the API connects to the wrong database, verify the Aspire-injected connection string is correct (check the Aspire Dashboard environment tab for the `api` resource).
 
-**Fix:** `appsettings.Development.json` should NOT contain a `ConnectionStrings` section. Connection strings are injected by Aspire for local dev and by environment variables for production.
+**Fix:** The `appsettings.Development.json` has standalone defaults (localhost:5432) for running without Aspire. When running under Aspire, these are overridden automatically. If you see connection issues, check that the `db` resource in `MyProject.AppHost/Program.cs` is healthy and that no conflicting `ConnectionStrings__Database` environment variable is set in your shell.
 
 ### MinIO bucket not created
 
 **Cause:** The storage service didn't initialize properly, or the bucket name doesn't match configuration.
 
-**Fix:** Access the MinIO Console from the Aspire Dashboard — look for the `storage` resource and click its endpoint link.
+**Fix:** Access the MinIO Console from the Aspire Dashboard - look for the `storage` resource and click its endpoint link.
 
 ---
 
@@ -183,9 +183,9 @@ dotnet build src/backend/MyProject.slnx
 
 ### Tests fail with "connection refused"
 
-**Cause:** No Docker containers are needed for tests. Both component tests and API integration tests use EF Core's InMemory database provider — each test gets a fresh GUID-named database. Caching and Hangfire are disabled via `appsettings.Testing.json`.
+**Cause:** No Docker containers are needed for tests. Both component tests and API integration tests use EF Core's InMemory database provider - each test gets a fresh GUID-named database. Caching and Hangfire are disabled via `appsettings.Testing.json`.
 
-If you see "connection refused," something is incorrectly trying to reach PostgreSQL — usually a misconfigured test fixture or a service that was not replaced by the test infrastructure.
+If you see "connection refused," something is incorrectly trying to reach PostgreSQL - usually a misconfigured test fixture or a service that was not replaced by the test infrastructure.
 
 **Fix:** Verify you're running the correct test project and that `CustomWebApplicationFactory` (API tests) or `TestDbContextFactory` (component tests) is properly configured.
 
@@ -193,18 +193,18 @@ If you see "connection refused," something is incorrectly trying to reach Postgr
 
 **Cause:** In Development mode, the API calls `Database.Migrate()` on startup to apply pending migrations. If you changed an entity but didn't create a migration, the database schema won't match your model.
 
-> If your deployment manages the schema externally (e.g., SQL scripts or a separate migration tool), this entry may not apply. See [Development — Database Migrations](development.md#database-migrations) for the full workflow.
+> If your deployment manages the schema externally (e.g., SQL scripts or a separate migration tool), this entry may not apply. See [Development - Database Migrations](development.md#database-migrations) for the full workflow.
 
 **Fix:**
 
 ```bash
 dotnet ef migrations add <MigrationName> \
-  --project src/backend/MyProject.Infrastructure \
-  --startup-project src/backend/MyProject.WebApi \
-  --output-dir Persistence/Migrations
+ --project src/backend/MyProject.Infrastructure \
+ --startup-project src/backend/MyProject.WebApi \
+ --output-dir Persistence/Migrations
 ```
 
-Restart the API — the migration applies automatically on startup.
+Restart the API - the migration applies automatically on startup.
 
 ### "Cannot access a disposed context" (`ObjectDisposedException`)
 
@@ -218,13 +218,13 @@ Restart the API — the migration applies automatically on startup.
 
 **Fix:**
 
-- In application code: inject `TimeProvider` via constructor — it's already registered
+- In application code: inject `TimeProvider` via constructor - it's already registered
 - In tests: use `FakeTimeProvider` from `Microsoft.Extensions.Time.Testing`:
   ```csharp
   var timeProvider = new FakeTimeProvider(
       new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero));
   ```
-- Never use `DateTime.UtcNow` or `DateTimeOffset.UtcNow` directly — always go through the injected `TimeProvider`
+- Never use `DateTime.UtcNow` or `DateTimeOffset.UtcNow` directly - always go through the injected `TimeProvider`
 
 ---
 
@@ -243,7 +243,7 @@ pnpm install
 
 ### `pnpm run check` shows ~30 Paraglide errors
 
-**Cause:** Paraglide JS generates its output at build time into `src/lib/paraglide/`. Before building, these files don't exist and `svelte-check` reports missing imports. Even after compiling Paraglide, `svelte-check` may still report ~30 module-level errors from the generated output — these are expected and do not affect functionality.
+**Cause:** Paraglide JS generates its output at build time into `src/lib/paraglide/`. Before building, these files don't exist and `svelte-check` reports missing imports. Even after compiling Paraglide, `svelte-check` may still report ~30 module-level errors from the generated output - these are expected and do not affect functionality.
 
 **Fix:** Compile Paraglide to reduce noise:
 
@@ -324,11 +324,11 @@ English is the base locale. The path pattern is `./src/messages/{locale}.json` a
 
 **Cause:** The auth system uses HttpOnly JWT cookies. If the cookie isn't being set, common causes are:
 
-- **Wrong domain / origin** — the API and frontend must share the same origin or be properly proxied through the BFF
-- **SameSite / Secure flags** — in production, cookies require HTTPS. Locally, HTTP works because `SameSite=Lax` is the default
-- **CORS misconfiguration** — the API has a CORS startup guard; check the allowed origins
+- **Wrong domain / origin** - the API and frontend must share the same origin or be properly proxied through the BFF
+- **SameSite / Secure flags** - in production, cookies require HTTPS. Locally, HTTP works because `SameSite=Lax` is the default
+- **CORS misconfiguration** - the API has a CORS startup guard; check the allowed origins
 
-**Fix:** Open browser DevTools → Network tab. Inspect the login response headers — look for `Set-Cookie`. If the cookie is present but not being sent on subsequent requests, check the `Domain`, `Path`, `SameSite`, and `Secure` attributes.
+**Fix:** Open browser DevTools → Network tab. Inspect the login response headers - look for `Set-Cookie`. If the cookie is present but not being sent on subsequent requests, check the `Domain`, `Path`, `SameSite`, and `Secure` attributes.
 
 ### Token refresh loops / unexpected redirect to login
 
@@ -336,14 +336,14 @@ English is the base locale. The path pattern is `./src/messages/{locale}.json` a
 
 - Concurrent 401s share a single refresh attempt (deduplicated)
 - After a successful refresh, only **idempotent** requests (`GET`, `HEAD`, `OPTIONS`) are automatically retried
-- Non-idempotent requests (`POST`, `PUT`, `PATCH`, `DELETE`) that receive a 401 are **not retried** — the 401 propagates to the caller
+- Non-idempotent requests (`POST`, `PUT`, `PATCH`, `DELETE`) that receive a 401 are **not retried** - the 401 propagates to the caller
 - If the refresh itself fails, the user is redirected to `/login`
 
 **Fix:** If you're seeing unexpected login redirects:
 
-1. Check the refresh token cookie — it may have expired or been invalidated by reuse detection
+1. Check the refresh token cookie - it may have expired or been invalidated by reuse detection
 2. For non-GET requests failing with 401, the user may need to retry the action manually after re-authentication
-3. Check the API logs for refresh token reuse detection warnings — this indicates a potential security event
+3. Check the API logs for refresh token reuse detection warnings - this indicates a potential security event
 
 ### Permission changes not taking effect
 
@@ -367,7 +367,7 @@ English is the base locale. The path pattern is `./src/messages/{locale}.json` a
 
 If your changes don't match these paths, the corresponding jobs won't run.
 
-**Fix:** This is expected behavior — it keeps CI fast. If you need to force a run, push a trivial change to a matched path or re-run the workflow manually from GitHub Actions.
+**Fix:** This is expected behavior - it keeps CI fast. If you need to force a run, push a trivial change to a matched path or re-run the workflow manually from GitHub Actions.
 
 ### Docker build fails in CI
 
@@ -385,37 +385,37 @@ If your changes don't match these paths, the corresponding jobs won't run.
 
 ## Production Deployment
 
-Production uses Docker Compose (not Aspire).
+Production uses Docker Compose generated from the Aspire AppHost via `./deploy/publish.sh`.
 
-### "Environment directory not found" (`deploy/envs/production/`)
+### "No deployment package found" (`deploy/compose/`)
 
-**Cause:** The production environment directory doesn't exist yet. The template ships a `production-example` directory that you must copy and configure.
+**Cause:** The deployment package hasn't been generated yet.
 
 **Fix:**
 
 ```bash
-cp -r deploy/envs/production-example deploy/envs/production     # Linux / macOS
-Copy-Item -Recurse deploy\envs\production-example deploy\envs\production   # Windows PowerShell
+./deploy/publish.sh          # Linux / macOS
+.\deploy\publish.ps1         # Windows PowerShell
 ```
 
-Then edit `deploy/envs/production/compose.env` with your actual values.
+Then fill in `deploy/compose/.env` (infrastructure secrets) and `deploy/compose/envs/*.env` (app config) with your production values.
 
 ### Container crashes immediately in production (`read_only` filesystem)
 
-**Cause:** The production overlay applies `read_only: true` to all service containers for security hardening. Services that write to unexpected paths will crash with permission errors.
+**Cause:** The Aspire-generated production compose applies `read_only: true` to all service containers for security hardening. Services that write to unexpected paths will crash with permission errors.
 
 Only `/tmp` is writable by default. The API service also gets `/home/app` as a writable tmpfs mount (.NET needs it for data-protection keys and diagnostics). Stateful services (`db`, `storage`) override `read_only` back to `false`.
 
 **Fix:** If a custom service needs to write to disk, either:
 
-- Add a `tmpfs` mount for the writable path in `docker-compose.production.yml`
-- Or set `read_only: false` on that service (less secure)
+- Add a `tmpfs` mount for the writable path in the service's `PublishAsDockerComposeService` callback in `MyProject.AppHost/Program.cs`, then re-run `./deploy/publish.sh`
+- Or set `read_only: false` on that service in the callback (less secure)
 
 ### SvelteKit CSRF errors in production (`403 Cross-site POST form submissions are forbidden`)
 
 **Cause:** SvelteKit requires the `ORIGIN` environment variable when running behind a TLS-terminating reverse proxy. Without it, form submissions and non-GET requests are rejected.
 
-**Fix:** Set `ORIGIN` in `deploy/envs/production/compose.env`:
+**Fix:** Set `ORIGIN` in the `.env` file:
 
 ```env
 ORIGIN=https://your-domain.com
@@ -425,7 +425,7 @@ If you have multiple origins (e.g., `www` and apex domain), use `ALLOWED_ORIGINS
 
 ### Required production environment variables
 
-These variables must be set in `deploy/envs/production/compose.env` before the stack will start:
+These variables must be set in the `.env` file before the stack will start:
 
 | Variable | Purpose |
 |---|---|
@@ -433,10 +433,10 @@ These variables must be set in `deploy/envs/production/compose.env` before the s
 | `FRONTEND_IMAGE` | Docker image for the frontend |
 | `POSTGRES_USER` | Database username |
 | `POSTGRES_PASSWORD` | Database password |
-| `JWT_SECRET_KEY` | Minimum 32 characters — generate with `openssl rand -base64 64` |
+| JWT secret | Minimum 32 characters - generate with `openssl rand -base64 64` |
 | `ORIGIN` | Public URL for SvelteKit CSRF (e.g., `https://your-domain.com`) |
 
-See `deploy/envs/production-example/compose.env` for the full list with descriptions.
+See the `.env` file generated by `./deploy/publish.sh` for the full list with descriptions.
 
 ---
 
@@ -452,7 +452,7 @@ Three users are seeded (configured in `appsettings.Development.json`):
 | Admin | `admin@test.com` | `AdminUser123!` |
 | User | `testuser@test.com` | `TestUser123!` |
 
-Use SuperAdmin for full access. The User role has the most restrictive permissions — good for testing authorization guards.
+Use SuperAdmin for full access. The User role has the most restrictive permissions - good for testing authorization guards.
 
 ### Where are the logs?
 
@@ -461,7 +461,7 @@ Use SuperAdmin for full access. The User role has the most restrictive permissio
 
 ### How do I reset everything?
 
-Stop the Aspire AppHost (Ctrl+C) — all containers stop and system resources are freed. Data persists in named Docker volumes (PostgreSQL and MinIO). To wipe everything and start fresh, remove the volumes:
+Stop the Aspire AppHost (Ctrl+C) - all containers stop and system resources are freed. Data persists in named Docker volumes (PostgreSQL and MinIO). To wipe everything and start fresh, remove the volumes:
 
 ```bash
 docker volume ls | grep <project-slug>
@@ -470,7 +470,7 @@ docker volume rm <volume-name>
 
 ### What's the difference between `up.sh` and `up.ps1`?
 
-They are functionally identical — `up.sh` is for Linux/macOS (Bash), `up.ps1` is for Windows (PowerShell). Both are thin wrappers around `docker compose` that resolve the environment-specific compose overlay and env files. They are used for **production deployment only** — local development uses Aspire.
+They are functionally identical - `up.sh` is for Linux/macOS (Bash), `up.ps1` is for Windows (PowerShell). Both are thin wrappers around `docker compose` that point at the Aspire-generated deployment package in `deploy/compose/`. They are used for **production deployment only** - local development uses Aspire (`dotnet run --project src/backend/MyProject.AppHost`).
 
 ---
 
@@ -478,9 +478,9 @@ They are functionally identical — `up.sh` is for Linux/macOS (Bash), `up.ps1` 
 
 If this guide didn't solve your problem:
 
-1. **Search [existing GitHub issues](https://github.com/fpindej/netrock/issues)** — someone may have hit the same problem
-2. **Ask in [Discord](https://discord.gg/5rHquRptSh)** — the community and maintainers are active
-3. **Open a [new issue](https://github.com/fpindej/netrock/issues/new)** — include:
-   - Your OS and Docker version
-   - The full error message or log output
-   - Steps to reproduce
+1. **Search [existing GitHub issues](https://github.com/fpindej/netrock/issues)** - someone may have hit the same problem
+2. **Ask in [Discord](https://discord.gg/5rHquRptSh)** - the community and maintainers are active
+3. **Open a [new issue](https://github.com/fpindej/netrock/issues/new)** - include:
+  - Your OS and Docker version
+  - The full error message or log output
+  - Steps to reproduce

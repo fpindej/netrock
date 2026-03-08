@@ -62,10 +62,16 @@ Migrations auto-apply on startup in Development.
 
 ## Production Deployment
 
-Docker Compose is used for production only. Aspire is not involved.
+Production uses Docker Compose generated from the Aspire AppHost.
 
 ```bash
-./deploy/up.sh production up -d
+# 1. Generate deployment artifacts
+./deploy/publish.sh
+
+# 2. Fill in deploy/compose/.env and deploy/compose/envs/*.env
+
+# 3. Start the stack
+./deploy/up.sh up -d
 ```
 
 See [Before You Ship](before-you-ship.md) for the full production checklist.
