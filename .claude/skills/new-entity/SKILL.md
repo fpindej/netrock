@@ -6,6 +6,12 @@ Creates a new backend entity with EF Core configuration and migration.
 
 Infers entity name, properties, feature name, and enum values from context. Asks only if the entity's purpose or key properties are genuinely ambiguous.
 
+## Templates
+
+Use these as starting points - fill in the specifics from context:
+- [Entity class template](assets/entity.cs.md)
+- [EF Core configuration template](assets/configuration.cs.md)
+
 ## Conventions
 
 - **Boolean properties**: Use `Is*` prefix in C# (e.g. `IsUsed`, `IsInvalidated`) per .NET convention, but map to prefix-free DB column names via `HasColumnName` (e.g. `Used`, `Invalidated`) to keep the schema clean.

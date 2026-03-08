@@ -31,24 +31,10 @@ Creates a pull request for the current branch.
 
 **Create PR:**
 
-8. Create PR with `gh pr create`:
+8. Create PR with `gh pr create` using the [PR body template](assets/pr-body.md):
    - **Title**: Conventional Commit format, under 70 chars
    - **Base**: argument if provided, otherwise `master`
    - **Labels**: Apply all relevant (`backend`, `frontend`, `feature`, `bug`, `security`, `documentation`)
-   - **Body**:
-     ```
-     ## Summary
-     - Change 1
-     - Change 2
-
-     ## Breaking Changes
-     None / describe if any
-
-     ## Test Plan
-     - [ ] Verification steps
-
-     Closes #N (if applicable)
-     ```
 9. Merge strategy for this project: **squash-and-merge only**
 10. Report PR URL
 
