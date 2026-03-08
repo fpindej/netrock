@@ -611,6 +611,35 @@ public class AdminServiceTests : IDisposable
         Assert.True(result.IsSuccess);
     }
 
+    [Fact]
+    public async Task DeleteUser_LastSuperuser_ReturnsFailure()
+    {
+        // Caller is Superuser; target also holds Superuser.
+        // EnforceHierarchyAsync needs callerRank > targetRank to pass.
+        // Mock GetRolesAsync on the target to return User first (for hierarchy check)
+        // then Superuser (for the last-superuser protection check).
+        var caller = new ApplicationUser { Id = _callerId, UserName = "superuser@test.com" };
+        _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
+        _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Superuser });
+
+        var target = new ApplicationUser { Id = _targetId, UserName = "target@test.com" };
+        _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
+        _userManager.GetRolesAsync(target).Returns(
+            new List<string> { AppRoles.User },
+            new List<string> { AppRoles.Superuser });
+
+        // Only 1 user in Superuser role - this should block deletion
+        var superuserRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Superuser };
+        _roleManager.FindByNameAsync(AppRoles.Superuser).Returns(superuserRole);
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = superuserRole.Id, UserId = _targetId });
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _sut.DeleteUserAsync(_callerId, _targetId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.LastSuperuserCannotDelete, result.Error);
+    }
+
     #endregion
 
     #region GetUsersAsync

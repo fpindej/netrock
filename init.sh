@@ -386,7 +386,14 @@ echo -e "  API:          ${CYAN}$API_PORT${NC}"
 # ─────────────────────────────────────────────────────────────────────────────
 echo ""
 ADMIN_EMAIL=$(prompt_value "Superuser email" "$ADMIN_EMAIL")
-ADMIN_PASSWORD=$(prompt_value "Superuser password" "$ADMIN_PASSWORD")
+
+if [[ "$YES_TO_ALL" == "true" ]]; then
+    : # keep ADMIN_PASSWORD as-is (from CLI flag or default)
+else
+    read -sp "$(echo -e "${BOLD}Superuser password [${ADMIN_PASSWORD}]${NC}: ")" ADMIN_PASSWORD_INPUT
+    echo
+    ADMIN_PASSWORD="${ADMIN_PASSWORD_INPUT:-$ADMIN_PASSWORD}"
+fi
 
 # Convert PascalCase to kebab-case (MyAwesomeApi -> my-awesome-api)
 to_kebab_case() {
@@ -509,6 +516,9 @@ fi
 JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n/+=' | cut -c1-64)
 ENCRYPTION_KEY=$(openssl rand -base64 64 | tr -d '\n/+=' | cut -c1-64)
 
+# Escape special sed characters in the password (/, &, \)
+ESCAPED_ADMIN_PASSWORD=$(printf '%s\n' "$ADMIN_PASSWORD" | sed 's/[&/\]/\\&/g')
+
 print_substep "Replacing placeholders..."
 if [ "$OS" = "Darwin" ]; then
     grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}\|{INIT_ENCRYPTION_KEY}\|{INIT_SUPERUSER_EMAIL}\|{INIT_SUPERUSER_PASSWORD}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
@@ -518,7 +528,7 @@ if [ "$OS" = "Darwin" ]; then
         -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" \
         -e "s/{INIT_ENCRYPTION_KEY}/$ENCRYPTION_KEY/g" \
         -e "s/{INIT_SUPERUSER_EMAIL}/$ADMIN_EMAIL/g" \
-        -e "s/{INIT_SUPERUSER_PASSWORD}/$ADMIN_PASSWORD/g" 2>/dev/null || true
+        -e "s/{INIT_SUPERUSER_PASSWORD}/$ESCAPED_ADMIN_PASSWORD/g" 2>/dev/null || true
 else
     grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}\|{INIT_ENCRYPTION_KEY}\|{INIT_SUPERUSER_EMAIL}\|{INIT_SUPERUSER_PASSWORD}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
@@ -527,7 +537,7 @@ else
         -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" \
         -e "s/{INIT_ENCRYPTION_KEY}/$ENCRYPTION_KEY/g" \
         -e "s/{INIT_SUPERUSER_EMAIL}/$ADMIN_EMAIL/g" \
-        -e "s/{INIT_SUPERUSER_PASSWORD}/$ADMIN_PASSWORD/g" 2>/dev/null || true
+        -e "s/{INIT_SUPERUSER_PASSWORD}/$ESCAPED_ADMIN_PASSWORD/g" 2>/dev/null || true
 fi
 
 print_success "Port configuration complete"

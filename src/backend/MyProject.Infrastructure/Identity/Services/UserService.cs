@@ -296,10 +296,10 @@ internal sealed class UserService(
             return Result.Failure(ErrorMessages.User.DeleteInvalidPassword);
         }
 
-        var lastAdminResult = await EnforceLastAdminProtectionForDeletionAsync(user, cancellationToken);
-        if (!lastAdminResult.IsSuccess)
+        var lastSuperuserResult = await EnforceLastSuperuserProtectionForDeletionAsync(user, cancellationToken);
+        if (!lastSuperuserResult.IsSuccess)
         {
-            return lastAdminResult;
+            return lastSuperuserResult;
         }
 
         await auditService.LogAsync(AuditActions.AccountDeletion, userId: userId.Value, ct: cancellationToken);
@@ -326,7 +326,7 @@ internal sealed class UserService(
     /// <summary>
     /// Prevents self-deletion if the user is the last Superuser.
     /// </summary>
-    private async Task<Result> EnforceLastAdminProtectionForDeletionAsync(
+    private async Task<Result> EnforceLastSuperuserProtectionForDeletionAsync(
         ApplicationUser user, CancellationToken cancellationToken)
     {
         var userRoles = await userManager.GetRolesAsync(user);
@@ -341,7 +341,7 @@ internal sealed class UserService(
 
             if (usersInRoleCount <= 1)
             {
-                return Result.Failure(ErrorMessages.User.LastAdminCannotDelete);
+                return Result.Failure(ErrorMessages.User.LastSuperuserCannotDelete);
             }
         }
 

@@ -65,7 +65,7 @@ public static class ErrorMessages
         public const string PhoneNumberTaken = "This phone number is already in use.";
         public const string UpdateFailed = "Failed to update profile.";
         public const string DeleteFailed = "Failed to delete account.";
-        public const string LastAdminCannotDelete = "Cannot delete your account while you are the last superuser.";
+        public const string LastSuperuserCannotDelete = "Cannot delete your account while you are the last superuser.";
     }
 
     /// <summary>
@@ -94,7 +94,7 @@ public static class ErrorMessages
         public const string DeleteFailed = "Failed to delete user account.";
         public const string EmailVerificationFailed = "Failed to verify email address.";
         public const string CreateUserFailed = "Failed to create user account.";
-        public const string LastAdminCannotDelete = "Cannot delete this user - they are the last superuser.";
+        public const string LastSuperuserCannotDelete = "Cannot delete this user - they are the last superuser.";
         public const string TwoFactorNotEnabled = "Two-factor authentication is not enabled for this user.";
         public const string DisableTwoFactorSelfAction = "You cannot disable your own two-factor authentication from the admin panel.";
         public const string DisableTwoFactorFailed = "Failed to disable two-factor authentication.";

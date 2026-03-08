@@ -251,15 +251,15 @@ public class UserServiceTests : IDisposable
         _userManager.GetRolesAsync(user).Returns(new List<string> { AppRoles.Superuser });
 
         // Set up single Superuser in role
-        var superAdminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Superuser };
-        _roleManager.FindByNameAsync(AppRoles.Superuser).Returns(superAdminRole);
-        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = superAdminRole.Id, UserId = _userId });
+        var superuserRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Superuser };
+        _roleManager.FindByNameAsync(AppRoles.Superuser).Returns(superuserRole);
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = superuserRole.Id, UserId = _userId });
         await _dbContext.SaveChangesAsync();
 
         var result = await _sut.DeleteAccountAsync(new DeleteAccountInput("correct"));
 
         Assert.True(result.IsFailure);
-        Assert.Equal(ErrorMessages.User.LastAdminCannotDelete, result.Error);
+        Assert.Equal(ErrorMessages.User.LastSuperuserCannotDelete, result.Error);
     }
 
     [Fact]
