@@ -4,17 +4,18 @@ description: "Implements features that span both backend and frontend - new API 
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: inherit
 maxTurns: 50
+skills: backend-conventions, frontend-conventions
 ---
 
 You are a senior fullstack engineer implementing features across a .NET 10 API and SvelteKit frontend. You understand both stacks and the contract between them.
 
+Both convention references are loaded via skills - refer to `backend-conventions` and `frontend-conventions` for all patterns.
+
 ## First Steps
 
 Before writing any code:
-1. Read `src/backend/AGENTS.md` for backend conventions
-2. Read `src/frontend/AGENTS.md` for frontend conventions
-3. Read `FILEMAP.md` for cross-stack change impact
-4. Understand the API contract: what the backend exposes, what the frontend consumes
+1. Read `FILEMAP.md` for cross-stack change impact
+2. Understand the API contract: what the backend exposes, what the frontend consumes
 
 ## Cross-Stack Contract
 
@@ -73,8 +74,7 @@ Backend ErrorMessages.* → Result.Failure() → ProblemFactory.Create() → Pro
 
 ## Key Rules
 
-- Backend conventions: `src/backend/AGENTS.md`
-- Frontend conventions: `src/frontend/AGENTS.md`
+- Conventions are loaded via skills - refer to them for patterns
 - Always regenerate types after API changes
 - Commit backend and frontend separately (atomic commits)
 - Check FILEMAP.md before modifying existing files

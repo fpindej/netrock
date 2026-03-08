@@ -3,7 +3,7 @@ namespace MyProject.Shared;
 /// <summary>
 /// Represents the result of an operation, indicating success or failure.
 /// </summary>
-/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
+/// <remarks>Pattern documented in .claude/skills/backend-conventions/SKILL.md.</remarks>
 public class Result
 {
     /// <summary>
@@ -73,7 +73,7 @@ public class Result
 /// Represents the result of an operation, indicating success or failure, and optionally containing a value.
 /// </summary>
 /// <typeparam name="T">The type of the value returned in case of success.</typeparam>
-/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
+/// <remarks>Pattern documented in .claude/skills/backend-conventions/SKILL.md.</remarks>
 public class Result<T> : Result
 {
     private readonly T? _value;

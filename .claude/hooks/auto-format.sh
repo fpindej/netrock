@@ -30,7 +30,7 @@ case "$FILE_PATH" in
         # Format frontend files with prettier
         if [ -f "$CLAUDE_PROJECT_DIR/src/frontend/node_modules/.bin/prettier" ]; then
             cd "$CLAUDE_PROJECT_DIR/src/frontend"
-            npx prettier --write "$FILE_PATH" 2>/dev/null || true
+            pnpm exec prettier --write "$FILE_PATH" 2>/dev/null || true
         fi
         ;;
 esac

@@ -43,7 +43,7 @@ Key skills for daily development:
 | `/review-pr` | Reviewing someone else's PR |
 | `/review-design` | Checking UI/UX quality of frontend components |
 
-The project context files (`CLAUDE.md`, `FILEMAP.md`, backend/frontend `AGENTS.md`) plus specialized agents and lifecycle hooks provide Claude Code with deep understanding of the architecture and conventions. No separate onboarding needed.
+The project context files (`CLAUDE.md`, `FILEMAP.md`) plus specialized agents, convention skills, and lifecycle hooks provide Claude Code with deep understanding of the architecture and conventions. No separate onboarding needed.
 
 ---
 

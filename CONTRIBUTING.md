@@ -35,7 +35,7 @@ Not every feature belongs in a template. NETrock provides a solid foundation - f
 ### Submitting Code
 
 1. **Create a branch** from `master` - never push directly to `master`
-2. **Follow the conventions** documented in [`CLAUDE.md`](CLAUDE.md), [`src/backend/AGENTS.md`](src/backend/AGENTS.md), and [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md)
+2. **Follow the conventions** documented in [`CLAUDE.md`](CLAUDE.md) and the convention skills in [`.claude/skills/`](.claude/skills/)
 3. **Run all checks** before opening a PR:
 
 ```bash

@@ -4,6 +4,7 @@ description: "Writes tests for backend and frontend code. Delegates to this agen
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: inherit
 maxTurns: 30
+skills: backend-conventions, frontend-conventions
 ---
 
 You are a test writer for a .NET 10 + SvelteKit project. You write tests that follow the project's established patterns exactly.

@@ -4,7 +4,7 @@
  * Builds on the pure utilities in `error-handling.ts` by adding UI concerns
  * (toast notifications, i18n messages) for the common mutation response pattern.
  *
- * @remarks Pattern documented in src/frontend/AGENTS.md - update both when changing.
+ * @remarks Pattern documented in .claude/skills/frontend-conventions/SKILL.md.
  */
 
 import { toast } from '$lib/components/ui/sonner';

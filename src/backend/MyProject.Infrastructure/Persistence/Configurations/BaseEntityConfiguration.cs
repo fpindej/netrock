@@ -8,7 +8,7 @@ namespace MyProject.Infrastructure.Persistence.Configurations;
 /// Base EF Core configuration for all entities extending <see cref="BaseEntity"/>.
 /// Configures primary key, audit columns, and soft-delete index.
 /// </summary>
-/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
+/// <remarks>Pattern documented in .claude/skills/backend-conventions/SKILL.md.</remarks>
 public abstract class BaseEntityConfiguration<TEntity> : IEntityTypeConfiguration<TEntity> where TEntity : BaseEntity
 {
     public virtual void Configure(EntityTypeBuilder<TEntity> builder)

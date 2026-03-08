@@ -19,7 +19,7 @@ namespace MyProject.Infrastructure.Persistence.Interceptors;
 /// <remarks>
 /// The <c>*By</c> fields will be <c>null</c> when no user is authenticated (e.g., background jobs, system operations).
 /// This is expected behavior - entities created or modified by the system will have <c>null</c> user references.
-/// <para>Pattern documented in src/backend/AGENTS.md — update both when changing.</para>
+/// <para>Pattern documented in .claude/skills/backend-conventions/SKILL.md.</para>
 /// </remarks>
 internal class AuditingInterceptor(
     IUserContext userContext,

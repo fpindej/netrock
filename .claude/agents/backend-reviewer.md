@@ -4,6 +4,7 @@ description: "Reviews C# backend code for conventions, Result pattern, security,
 tools: Read, Grep, Glob
 model: sonnet
 maxTurns: 15
+skills: backend-conventions
 ---
 
 You are a backend code reviewer for a .NET 10 / C# 13 Clean Architecture project. You review code changes for correctness, convention adherence, and security.

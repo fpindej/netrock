@@ -8,7 +8,7 @@ namespace MyProject.WebApi.Middlewares;
 /// <summary>
 /// Catches unhandled exceptions and maps them to standardized <see cref="ProblemDetails"/> JSON responses.
 /// </summary>
-/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
+/// <remarks>Pattern documented in .claude/skills/backend-conventions/SKILL.md.</remarks>
 public class ExceptionHandlingMiddleware(
     RequestDelegate next,
     ILogger<ExceptionHandlingMiddleware> logger,

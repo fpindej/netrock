@@ -5,7 +5,7 @@ namespace MyProject.Infrastructure.Persistence.Extensions;
 /// <summary>
 /// Extension methods for IQueryable to support conditional filtering.
 /// </summary>
-/// <remarks>Pattern documented in src/backend/AGENTS.md — update both when changing.</remarks>
+/// <remarks>Pattern documented in .claude/skills/backend-conventions/SKILL.md.</remarks>
 public static class QueryableExtensions
 {
     /// <param name="query">The query to extend</param>

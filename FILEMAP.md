@@ -82,7 +82,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`RateLimitingOptions.cs`** (add/rename option class) | `RateLimiterExtensions.cs`, `appsettings.json`, `appsettings.Development.json` |
 | **`RateLimiterExtensions.cs`** (add policy) | Requires matching constant in `RateLimitPolicies.cs` and config in `RateLimitingOptions.cs` |
 | **`HostingOptions.cs`** (change hosting config shape) | `HostingExtensions.cs`, `appsettings.json`, `appsettings.Development.json`, `deploy/docker-compose.yml` |
-| **`HostingExtensions.cs`** (change middleware behavior) | `Program.cs`, `src/backend/AGENTS.md` Hosting section |
+| **`HostingExtensions.cs`** (change middleware behavior) | `Program.cs` |
 | **`Dockerfile`** (backend - change build/publish steps) | `.dockerignore`, verify published files don't include dev/test config |
 | **`Dockerfile`** (frontend - change build steps) | `.dockerignore`, `.npmrc` (copied into image for install-affecting settings), `docker.yml` build args, `deploy/build.sh`/`deploy/build.ps1` build args. New `PUBLIC_*` SvelteKit env vars need `ARG`+`ENV` in Dockerfile (before `pnpm run build`), `--build-arg` in deploy scripts and `docker.yml` |
 | **`MyProject.WebApi.csproj`** (add appsettings file) | If non-production: add `CopyToPublishDirectory="Never"` and matching `rm -f` in `Dockerfile` |
@@ -158,7 +158,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 
 ## Key Files Quick Reference
 
-Files that are frequently referenced in impact tables above. For anything not listed here, use Glob/Grep - the codebase follows predictable naming patterns documented in `src/backend/AGENTS.md` and `src/frontend/AGENTS.md`.
+Files that are frequently referenced in impact tables above. For anything not listed here, use Glob/Grep - the codebase follows predictable naming patterns documented in the convention skills.
 
 ### Backend Naming Patterns
 

@@ -130,10 +130,8 @@ Skills are also loaded automatically when Claude Code plans work - it reads the 
 | File | Purpose |
 |---|---|
 | [`CLAUDE.md`](CLAUDE.md) | Hard rules, verification, agent team guide, architecture overview |
-| [`src/backend/AGENTS.md`](src/backend/AGENTS.md) | Backend conventions - entities, Result pattern, EF Core, controllers, testing |
-| [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md) | Frontend conventions - routing, API client, components, styling, i18n |
-| [`.claude/agents/`](.claude/agents/) | Specialized agents - engineers, reviewers, security, devops, tech writer |
-| [`.claude/skills/`](.claude/skills/) | Step-by-step procedures for all operations (use `/` to list) |
+| [`.claude/agents/`](.claude/agents/) | Specialized agents - engineers, reviewers, designers, devops, tech writer |
+| [`.claude/skills/`](.claude/skills/) | Procedures, convention references, and design tokens (use `/` to list) |
 | [`.claude/hooks/`](.claude/hooks/) | Lifecycle hooks - auto-format, safety gates, quality checks |
 | [`FILEMAP.md`](FILEMAP.md) | Change impact tables - "when you change X, also update Y" |
 

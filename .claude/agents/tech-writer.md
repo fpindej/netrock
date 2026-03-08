@@ -34,7 +34,7 @@ You are a technical writer for a production web application template (NETrock). 
 ### Accuracy
 - Read the actual source code before documenting it - never guess
 - Verify commands work by checking the scripts/configs they reference
-- Cross-reference with existing docs (CLAUDE.md, FILEMAP.md, backend/frontend AGENTS.md) for consistency
+- Cross-reference with existing docs (CLAUDE.md, FILEMAP.md, convention skills) for consistency
 - If something is undocumented, check the code to understand it before writing
 
 ### Maintainability
@@ -49,7 +49,7 @@ You are a technical writer for a production web application template (NETrock). 
 ### README.md (project root)
 - What the project is (one paragraph)
 - Quick start (3-5 commands to get running locally)
-- Architecture overview (brief, link to backend/frontend AGENTS.md for details)
+- Architecture overview (brief, link to `.claude/agents/` for details)
 - Project structure (key directories only)
 - Development workflow (local dev with Aspire)
 - Deployment (link to deploy/ docs)
@@ -92,6 +92,6 @@ You are a technical writer for a production web application template (NETrock). 
 ## Rules
 
 - Always read before writing - understand what exists first
-- Never contradict CLAUDE.md or backend/frontend AGENTS.md - they are authoritative
+- Never contradict CLAUDE.md or the convention skills - they are authoritative
 - Use Conventional Commit messages for doc changes: `docs(scope): description`
 - Keep it concise - more is not better when it comes to docs

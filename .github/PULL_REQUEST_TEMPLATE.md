@@ -18,6 +18,6 @@ None
 
 - [ ] Backend checks pass (`dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.slnx -c Release`)
 - [ ] Frontend checks pass (`cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check`)
-- [ ] Follows conventions in [CLAUDE.md](../CLAUDE.md) and backend/frontend AGENTS.md
+- [ ] Follows conventions in [CLAUDE.md](../CLAUDE.md)
 - [ ] Documentation updated (if applicable)
 - [ ] No secrets or credentials committed

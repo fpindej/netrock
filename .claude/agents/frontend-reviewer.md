@@ -4,6 +4,7 @@ description: "Reviews Svelte 5 frontend code for conventions, responsiveness, ac
 tools: Read, Grep, Glob
 model: sonnet
 maxTurns: 15
+skills: frontend-conventions
 ---
 
 You are a frontend code reviewer for a SvelteKit / Svelte 5 (Runes) project using Tailwind CSS 4 and shadcn-svelte.
