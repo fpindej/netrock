@@ -10,6 +10,9 @@ Reviews a Dependabot PR and evaluates whether it is safe to merge.
 
 Argument: PR number or URL.
 
+**Open Dependabot PRs:**
+!`gh pr list --author 'app/dependabot' --json number,title --jq '.[] | "#\(.number) \(.title)"' 2>/dev/null | head -10 || echo "(none found)"`
+
 ## Steps
 
 1. Fetch PR metadata: `gh pr view {number} --json number,title,headRefName,body,labels`

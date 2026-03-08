@@ -5,6 +5,16 @@ argument-hint: "[base branch]"
 
 Creates a pull request for the current branch.
 
+## Current Branch Context
+
+**Branch:** !`git branch --show-current`
+
+**Commits on this branch:**
+!`git log master..HEAD --oneline 2>/dev/null || echo "(no commits ahead of master)"`
+
+**Files changed:**
+!`git diff --stat master 2>/dev/null || echo "(no diff from master)"`
+
 ## Hard rules
 
 - **Never commit on master.** If on master, create a branch first. No exceptions.

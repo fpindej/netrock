@@ -10,6 +10,9 @@ Reviews a pull request for production-readiness before merge.
 
 Argument: PR number or URL. If omitted, reviews the current branch's open PR.
 
+**Current branch:** !`git branch --show-current`
+**Open PR for this branch:** !`gh pr view --json number,title,url --jq '"#\(.number) \(.title) - \(.url)"' 2>/dev/null || echo "(no open PR)"`
+
 ## References
 
 - [Conventions quick reference](references/conventions-summary.md) - condensed rules for fast lookup during review
