@@ -3,7 +3,7 @@
 ```csharp
 using FluentValidation;
 
-namespace MyProject.WebApi.Features.{Feature}.Dtos.{Operation};
+namespace Test.WebApi.Features.{Feature}.Dtos.{Operation};
 
 /// <summary>
 /// Validates <see cref="{Operation}Request"/> fields at runtime.

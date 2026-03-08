@@ -52,16 +52,16 @@ jobs:
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Restore
-        run: dotnet restore src/backend/MyProject.slnx
+        run: dotnet restore src/backend/Test.slnx
 
       - name: Build
-        run: dotnet build src/backend/MyProject.slnx --no-restore -c Release
+        run: dotnet build src/backend/Test.slnx --no-restore -c Release
 
       - name: Test
         id: test
         continue-on-error: true
         run: >-
-          dotnet test src/backend/MyProject.slnx
+          dotnet test src/backend/Test.slnx
           --no-build -c Release
           --collect:"XPlat Code Coverage"
           --results-directory ./coverage

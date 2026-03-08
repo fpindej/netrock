@@ -1,7 +1,7 @@
 # Entity Template
 
 ```csharp
-namespace MyProject.Domain.Entities;
+namespace Test.Domain.Entities;
 
 /// <summary>
 /// Represents a {EntityDescription}.

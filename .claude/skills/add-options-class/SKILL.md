@@ -7,8 +7,8 @@ Adds a typed options/configuration class.
 ## Steps
 
 1. Create in the appropriate layer:
-   - Infrastructure: `src/backend/MyProject.Infrastructure/{Area}/Options/{Name}Options.cs`
-   - WebApi: `src/backend/MyProject.WebApi/Options/{Name}Options.cs`
+   - Infrastructure: `src/backend/Test.Infrastructure/{Area}/Options/{Name}Options.cs`
+   - WebApi: `src/backend/Test.WebApi/Options/{Name}Options.cs`
 2. Structure:
    ```csharp
    /// <summary>

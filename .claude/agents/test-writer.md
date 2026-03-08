@@ -17,7 +17,7 @@ Both convention references are loaded via skills. The Testing sections in `backe
 2. Read existing tests in the same test project for patterns
 3. Write tests following the exact same structure and imports
 4. Run the relevant test command to verify:
-   - Backend: `dotnet test src/backend/MyProject.slnx -c Release`
+   - Backend: `dotnet test src/backend/Test.slnx -c Release`
    - Frontend: `cd src/frontend && pnpm run test`
 5. Fix any failures. Loop until green.
 

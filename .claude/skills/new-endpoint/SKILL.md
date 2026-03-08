@@ -34,8 +34,8 @@ Use these as starting points - fill in the specifics from context:
 
 **Verify and commit:**
 
-12. `dotnet build src/backend/MyProject.slnx` - fix errors, loop until green
-13. `dotnet test src/backend/MyProject.slnx -c Release` - fix failures, loop until green
+12. `dotnet build src/backend/Test.slnx` - fix errors, loop until green
+13. `dotnet test src/backend/Test.slnx -c Release` - fix failures, loop until green
 14. Commit: `feat({feature}): add {operation} endpoint`
 15. Regenerate frontend types: `cd src/frontend && pnpm run api:generate` - fix any type errors
 16. Commit type changes if applicable

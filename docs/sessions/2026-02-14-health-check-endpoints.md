@@ -12,9 +12,9 @@ Replaced the bare `AddHealthChecks()` / `MapHealthChecks("/health")` with proper
 | File | Change | Reason |
 |------|--------|--------|
 | `src/backend/Directory.Packages.props` | Added `AspNetCore.HealthChecks.NpgSql` and `AspNetCore.HealthChecks.Redis` packages | NuGet version centralization |
-| `src/backend/MyProject.WebApi/MyProject.WebApi.csproj` | Added package references (no version) | Project needs health check libraries |
-| `src/backend/MyProject.WebApi/Extensions/HealthCheckExtensions.cs` | New file with `AddApplicationHealthChecks` and `MapHealthCheckEndpoints` | Encapsulate health check registration and endpoint mapping |
-| `src/backend/MyProject.WebApi/Program.cs` | Replaced `AddHealthChecks()` → `AddApplicationHealthChecks(...)`, `MapHealthChecks("/health")` → `MapHealthCheckEndpoints()` | Wire up new health check infrastructure |
+| `src/backend/Test.WebApi/Test.WebApi.csproj` | Added package references (no version) | Project needs health check libraries |
+| `src/backend/Test.WebApi/Extensions/HealthCheckExtensions.cs` | New file with `AddApplicationHealthChecks` and `MapHealthCheckEndpoints` | Encapsulate health check registration and endpoint mapping |
+| `src/backend/Test.WebApi/Program.cs` | Replaced `AddHealthChecks()` → `AddApplicationHealthChecks(...)`, `MapHealthChecks("/health")` → `MapHealthCheckEndpoints()` | Wire up new health check infrastructure |
 | `docker-compose.local.yml` | Added healthcheck directives to db/redis/api, conditional `depends_on` for api/frontend | Proper startup ordering and health verification |
 | `src/frontend/src/routes/api/health/+server.ts` | Forward backend Content-Type instead of hardcoded `text/plain` | Health endpoint now returns JSON |
 | `FILEMAP.md` | Added health check impact row | Change impact tracking |

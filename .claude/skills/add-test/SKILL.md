@@ -9,31 +9,31 @@ Adds tests. Specify test type or infer from context.
 
 For pure logic in Shared, Domain, or Application layers.
 
-1. Create `src/backend/tests/MyProject.Unit.Tests/{Layer}/{ClassUnderTest}Tests.cs`
+1. Create `src/backend/tests/Test.Unit.Tests/{Layer}/{ClassUnderTest}Tests.cs`
 2. Structure: `{Method}_{Scenario}_{Expected}` naming
 3. No mocking, no DI - test pure inputs and outputs
-4. Verify: `dotnet test src/backend/tests/MyProject.Unit.Tests -c Release`
+4. Verify: `dotnet test src/backend/tests/Test.Unit.Tests -c Release`
 
 ## Component Test
 
 For service business logic with mocked dependencies.
 
-1. Create `src/backend/tests/MyProject.Component.Tests/Services/{Service}Tests.cs`
+1. Create `src/backend/tests/Test.Component.Tests/Services/{Service}Tests.cs`
 2. Create mocks in constructor:
    ```csharp
-   private readonly MyProjectDbContext _dbContext = TestDbContextFactory.Create();
+   private readonly TestDbContext _dbContext = TestDbContextFactory.Create();
    private readonly IOrderRepository _orderRepo = Substitute.For<IOrderRepository>();
    private readonly HybridCache _cache = Substitute.For<HybridCache>();
    ```
 3. For Identity: `IdentityMockHelpers.CreateMockUserManager()` / `CreateMockRoleManager()`
 4. Assert on `Result`: `Assert.True(result.IsSuccess); Assert.Equal(expectedId, result.Value);`
-5. Verify: `dotnet test src/backend/tests/MyProject.Component.Tests -c Release`
+5. Verify: `dotnet test src/backend/tests/Test.Component.Tests -c Release`
 
 ## API Integration Test
 
 For testing the full HTTP pipeline (routes, auth, validation, status codes).
 
-1. Create `src/backend/tests/MyProject.Api.Tests/Controllers/{Controller}Tests.cs`
+1. Create `src/backend/tests/Test.Api.Tests/Controllers/{Controller}Tests.cs`
 2. Structure:
    ```csharp
    public class OrdersControllerTests : IClassFixture<CustomWebApplicationFactory>, IDisposable
@@ -56,13 +56,13 @@ For testing the full HTTP pipeline (routes, auth, validation, status codes).
 4. Configure mock returns: `_factory.AdminService.Method(...).Returns(...);`
 5. If service interface not mocked in `CustomWebApplicationFactory`, add it there first
 6. For 200/201 responses, add **response contract assertions** using frozen records in `Contracts/ResponseContracts.cs`
-7. Verify: `dotnet test src/backend/tests/MyProject.Api.Tests -c Release`
+7. Verify: `dotnet test src/backend/tests/Test.Api.Tests -c Release`
 
 ## Validator Test
 
 For FluentValidation rules without starting the test server.
 
-1. Create `src/backend/tests/MyProject.Api.Tests/Validators/{Validator}Tests.cs`
+1. Create `src/backend/tests/Test.Api.Tests/Validators/{Validator}Tests.cs`
 2. Use `TestValidate` + assertion helpers:
    ```csharp
    using FluentValidation.TestHelper;
@@ -86,7 +86,7 @@ For FluentValidation rules without starting the test server.
        }
    }
    ```
-3. Verify: `dotnet test src/backend/tests/MyProject.Api.Tests -c Release`
+3. Verify: `dotnet test src/backend/tests/Test.Api.Tests -c Release`
 
 ## Frontend Unit Test
 

@@ -12,8 +12,8 @@ Introduced Hangfire with PostgreSQL persistence as the standardized background j
 | File | Change | Reason |
 |------|--------|--------|
 | `Directory.Packages.props` | Added Hangfire.Core 1.8.23, Hangfire.AspNetCore 1.8.23, Hangfire.PostgreSql 1.20.13 | NuGet package management |
-| `MyProject.Infrastructure.csproj` | Added Hangfire.AspNetCore, Hangfire.Core, Hangfire.PostgreSql references | Infrastructure needs Hangfire for DI + dashboard |
-| `MyProject.WebApi.csproj` | Added Hangfire.AspNetCore reference | WebApi needs Hangfire middleware |
+| `Test.Infrastructure.csproj` | Added Hangfire.AspNetCore, Hangfire.Core, Hangfire.PostgreSql references | Infrastructure needs Hangfire for DI + dashboard |
+| `Test.WebApi.csproj` | Added Hangfire.AspNetCore reference | WebApi needs Hangfire middleware |
 | `AppPermissions.cs` | Added `Jobs.View` and `Jobs.Manage` permissions | Permission-based access to job admin |
 | `ErrorMessages.cs` | Added `Jobs.NotFound` and `Jobs.TriggerFailed` | Consistent error messages for job operations |
 | `IRecurringJobDefinition.cs` | Created standardized interface for recurring jobs | Convention for writing jobs consistently |
@@ -89,7 +89,7 @@ classDiagram
     }
 
     class ExpiredRefreshTokenCleanupJob {
-        -MyProjectDbContext dbContext
+        -TestDbContext dbContext
         -TimeProvider timeProvider
         -ILogger logger
         +JobId = "expired-refresh-token-cleanup"

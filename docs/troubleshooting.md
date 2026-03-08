@@ -151,14 +151,14 @@ Kill the conflicting process, stop the other Aspire run, or re-init with a diffe
 **Fix:** Always start via the AppHost:
 
 ```bash
-dotnet run --project src/backend/MyProject.AppHost
+dotnet run --project src/backend/Test.AppHost
 ```
 
 ### Database connection fails under Aspire
 
 **Cause:** Aspire injects `ConnectionStrings:Database` via environment variables, which take precedence over `appsettings.Development.json`. If the API connects to the wrong database, verify the Aspire-injected connection string is correct (check the Aspire Dashboard environment tab for the `api` resource).
 
-**Fix:** The `appsettings.Development.json` has standalone defaults (localhost:5432) for running without Aspire. When running under Aspire, these are overridden automatically. If you see connection issues, check that the `db` resource in `MyProject.AppHost/Program.cs` is healthy and that no conflicting `ConnectionStrings__Database` environment variable is set in your shell.
+**Fix:** The `appsettings.Development.json` has standalone defaults (localhost:5432) for running without Aspire. When running under Aspire, these are overridden automatically. If you see connection issues, check that the `db` resource in `Test.AppHost/Program.cs` is healthy and that no conflicting `ConnectionStrings__Database` environment variable is set in your shell.
 
 ### MinIO bucket not created
 
@@ -177,8 +177,8 @@ dotnet run --project src/backend/MyProject.AppHost
 **Fix:**
 
 ```bash
-dotnet restore src/backend/MyProject.slnx
-dotnet build src/backend/MyProject.slnx
+dotnet restore src/backend/Test.slnx
+dotnet build src/backend/Test.slnx
 ```
 
 ### Tests fail with "connection refused"
@@ -199,8 +199,8 @@ If you see "connection refused," something is incorrectly trying to reach Postgr
 
 ```bash
 dotnet ef migrations add <MigrationName> \
- --project src/backend/MyProject.Infrastructure \
- --startup-project src/backend/MyProject.WebApi \
+ --project src/backend/Test.Infrastructure \
+ --startup-project src/backend/Test.WebApi \
  --output-dir Persistence/Migrations
 ```
 
@@ -275,7 +275,7 @@ This fetches `http://localhost:<API_PORT>/openapi/v1.json` and regenerates the t
 
 **Fix:**
 
-1. Start the API via Aspire (`dotnet run --project src/backend/MyProject.AppHost`) or locally from your IDE
+1. Start the API via Aspire (`dotnet run --project src/backend/Test.AppHost`) or locally from your IDE
 2. Verify the API is responding:
    ```bash
    curl http://localhost:<API_PORT>/openapi/v1.json
@@ -373,7 +373,7 @@ If your changes don't match these paths, the corresponding jobs won't run.
 
 **Cause:** Dockerfile paths or build contexts may not match what `docker.yml` expects.
 
-**Fix:** Verify that your Dockerfile is in the expected location (`src/backend/MyProject.WebApi/Dockerfile` or `src/frontend/Dockerfile`) and that the build context matches the workflow configuration in `.github/workflows/docker.yml`.
+**Fix:** Verify that your Dockerfile is in the expected location (`src/backend/Test.WebApi/Dockerfile` or `src/frontend/Dockerfile`) and that the build context matches the workflow configuration in `.github/workflows/docker.yml`.
 
 ### Coverage report not posted on PR
 

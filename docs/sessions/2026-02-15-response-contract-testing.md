@@ -11,11 +11,11 @@ Added response contract testing to the API integration test suite. All success e
 
 | File | Change | Reason |
 |------|--------|--------|
-| `tests/MyProject.Api.Tests/Contracts/ResponseContracts.cs` | Created 13 contract records covering Auth, Users, Admin, and Jobs responses | Frozen copies of expected response shapes, independent of production DTOs |
-| `tests/MyProject.Api.Tests/Controllers/AuthControllerTests.cs` | Added contract deserialization + assertions to 6 success tests | Validate `AuthTokensResponse` and `RegisterUserResponse` field shapes |
-| `tests/MyProject.Api.Tests/Controllers/UsersControllerTests.cs` | Added contract assertions to 2 success tests | Validate `UserMeResponse` fields (Id, Username, FirstName, Roles) |
-| `tests/MyProject.Api.Tests/Controllers/AdminControllerTests.cs` | Added contract assertions to 7 success tests | Validate `AdminUserListResponse`, `AdminUserResponse`, `AdminRoleResponse`, `RoleDetailResponse`, `CreateRoleResponse`, `PermissionGroupResponse` |
-| `tests/MyProject.Api.Tests/Controllers/JobsControllerTests.cs` | Added contract assertions to 2 success tests | Validate `RecurringJobResponse` and `RecurringJobDetailResponse` |
+| `tests/Test.Api.Tests/Contracts/ResponseContracts.cs` | Created 13 contract records covering Auth, Users, Admin, and Jobs responses | Frozen copies of expected response shapes, independent of production DTOs |
+| `tests/Test.Api.Tests/Controllers/AuthControllerTests.cs` | Added contract deserialization + assertions to 6 success tests | Validate `AuthTokensResponse` and `RegisterUserResponse` field shapes |
+| `tests/Test.Api.Tests/Controllers/UsersControllerTests.cs` | Added contract assertions to 2 success tests | Validate `UserMeResponse` fields (Id, Username, FirstName, Roles) |
+| `tests/Test.Api.Tests/Controllers/AdminControllerTests.cs` | Added contract assertions to 7 success tests | Validate `AdminUserListResponse`, `AdminUserResponse`, `AdminRoleResponse`, `RoleDetailResponse`, `CreateRoleResponse`, `PermissionGroupResponse` |
+| `tests/Test.Api.Tests/Controllers/JobsControllerTests.cs` | Added contract assertions to 2 success tests | Validate `RecurringJobResponse` and `RecurringJobDetailResponse` |
 | `SKILLS.md` | Added step 6 to "Add an API Integration Test" recipe | Document the contract testing pattern |
 | `FILEMAP.md` | Added `Contracts/ResponseContracts.cs` to tree; added contract file to response DTO change impact | Track the new file and its change dependencies |
 | `src/backend/AGENTS.md` | Added `Contracts/` to API Tests tree; added "Response Contract Testing" section; added step 6 to "Adding a New Test" | Document the pattern, its purpose, and when to use it |

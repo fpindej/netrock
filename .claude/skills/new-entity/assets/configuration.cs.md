@@ -3,10 +3,10 @@
 ```csharp
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using MyProject.Domain.Entities;
-using MyProject.Infrastructure.Persistence.Configurations;
+using Test.Domain.Entities;
+using Test.Infrastructure.Persistence.Configurations;
 
-namespace MyProject.Infrastructure.Features.{Feature}.Configurations;
+namespace Test.Infrastructure.Features.{Feature}.Configurations;
 
 /// <summary>
 /// EF Core configuration for the <see cref="{Entity}"/> entity.

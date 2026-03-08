@@ -6,19 +6,19 @@ Adds a recurring or one-time Hangfire background job.
 
 ## Recurring Job
 
-**1. Create the job class** in `src/backend/MyProject.Infrastructure/Features/Jobs/RecurringJobs/{JobName}Job.cs`:
+**1. Create the job class** in `src/backend/Test.Infrastructure/Features/Jobs/RecurringJobs/{JobName}Job.cs`:
 
 ```csharp
 using Hangfire;
 using Microsoft.Extensions.Logging;
 
-namespace MyProject.Infrastructure.Features.Jobs.RecurringJobs;
+namespace Test.Infrastructure.Features.Jobs.RecurringJobs;
 
 /// <summary>
 /// Brief description of what this job does and why.
 /// </summary>
 internal sealed class MyCleanupJob(
-    MyProjectDbContext dbContext,
+    TestDbContext dbContext,
     TimeProvider timeProvider,
     ILogger<MyCleanupJob> logger) : IRecurringJobDefinition
 {
@@ -42,14 +42,14 @@ Key conventions:
 - Descriptive `JobId` (kebab-case, e.g. `"expired-token-cleanup"`)
 - `Hangfire.Cron` helpers: `Cron.Hourly()`, `Cron.Daily()`, `Cron.Weekly()`
 
-**2. Register in DI** - add two lines to `src/backend/MyProject.Infrastructure/Features/Jobs/Extensions/ServiceCollectionExtensions.cs`:
+**2. Register in DI** - add two lines to `src/backend/Test.Infrastructure/Features/Jobs/Extensions/ServiceCollectionExtensions.cs`:
 
 ```csharp
 services.AddScoped<MyCleanupJob>();
 services.AddScoped<IRecurringJobDefinition>(sp => sp.GetRequiredService<MyCleanupJob>());
 ```
 
-**3. Verify:** `dotnet build src/backend/MyProject.slnx`
+**3. Verify:** `dotnet build src/backend/Test.slnx`
 
 `UseJobScheduling()` discovers all `IRecurringJobDefinition` implementations automatically. The job appears in admin panel at `/admin/jobs`. Pause state persists to DB (`hangfire.pausedjobs`).
 
@@ -59,7 +59,7 @@ services.AddScoped<IRecurringJobDefinition>(sp => sp.GetRequiredService<MyCleanu
 
 For ad-hoc background work (send email, call API, process file), use `IBackgroundJobClient` directly.
 
-**1. Create the job class** in `src/backend/MyProject.Infrastructure/Features/Jobs/`:
+**1. Create the job class** in `src/backend/Test.Infrastructure/Features/Jobs/`:
 
 ```csharp
 internal sealed class WelcomeEmailJob(

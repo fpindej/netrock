@@ -37,7 +37,7 @@ Always backend first, then types bridge, then frontend. Commit each phase separa
 3. Infrastructure service
 4. WebApi controller + request/response + validator + mapper
 5. Backend tests
-6. Verify: `dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.slnx -c Release`
+6. Verify: `dotnet build src/backend/Test.slnx && dotnet test src/backend/Test.slnx -c Release`
 7. Commit: `feat(feature): add feature backend`
 
 **Types bridge:**

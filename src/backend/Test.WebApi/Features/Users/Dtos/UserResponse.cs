@@ -1,0 +1,79 @@
+using JetBrains.Annotations;
+
+namespace Test.WebApi.Features.Users.Dtos;
+
+/// <summary>
+/// Represents the current user's information.
+/// </summary>
+public class UserResponse
+{
+    /// <summary>
+    /// The unique identifier of the user.
+    /// </summary>
+    public Guid Id { [UsedImplicitly] get; [UsedImplicitly] init; }
+
+    /// <summary>
+    /// The username of the user (same as email).
+    /// </summary>
+    public string Username { [UsedImplicitly] get; [UsedImplicitly] init; } = string.Empty;
+
+    /// <summary>
+    /// The email address of the user (same as username).
+    /// </summary>
+    public string Email { [UsedImplicitly] get; init; } = string.Empty;
+
+    /// <summary>
+    /// The first name of the user.
+    /// </summary>
+    public string? FirstName { [UsedImplicitly] get; init; }
+
+    /// <summary>
+    /// The last name of the user.
+    /// </summary>
+    public string? LastName { [UsedImplicitly] get; init; }
+
+    /// <summary>
+    /// The phone number of the user.
+    /// </summary>
+    public string? PhoneNumber { [UsedImplicitly] get; init; }
+
+    /// <summary>
+    /// A short biography or description of the user.
+    /// </summary>
+    public string? Bio { [UsedImplicitly] get; init; }
+
+    /// <summary>
+    /// Whether the user has an uploaded avatar image.
+    /// </summary>
+    public bool HasAvatar { [UsedImplicitly] get; init; }
+
+    /// <summary>
+    /// The roles assigned to the user.
+    /// </summary>
+    public IEnumerable<string> Roles { [UsedImplicitly] get; init; } = [];
+
+    /// <summary>
+    /// The atomic permissions granted to the user through their roles.
+    /// </summary>
+    public IReadOnlyList<string> Permissions { [UsedImplicitly] get; init; } = [];
+
+    /// <summary>
+    /// Whether the user's email address has been confirmed.
+    /// </summary>
+    public bool EmailConfirmed { [UsedImplicitly] get; init; }
+
+    /// <summary>
+    /// Whether the user has two-factor authentication enabled.
+    /// </summary>
+    public bool TwoFactorEnabled { [UsedImplicitly] get; init; }
+
+    /// <summary>
+    /// External OAuth2 providers linked to this account.
+    /// </summary>
+    public IReadOnlyList<string> LinkedProviders { [UsedImplicitly] get; init; } = [];
+
+    /// <summary>
+    /// Whether the user has a password set (false for OAuth-only accounts).
+    /// </summary>
+    public bool HasPassword { [UsedImplicitly] get; init; }
+}

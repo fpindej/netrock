@@ -10,11 +10,11 @@ Adds an infrastructure dependency to Aspire AppHost.
    ```xml
    <PackageVersion Include="Aspire.Hosting.{Resource}" Version="13.1.2" />
    ```
-2. Add package reference to `src/backend/MyProject.AppHost/MyProject.AppHost.csproj`:
+2. Add package reference to `src/backend/Test.AppHost/Test.AppHost.csproj`:
    ```xml
    <PackageReference Include="Aspire.Hosting.{Resource}" />
    ```
-3. Add resource in `src/backend/MyProject.AppHost/Program.cs`:
+3. Add resource in `src/backend/Test.AppHost/Program.cs`:
    ```csharp
    var myResource = builder.AddRabbitMQ("rabbitmq");
    ```
@@ -30,4 +30,4 @@ Adds an infrastructure dependency to Aspire AppHost.
    .WaitFor(myResource)
    ```
 6. Add standalone defaults to `appsettings.Development.json` so the API can run without Aspire.
-7. Verify: `dotnet build src/backend/MyProject.slnx`
+7. Verify: `dotnet build src/backend/Test.slnx`

@@ -54,7 +54,7 @@ Argument: PR number or URL.
 
 - Checkout the PR branch: `gh pr checkout {number}`
 - Run the relevant test suite:
-  - Backend: `dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.slnx -c Release`
+  - Backend: `dotnet build src/backend/Test.slnx && dotnet test src/backend/Test.slnx -c Release`
   - Frontend: `cd src/frontend && pnpm install && pnpm run test && pnpm run check`
 - If tests pass, that's a strong signal. If they fail, identify whether the failure is related to the update.
 

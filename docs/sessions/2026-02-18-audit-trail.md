@@ -22,7 +22,7 @@ Added a comprehensive audit trail system spanning the entire stack. Every signif
 | `Infrastructure/Features/Admin/Services/RoleManagementService.cs` | Added audit calls to role CRUD + permissions | Track role management actions |
 | `Infrastructure/Features/Authentication/Services/AuthenticationService.cs` | Added audit calls to auth flows | Track login/logout/register/password/email actions |
 | `Infrastructure/Identity/Services/UserService.cs` | Added audit calls to profile update and account deletion | Track self-service user actions |
-| `Infrastructure/Persistence/MyProjectDbContext.cs` | Added `DbSet<AuditEvent>` | EF Core model registration |
+| `Infrastructure/Persistence/TestDbContext.cs` | Added `DbSet<AuditEvent>` | EF Core model registration |
 | `WebApi/Features/Audit/` | Response DTOs, mapper, request/response for pagination | API layer types and mapping |
 | `WebApi/Features/Admin/AdminController.cs` | New `GET users/{id}/audit` endpoint | Admin audit trail access |
 | `WebApi/Features/Users/UsersController.cs` | New `GET me/audit` endpoint | User's own activity log |

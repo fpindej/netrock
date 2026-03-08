@@ -1,6 +1,6 @@
 {
-  "name": "MyProject",
-  "short_name": "MyProject",
+  "name": "Test",
+  "short_name": "Test",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

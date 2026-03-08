@@ -11,7 +11,7 @@ Added two-layer defense to prevent non-production appsettings from shipping in p
 
 | File | Change | Reason |
 |------|--------|--------|
-| `WebApi/MyProject.WebApi.csproj` | `CopyToPublishDirectory="Never"` conditional on `StripDevConfig != false` | Primary exclusion — strips dev/test config at MSBuild level |
+| `WebApi/Test.WebApi.csproj` | `CopyToPublishDirectory="Never"` conditional on `StripDevConfig != false` | Primary exclusion — strips dev/test config at MSBuild level |
 | `WebApi/Dockerfile` | `STRIP_DEV_CONFIG` build arg (default: `true`), passed to `dotnet publish` as `/p:StripDevConfig`, conditional `rm -f` after publish | Defense-in-depth + single control point for both layers |
 | `docker-compose.local.yml` | `args: STRIP_DEV_CONFIG: "false"` in api build config | Local dev retains all appsettings files |
 | `src/backend/AGENTS.md` | "Production build hygiene" subsection documenting the pattern | Guide for future appsettings additions |

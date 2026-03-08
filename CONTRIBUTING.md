@@ -10,7 +10,7 @@ Thanks for your interest in contributing! NETrock is a production-grade template
 
 1. **Fork the repository** and clone your fork
 2. **Run the init script** - `./init.sh` (macOS/Linux) or `.\init.ps1` (Windows)
-3. **Start Aspire** - `dotnet run --project src/backend/MyProject.AppHost`
+3. **Start Aspire** - `dotnet run --project src/backend/Test.AppHost`
 4. **Read the docs** - at minimum, read [`CLAUDE.md`](CLAUDE.md) before making changes
 
 ## How to Contribute
@@ -40,8 +40,8 @@ Not every feature belongs in a template. NETrock provides a solid foundation - f
 
 ```bash
 # Backend
-dotnet build src/backend/MyProject.slnx
-dotnet test src/backend/MyProject.slnx -c Release
+dotnet build src/backend/Test.slnx
+dotnet test src/backend/Test.slnx -c Release
 
 # Frontend
 cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check

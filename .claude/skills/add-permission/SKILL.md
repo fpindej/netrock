@@ -8,7 +8,7 @@ Adds a permission constant across backend and frontend.
 
 **Backend:**
 
-1. Add `public const string` field to the appropriate nested class in `src/backend/MyProject.Application/Identity/Constants/AppPermissions.cs`:
+1. Add `public const string` field to the appropriate nested class in `src/backend/Test.Application/Identity/Constants/AppPermissions.cs`:
    ```csharp
    public static class Orders
    {
@@ -18,8 +18,8 @@ Adds a permission constant across backend and frontend.
    ```
    `AppPermissions.All` discovers permissions via reflection - no manual registration needed.
 2. Add `[RequirePermission(AppPermissions.Orders.View)]` to the relevant controller actions
-3. *(Optional)* Seed the permission for existing roles in `SeedRolePermissionsAsync()` in `src/backend/MyProject.Infrastructure/Persistence/Extensions/ApplicationBuilderExtensions.cs`
-4. Verify: `dotnet build src/backend/MyProject.slnx`
+3. *(Optional)* Seed the permission for existing roles in `SeedRolePermissionsAsync()` in `src/backend/Test.Infrastructure/Persistence/Extensions/ApplicationBuilderExtensions.cs`
+4. Verify: `dotnet build src/backend/Test.slnx`
 
 **Frontend:**
 

@@ -12,7 +12,7 @@ Local dev:  Aspire AppHost -> PostgreSQL, MinIO, MailPit (containers) + API + Fr
 Production: User's choice - Docker Compose, Coolify, Railway, Kubernetes, etc.
 ```
 
-- **Backend Dockerfile**: Multi-stage .NET build at `src/backend/MyProject.WebApi/Dockerfile`
+- **Backend Dockerfile**: Multi-stage .NET build at `src/backend/Test.WebApi/Dockerfile`
 - **Frontend Dockerfile**: Multi-stage Node/SvelteKit build at `src/frontend/Dockerfile`
 - **Production config**: `appsettings.json` defines the full config structure; `docs/before-you-ship.md` lists what to configure
 
@@ -48,7 +48,7 @@ Production: User's choice - Docker Compose, Coolify, Railway, Kubernetes, etc.
 - [ ] Start periods appropriate for cold starts (API: 60s, DB: 15s)
 
 ### Reproducibility
-- [ ] Can clone and run with `dotnet run --project src/backend/MyProject.AppHost` (local dev)
+- [ ] Can clone and run with `dotnet run --project src/backend/Test.AppHost` (local dev)
 - [ ] No machine-specific paths or assumptions
 - [ ] NuGet versions pinned in `Directory.Packages.props`
 - [ ] pnpm lockfile committed

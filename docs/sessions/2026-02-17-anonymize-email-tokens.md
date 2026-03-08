@@ -21,7 +21,7 @@ In a follow-up commit, extracted `CreateEmailTokenAsync`/`ResolveEmailTokenAsync
 | `Infrastructure/.../Services/AdminService.cs` | Replaced `BuildPasswordResetUrl(token, email)` with opaque token flow | Admin invite and admin password reset now use opaque tokens |
 | `Infrastructure/.../Options/AuthenticationOptions.cs` | Added `EmailTokenOptions` (TokenLengthInBytes, ExpiresInHours) | Configurable token generation parameters |
 | `Infrastructure/.../Extensions/ServiceCollectionExtensions.cs` | Registered `EmailTokenService` as scoped | DI wiring |
-| `Persistence/MyProjectDbContext.cs` | Added `DbSet<EmailToken>` | EF access to new entity |
+| `Persistence/TestDbContext.cs` | Added `DbSet<EmailToken>` | EF access to new entity |
 | `Application/.../Dtos/ResetPasswordInput.cs` | Removed `Email` parameter | No longer needed — resolved from opaque token |
 | `Application/.../Dtos/VerifyEmailInput.cs` | Removed `Email` parameter | Same reason |
 | `WebApi/.../Dtos/ResetPassword/ResetPasswordRequest.cs` | Removed `Email` property | API contract change |

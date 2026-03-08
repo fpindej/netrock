@@ -11,13 +11,13 @@ Added 190 backend tests across 4 test projects covering all layers of the Clean 
 
 | File | Change | Reason |
 |------|--------|--------|
-| `src/backend/tests/MyProject.Unit.Tests/` | New project — 77 unit tests | Cover Shared (Result, ErrorMessages, PhoneNumberHelper, ErrorType), Domain (BaseEntity), and Application (AppRoles, AppPermissions) pure logic |
-| `src/backend/tests/MyProject.Component.Tests/` | New project — 62 component tests | Cover AuthenticationService, AdminService, RoleManagementService, UserService business logic with mocked dependencies |
-| `src/backend/tests/MyProject.Api.Tests/` | New project — 40 tests (16 controller + 24 validator) | Cover AuthController, UsersController HTTP pipeline + RegisterRequest, LoginRequest, ChangePasswordRequest validators |
-| `src/backend/tests/MyProject.Architecture.Tests/` | New project — 10 tests | Enforce layer dependency rules, naming conventions, access modifiers |
+| `src/backend/tests/Test.Unit.Tests/` | New project — 77 unit tests | Cover Shared (Result, ErrorMessages, PhoneNumberHelper, ErrorType), Domain (BaseEntity), and Application (AppRoles, AppPermissions) pure logic |
+| `src/backend/tests/Test.Component.Tests/` | New project — 62 component tests | Cover AuthenticationService, AdminService, RoleManagementService, UserService business logic with mocked dependencies |
+| `src/backend/tests/Test.Api.Tests/` | New project — 40 tests (16 controller + 24 validator) | Cover AuthController, UsersController HTTP pipeline + RegisterRequest, LoginRequest, ChangePasswordRequest validators |
+| `src/backend/tests/Test.Architecture.Tests/` | New project — 10 tests | Enforce layer dependency rules, naming conventions, access modifiers |
 | `src/backend/Directory.Packages.props` | Added test package versions | xUnit, NSubstitute, Mvc.Testing, InMemory EF, NetArchTest, TimeProvider.Testing |
-| `src/backend/MyProject.slnx` | Added 4 test projects to solution | IDE and CI discovery |
-| `src/backend/MyProject.WebApi/appsettings.Testing.json` | New config file | Test-specific settings that disable Redis, Hangfire, restrict CORS |
+| `src/backend/Test.slnx` | Added 4 test projects to solution | IDE and CI discovery |
+| `src/backend/Test.WebApi/appsettings.Testing.json` | New config file | Test-specific settings that disable Redis, Hangfire, restrict CORS |
 | `src/backend/.dockerignore` | Added `**/tests` | Exclude test projects from Docker build context |
 | `.github/workflows/ci.yml` | Uncommented test step | Run tests in CI on every PR |
 | `CLAUDE.md` | Added test command to pre-commit checks | Tests must pass before committing |
@@ -42,7 +42,7 @@ Added 190 backend tests across 4 test projects covering all layers of the Clean 
 
 ### Manual DbContext Registration in WebApplicationFactory
 
-- **Choice**: Manually register `DbContextOptions<MyProjectDbContext>` instead of using `AddDbContext`
+- **Choice**: Manually register `DbContextOptions<TestDbContext>` instead of using `AddDbContext`
 - **Alternatives considered**: `RemoveAll + AddDbContext`, Testcontainers with real PostgreSQL
 - **Reasoning**: `AddDbContext` uses `TryAdd` internally. When `RemoveAll + AddDbContext` is used in `ConfigureTestServices`, both Npgsql and InMemory providers end up registered, causing a dual-provider exception. Manual registration bypasses `TryAdd` entirely. Testcontainers is planned as a follow-up for true integration tests.
 
@@ -110,7 +110,7 @@ flowchart LR
 
 ## Follow-Up Items
 
-- [ ] Testcontainers integration for real PostgreSQL tests (new `MyProject.Integration.Tests` project)
+- [ ] Testcontainers integration for real PostgreSQL tests (new `Test.Integration.Tests` project)
 - [x] AdminController integration tests (requires mocking `IAdminService`)
 - [x] JobsController integration tests (requires mocking `IJobManagementService`)
 - [ ] BaseEntityRepository tests with InMemory provider (CRUD, soft-delete, pagination)

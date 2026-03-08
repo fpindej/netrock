@@ -12,10 +12,10 @@ Added `coverlet.collector` to all 4 test projects to enable code coverage data c
 | File | Change | Reason |
 |------|--------|--------|
 | `src/backend/Directory.Packages.props` | Added `coverlet.collector` 6.0.4 to Test item group | Central package version management |
-| `src/backend/tests/MyProject.Unit.Tests/MyProject.Unit.Tests.csproj` | Added `coverlet.collector` PackageReference | Enable coverage collection |
-| `src/backend/tests/MyProject.Component.Tests/MyProject.Component.Tests.csproj` | Added `coverlet.collector` PackageReference | Enable coverage collection |
-| `src/backend/tests/MyProject.Api.Tests/MyProject.Api.Tests.csproj` | Added `coverlet.collector` PackageReference | Enable coverage collection |
-| `src/backend/tests/MyProject.Architecture.Tests/MyProject.Architecture.Tests.csproj` | Added `coverlet.collector` PackageReference | Enable coverage collection |
+| `src/backend/tests/Test.Unit.Tests/Test.Unit.Tests.csproj` | Added `coverlet.collector` PackageReference | Enable coverage collection |
+| `src/backend/tests/Test.Component.Tests/Test.Component.Tests.csproj` | Added `coverlet.collector` PackageReference | Enable coverage collection |
+| `src/backend/tests/Test.Api.Tests/Test.Api.Tests.csproj` | Added `coverlet.collector` PackageReference | Enable coverage collection |
+| `src/backend/tests/Test.Architecture.Tests/Test.Architecture.Tests.csproj` | Added `coverlet.collector` PackageReference | Enable coverage collection |
 | `.github/workflows/ci.yml` | Replaced single Test step with coverage collection + report pipeline | Coverage visibility in CI |
 
 ## Decisions & Reasoning

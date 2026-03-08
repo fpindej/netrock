@@ -8,7 +8,7 @@ Each email has a 3-file pattern plus a model record.
 
 ## Steps
 
-**1. Create the model record** in `src/backend/MyProject.Application/Features/Email/Models/EmailTemplateModels.cs`:
+**1. Create the model record** in `src/backend/Test.Application/Features/Email/Models/EmailTemplateModels.cs`:
 
 ```csharp
 /// <summary>
@@ -19,7 +19,7 @@ public record OrderConfirmationModel(string OrderNumber, string Total);
 
 Properties auto-map to snake_case Liquid variables (`OrderNumber` -> `order_number`).
 
-**2. Create 3 template files** in `src/backend/MyProject.Infrastructure/Features/Email/Templates/`:
+**2. Create 3 template files** in `src/backend/Test.Infrastructure/Features/Email/Templates/`:
 
 - `order-confirmation.liquid` - HTML body fragment (injected into `_base.liquid` via `{{ body | raw }}`):
   ```html
@@ -47,7 +47,7 @@ await templatedEmailSender.SendSafeAsync("order-confirmation",
 
 **5. Add tests** in `FluidEmailTemplateRendererTests.cs` - test subject rendering, HTML variable injection, and plain text variant.
 
-**6. Verify:** `dotnet test src/backend/MyProject.slnx -c Release`
+**6. Verify:** `dotnet test src/backend/Test.slnx -c Release`
 
 ## Conventions
 

@@ -12,12 +12,12 @@ Added a circuit breaker around all `IDistributedCache` operations in `CacheServi
 | File | Change | Reason |
 |------|--------|--------|
 | `Directory.Packages.props` | Added `Microsoft.Extensions.Resilience` 10.3.0 | Polly v8 circuit breaker package |
-| `MyProject.Infrastructure.csproj` | Replaced `Microsoft.Extensions.Http.Polly` with `Microsoft.Extensions.Resilience` | Polly v7 reference was unused and caused type ambiguity with v8; kept in `Directory.Packages.props` for #194 |
+| `Test.Infrastructure.csproj` | Replaced `Microsoft.Extensions.Http.Polly` with `Microsoft.Extensions.Resilience` | Polly v7 reference was unused and caused type ambiguity with v8; kept in `Directory.Packages.props` for #194 |
 | `Caching/Options/CachingOptions.cs` | Added `CircuitBreakerOptions` nested class with `FailureThreshold`, `BreakDuration`, `SamplingDuration` | Configurable circuit breaker behavior with validation |
 | `Caching/Extensions/ServiceCollectionExtensions.cs` | Registered named resilience pipeline `"cache"` with circuit breaker strategy and logging callbacks | DI-integrated pipeline with state transition logging (opened/half-opened/closed) |
 | `Caching/Services/CacheService.cs` | Injected `ResiliencePipelineProvider<string>`, wrapped operations in pipeline, catch `BrokenCircuitException` silently | Core behavior change — short-circuit on sustained failure |
 | `appsettings.json` | Added `CircuitBreaker` section under `Caching` | Discoverability; defaults work without config |
-| `MyProject.Component.Tests.csproj` | Added `Microsoft.Extensions.Resilience` package | Tests need pipeline provider types |
+| `Test.Component.Tests.csproj` | Added `Microsoft.Extensions.Resilience` package | Tests need pipeline provider types |
 | `CacheServiceTests.cs` | Updated constructor with no-op pipeline, added 5 circuit breaker tests | Verify open-circuit behavior, no-log guarantee, and recovery via FakeTimeProvider |
 
 ## Decisions & Reasoning

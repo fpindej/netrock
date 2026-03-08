@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="../Test.Domain/Test.Domain.csproj"/>
+        <ProjectReference Include="../Test.Shared/Test.Shared.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Features/" />
+    </ItemGroup>
+
+</Project>

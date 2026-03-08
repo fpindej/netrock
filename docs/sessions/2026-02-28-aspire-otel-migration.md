@@ -13,22 +13,22 @@ Added Aspire ServiceDefaults project with full OpenTelemetry instrumentation (me
 
 | File | Change | Reason |
 |------|--------|--------|
-| `MyProject.ServiceDefaults/Extensions.cs` | New shared Aspire project | OTEL metrics/tracing/logging, service discovery, HTTP resilience |
-| `MyProject.ServiceDefaults/MyProject.ServiceDefaults.csproj` | New project file | `IsAspireSharedProject=true` with OTEL + resilience packages |
+| `Test.ServiceDefaults/Extensions.cs` | New shared Aspire project | OTEL metrics/tracing/logging, service discovery, HTTP resilience |
+| `Test.ServiceDefaults/Test.ServiceDefaults.csproj` | New project file | `IsAspireSharedProject=true` with OTEL + resilience packages |
 | `Directory.Packages.props` | Add OTEL + resilience + ServiceDiscovery packages, remove Seq | OTEL instrumentation and Aspire integration |
-| `MyProject.Infrastructure.csproj` | Remove `Serilog.Sinks.Seq` | Logging now handled by ServiceDefaults OTEL provider |
+| `Test.Infrastructure.csproj` | Remove `Serilog.Sinks.Seq` | Logging now handled by ServiceDefaults OTEL provider |
 | `LoggerConfigurationExtensions.cs` | Remove Seq/OTEL sink, keep Console only | OTEL log export handled by ServiceDefaults via `writeToProviders: true` |
-| `MyProject.WebApi.csproj` | Add ServiceDefaults project reference | Wire OTEL into the API |
+| `Test.WebApi.csproj` | Add ServiceDefaults project reference | Wire OTEL into the API |
 | `Program.cs` | Add `builder.AddServiceDefaults()` | Activate OTEL, service discovery, resilience |
-| `MyProject.slnx` | Add ServiceDefaults project | Solution awareness |
+| `Test.slnx` | Add ServiceDefaults project | Solution awareness |
 | `appsettings.Development.json` | Remove Serilog Seq config | Seq package removed |
 
 ### PR 2: AppHost + Migration (`feat/aspire-local-dev`)
 
 | File | Change | Reason |
 |------|--------|--------|
-| `MyProject.AppHost/Program.cs` | New Aspire orchestrator | PostgreSQL, MinIO, API, Frontend with pinned ports |
-| `MyProject.AppHost/*.csproj, appsettings, launchSettings` | New project files | AppHost configuration |
+| `Test.AppHost/Program.cs` | New Aspire orchestrator | PostgreSQL, MinIO, API, Frontend with pinned ports |
+| `Test.AppHost/*.csproj, appsettings, launchSettings` | New project files | AppHost configuration |
 | `docker-compose.local.yml` | Deleted | Replaced by Aspire |
 | `deploy/envs/local/*` | Deleted (3 files) | Config moved to appsettings.Development.json |
 | `appsettings.Development.json` | Major rework | Remove stale Seq/ConnectionStrings/FileStorage, add Seed users |
@@ -69,7 +69,7 @@ Added Aspire ServiceDefaults project with full OpenTelemetry instrumentation (me
 ```mermaid
 flowchart TD
     subgraph "Aspire AppHost (dotnet run)"
-        AppHost[MyProject.AppHost]
+        AppHost[Test.AppHost]
         Dashboard[Aspire Dashboard<br/>OTEL traces/logs/metrics]
     end
 
@@ -80,7 +80,7 @@ flowchart TD
     end
 
     subgraph "Projects (in-process)"
-        API[MyProject.WebApi]
+        API[Test.WebApi]
         FE[SvelteKit Frontend]
     end
 

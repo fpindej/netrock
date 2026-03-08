@@ -11,9 +11,9 @@ Replaced the auto-dismissing toast notification on reset-password failure with a
 
 | File | Change | Reason |
 |------|--------|--------|
-| `src/backend/MyProject.Shared/ErrorMessages.cs` | Added `PasswordSameAsCurrent` constant | Reject resetting to the same password |
-| `src/backend/MyProject.Infrastructure/Features/Authentication/Services/AuthenticationService.cs` | Added `CheckPasswordAsync` guard before `ResetPasswordAsync` | Prevent no-op password resets; safe for invited users (no hash = returns false) |
-| `src/backend/MyProject.Infrastructure/Features/Admin/Services/AdminService.cs` | Appended `&invited=1` to invitation email URL | Lets frontend distinguish invitation from reset (cosmetic only) |
+| `src/backend/Test.Shared/ErrorMessages.cs` | Added `PasswordSameAsCurrent` constant | Reject resetting to the same password |
+| `src/backend/Test.Infrastructure/Features/Authentication/Services/AuthenticationService.cs` | Added `CheckPasswordAsync` guard before `ResetPasswordAsync` | Prevent no-op password resets; safe for invited users (no hash = returns false) |
+| `src/backend/Test.Infrastructure/Features/Admin/Services/AdminService.cs` | Appended `&invited=1` to invitation email URL | Lets frontend distinguish invitation from reset (cosmetic only) |
 | `src/frontend/src/routes/(public)/reset-password/+page.server.ts` | Added `invited` boolean from URL params | Pass invitation flag to page |
 | `src/frontend/src/routes/(public)/reset-password/+page.svelte` | Conditional meta title/description, pass `invited` prop | SEO and component awareness of mode |
 | `src/frontend/src/lib/components/auth/ResetPasswordForm.svelte` | Added `isError`/`errorMessage` state, persistent error card, invitation-aware copy | Core UX fix: errors now persist instead of auto-dismissing |

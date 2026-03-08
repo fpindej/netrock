@@ -1,0 +1,26 @@
+<Solution>
+  <Folder Name="/solution items/">
+    <File Path="../../.config/dotnet-tools.json" />
+    <File Path="../../global.json" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="Test.WebApi/Dockerfile" />
+    <File Path="nuget.config" />
+  </Folder>
+  <Project Path="Test.Application/Test.Application.csproj" />
+  <Project Path="Test.Domain/Test.Domain.csproj" />
+  <Project Path="Test.Infrastructure/Test.Infrastructure.csproj" />
+  <Project Path="Test.Shared/Test.Shared.csproj" />
+  <Project Path="Test.WebApi/Test.WebApi.csproj" />
+  <Project Path="Test.ServiceDefaults/Test.ServiceDefaults.csproj" />
+  <Project Path="Test.AppHost/Test.AppHost.csproj" />
+  <Folder Name="/tools/">
+    <Project Path="HealthProbe/HealthProbe.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Test.Unit.Tests/Test.Unit.Tests.csproj" />
+    <Project Path="tests/Test.Component.Tests/Test.Component.Tests.csproj" />
+    <Project Path="tests/Test.Api.Tests/Test.Api.Tests.csproj" />
+    <Project Path="tests/Test.Architecture.Tests/Test.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

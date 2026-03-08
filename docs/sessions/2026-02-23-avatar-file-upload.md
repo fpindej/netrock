@@ -17,7 +17,7 @@ Replaced the tracking-pixel-vulnerable URL-based avatar system with a full file 
 | `deploy/envs/local.env` | Added MINIO_ROOT_USER/PASSWORD, FileStorage config | MinIO credentials |
 | `deploy/envs/production.env.example` | Added FileStorage section with S3 examples | Production config template |
 | `Directory.Packages.props` | Added AWSSDK.S3 3.7.415.1, SkiaSharp 3.119.2 | NuGet version management |
-| `MyProject.Infrastructure.csproj` | Added package references | Project dependencies |
+| `Test.Infrastructure.csproj` | Added package references | Project dependencies |
 | `Application/Features/FileStorage/IFileStorageService.cs` | Created generic file storage interface | Reusable abstraction |
 | `Application/Features/FileStorage/Dtos/FileDownloadOutput.cs` | Created download result record | DTO for file downloads |
 | `Application/Features/Avatar/IImageProcessingService.cs` | Created image processing interface | Avatar-specific processing |

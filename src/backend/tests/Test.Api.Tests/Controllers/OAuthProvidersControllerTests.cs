@@ -1,0 +1,316 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Test.Api.Tests.Contracts;
+using Test.Api.Tests.Fixtures;
+using Test.Application.Features.Authentication.Dtos;
+using Test.Application.Identity.Constants;
+using Test.Shared;
+
+namespace Test.Api.Tests.Controllers;
+
+public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationFactory>, IDisposable
+{
+    private readonly CustomWebApplicationFactory _factory;
+    private readonly HttpClient _client;
+
+    public OAuthProvidersControllerTests(CustomWebApplicationFactory factory)
+    {
+        _factory = factory;
+        _factory.ResetMocks();
+        _client = factory.CreateClient();
+    }
+
+    public void Dispose() => _client.Dispose();
+
+    private static HttpRequestMessage Get(string url, string auth)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.TryAddWithoutValidation("Authorization", auth);
+        return request;
+    }
+
+    private static HttpRequestMessage Put(string url, string auth, HttpContent? content = null)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Put, url) { Content = content };
+        request.Headers.TryAddWithoutValidation("Authorization", auth);
+        return request;
+    }
+
+    private static HttpRequestMessage Post(string url, string auth)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Headers.TryAddWithoutValidation("Authorization", auth);
+        return request;
+    }
+
+    private static async Task AssertProblemDetailsAsync(
+        HttpResponseMessage response, int expectedStatus, string? expectedDetail = null)
+    {
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(expectedStatus, json.GetProperty("status").GetInt32());
+        if (expectedDetail is not null)
+        {
+            Assert.Equal(expectedDetail, json.GetProperty("detail").GetString());
+        }
+    }
+
+    #region ListProviders
+
+    [Fact]
+    public async Task ListProviders_WithPermission_ReturnsProviders()
+    {
+        _factory.ProviderConfigService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<ProviderConfigOutput>
+            {
+                new("Google", "Google", true, "google-client-id", true, "database", DateTime.UtcNow, Guid.NewGuid()),
+                new("GitHub", "GitHub", false, null, false, "unconfigured", null, null)
+            });
+
+        var response = await _client.SendAsync(
+            Get("/api/v1/admin/oauth-providers",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.View)));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<List<OAuthProviderConfigContract>>();
+        Assert.NotNull(body);
+        Assert.Equal(2, body.Count);
+        Assert.Equal("Google", body[0].Provider);
+        Assert.True(body[0].IsEnabled);
+        Assert.Equal("GitHub", body[1].Provider);
+        Assert.False(body[1].IsEnabled);
+    }
+
+    [Fact]
+    public async Task ListProviders_Unauthenticated_Returns401()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/admin/oauth-providers");
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ListProviders_NoPermission_Returns403()
+    {
+        var response = await _client.SendAsync(
+            Get("/api/v1/admin/oauth-providers", TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    #endregion
+
+    #region UpdateProvider
+
+    [Fact]
+    public async Task UpdateProvider_ValidRequest_Returns204()
+    {
+        _factory.ProviderConfigService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<ProviderConfigOutput>
+            {
+                new("Google", "Google", false, null, false, "unconfigured", null, null)
+            });
+        _factory.ProviderConfigService.UpsertAsync(
+                Arg.Any<Guid>(), Arg.Any<UpsertProviderConfigInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Put("/api/v1/admin/oauth-providers/Google",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage),
+                JsonContent.Create(new { IsEnabled = true, ClientId = "new-id", ClientSecret = "new-secret" })));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        await _factory.ProviderConfigService.Received(1).UpsertAsync(
+            Arg.Any<Guid>(), Arg.Any<UpsertProviderConfigInput>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateProvider_UnknownProvider_Returns400()
+    {
+        _factory.ProviderConfigService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<ProviderConfigOutput>
+            {
+                new("Google", "Google", false, null, false, "unconfigured", null, null)
+            });
+
+        var response = await _client.SendAsync(
+            Put("/api/v1/admin/oauth-providers/Unknown",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage),
+                JsonContent.Create(new { IsEnabled = true, ClientId = "id", ClientSecret = "secret" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400, "The specified authentication provider is not recognized.");
+    }
+
+    [Fact]
+    public async Task UpdateProvider_EnabledWithoutClientId_Returns400()
+    {
+        var response = await _client.SendAsync(
+            Put("/api/v1/admin/oauth-providers/Google",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage),
+                JsonContent.Create(new { IsEnabled = true, ClientId = "", ClientSecret = "secret" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateProvider_Unauthenticated_Returns401()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Put, "/api/v1/admin/oauth-providers/Google")
+        {
+            Content = JsonContent.Create(new { IsEnabled = true, ClientId = "id", ClientSecret = "secret" })
+        };
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateProvider_NoPermission_Returns403()
+    {
+        var response = await _client.SendAsync(
+            Put("/api/v1/admin/oauth-providers/Google",
+                TestAuth.User(),
+                JsonContent.Create(new { IsEnabled = true, ClientId = "id", ClientSecret = "secret" })));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateProvider_NullClientSecret_KeepsExisting_Returns204()
+    {
+        _factory.ProviderConfigService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<ProviderConfigOutput>
+            {
+                new("Google", "Google", true, "existing-id", true, "database", DateTime.UtcNow, Guid.NewGuid())
+            });
+        _factory.ProviderConfigService.UpsertAsync(
+                Arg.Any<Guid>(), Arg.Any<UpsertProviderConfigInput>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Put("/api/v1/admin/oauth-providers/Google",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage),
+                JsonContent.Create(new { IsEnabled = true, ClientId = "updated-id" })));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        await _factory.ProviderConfigService.Received(1).UpsertAsync(
+            Arg.Any<Guid>(),
+            Arg.Is<UpsertProviderConfigInput>(i => i.ClientSecret == null),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateProvider_EnabledWithoutSecretAndNoExisting_Returns400()
+    {
+        _factory.ProviderConfigService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<ProviderConfigOutput>
+            {
+                new("Google", "Google", false, null, false, "unconfigured", null, null)
+            });
+
+        var response = await _client.SendAsync(
+            Put("/api/v1/admin/oauth-providers/Google",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage),
+                JsonContent.Create(new { IsEnabled = true, ClientId = "new-id" })));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400,
+            "A client secret is required when enabling a provider that has no existing secret.");
+    }
+
+    [Fact]
+    public async Task UpdateProvider_InvalidProviderNameFormat_Returns404()
+    {
+        var response = await _client.SendAsync(
+            Put("/api/v1/admin/oauth-providers/invalid-name!",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage),
+                JsonContent.Create(new { IsEnabled = true, ClientId = "id", ClientSecret = "secret" })));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    #endregion
+
+    #region TestConnection
+
+    [Fact]
+    public async Task TestConnection_ValidCredentials_Returns204()
+    {
+        _factory.ProviderConfigService.TestConnectionAsync(
+                Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var response = await _client.SendAsync(
+            Post("/api/v1/admin/oauth-providers/Google/test",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage)));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        await _factory.ProviderConfigService.Received(1).TestConnectionAsync(
+            Arg.Any<Guid>(), "Google", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task TestConnection_InvalidCredentials_Returns400()
+    {
+        _factory.ProviderConfigService.TestConnectionAsync(
+                Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.ExternalAuth.TestConnectionInvalidCredentials));
+
+        var response = await _client.SendAsync(
+            Post("/api/v1/admin/oauth-providers/Google/test",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage)));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400,
+            ErrorMessages.ExternalAuth.TestConnectionInvalidCredentials);
+    }
+
+    [Fact]
+    public async Task TestConnection_NotConfigured_Returns400()
+    {
+        _factory.ProviderConfigService.TestConnectionAsync(
+                Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(ErrorMessages.ExternalAuth.TestConnectionNotConfigured));
+
+        var response = await _client.SendAsync(
+            Post("/api/v1/admin/oauth-providers/Google/test",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage)));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemDetailsAsync(response, 400,
+            ErrorMessages.ExternalAuth.TestConnectionNotConfigured);
+    }
+
+    [Fact]
+    public async Task TestConnection_Unauthenticated_Returns401()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/admin/oauth-providers/Google/test");
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TestConnection_NoPermission_Returns403()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/v1/admin/oauth-providers/Google/test", TestAuth.User()));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TestConnection_InvalidProviderNameFormat_Returns404()
+    {
+        var response = await _client.SendAsync(
+            Post("/api/v1/admin/oauth-providers/invalid-name!/test",
+                TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage)));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    #endregion
+}

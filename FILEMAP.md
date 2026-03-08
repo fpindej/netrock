@@ -36,7 +36,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **WebApi response DTO** (add/rename/remove property) | Mapper, frontend types, frontend component displaying data, `Api.Tests/Contracts/ResponseContracts.cs` |
 | **`Program.cs`** (change middleware order) | Test full request pipeline - order matters for auth, CORS, rate limiting; update `CustomWebApplicationFactory` if new services need mocking |
 | **`BaseEntity.cs`** | `BaseEntityConfiguration`, `AuditingInterceptor`, all entities |
-| **`FileStorageOptions`** (change S3/MinIO config) | `appsettings.json`, `MyProject.AppHost/Program.cs` (`.WithEnvironment()`), `appsettings.Testing.json` |
+| **`FileStorageOptions`** (change S3/MinIO config) | `appsettings.json`, `Test.AppHost/Program.cs` (`.WithEnvironment()`), `appsettings.Testing.json` |
 | **`EmailOptions`** (change config shape) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `ServiceCollectionExtensions` (email DI), `EmailOptionsValidationTests` |
 | **`IEmailService`** (change sending contract) | `NoOpEmailService`, `SmtpEmailService`, `CustomWebApplicationFactory` |
 | **`IEmailTemplateRenderer`** (change rendering contract) | `FluidEmailTemplateRenderer`, `TemplatedEmailSender`, `FluidEmailTemplateRendererTests` |
@@ -73,12 +73,12 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`HostingOptions.cs`** (change hosting config shape) | `HostingExtensions.cs`, `appsettings.json`, `appsettings.Development.json` |
 | **`Dockerfile`** (backend - change build/publish steps) | `.dockerignore`, verify published files don't include dev/test config |
 | **`Dockerfile`** (frontend - change build steps) | `.dockerignore`, `.npmrc` (copied into image for install-affecting settings), `docker.yml` build args. New `PUBLIC_*` SvelteKit env vars need `ARG`+`ENV` in Dockerfile (before `pnpm run build`), `--build-arg` in `docker.yml`. For runtime env vars, prefer `$env/dynamic/private` with SSR layout data |
-| **`MyProject.WebApi.csproj`** (add appsettings file) | If non-production: add `CopyToPublishDirectory="Never"` and matching `rm -f` in `Dockerfile` |
+| **`Test.WebApi.csproj`** (add appsettings file) | If non-production: add `CopyToPublishDirectory="Never"` and matching `rm -f` in `Dockerfile` |
 | **`HealthCheckExtensions.cs`** (change endpoints/checks) | Frontend health proxy `+server.ts`, Dockerfile healthcheck command |
-| **New infrastructure dependency** (DB, cache, storage, etc.) | `MyProject.AppHost/Program.cs` (add resource + `.WithReference()`/`.WithEnvironment()`) |
-| **Connection string config** (change format/name) | Verify `MyProject.AppHost/Program.cs` environment variable mapping still works |
-| **`MyProject.ServiceDefaults/Extensions.cs`** | All projects referencing ServiceDefaults, `Program.cs` `AddServiceDefaults()` call |
-| **`MyProject.AppHost/Program.cs`** | Verify resource names match `ConnectionStrings:*` and `WithEnvironment` keys match `appsettings.json` option paths |
+| **New infrastructure dependency** (DB, cache, storage, etc.) | `Test.AppHost/Program.cs` (add resource + `.WithReference()`/`.WithEnvironment()`) |
+| **Connection string config** (change format/name) | Verify `Test.AppHost/Program.cs` environment variable mapping still works |
+| **`Test.ServiceDefaults/Extensions.cs`** | All projects referencing ServiceDefaults, `Program.cs` `AddServiceDefaults()` call |
+| **`Test.AppHost/Program.cs`** | Verify resource names match `ConnectionStrings:*` and `WithEnvironment` keys match `appsettings.json` option paths |
 | **`ProblemDetailsAuthorizationHandler`** | `ProblemDetails` shape, `ErrorMessages.Auth` constants, `Program.cs` registration |
 | **`CaptchaOptions`** (Infrastructure - Captcha config) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `TurnstileCaptchaService`, `ServiceCollectionExtensions` |
 | **`TurnstileCaptchaService`** (Infrastructure - Captcha service) | `ICaptchaService` interface, `CaptchaOptions`, `AuthController` captcha gate |
@@ -123,13 +123,13 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Backend endpoint route** | Frontend API calls + regenerate types |
 | **Backend response shape** | Regenerate types → update frontend components |
 | **Backend auth/cookie behavior** | Frontend `$lib/auth/middleware.ts` (refresh logic), `$lib/auth/auth.ts` |
-| **`appsettings.Development.json`** (add dev config override) | Keep standalone defaults (ConnectionStrings, FileStorage, JWT key) in sync with `MyProject.AppHost/appsettings.json` parameters |
+| **`appsettings.Development.json`** (add dev config override) | Keep standalone defaults (ConnectionStrings, FileStorage, JWT key) in sync with `Test.AppHost/appsettings.json` parameters |
 | **`.env.example`** (frontend) | `src/frontend/.env.test` if new `PUBLIC_*` var added |
 | **`.env.test`** (frontend) | `ci.yml` loads it via `cp .env.test .env`; keep in sync with `.env.example` vars |
-| **`MyProject.AppHost/Program.cs`** (add env var or parameter) | Verify `appsettings.Development.json` standalone defaults match |
+| **`Test.AppHost/Program.cs`** (add env var or parameter) | Verify `appsettings.Development.json` standalone defaults match |
 | **CORS config** (`CorsExtensions.cs`) | Frontend dev server origin, `ALLOWED_ORIGINS` env var |
 | **Rate limiting config** | Frontend may need retry/backoff logic |
-| **`appsettings.json`** structure | Options class, `MyProject.AppHost/Program.cs` |
+| **`appsettings.json`** structure | Options class, `Test.AppHost/Program.cs` |
 | **CI workflows** (`.github/workflows/`) | Verify `dorny/paths-filter` patterns match project structure |
 
 ---
@@ -141,7 +141,7 @@ Files that are frequently referenced in impact tables above. For anything not li
 ### Backend Naming Patterns
 
 ```
-src/backend/MyProject.{Layer}/
+src/backend/Test.{Layer}/
   Shared:          Result.cs, ErrorType.cs, ErrorMessages.cs, PhoneNumberHelper.cs
   Domain:          Entities/{Entity}.cs
   Application:     Features/{Feature}/I{Feature}Service.cs
@@ -156,7 +156,7 @@ src/backend/MyProject.{Layer}/
   Infrastructure:  Features/{Feature}/Services/{Feature}Service.cs
                    Features/{Feature}/Configurations/{Entity}Configuration.cs
                    Features/{Feature}/Extensions/ServiceCollectionExtensions.cs
-                   Persistence/MyProjectDbContext.cs
+                   Persistence/TestDbContext.cs
   WebApi:          Features/{Feature}/{Feature}Controller.cs
                    Features/{Feature}/{Feature}Mapper.cs
                    Features/{Feature}/Dtos/{Operation}/{Operation}Request.cs
@@ -187,7 +187,7 @@ src/frontend/src/
 ### Job Scheduling Patterns
 
 ```
-src/backend/MyProject.Infrastructure/Features/Jobs/
+src/backend/Test.Infrastructure/Features/Jobs/
   IRecurringJobDefinition.cs                          Interface for recurring jobs
   RecurringJobs/{JobName}Job.cs                       Recurring job implementations
   Examples/ExampleFireAndForgetJob.cs                 Example one-time job (removable)
@@ -197,10 +197,10 @@ src/backend/MyProject.Infrastructure/Features/Jobs/
   Options/JobSchedulingOptions.cs                     Configuration (Enabled, WorkerCount)
   Extensions/ServiceCollectionExtensions.cs           DI registration
   Extensions/ApplicationBuilderExtensions.cs          Middleware + job registration + pause restore
-src/backend/MyProject.Application/Features/Jobs/
+src/backend/Test.Application/Features/Jobs/
   IJobManagementService.cs                            Admin API interface
   Dtos/RecurringJobOutput.cs, ...                     Job DTOs
-src/backend/MyProject.WebApi/Features/Admin/
+src/backend/Test.WebApi/Features/Admin/
   JobsController.cs                                   Admin job endpoints
   JobsMapper.cs                                       DTO mapping
   Dtos/Jobs/                                          Response DTOs
@@ -209,14 +209,14 @@ src/backend/MyProject.WebApi/Features/Admin/
 ### Email Template Patterns
 
 ```
-src/backend/MyProject.Application/Features/Email/
+src/backend/Test.Application/Features/Email/
   IEmailTemplateRenderer.cs                         Rendering interface (Render<TModel>)
   ITemplatedEmailSender.cs                          Safe render+send interface (SendSafeAsync)
   Models/EmailTemplateModels.cs                     Model records (one per template)
   EmailTemplateNames.cs                             Template name constants (kebab-case)
   IEmailService.cs                                  Sending interface
   EmailMessage.cs                                   Message envelope DTO
-src/backend/MyProject.Infrastructure/Features/Email/
+src/backend/Test.Infrastructure/Features/Email/
   Services/FluidEmailTemplateRenderer.cs            Fluid-based renderer (singleton, cached)
   Services/TemplatedEmailSender.cs                  Render+send wrapper (swallows failures)
   Services/SmtpEmailService.cs                      MailKit SMTP sender (when Enabled)
@@ -233,19 +233,19 @@ src/backend/MyProject.Infrastructure/Features/Email/
 
 ```
 src/backend/tests/
-  MyProject.Unit.Tests/
+  Test.Unit.Tests/
     {Layer}/{ClassUnderTest}Tests.cs             Unit tests (pure logic)
-  MyProject.Component.Tests/
+  Test.Component.Tests/
     Fixtures/TestDbContextFactory.cs             InMemory DbContext factory
     Fixtures/IdentityMockHelpers.cs              UserManager/RoleManager mock setup
     Services/{Service}Tests.cs                   Service tests (mocked deps)
-  MyProject.Api.Tests/
+  Test.Api.Tests/
     Fixtures/CustomWebApplicationFactory.cs      WebApplicationFactory config
     Fixtures/TestAuthHandler.cs                  Fake auth handler
     Contracts/ResponseContracts.cs               Frozen response shapes for contract testing
     Controllers/{Controller}Tests.cs             HTTP integration tests
     Validators/{Validator}Tests.cs               FluentValidation tests
-  MyProject.Architecture.Tests/
+  Test.Architecture.Tests/
     DependencyTests.cs                           Layer dependency rules
     NamingConventionTests.cs                     Class naming enforcement
     AccessModifierTests.cs                       Visibility rules
@@ -255,22 +255,22 @@ src/backend/tests/
 
 | File | Why it matters |
 |---|---|
-| `src/backend/MyProject.WebApi/Program.cs` | DI wiring, middleware pipeline |
-| `src/backend/MyProject.Infrastructure/Persistence/MyProjectDbContext.cs` | DbSets, migrations |
-| `src/backend/MyProject.Shared/ErrorMessages.cs` | All static error strings |
-| `src/backend/MyProject.Application/Identity/Constants/AppRoles.cs` | Role definitions |
-| `src/backend/MyProject.Application/Identity/Constants/AppPermissions.cs` | Permission definitions (reflection-discovered) |
-| `src/backend/MyProject.Application/Caching/Constants/CacheKeys.cs` | Cache key constants (used across services) |
-| `src/backend/MyProject.Application/Features/Email/EmailTemplateNames.cs` | Email template name constants |
+| `src/backend/Test.WebApi/Program.cs` | DI wiring, middleware pipeline |
+| `src/backend/Test.Infrastructure/Persistence/TestDbContext.cs` | DbSets, migrations |
+| `src/backend/Test.Shared/ErrorMessages.cs` | All static error strings |
+| `src/backend/Test.Application/Identity/Constants/AppRoles.cs` | Role definitions |
+| `src/backend/Test.Application/Identity/Constants/AppPermissions.cs` | Permission definitions (reflection-discovered) |
+| `src/backend/Test.Application/Caching/Constants/CacheKeys.cs` | Cache key constants (used across services) |
+| `src/backend/Test.Application/Features/Email/EmailTemplateNames.cs` | Email template name constants |
 | `src/frontend/src/lib/utils/permissions.ts` | Frontend permission constants + helpers |
-| `src/backend/MyProject.WebApi/Shared/RateLimitPolicies.cs` | Rate limit policy name constants |
+| `src/backend/Test.WebApi/Shared/RateLimitPolicies.cs` | Rate limit policy name constants |
 | `src/backend/Directory.Packages.props` | NuGet versions (never in .csproj) |
 | `src/frontend/src/lib/components/layout/AppSidebar.svelte` | Navigation entries + command palette trigger |
 | `src/frontend/src/lib/components/layout/ContentHeader.svelte` | Desktop breadcrumb header + sidebar toggle (keep route labels in sync with AppSidebar) |
 | `src/frontend/src/lib/components/layout/CommandPalette.svelte` | Command palette entries (keep in sync with AppSidebar) |
 | `src/frontend/src/lib/api/v1.d.ts` | Generated types (never hand-edit) |
 | `src/frontend/.env.test` | CI + test environment defaults (loaded by `ci.yml`) |
-| `src/backend/MyProject.WebApi/appsettings.Testing.json` | Test environment config (disables Hangfire, caching, CORS) |
-| `src/backend/tests/MyProject.Api.Tests/Fixtures/CustomWebApplicationFactory.cs` | Test host configuration for API tests |
-| `src/backend/MyProject.ServiceDefaults/Extensions.cs` | Aspire shared: OTEL, service discovery, HTTP resilience defaults |
-| `src/backend/MyProject.AppHost/Program.cs` | Aspire orchestrator: local dev (PostgreSQL, MinIO, MailPit, API, Frontend) |
+| `src/backend/Test.WebApi/appsettings.Testing.json` | Test environment config (disables Hangfire, caching, CORS) |
+| `src/backend/tests/Test.Api.Tests/Fixtures/CustomWebApplicationFactory.cs` | Test host configuration for API tests |
+| `src/backend/Test.ServiceDefaults/Extensions.cs` | Aspire shared: OTEL, service discovery, HTTP resilience defaults |
+| `src/backend/Test.AppHost/Program.cs` | Aspire orchestrator: local dev (PostgreSQL, MinIO, MailPit, API, Frontend) |

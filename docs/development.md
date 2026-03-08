@@ -7,7 +7,7 @@
 Aspire is the sole local development workflow. It starts all infrastructure (PostgreSQL, MinIO, MailPit) as containers and launches the API and frontend dev server.
 
 ```bash
-dotnet run --project src/backend/MyProject.AppHost
+dotnet run --project src/backend/Test.AppHost
 ```
 
 The Aspire Dashboard URL appears in the console. All service URLs (API docs, pgAdmin, MinIO, MailPit) are linked from the Dashboard.
@@ -62,6 +62,6 @@ Migrations auto-apply on startup in Development.
 
 ## Production Deployment
 
-Production deployment is up to you. The project provides production-ready Dockerfiles (`src/backend/MyProject.WebApi/Dockerfile` and `src/frontend/Dockerfile`) but does not prescribe an orchestrator, build pipeline, or registry. Use whatever fits your infrastructure.
+Production deployment is up to you. The project provides production-ready Dockerfiles (`src/backend/Test.WebApi/Dockerfile` and `src/frontend/Dockerfile`) but does not prescribe an orchestrator, build pipeline, or registry. Use whatever fits your infrastructure.
 
 See [Before You Ship](before-you-ship.md) for the configuration checklist.

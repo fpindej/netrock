@@ -13,8 +13,8 @@ src/frontend/src/lib/api/v1.d.ts
 src/frontend/src/lib/paraglide/
 
 # EF Core migrations (large, auto-generated)
-src/backend/MyProject.Infrastructure/Features/Postgres/Migrations/
-src/backend/MyProject.Infrastructure/Persistence/Migrations/
+src/backend/Test.Infrastructure/Features/Postgres/Migrations/
+src/backend/Test.Infrastructure/Persistence/Migrations/
 
 # Session docs (historical, not needed for coding tasks)
 docs/sessions/

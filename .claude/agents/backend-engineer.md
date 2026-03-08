@@ -31,7 +31,7 @@ For a typical feature:
 
 After implementation, always run:
 ```bash
-dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.slnx -c Release
+dotnet build src/backend/Test.slnx && dotnet test src/backend/Test.slnx -c Release
 ```
 Fix failures. Loop until green. Never commit broken code.
 

@@ -11,18 +11,18 @@ Added Cloudflare Turnstile CAPTCHA to the Register and Forgot Password flows to 
 
 | File | Change | Reason |
 |------|--------|--------|
-| `src/backend/MyProject.Application/Features/Captcha/ICaptchaService.cs` | New interface | Clean Architecture abstraction for captcha verification |
-| `src/backend/MyProject.Infrastructure/Features/Captcha/Options/CaptchaOptions.cs` | New options class | Typed configuration with `ValidateOnStart` |
-| `src/backend/MyProject.Infrastructure/Features/Captcha/Services/TurnstileCaptchaService.cs` | New service | Server-side Turnstile token verification via `HttpClient` |
-| `src/backend/MyProject.Infrastructure/Features/Captcha/Extensions/ServiceCollectionExtensions.cs` | New DI extension | C# 13 extension syntax, registers options + typed HttpClient |
-| `src/backend/MyProject.Shared/ErrorMessages.cs` | Added `CaptchaInvalid` | Consistent error message for captcha failures |
-| `src/backend/MyProject.WebApi/Program.cs` | Added `AddCaptchaServices` | Service registration |
-| `src/backend/MyProject.WebApi/appsettings.*.json` | Added `Captcha` section | Configuration for all environments |
-| `src/backend/MyProject.WebApi/.../RegisterRequest.cs` | Added `CaptchaToken` property | Required field for captcha token |
-| `src/backend/MyProject.WebApi/.../ForgotPasswordRequest.cs` | Added `CaptchaToken` property | Required field for captcha token |
-| `src/backend/MyProject.WebApi/.../RegisterRequestValidator.cs` | Added `NotEmpty` rule | FluentValidation for captcha token |
-| `src/backend/MyProject.WebApi/.../ForgotPasswordRequestValidator.cs` | Added `NotEmpty` rule | FluentValidation for captcha token |
-| `src/backend/MyProject.WebApi/.../AuthController.cs` | Injected `ICaptchaService`, added validation | Gate Register/ForgotPassword behind captcha check |
+| `src/backend/Test.Application/Features/Captcha/ICaptchaService.cs` | New interface | Clean Architecture abstraction for captcha verification |
+| `src/backend/Test.Infrastructure/Features/Captcha/Options/CaptchaOptions.cs` | New options class | Typed configuration with `ValidateOnStart` |
+| `src/backend/Test.Infrastructure/Features/Captcha/Services/TurnstileCaptchaService.cs` | New service | Server-side Turnstile token verification via `HttpClient` |
+| `src/backend/Test.Infrastructure/Features/Captcha/Extensions/ServiceCollectionExtensions.cs` | New DI extension | C# 13 extension syntax, registers options + typed HttpClient |
+| `src/backend/Test.Shared/ErrorMessages.cs` | Added `CaptchaInvalid` | Consistent error message for captcha failures |
+| `src/backend/Test.WebApi/Program.cs` | Added `AddCaptchaServices` | Service registration |
+| `src/backend/Test.WebApi/appsettings.*.json` | Added `Captcha` section | Configuration for all environments |
+| `src/backend/Test.WebApi/.../RegisterRequest.cs` | Added `CaptchaToken` property | Required field for captcha token |
+| `src/backend/Test.WebApi/.../ForgotPasswordRequest.cs` | Added `CaptchaToken` property | Required field for captcha token |
+| `src/backend/Test.WebApi/.../RegisterRequestValidator.cs` | Added `NotEmpty` rule | FluentValidation for captcha token |
+| `src/backend/Test.WebApi/.../ForgotPasswordRequestValidator.cs` | Added `NotEmpty` rule | FluentValidation for captcha token |
+| `src/backend/Test.WebApi/.../AuthController.cs` | Injected `ICaptchaService`, added validation | Gate Register/ForgotPassword behind captcha check |
 | `src/frontend/src/lib/components/auth/TurnstileWidget.svelte` | New component | Svelte 5 wrapper for Cloudflare Turnstile explicit render API |
 | `src/frontend/src/lib/components/auth/RegisterDialog.svelte` | Widget integration, submit-gate | Captcha required before registration |
 | `src/frontend/src/lib/components/auth/ForgotPasswordForm.svelte` | Widget integration, submit-gate | Captcha required before password reset |

@@ -6,7 +6,7 @@ Adds a route constraint for validating string path parameters at the routing lay
 
 ## Steps
 
-1. Create `src/backend/MyProject.WebApi/Routing/{Name}RouteConstraint.cs`:
+1. Create `src/backend/Test.WebApi/Routing/{Name}RouteConstraint.cs`:
    ```csharp
    public partial class {Name}RouteConstraint : IRouteConstraint
    {
@@ -28,4 +28,4 @@ Adds a route constraint for validating string path parameters at the routing lay
    ```
 3. Use in routes: `[HttpGet("items/{id:myConstraint}")]`
 4. Non-matching routes return 404 automatically - no controller code needed
-5. Verify: `dotnet build src/backend/MyProject.slnx`
+5. Verify: `dotnet build src/backend/Test.slnx`

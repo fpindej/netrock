@@ -64,13 +64,13 @@ Run before every commit. Fix all errors before committing. **Loop until green - 
 
 ```bash
 # Backend (run when src/backend/ changed)
-dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.slnx -c Release
+dotnet build src/backend/Test.slnx && dotnet test src/backend/Test.slnx -c Release
 
 # Frontend (run when src/frontend/ changed)
 cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check
 
 # Aspire (run to verify local orchestration - requires Docker)
-dotnet run --project src/backend/MyProject.AppHost
+dotnet run --project src/backend/Test.AppHost
 ```
 
 ## Autonomous Behaviors

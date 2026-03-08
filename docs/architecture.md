@@ -39,7 +39,7 @@ NETrock is thoroughly tested across 4 test projects, covering every layer of the
 All tests run in-process - no Docker or PostgreSQL required:
 
 ```bash
-dotnet test src/backend/MyProject.slnx -c Release
+dotnet test src/backend/Test.slnx -c Release
 ```
 
 ---

@@ -33,7 +33,7 @@ Pre-create the bucket in your provider's console. Restart - no rebuild needed.
 
 ## Remove File Storage Entirely
 
-1. **Infrastructure:** Remove the MinIO resource from `MyProject.AppHost/Program.cs`
+1. **Infrastructure:** Remove the MinIO resource from `Test.AppHost/Program.cs`
 2. **Backend:** Remove `Application/Features/FileStorage/`, `Application/Features/Avatar/`, `Infrastructure/Features/FileStorage/`, `Infrastructure/Features/Avatar/`
 3. **Entity:** Remove `HasAvatar` from `ApplicationUser`
 4. **Endpoints:** Remove avatar endpoints from `UsersController`, `UploadAvatar/` DTOs

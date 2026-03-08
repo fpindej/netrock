@@ -9,19 +9,19 @@ user-invocable: false
 
 ```
 src/backend/
-├── MyProject.Shared/              # Result, ErrorType, ErrorMessages (zero deps)
-├── MyProject.Domain/Entities/     # Business entities (BaseEntity)
-├── MyProject.Application/         # Interfaces, DTOs, service contracts
+├── Test.Shared/              # Result, ErrorType, ErrorMessages (zero deps)
+├── Test.Domain/Entities/     # Business entities (BaseEntity)
+├── Test.Application/         # Interfaces, DTOs, service contracts
 │   ├── Features/{Feature}/I{Feature}Service.cs
 │   ├── Features/{Feature}/Dtos/{Operation}Input.cs, {Entity}Output.cs
 │   ├── Identity/IUserService.cs, IUserContext.cs
 │   └── Identity/Constants/AppRoles.cs, AppPermissions.cs
-├── MyProject.Infrastructure/      # Implementations (all internal)
+├── Test.Infrastructure/      # Implementations (all internal)
 │   ├── Features/{Feature}/Services/, Configurations/, Extensions/
-│   └── Persistence/MyProjectDbContext.cs
-├── MyProject.ServiceDefaults/     # Aspire shared: OTEL, service discovery, resilience
-├── MyProject.AppHost/             # Aspire orchestrator (local dev only)
-└── MyProject.WebApi/              # Entry point
+│   └── Persistence/TestDbContext.cs
+├── Test.ServiceDefaults/     # Aspire shared: OTEL, service discovery, resilience
+├── Test.AppHost/             # Aspire orchestrator (local dev only)
+└── Test.WebApi/              # Entry point
     ├── Features/{Feature}/{Feature}Controller.cs, {Feature}Mapper.cs
     ├── Features/{Feature}/Dtos/{Operation}/{Operation}Request.cs + Validator
     ├── Authorization/             # RequirePermission, PermissionPolicyProvider
@@ -79,8 +79,8 @@ Configurations inherit `BaseEntityConfiguration<T>` (`public abstract`), overrid
 Migration command:
 ```bash
 dotnet ef migrations add {Name} \
-  --project src/backend/MyProject.Infrastructure \
-  --startup-project src/backend/MyProject.WebApi \
+  --project src/backend/Test.Infrastructure \
+  --startup-project src/backend/Test.WebApi \
   --output-dir Persistence/Migrations
 ```
 
@@ -242,6 +242,6 @@ Response contracts: frozen records in `Contracts/ResponseContracts.cs` - deseria
 
 ## Aspire (Local Development)
 
-Run: `dotnet run --project src/backend/MyProject.AppHost` - launches PostgreSQL, MinIO, MailPit, API, and Frontend. See `/add-aspire-dep` skill for adding dependencies.
+Run: `dotnet run --project src/backend/Test.AppHost` - launches PostgreSQL, MinIO, MailPit, API, and Frontend. See `/add-aspire-dep` skill for adding dependencies.
 
 **Logging gotcha**: Serilog bridges to OTEL via `writeToProviders: true` - do NOT add `Serilog.Sinks.OpenTelemetry` (causes duplicate logs).

@@ -12,7 +12,7 @@ Replaced 4 transactional emails (verify-email, reset-password, admin-reset-passw
 | File | Change | Reason |
 |------|--------|--------|
 | `Directory.Packages.props` | Added Fluid.Core 2.13.0 | Liquid template engine |
-| `MyProject.Infrastructure.csproj` | Added PackageReference + EmbeddedResource glob | Fluid dependency + template embedding |
+| `Test.Infrastructure.csproj` | Added PackageReference + EmbeddedResource glob | Fluid dependency + template embedding |
 | `IEmailTemplateRenderer.cs` | New interface + RenderedEmail record | Application-layer rendering contract |
 | `ITemplatedEmailSender.cs` | New interface for safe render+send | DRY extraction of duplicate private methods |
 | `EmailTemplateModels.cs` | 4 new model records | One per email template |
@@ -65,7 +65,7 @@ Replaced 4 transactional emails (verify-email, reset-password, admin-reset-passw
 
 ### Const resource prefix over Namespace reflection
 
-- **Choice**: `private const string ResourcePrefix = "MyProject.Infrastructure.Features.Email.Templates"`
+- **Choice**: `private const string ResourcePrefix = "Test.Infrastructure.Features.Email.Templates"`
 - **Alternatives considered**: `typeof(...).Namespace!.Replace(".Services", ".Templates")`
 - **Reasoning**: Eliminates `null!` violation (hard CLAUDE.md rule), avoids reflection at static init, and is clearer. Trade-off is manual update on namespace rename, but embedded resource names already require that.
 

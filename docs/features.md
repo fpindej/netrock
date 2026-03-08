@@ -6,7 +6,7 @@
 
 | Feature | Implementation |
 |---|---|
-| **Clean Architecture** | Domain, Application, Infrastructure, WebApi - with [architecture tests](../src/backend/tests/MyProject.Architecture.Tests) enforcing dependency rules at build time |
+| **Clean Architecture** | Domain, Application, Infrastructure, WebApi - with [architecture tests](../src/backend/tests/Test.Architecture.Tests) enforcing dependency rules at build time |
 | **Authentication** | JWT in HttpOnly cookies, refresh token rotation with reuse detection (stolen token revokes entire family), security stamp validation, remember-me persistent sessions |
 | **Two-Factor Authentication** | TOTP-based 2FA with QR code setup, 6-digit verification, 8 single-use recovery codes, challenge token flow (login returns challenge, client submits TOTP code), admin can disable 2FA for locked-out users with automatic session revocation and notification email |
 | **OAuth / External Login** | OAuth 2.0 / OIDC external authentication with 8 providers out of the box - Google, GitHub, Discord, Apple, Microsoft, Facebook, LinkedIn, and X (Twitter). Manual `HttpClient`-based code exchange (no ASP.NET middleware). Auto-links accounts by verified email. 2FA is bypassed for OAuth logins (provider already verified identity). Provider credentials stored with AES-256-GCM encryption |

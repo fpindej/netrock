@@ -49,5 +49,5 @@ AuthenticationOptions
 
 - **`IValidatableObject` over `IValidateOptions<T>`**: Consistent with existing caching options pattern — validation lives directly on the options class, validated via `ValidateDataAnnotations()`.
 - **`RefreshTokenAsync` unchanged**: Rotated tokens already inherit `ExpiredAt` from the parent token, so the dual lifetime is only set at login time.
-- **`TimeSpan.ToHumanReadable()` in Shared**: Extracted from auth-specific `FormatLifetime` to a general-purpose public extension. Uses the largest whole unit (days → hours → minutes) with singular/plural handling. Lives in `MyProject.Shared` so it's reusable across all layers without `InternalsVisibleTo` workarounds.
+- **`TimeSpan.ToHumanReadable()` in Shared**: Extracted from auth-specific `FormatLifetime` to a general-purpose public extension. Uses the largest whole unit (days → hours → minutes) with singular/plural handling. Lives in `Test.Shared` so it's reusable across all layers without `InternalsVisibleTo` workarounds.
 - **Null safety on config reads**: Replaced `null!` with `?? throw new InvalidOperationException(...)` for clear startup failure messages when configuration sections are missing.

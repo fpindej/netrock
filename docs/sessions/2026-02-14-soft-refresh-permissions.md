@@ -11,9 +11,9 @@ Previously, role assignment, role removal, and permission changes all revoked ev
 
 | File | Change | Reason |
 |------|--------|--------|
-| `src/backend/MyProject.Infrastructure/Features/Admin/Services/RoleManagementService.cs` | `RotateSecurityStampsForRoleAsync` now only rotates security stamps and clears caches — no longer revokes refresh tokens | Preserve sessions on permission changes |
-| `src/backend/MyProject.Infrastructure/Features/Admin/Services/AdminService.cs` | Extracted `RotateSecurityStampAsync` helper; `AssignRoleAsync` and `RemoveRoleAsync` call it instead of `RevokeUserSessionsAsync` | Soft-refresh for role assignment/removal; DRY helper |
-| `src/backend/MyProject.Infrastructure/Features/Authentication/Services/AuthenticationService.cs` | `RefreshTokenAsync` preserves `storedToken.ExpiredAt` on the new entity and cookie | Original 7-day window survives rotation; prevents indefinite session extension |
+| `src/backend/Test.Infrastructure/Features/Admin/Services/RoleManagementService.cs` | `RotateSecurityStampsForRoleAsync` now only rotates security stamps and clears caches — no longer revokes refresh tokens | Preserve sessions on permission changes |
+| `src/backend/Test.Infrastructure/Features/Admin/Services/AdminService.cs` | Extracted `RotateSecurityStampAsync` helper; `AssignRoleAsync` and `RemoveRoleAsync` call it instead of `RevokeUserSessionsAsync` | Soft-refresh for role assignment/removal; DRY helper |
+| `src/backend/Test.Infrastructure/Features/Authentication/Services/AuthenticationService.cs` | `RefreshTokenAsync` preserves `storedToken.ExpiredAt` on the new entity and cookie | Original 7-day window survives rotation; prevents indefinite session extension |
 
 ## Decisions & Reasoning
 

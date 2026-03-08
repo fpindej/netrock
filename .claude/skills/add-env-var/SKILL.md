@@ -8,7 +8,7 @@ Adds an environment variable (backend or frontend).
 
 1. Add to `appsettings.Development.json` if it needs a dev-specific value (Aspire injects infrastructure connection strings automatically - only add behavioral config here)
 2. If it maps to an Options class: use `Section:Key` naming in appsettings (e.g., `Authentication:Jwt:AccessTokenLifetime`)
-3. If it needs Aspire wiring for local dev: add via `.WithEnvironment()` in `MyProject.AppHost/Program.cs`
+3. If it needs Aspire wiring for local dev: add via `.WithEnvironment()` in `Test.AppHost/Program.cs`
 4. If it needs an Options class: use `/add-options-class`
 
 ## Frontend-consumed variable

@@ -79,7 +79,7 @@ The init script will ask for your project name and base port, then rename everyt
 ### 2. Launch Everything
 
 ```bash
-dotnet run --project src/backend/MyProject.AppHost
+dotnet run --project src/backend/Test.AppHost
 ```
 
 That's it. Aspire starts all infrastructure (PostgreSQL, MinIO) as containers and launches the API and frontend dev server. The Aspire Dashboard URL appears in the console - all service URLs (API docs, pgAdmin, MinIO) are linked from the Dashboard.

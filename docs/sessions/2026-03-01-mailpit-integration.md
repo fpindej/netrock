@@ -12,8 +12,8 @@ Added an `Enabled` toggle to `EmailOptions` that switches between `NoOpEmailServ
 | File | Change | Reason |
 |------|--------|--------|
 | `Directory.Packages.props` | Added `MailKit` and `CommunityToolkit.Aspire.Hosting.MailPit` | SMTP client and Aspire MailPit container |
-| `MyProject.Infrastructure.csproj` | Added `MailKit` reference | Infrastructure needs SMTP client |
-| `MyProject.AppHost.csproj` | Added `CommunityToolkit.Aspire.Hosting.MailPit` reference | AppHost needs MailPit hosting |
+| `Test.Infrastructure.csproj` | Added `MailKit` reference | Infrastructure needs SMTP client |
+| `Test.AppHost.csproj` | Added `CommunityToolkit.Aspire.Hosting.MailPit` reference | AppHost needs MailPit hosting |
 | `EmailOptions.cs` | Added `Enabled` flag, implemented `IValidatableObject` | Conditionally require SMTP host when enabled |
 | `SmtpEmailService.cs` | New file - MailKit SMTP sender | Real email delivery for dev/production |
 | `ServiceCollectionExtensions.cs` (email) | Conditional registration based on `Enabled` | SmtpEmailService when enabled, NoOpEmailService when disabled |
@@ -21,7 +21,7 @@ Added an `Enabled` toggle to `EmailOptions` that switches between `NoOpEmailServ
 | `appsettings.Development.json` | Added `"Enabled": true` + MailPit SMTP defaults | Dev uses MailPit automatically |
 | `appsettings.Testing.json` | Added `"Enabled": false` to Email section | Tests use NoOp |
 | `api.env` | Added `Email__Enabled=true` | Production template |
-| `MyProject.AppHost/Program.cs` | Added MailPit resource at base+7/+8, wired SMTP env vars | Local email testing infrastructure |
+| `Test.AppHost/Program.cs` | Added MailPit resource at base+7/+8, wired SMTP env vars | Local email testing infrastructure |
 | `init.sh` / `init.ps1` | Max port 65529 to 65527 | Accommodate 2 new MailPit ports |
 | `SmtpEmailServiceTests.cs` | New file - invalid host and cancellation tests | Verify error propagation |
 | `EmailOptionsValidationTests.cs` | Added Enabled flag validation tests | Verify conditional SMTP validation |

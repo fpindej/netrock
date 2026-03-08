@@ -45,7 +45,7 @@ Migrated all 9 `.claude/commands/` files to `.claude/skills/*/SKILL.md` with YAM
 
 ### Post-init perspective for all skills
 
-- **Choice**: Treat all content as post-init state with `MyProject` as placeholder
+- **Choice**: Treat all content as post-init state with `Test` as placeholder
 - **Alternatives considered**: Include template-specific notes (e.g., "no EF migrations")
 - **Reasoning**: Skills should reflect how the initialized project works, not template internals. Template-specific behavior is handled by the init script.
 
