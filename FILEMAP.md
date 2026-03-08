@@ -36,7 +36,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **WebApi response DTO** (add/rename/remove property) | Mapper, frontend types, frontend component displaying data, `Api.Tests/Contracts/ResponseContracts.cs` |
 | **`Program.cs`** (change middleware order) | Test full request pipeline - order matters for auth, CORS, rate limiting; update `CustomWebApplicationFactory` if new services need mocking |
 | **`BaseEntity.cs`** | `BaseEntityConfiguration`, `AuditingInterceptor`, all entities |
-| **`FileStorageOptions`** (change S3/MinIO config) | `appsettings.json`, `MyProject.AppHost/Program.cs` (WithEnvironment), `deploy/envs/production-example/api.env`, `appsettings.Testing.json` |
+| **`FileStorageOptions`** (change S3/MinIO config) | `appsettings.json`, `MyProject.AppHost/Program.cs` (`.WithEnvironment()`), `deploy/envs/production-example/api.env`, `appsettings.Testing.json` |
 | **`EmailOptions`** (change config shape) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `deploy/envs/production-example/api.env`, `ServiceCollectionExtensions` (email DI), `EmailOptionsValidationTests` |
 | **`IEmailService`** (change sending contract) | `NoOpEmailService`, `SmtpEmailService`, `CustomWebApplicationFactory` |
 | **`IEmailTemplateRenderer`** (change rendering contract) | `FluidEmailTemplateRenderer`, `TemplatedEmailSender`, `FluidEmailTemplateRendererTests` |
@@ -72,10 +72,10 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`RateLimiterExtensions.cs`** (add policy) | Requires matching constant in `RateLimitPolicies.cs` and config in `RateLimitingOptions.cs` |
 | **`HostingOptions.cs`** (change hosting config shape) | `HostingExtensions.cs`, `appsettings.json`, `appsettings.Development.json`, `deploy/envs/production-example/api.env` |
 | **`Dockerfile`** (backend - change build/publish steps) | `.dockerignore`, verify published files don't include dev/test config |
-| **`Dockerfile`** (frontend - change build steps) | `.dockerignore`, `.npmrc` (copied into image for install-affecting settings), `docker.yml` build args, `deploy/build.sh`/`deploy/build.ps1` build args. New `PUBLIC_*` SvelteKit env vars need `ARG`+`ENV` in Dockerfile (before `pnpm run build`), `--build-arg` in deploy scripts and `docker.yml` |
+| **`Dockerfile`** (frontend - change build steps) | `.dockerignore`, `.npmrc` (copied into image for install-affecting settings), `docker.yml` build args, `deploy/build.sh`/`deploy/build.ps1` build args. New `PUBLIC_*` SvelteKit env vars need `ARG`+`ENV` in Dockerfile (before `pnpm run build`), `--build-arg` in deploy scripts and `docker.yml`. For runtime env vars, prefer `$env/dynamic/private` with SSR layout data |
 | **`MyProject.WebApi.csproj`** (add appsettings file) | If non-production: add `CopyToPublishDirectory="Never"` and matching `rm -f` in `Dockerfile` |
-| **`HealthCheckExtensions.cs`** (change endpoints/checks) | `MyProject.AppHost/Program.cs` (PublishAsDockerComposeService healthcheck), frontend health proxy `+server.ts` |
-| **New infrastructure dependency** (DB, cache, storage, etc.) | `MyProject.AppHost/Program.cs` (add resource + `.WithReference()`/`.WithEnvironment()` + `.PublishAsDockerComposeService()`), `deploy/envs/` (add env vars), re-run `./deploy/publish.sh` |
+| **`HealthCheckExtensions.cs`** (change endpoints/checks) | Frontend health proxy `+server.ts`, Dockerfile healthcheck command |
+| **New infrastructure dependency** (DB, cache, storage, etc.) | `MyProject.AppHost/Program.cs` (add resource + `.WithReference()`/`.WithEnvironment()`), `deploy/envs/production-example/` (add env vars) |
 | **Connection string config** (change format/name) | Verify `MyProject.AppHost/Program.cs` environment variable mapping still works, `deploy/envs/` env files |
 | **`MyProject.ServiceDefaults/Extensions.cs`** | All projects referencing ServiceDefaults, `Program.cs` `AddServiceDefaults()` call |
 | **`MyProject.AppHost/Program.cs`** | Verify resource names match `ConnectionStrings:*` and `WithEnvironment` keys match `appsettings.json` option paths |
@@ -126,7 +126,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`appsettings.Development.json`** (add dev config override) | Verify production equivalent in `deploy/envs/production-example/api.env`; keep standalone defaults (ConnectionStrings, FileStorage, JWT key) in sync with `MyProject.AppHost/appsettings.json` parameters |
 | **`.env.example`** (frontend) | `src/frontend/.env.test` if new `PUBLIC_*` var added |
 | **`.env.test`** (frontend) | `ci.yml` loads it via `cp .env.test .env`; keep in sync with `.env.example` vars |
-| **`MyProject.AppHost/Program.cs`** (add env var or parameter) | Re-run `./deploy/publish.sh` to regenerate compose; update `deploy/envs/production-example/api.env` if new app config |
+| **`MyProject.AppHost/Program.cs`** (add env var or parameter) | Update `deploy/envs/production-example/api.env` if new app config |
 | **CORS config** (`CorsExtensions.cs`) | Frontend dev server origin, `ALLOWED_ORIGINS` env var |
 | **Rate limiting config** | Frontend may need retry/backoff logic |
 | **`appsettings.json`** structure | Options class, `deploy/envs/production-example/api.env`, `MyProject.AppHost/Program.cs` |
@@ -271,11 +271,9 @@ src/backend/tests/
 | `src/frontend/src/lib/api/v1.d.ts` | Generated types (never hand-edit) |
 | `deploy/envs/production-example/` | Production env templates (api.env, seed.env) |
 | `deploy/build.sh` / `deploy/build.ps1` | Build and push Docker images |
-| `deploy/publish.sh` / `deploy/publish.ps1` | Generate production compose from Aspire AppHost |
-| `deploy/up.sh` / `deploy/up.ps1` | Docker Compose launcher for generated package |
 | `deploy/config.json` | Deploy configuration (registries, versioning) |
 | `src/frontend/.env.test` | CI + test environment defaults (loaded by `ci.yml`) |
 | `src/backend/MyProject.WebApi/appsettings.Testing.json` | Test environment config (disables Hangfire, caching, CORS) |
 | `src/backend/tests/MyProject.Api.Tests/Fixtures/CustomWebApplicationFactory.cs` | Test host configuration for API tests |
 | `src/backend/MyProject.ServiceDefaults/Extensions.cs` | Aspire shared: OTEL, service discovery, HTTP resilience defaults |
-| `src/backend/MyProject.AppHost/Program.cs` | Aspire orchestrator: local dev + production compose publisher (PostgreSQL, MinIO, API, Frontend) |
+| `src/backend/MyProject.AppHost/Program.cs` | Aspire orchestrator: local dev (PostgreSQL, MinIO, MailPit, API, Frontend) |

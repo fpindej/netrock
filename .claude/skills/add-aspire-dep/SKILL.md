@@ -29,5 +29,6 @@ Adds an infrastructure dependency to Aspire AppHost.
    ```csharp
    .WaitFor(myResource)
    ```
-6. Add a `.PublishAsDockerComposeService()` callback with production hardening (see `ApplyHardened` pattern in `Program.cs`), then re-run `./deploy/publish.sh`.
-7. Verify: `dotnet build src/backend/MyProject.slnx`
+6. Add standalone defaults to `appsettings.Development.json` so the API can run without Aspire.
+7. Document the required production env vars in `deploy/envs/production-example/api.env`.
+8. Verify: `dotnet build src/backend/MyProject.slnx`

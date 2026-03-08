@@ -4,7 +4,6 @@
     <FrameworkVersion>10.0.3</FrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Hosting.Docker" Version="13.1.2-preview.1.26125.13" />
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.1.2" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.1.2" />
 

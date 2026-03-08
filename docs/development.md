@@ -62,19 +62,11 @@ Migrations auto-apply on startup in Development.
 
 ## Production Deployment
 
-Production uses Docker Compose generated from the Aspire AppHost.
+Production deployment is up to you - the project provides production-ready Dockerfiles and a build script, but does not prescribe an orchestrator. Use whatever fits your infrastructure: Docker Compose, Coolify, Railway, Fly.io, Kubernetes, or any platform that runs containers.
 
-```bash
-# 1. Generate deployment artifacts
-./deploy/publish.sh
-
-# 2. Fill in deploy/compose/.env and deploy/compose/envs/*.env
-
-# 3. Start the stack
-./deploy/up.sh up -d
-```
-
-See [Before You Ship](before-you-ship.md) for the full production checklist.
+1. Build and push images with `./deploy/build.sh`
+2. Configure your platform with the environment variables from `deploy/envs/production-example/`
+3. See [Before You Ship](before-you-ship.md) for the full production checklist
 
 ---
 

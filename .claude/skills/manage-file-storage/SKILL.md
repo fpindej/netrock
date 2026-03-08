@@ -9,7 +9,7 @@ Swaps S3 provider or removes file storage entirely.
 
 No code changes needed - `S3FileStorageService` uses the standard S3 API. Only configuration:
 
-The storage credentials are managed as Aspire parameters in `MyProject.AppHost/Program.cs` and flow to the generated `.env` file via `./deploy/publish.sh`. Set the `FileStorage__*` values in the generated `.env` file or in `deploy/envs/production-example/api.env`:
+Set the `FileStorage__*` values as environment variables on your API container (see `deploy/envs/production-example/api.env`):
 
 ```env
 # Cloudflare R2
@@ -33,7 +33,7 @@ Pre-create the bucket in your provider's console. Restart - no rebuild needed.
 
 ## Remove File Storage Entirely
 
-1. **Infrastructure:** Remove the MinIO resource and its `PublishAsDockerComposeService` callback from `MyProject.AppHost/Program.cs`, then re-run `./deploy/publish.sh`
+1. **Infrastructure:** Remove the MinIO resource from `MyProject.AppHost/Program.cs`
 2. **Backend:** Remove `Application/Features/FileStorage/`, `Application/Features/Avatar/`, `Infrastructure/Features/FileStorage/`, `Infrastructure/Features/Avatar/`
 3. **Entity:** Remove `HasAvatar` from `ApplicationUser`
 4. **Endpoints:** Remove avatar endpoints from `UsersController`, `UploadAvatar/` DTOs

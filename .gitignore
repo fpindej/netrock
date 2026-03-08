@@ -458,7 +458,5 @@ $RECYCLE.BIN/
 
 # Production env directory (contains secrets - never commit)
 deploy/envs/production/
-# Aspire-generated deployment package (regenerate with ./deploy/publish.sh)
-deploy/compose/
 # Legacy root .env from before the deploy/ restructure
 /.env
