@@ -65,7 +65,7 @@ public static class ErrorMessages
         public const string PhoneNumberTaken = "This phone number is already in use.";
         public const string UpdateFailed = "Failed to update profile.";
         public const string DeleteFailed = "Failed to delete account.";
-        public const string LastAdminCannotDelete = "Cannot delete your account while you are the last administrator.";
+        public const string LastAdminCannotDelete = "Cannot delete your account while you are the last superuser.";
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public static class ErrorMessages
         public const string RoleNotFound = "Role not found.";
         public const string RoleAlreadyAssigned = "User already has this role.";
         public const string RoleNotAssigned = "User does not have this role.";
-        public const string LastRoleHolder = "Cannot remove this role — this is the last user holding it.";
+        public const string LastRoleHolder = "Cannot remove this role - this is the last user holding it.";
         public const string RoleAssignFailed = "Failed to assign role.";
         public const string RoleRemoveFailed = "Failed to remove role.";
         public const string LockFailed = "Failed to lock user account.";
@@ -94,7 +94,7 @@ public static class ErrorMessages
         public const string DeleteFailed = "Failed to delete user account.";
         public const string EmailVerificationFailed = "Failed to verify email address.";
         public const string CreateUserFailed = "Failed to create user account.";
-        public const string LastAdminCannotDelete = "Cannot delete this user — they are the last user holding an administrative role.";
+        public const string LastAdminCannotDelete = "Cannot delete this user - they are the last superuser.";
         public const string TwoFactorNotEnabled = "Two-factor authentication is not enabled for this user.";
         public const string DisableTwoFactorSelfAction = "You cannot disable your own two-factor authentication from the admin panel.";
         public const string DisableTwoFactorFailed = "Failed to disable two-factor authentication.";
@@ -112,7 +112,7 @@ public static class ErrorMessages
         public const string RoleHasUsers = "Cannot delete a role that has users assigned to it.";
         public const string InvalidPermission = "One or more permission values are invalid.";
         public const string SystemRoleNameReserved = "This name is reserved for a system role.";
-        public const string SuperAdminPermissionsFixed = "SuperAdmin permissions cannot be modified.";
+        public const string SuperuserPermissionsFixed = "Superuser permissions cannot be modified.";
         public const string CannotGrantUnheldPermission = "Cannot grant permissions that you do not hold.";
         public const string CreateFailed = "Failed to create role.";
         public const string UpdateFailed = "Failed to update role.";

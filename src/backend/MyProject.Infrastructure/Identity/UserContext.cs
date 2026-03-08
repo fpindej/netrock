@@ -48,7 +48,7 @@ internal class UserContext(IHttpContextAccessor httpContextAccessor) : IUserCont
     /// <inheritdoc />
     public bool HasPermission(string permission)
     {
-        return IsInRole(AppRoles.SuperAdmin) ||
+        return IsInRole(AppRoles.Superuser) ||
                (httpContextAccessor.HttpContext?.User.HasClaim(AppPermissions.ClaimType, permission) ?? false);
     }
 

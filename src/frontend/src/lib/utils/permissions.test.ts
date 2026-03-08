@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { User } from '$lib/types';
-import { hasAnyPermission, hasPermission, isSuperAdmin, Permissions } from './permissions';
+import { hasAnyPermission, hasPermission, isSuperuser, Permissions } from './permissions';
 
 /** Creates a minimal User object for testing. */
 function makeUser(overrides: Partial<User> = {}): User {
@@ -14,41 +14,41 @@ function makeUser(overrides: Partial<User> = {}): User {
 	};
 }
 
-// ── isSuperAdmin ────────────────────────────────────────────────────
+// ── isSuperuser ────────────────────────────────────────────────────
 
-describe('isSuperAdmin', () => {
-	it('returns true when user has SuperAdmin role', () => {
-		const user = makeUser({ roles: ['SuperAdmin'] });
-		expect(isSuperAdmin(user)).toBe(true);
+describe('isSuperuser', () => {
+	it('returns true when user has Superuser role', () => {
+		const user = makeUser({ roles: ['Superuser'] });
+		expect(isSuperuser(user)).toBe(true);
 	});
 
-	it('returns true when SuperAdmin is among multiple roles', () => {
-		const user = makeUser({ roles: ['User', 'SuperAdmin', 'Admin'] });
-		expect(isSuperAdmin(user)).toBe(true);
+	it('returns true when Superuser is among multiple roles', () => {
+		const user = makeUser({ roles: ['User', 'Superuser', 'Admin'] });
+		expect(isSuperuser(user)).toBe(true);
 	});
 
-	it('returns false when user has Admin but not SuperAdmin', () => {
+	it('returns false when user has Admin but not Superuser', () => {
 		const user = makeUser({ roles: ['Admin'] });
-		expect(isSuperAdmin(user)).toBe(false);
+		expect(isSuperuser(user)).toBe(false);
 	});
 
 	it('returns false when user has no roles', () => {
 		const user = makeUser({ roles: [] });
-		expect(isSuperAdmin(user)).toBe(false);
+		expect(isSuperuser(user)).toBe(false);
 	});
 
 	it('returns false for null user', () => {
-		expect(isSuperAdmin(null)).toBe(false);
+		expect(isSuperuser(null)).toBe(false);
 	});
 
 	it('returns false for undefined user', () => {
-		expect(isSuperAdmin(undefined)).toBe(false);
+		expect(isSuperuser(undefined)).toBe(false);
 	});
 
 	it('returns false when roles property is undefined', () => {
 		const user = makeUser();
 		delete user.roles;
-		expect(isSuperAdmin(user)).toBe(false);
+		expect(isSuperuser(user)).toBe(false);
 	});
 });
 
@@ -70,15 +70,15 @@ describe('hasPermission', () => {
 		expect(hasPermission(user, Permissions.Users.View)).toBe(false);
 	});
 
-	it('SuperAdmin implicitly has any permission', () => {
-		const user = makeUser({ roles: ['SuperAdmin'], permissions: [] });
+	it('Superuser implicitly has any permission', () => {
+		const user = makeUser({ roles: ['Superuser'], permissions: [] });
 		expect(hasPermission(user, Permissions.Users.Manage)).toBe(true);
 		expect(hasPermission(user, Permissions.Roles.Manage)).toBe(true);
 		expect(hasPermission(user, Permissions.Jobs.Manage)).toBe(true);
 	});
 
-	it('SuperAdmin implicitly has permissions even for unknown permission strings', () => {
-		const user = makeUser({ roles: ['SuperAdmin'], permissions: [] });
+	it('Superuser implicitly has permissions even for unknown permission strings', () => {
+		const user = makeUser({ roles: ['Superuser'], permissions: [] });
 		expect(hasPermission(user, 'some.custom.permission')).toBe(true);
 	});
 
@@ -96,7 +96,7 @@ describe('hasPermission', () => {
 		expect(hasPermission(user, Permissions.Users.View)).toBe(false);
 	});
 
-	it('non-SuperAdmin with explicit permission returns true', () => {
+	it('non-Superuser with explicit permission returns true', () => {
 		const user = makeUser({
 			roles: ['Admin'],
 			permissions: [Permissions.Users.View, Permissions.Users.Manage]
@@ -135,8 +135,8 @@ describe('hasAnyPermission', () => {
 		expect(hasAnyPermission(user, [])).toBe(false);
 	});
 
-	it('SuperAdmin implicitly satisfies any permission check', () => {
-		const user = makeUser({ roles: ['SuperAdmin'], permissions: [] });
+	it('Superuser implicitly satisfies any permission check', () => {
+		const user = makeUser({ roles: ['Superuser'], permissions: [] });
 		expect(hasAnyPermission(user, [Permissions.Users.Manage, Permissions.Roles.Manage])).toBe(true);
 	});
 

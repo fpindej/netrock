@@ -89,7 +89,7 @@ public class RoleManagementServiceTests : IDisposable
     [Theory]
     [InlineData("User")]
     [InlineData("Admin")]
-    [InlineData("SuperAdmin")]
+    [InlineData("Superuser")]
     public async Task CreateRole_AnySystemRoleName_ReturnsFailure(string systemName)
     {
         var input = new CreateRoleInput(systemName, null);
@@ -266,10 +266,10 @@ public class RoleManagementServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SetPermissions_SuperAdminRole_ReturnsFailure()
+    public async Task SetPermissions_SuperuserRole_ReturnsFailure()
     {
         var roleId = Guid.NewGuid();
-        var role = new ApplicationRole { Id = roleId, Name = AppRoles.SuperAdmin };
+        var role = new ApplicationRole { Id = roleId, Name = AppRoles.Superuser };
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var result = await _sut.SetRolePermissionsAsync(roleId,
@@ -277,7 +277,7 @@ public class RoleManagementServiceTests : IDisposable
             Guid.NewGuid());
 
         Assert.True(result.IsFailure);
-        Assert.Equal(ErrorMessages.Roles.SuperAdminPermissionsFixed, result.Error);
+        Assert.Equal(ErrorMessages.Roles.SuperuserPermissionsFixed, result.Error);
     }
 
     [Fact]
@@ -439,16 +439,16 @@ public class RoleManagementServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SetPermissions_SuperAdminCaller_SkipsPermissionCheck()
+    public async Task SetPermissions_SuperuserCaller_SkipsPermissionCheck()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "CustomRole" };
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var callerId = Guid.NewGuid();
-        MockCallerWithRole(callerId, AppRoles.SuperAdmin);
+        MockCallerWithRole(callerId, AppRoles.Superuser);
 
-        // SuperAdmin caller should pass escalation check even though they don't
+        // Superuser caller should pass escalation check even though they don't
         // have explicit permission claims. The method will fail at ExecuteDeleteAsync
         // (InMemory provider limitation), confirming the escalation guard passed.
         await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.SetRolePermissionsAsync(roleId,

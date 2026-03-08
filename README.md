@@ -90,13 +90,7 @@ That's it. Aspire starts all infrastructure (PostgreSQL, MinIO) as containers an
 | **Frontend** | `http://localhost:<BASE_PORT>` (default: `http://localhost:13000`) |
 | **MailPit (Email Testing)** | `http://localhost:<BASE_PORT + 8>` |
 
-Three test users are seeded (configured in `appsettings.Development.json`):
-
-| Role | Email | Password |
-|---|---|---|
-| SuperAdmin | `superadmin@test.com` | `SuperAdmin123!` |
-| Admin | `admin@test.com` | `AdminUser123!` |
-| User | `testuser@test.com` | `TestUser123!` |
+A Superuser is seeded with credentials you provide during `init.sh` / `init.ps1` (defaults: `admin@localhost` / `Admin123!`). Configured in `appsettings.Development.json`.
 
 ### 3. Start Building
 

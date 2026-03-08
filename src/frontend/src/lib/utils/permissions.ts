@@ -28,14 +28,14 @@ export const Permissions = {
 	}
 } as const;
 
-/** Returns true if the user is a SuperAdmin (implicit all permissions). */
-export function isSuperAdmin(user: User | null | undefined): boolean {
-	return user?.roles?.includes(SystemRoles.SuperAdmin) ?? false;
+/** Returns true if the user is a Superuser (implicit all permissions). */
+export function isSuperuser(user: User | null | undefined): boolean {
+	return user?.roles?.includes(SystemRoles.Superuser) ?? false;
 }
 
-/** Returns true if the user has a specific permission. SuperAdmin implicitly has all. */
+/** Returns true if the user has a specific permission. Superuser implicitly has all. */
 export function hasPermission(user: User | null | undefined, permission: string): boolean {
-	return isSuperAdmin(user) || (user?.permissions?.includes(permission) ?? false);
+	return isSuperuser(user) || (user?.permissions?.includes(permission) ?? false);
 }
 
 /** Returns true if the user has at least one of the given permissions. */

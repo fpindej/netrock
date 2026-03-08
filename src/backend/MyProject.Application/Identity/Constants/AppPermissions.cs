@@ -10,7 +10,7 @@ namespace MyProject.Application.Identity.Constants;
 /// so that adding a new <c>public const string</c> field is sufficient — no manual registration required.
 /// </para>
 /// <para>
-/// SuperAdmin bypasses all permission checks in the authorization handler (implicit all).
+/// Superuser bypasses all permission checks in the authorization handler (implicit all).
 /// </para>
 /// </summary>
 public static class AppPermissions

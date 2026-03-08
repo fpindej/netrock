@@ -73,7 +73,7 @@
 							</div>
 						{:else}
 							<p class="text-xs text-muted-foreground">
-								{role.name === SystemRoles.SuperAdmin
+								{role.name === SystemRoles.Superuser
 									? m.admin_roles_implicitFullAccess()
 									: m.admin_roles_noPermissions()}
 							</p>

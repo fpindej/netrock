@@ -29,6 +29,12 @@
 .PARAMETER NoAspire
     Don't launch Aspire after setup.
 
+.PARAMETER Email
+    SuperAdmin email address. Default is admin@localhost.
+
+.PARAMETER Password
+    SuperAdmin password. Default is Admin123!.
+
 .EXAMPLE
     .\init.ps1
     # Interactive mode - prompts for all options
@@ -40,6 +46,10 @@
 .EXAMPLE
     .\init.ps1 -Name "TodoApp" -Yes
     # Non-interactive with defaults
+
+.EXAMPLE
+    .\init.ps1 -Name "MyApi" -Email "me@example.com" -Password "MyPass123!"
+    # Custom SuperAdmin credentials
 #>
 
 param (
@@ -51,6 +61,11 @@ param (
 
     [Alias("y")]
     [switch]$Yes,
+
+    [Alias("e")]
+    [string]$Email = "admin@localhost",
+
+    [string]$Password = "Admin123!",
 
     [switch]$NoMigration,
     [switch]$NoCommit,
@@ -339,6 +354,11 @@ Write-Host "  -------------------------------------"
 Write-Host "  Frontend:     " -NoNewline; Write-Host $FrontendPort -ForegroundColor Cyan
 Write-Host "  API:          " -NoNewline; Write-Host $ApiPort -ForegroundColor Cyan
 
+# Superuser credentials
+Write-Host ""
+$Email = Read-Value "Superuser email" $Email
+$Password = Read-Value "Superuser password" $Password
+
 $ProjectSlug = ConvertTo-KebabCase $Name
 
 # -----------------------------------------------------------------------------
@@ -399,6 +419,11 @@ Write-Host "  Ports" -ForegroundColor White
 Write-Host "  -------------------------------------"
 Write-Host "  Frontend:         " -NoNewline; Write-Host $FrontendPort -ForegroundColor Cyan
 Write-Host "  API:              " -NoNewline; Write-Host $ApiPort -ForegroundColor Cyan
+Write-Host ""
+Write-Host "  Superuser" -ForegroundColor White
+Write-Host "  -------------------------------------"
+Write-Host "  Email:            " -NoNewline; Write-Host $Email -ForegroundColor Cyan
+Write-Host "  Password:         " -NoNewline; Write-Host $Password -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Options" -ForegroundColor White
 Write-Host "  -------------------------------------"
@@ -462,12 +487,14 @@ foreach ($file in $files) {
         $content = [System.IO.File]::ReadAllText($file.FullName)
         $originalContent = $content
 
-        if ($content -match "\{INIT_FRONTEND_PORT\}|\{INIT_API_PORT\}|\{INIT_PROJECT_SLUG\}|\{INIT_JWT_SECRET\}|\{INIT_ENCRYPTION_KEY\}") {
+        if ($content -match "\{INIT_FRONTEND_PORT\}|\{INIT_API_PORT\}|\{INIT_PROJECT_SLUG\}|\{INIT_JWT_SECRET\}|\{INIT_ENCRYPTION_KEY\}|\{INIT_SUPERUSER_EMAIL\}|\{INIT_SUPERUSER_PASSWORD\}") {
             $content = $content -replace "\{INIT_FRONTEND_PORT\}", $FrontendPort
             $content = $content -replace "\{INIT_API_PORT\}", $ApiPort
             $content = $content -replace "\{INIT_PROJECT_SLUG\}", $ProjectSlug
             $content = $content -replace "\{INIT_JWT_SECRET\}", $JwtSecret
             $content = $content -replace "\{INIT_ENCRYPTION_KEY\}", $EncryptionKey
+            $content = $content -replace "\{INIT_SUPERUSER_EMAIL\}", $Email
+            $content = $content -replace "\{INIT_SUPERUSER_PASSWORD\}", $Password
 
             if ($content -ne $originalContent) {
                 Set-FileContent $file.FullName $content

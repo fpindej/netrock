@@ -196,9 +196,9 @@ internal class RoleManagementService(
             return Result.Failure(ErrorMessages.Roles.RoleNotFound, ErrorType.NotFound);
         }
 
-        if (role.Name == AppRoles.SuperAdmin)
+        if (role.Name == AppRoles.Superuser)
         {
-            return Result.Failure(ErrorMessages.Roles.SuperAdminPermissionsFixed);
+            return Result.Failure(ErrorMessages.Roles.SuperuserPermissionsFixed);
         }
 
         var invalidPermissions = input.Permissions
@@ -261,7 +261,7 @@ internal class RoleManagementService(
 
     /// <summary>
     /// Verifies that the caller holds every permission being granted.
-    /// SuperAdmin callers are exempt (implicit all permissions).
+    /// Superuser callers are exempt (implicit all permissions).
     /// </summary>
     private async Task<Result> EnforcePermissionEscalationAsync(Guid callerUserId,
         IReadOnlyList<string> requestedPermissions)
@@ -278,7 +278,7 @@ internal class RoleManagementService(
         }
 
         var callerRoles = await userManager.GetRolesAsync(caller);
-        if (callerRoles.Contains(AppRoles.SuperAdmin))
+        if (callerRoles.Contains(AppRoles.Superuser))
         {
             return Result.Success();
         }

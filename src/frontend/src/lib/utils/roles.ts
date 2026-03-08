@@ -5,13 +5,13 @@
 
 /** Well-known system role names. Mirrors backend AppRoles constants. */
 export const SystemRoles = {
-	SuperAdmin: 'SuperAdmin',
+	Superuser: 'Superuser',
 	Admin: 'Admin',
 	User: 'User'
 } as const;
 
 const ROLE_RANKS: Record<string, number> = {
-	[SystemRoles.SuperAdmin]: 3,
+	[SystemRoles.Superuser]: 3,
 	[SystemRoles.Admin]: 2,
 	[SystemRoles.User]: 1
 };

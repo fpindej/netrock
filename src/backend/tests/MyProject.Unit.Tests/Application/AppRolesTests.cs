@@ -17,9 +17,9 @@ public class AppRolesTests
     }
 
     [Fact]
-    public void All_ShouldContainSuperAdmin()
+    public void All_ShouldContainSuperuser()
     {
-        Assert.Contains(AppRoles.SuperAdmin, AppRoles.All);
+        Assert.Contains(AppRoles.Superuser, AppRoles.All);
     }
 
     [Fact]
@@ -29,9 +29,9 @@ public class AppRolesTests
     }
 
     [Fact]
-    public void GetRoleRank_SuperAdmin_ShouldReturn3()
+    public void GetRoleRank_Superuser_ShouldReturn3()
     {
-        Assert.Equal(3, AppRoles.GetRoleRank(AppRoles.SuperAdmin));
+        Assert.Equal(3, AppRoles.GetRoleRank(AppRoles.Superuser));
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class AppRolesTests
     [Fact]
     public void GetHighestRank_SingleRole_ShouldReturnThatRank()
     {
-        Assert.Equal(3, AppRoles.GetHighestRank([AppRoles.SuperAdmin]));
+        Assert.Equal(3, AppRoles.GetHighestRank([AppRoles.Superuser]));
     }
 
     [Fact]
@@ -83,6 +83,6 @@ public class AppRolesTests
     {
         Assert.Equal("User", AppRoles.User);
         Assert.Equal("Admin", AppRoles.Admin);
-        Assert.Equal("SuperAdmin", AppRoles.SuperAdmin);
+        Assert.Equal("Superuser", AppRoles.Superuser);
     }
 }

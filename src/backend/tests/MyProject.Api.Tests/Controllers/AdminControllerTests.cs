@@ -103,13 +103,13 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
-    public async Task ListUsers_SuperAdmin_Returns200()
+    public async Task ListUsers_Superuser_Returns200()
     {
         _factory.AdminService.GetUsersAsync(1, 10, null, Arg.Any<CancellationToken>())
             .Returns(new AdminUserListOutput([], 0, 1, 10));
 
         var response = await _client.SendAsync(
-            Get("/api/v1/admin/users?pageNumber=1&pageSize=10", TestAuth.SuperAdmin()));
+            Get("/api/v1/admin/users?pageNumber=1&pageSize=10", TestAuth.Superuser()));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<AdminUserListResponse>();
@@ -246,7 +246,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
-    public async Task ListUsers_SuperAdmin_ReturnsUnmaskedPii()
+    public async Task ListUsers_Superuser_ReturnsUnmaskedPii()
     {
         var userId = Guid.NewGuid();
         _factory.AdminService.GetUsersAsync(1, 10, null, Arg.Any<CancellationToken>())
@@ -256,7 +256,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             ], 1, 1, 10));
 
         var response = await _client.SendAsync(
-            Get("/api/v1/admin/users?pageNumber=1&pageSize=10", TestAuth.SuperAdmin()));
+            Get("/api/v1/admin/users?pageNumber=1&pageSize=10", TestAuth.Superuser()));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<AdminUserListResponse>();
@@ -267,7 +267,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
-    public async Task GetUser_SuperAdmin_ReturnsUnmaskedPii()
+    public async Task GetUser_Superuser_ReturnsUnmaskedPii()
     {
         var userId = Guid.NewGuid();
         _factory.AdminService.GetUserByIdAsync(userId, Arg.Any<CancellationToken>())
@@ -276,7 +276,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
                 ["User"], true, true, null, 0, false, false)));
 
         var response = await _client.SendAsync(
-            Get($"/api/v1/admin/users/{userId}", TestAuth.SuperAdmin()));
+            Get($"/api/v1/admin/users/{userId}", TestAuth.Superuser()));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<AdminUserResponse>();
@@ -827,7 +827,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
-    public async Task SetPermissions_SuperAdmin_CanGrantAnyPermission_Returns204()
+    public async Task SetPermissions_Superuser_CanGrantAnyPermission_Returns204()
     {
         var roleId = Guid.NewGuid();
         _factory.RoleManagementService.SetRolePermissionsAsync(
@@ -836,7 +836,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
 
         var response = await _client.SendAsync(
             Put($"/api/v1/admin/roles/{roleId}/permissions",
-                TestAuth.SuperAdmin(),
+                TestAuth.Superuser(),
                 JsonContent.Create(new { Permissions = new[] { "users.view", "users.manage", "roles.manage" } })));
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -935,7 +935,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
-    public async Task GetUserAuditTrail_SuperAdmin_Returns200()
+    public async Task GetUserAuditTrail_Superuser_Returns200()
     {
         var userId = Guid.NewGuid();
         _factory.AuditService.GetUserAuditEventsAsync(
@@ -943,7 +943,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             .Returns(new AuditEventListOutput([], 0, 1, 10));
 
         var response = await _client.SendAsync(
-            Get($"/api/v1/admin/users/{userId}/audit?pageNumber=1&pageSize=10", TestAuth.SuperAdmin()));
+            Get($"/api/v1/admin/users/{userId}/audit?pageNumber=1&pageSize=10", TestAuth.Superuser()));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }

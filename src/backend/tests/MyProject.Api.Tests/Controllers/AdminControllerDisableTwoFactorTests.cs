@@ -152,7 +152,7 @@ public class AdminControllerDisableTwoFactorTests : IClassFixture<CustomWebAppli
     }
 
     [Fact]
-    public async Task DisableTwoFactor_SuperAdmin_Returns204()
+    public async Task DisableTwoFactor_Superuser_Returns204()
     {
         var userId = Guid.NewGuid();
         _factory.AdminService.DisableTwoFactorAsync(
@@ -161,7 +161,7 @@ public class AdminControllerDisableTwoFactorTests : IClassFixture<CustomWebAppli
 
         var response = await _client.SendAsync(
             Post($"/api/v1/admin/users/{userId}/disable-2fa",
-                TestAuth.SuperAdmin(),
+                TestAuth.Superuser(),
                 JsonContent.Create(new { Reason = (string?)null })));
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);

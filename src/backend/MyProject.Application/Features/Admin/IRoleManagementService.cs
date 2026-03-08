@@ -6,8 +6,8 @@ namespace MyProject.Application.Features.Admin;
 /// <summary>
 /// Provides CRUD operations for roles and permission management.
 /// <para>
-/// System roles (SuperAdmin, Admin, User) cannot be deleted or renamed.
-/// SuperAdmin permissions are implicit and cannot be modified via this service.
+/// System roles (Superuser, Admin, User) cannot be deleted or renamed.
+/// Superuser permissions are implicit and cannot be modified via this service.
 /// </para>
 /// </summary>
 public interface IRoleManagementService
@@ -48,7 +48,7 @@ public interface IRoleManagementService
 
     /// <summary>
     /// Replaces all permission claims on a role. Rotates security stamps for all users in the role.
-    /// Cannot modify SuperAdmin permissions. Callers cannot grant permissions they do not hold.
+    /// Cannot modify Superuser permissions. Callers cannot grant permissions they do not hold.
     /// </summary>
     /// <param name="roleId">The role ID.</param>
     /// <param name="input">The new set of permissions.</param>

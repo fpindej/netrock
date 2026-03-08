@@ -2785,7 +2785,7 @@ export interface paths {
 		get?: never;
 		/**
 		 * Replaces all permissions on a role. Rotates security stamps for affected users.
-		 *     SuperAdmin permissions cannot be modified.
+		 *     Superuser permissions cannot be modified.
 		 */
 		put: {
 			parameters: {
@@ -2811,7 +2811,7 @@ export interface paths {
 					};
 					content?: never;
 				};
-				/** @description If the permissions are invalid or SuperAdmin is targeted */
+				/** @description If the permissions are invalid or Superuser is targeted */
 				400: {
 					headers: {
 						[name: string]: unknown;

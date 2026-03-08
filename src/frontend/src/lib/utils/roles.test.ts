@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { canManageUser, getAssignableRoles, getHighestRank, getRoleRank } from './roles';
 
 describe('getRoleRank', () => {
-	it('returns 3 for SuperAdmin', () => {
-		expect(getRoleRank('SuperAdmin')).toBe(3);
+	it('returns 3 for Superuser', () => {
+		expect(getRoleRank('Superuser')).toBe(3);
 	});
 
 	it('returns 2 for Admin', () => {
@@ -23,7 +23,7 @@ describe('getRoleRank', () => {
 	});
 
 	it('is case-sensitive - lowercase variants return 0', () => {
-		expect(getRoleRank('superadmin')).toBe(0);
+		expect(getRoleRank('superuser')).toBe(0);
 		expect(getRoleRank('admin')).toBe(0);
 		expect(getRoleRank('user')).toBe(0);
 	});
@@ -34,8 +34,8 @@ describe('getHighestRank', () => {
 		expect(getHighestRank(['User', 'Admin'])).toBe(2);
 	});
 
-	it('returns 3 when SuperAdmin is present', () => {
-		expect(getHighestRank(['User', 'SuperAdmin', 'Admin'])).toBe(3);
+	it('returns 3 when Superuser is present', () => {
+		expect(getHighestRank(['User', 'Superuser', 'Admin'])).toBe(3);
 	});
 
 	it('returns 0 for an empty array', () => {
@@ -56,20 +56,20 @@ describe('getHighestRank', () => {
 });
 
 describe('canManageUser', () => {
-	it('SuperAdmin can manage Admin', () => {
-		expect(canManageUser(['SuperAdmin'], ['Admin'])).toBe(true);
+	it('Superuser can manage Admin', () => {
+		expect(canManageUser(['Superuser'], ['Admin'])).toBe(true);
 	});
 
-	it('SuperAdmin can manage User', () => {
-		expect(canManageUser(['SuperAdmin'], ['User'])).toBe(true);
+	it('Superuser can manage User', () => {
+		expect(canManageUser(['Superuser'], ['User'])).toBe(true);
 	});
 
 	it('Admin can manage User', () => {
 		expect(canManageUser(['Admin'], ['User'])).toBe(true);
 	});
 
-	it('Admin cannot manage SuperAdmin', () => {
-		expect(canManageUser(['Admin'], ['SuperAdmin'])).toBe(false);
+	it('Admin cannot manage Superuser', () => {
+		expect(canManageUser(['Admin'], ['Superuser'])).toBe(false);
 	});
 
 	it('User cannot manage Admin', () => {
@@ -84,8 +84,8 @@ describe('canManageUser', () => {
 		expect(canManageUser(['Admin'], ['Admin'])).toBe(false);
 	});
 
-	it('SuperAdmin cannot manage SuperAdmin - equal rank is not sufficient', () => {
-		expect(canManageUser(['SuperAdmin'], ['SuperAdmin'])).toBe(false);
+	it('Superuser cannot manage Superuser - equal rank is not sufficient', () => {
+		expect(canManageUser(['Superuser'], ['Superuser'])).toBe(false);
 	});
 
 	it('empty caller roles cannot manage anyone', () => {
@@ -105,8 +105,8 @@ describe('canManageUser', () => {
 	});
 
 	it('uses highest role when target has multiple roles', () => {
-		// Admin (rank 2) cannot manage target whose highest is SuperAdmin (rank 3)
-		expect(canManageUser(['Admin'], ['User', 'SuperAdmin'])).toBe(false);
+		// Admin (rank 2) cannot manage target whose highest is Superuser (rank 3)
+		expect(canManageUser(['Admin'], ['User', 'Superuser'])).toBe(false);
 	});
 
 	it('unknown caller roles cannot manage known target roles', () => {
@@ -120,10 +120,10 @@ describe('canManageUser', () => {
 });
 
 describe('getAssignableRoles', () => {
-	const allRoles = ['SuperAdmin', 'Admin', 'User'];
+	const allRoles = ['Superuser', 'Admin', 'User'];
 
-	it('SuperAdmin can assign Admin and User', () => {
-		const result = getAssignableRoles(['SuperAdmin'], allRoles);
+	it('Superuser can assign Admin and User', () => {
+		const result = getAssignableRoles(['Superuser'], allRoles);
 		expect(result).toEqual(['Admin', 'User']);
 	});
 
@@ -149,19 +149,19 @@ describe('getAssignableRoles', () => {
 
 	it('filters from arbitrary allRoles list', () => {
 		// Admin (rank 2) can assign anything with rank < 2
-		const result = getAssignableRoles(['Admin'], ['User', 'Viewer', 'SuperAdmin']);
-		// User has rank 1 (< 2), Viewer has rank 0 (< 2), SuperAdmin has rank 3 (not < 2)
+		const result = getAssignableRoles(['Admin'], ['User', 'Viewer', 'Superuser']);
+		// User has rank 1 (< 2), Viewer has rank 0 (< 2), Superuser has rank 3 (not < 2)
 		expect(result).toEqual(['User', 'Viewer']);
 	});
 
 	it('returns empty when allRoles is empty', () => {
-		const result = getAssignableRoles(['SuperAdmin'], []);
+		const result = getAssignableRoles(['Superuser'], []);
 		expect(result).toEqual([]);
 	});
 
 	it('never includes the caller own rank level', () => {
-		// SuperAdmin (rank 3) should not be able to assign SuperAdmin (rank 3)
-		const result = getAssignableRoles(['SuperAdmin'], ['SuperAdmin']);
+		// Superuser (rank 3) should not be able to assign Superuser (rank 3)
+		const result = getAssignableRoles(['Superuser'], ['Superuser']);
 		expect(result).toEqual([]);
 	});
 

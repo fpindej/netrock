@@ -60,14 +60,14 @@ public static class ApplicationBuilderExtensions
     /// <summary>
     /// Seeds the default permission claims for the Admin role.
     /// Idempotent — skips permissions that already exist as role claims.
-    /// SuperAdmin is not seeded because it has implicit all permissions.
+    /// Superuser is not seeded because it has implicit all permissions.
     /// </summary>
     private static async Task SeedRolePermissionsAsync(IServiceProvider serviceProvider)
     {
         var roleManager = serviceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
 
         // Admin gets user management + role viewing by default.
-        // Roles.Manage is deliberately excluded — only SuperAdmin can create/edit/delete roles.
+        // Roles.Manage is deliberately excluded — only Superuser can create/edit/delete roles.
         var adminPermissions = new[]
         {
             AppPermissions.Users.View,

@@ -15,9 +15,9 @@
 	let { data }: { data: PageData } = $props();
 
 	let canManageRoles = $derived(hasPermission(data.user, Permissions.Roles.Manage));
-	let isSuperAdmin = $derived(data.role?.name === SystemRoles.SuperAdmin);
+	let isSuperuser = $derived(data.role?.name === SystemRoles.Superuser);
 	let isSystem = $derived(data.role?.isSystem ?? false);
-	let canEditPermissions = $derived(canManageRoles && !isSuperAdmin);
+	let canEditPermissions = $derived(canManageRoles && !isSuperuser);
 	let canEditName = $derived(canManageRoles && !isSystem);
 	let canDelete = $derived(canManageRoles && !isSystem && (data.role?.userCount ?? 0) === 0);
 

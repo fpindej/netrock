@@ -17,7 +17,7 @@ namespace MyProject.Api.Tests.Fixtures;
 /// <list type="bullet">
 ///   <item><c>Authorization: Test</c> — default User role, no permissions</item>
 ///   <item><c>Authorization: Test roles=Admin permissions=users.view,users.manage</c></item>
-///   <item><c>Authorization: Test roles=SuperAdmin</c> — bypasses all permission checks</item>
+///   <item><c>Authorization: Test roles=Superuser</c> — bypasses all permission checks</item>
 /// </list>
 /// </para>
 /// </summary>
@@ -125,7 +125,7 @@ internal static class TestAuth
             ? $"Test roles=Admin permissions={string.Join(',', permissions)}"
             : "Test roles=Admin";
 
-    public static string SuperAdmin() => "Test roles=SuperAdmin";
+    public static string Superuser() => "Test roles=Superuser";
 
     public static string WithUserAndPermissions(Guid userId, params string[] permissions) =>
         $"Test userId={userId} permissions={string.Join(',', permissions)}";

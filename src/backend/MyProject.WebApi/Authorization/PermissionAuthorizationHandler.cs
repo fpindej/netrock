@@ -6,7 +6,7 @@ namespace MyProject.WebApi.Authorization;
 /// <summary>
 /// Handles <see cref="PermissionRequirement"/> by checking:
 /// <list type="number">
-///   <item>SuperAdmin role → always allowed (implicit all permissions).</item>
+///   <item>Superuser role → always allowed (implicit all permissions).</item>
 ///   <item>Matching <c>"permission"</c> claim → allowed.</item>
 ///   <item>Otherwise → denied.</item>
 /// </list>
@@ -18,7 +18,7 @@ internal class PermissionAuthorizationHandler : AuthorizationHandler<PermissionR
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        if (context.User.IsInRole(AppRoles.SuperAdmin))
+        if (context.User.IsInRole(AppRoles.Superuser))
         {
             context.Succeed(requirement);
             return Task.CompletedTask;

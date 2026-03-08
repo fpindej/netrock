@@ -10,7 +10,7 @@ namespace MyProject.Application.Identity.Constants;
 /// values defined here use PascalCase for display purposes.
 /// </para>
 /// <para>
-/// Roles follow a strict hierarchy: <c>SuperAdmin</c> (rank 3) &gt; <c>Admin</c> (rank 2) &gt; <c>User</c> (rank 1).
+/// Roles follow a strict hierarchy: <c>Superuser</c> (rank 3) &gt; <c>Admin</c> (rank 2) &gt; <c>User</c> (rank 1).
 /// A caller can only manage users whose highest role rank is strictly lower than their own.
 /// Use <see cref="GetRoleRank"/> to resolve individual role ranks and <see cref="GetHighestRank"/>
 /// to determine a user's effective rank from their full role list.
@@ -29,9 +29,9 @@ public static class AppRoles
     public const string Admin = "Admin";
 
     /// <summary>
-    /// The highest-level administrative role. SuperAdmins can manage all users including other admins.
+    /// The highest-level administrative role. Superusers can manage all users including other admins.
     /// </summary>
-    public const string SuperAdmin = "SuperAdmin";
+    public const string Superuser = "Superuser";
 
     /// <summary>
     /// All defined roles, discovered automatically from <c>public const string</c> fields.
@@ -52,10 +52,10 @@ public static class AppRoles
     /// </para>
     /// </summary>
     /// <param name="role">The role name.</param>
-    /// <returns>The numeric rank: SuperAdmin=3, Admin=2, User=1, custom/unknown=0.</returns>
+    /// <returns>The numeric rank: Superuser=3, Admin=2, User=1, custom/unknown=0.</returns>
     public static int GetRoleRank(string role) => role switch
     {
-        SuperAdmin => 3,
+        Superuser => 3,
         Admin => 2,
         User => 1,
         _ => 0

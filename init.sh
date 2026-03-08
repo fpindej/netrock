@@ -11,6 +11,8 @@
 #  Flags:
 #    --name, -n     Project name (required in non-interactive mode)
 #    --port, -p     Base port (default: 13000)
+#    --email, -e    Superuser email (default: admin@localhost)
+#    --password     Superuser password (default: Admin123!)
 #    --yes, -y      Accept all defaults, no prompts
 #    --no-migration Skip migration creation
 #    --no-commit    Skip git commits
@@ -116,6 +118,8 @@ show_help() {
     echo "Options:"
     echo "  -n, --name NAME       Project name (e.g., MyAwesomeApi)"
     echo "  -p, --port PORT       Base port for services (default: 13000)"
+    echo "  -e, --email EMAIL     Superuser email (default: admin@localhost)"
+    echo "      --password PASS   Superuser password (default: Admin123!)"
     echo "  -y, --yes             Accept all defaults without prompting"
     echo "      --no-migration    Skip creating initial migration"
     echo "      --no-commit       Skip git commits"
@@ -130,6 +134,7 @@ show_help() {
     echo "Examples:"
     echo "  ./init.sh --name MyApi --port 14000 --yes"
     echo "  ./init.sh -n MyApi -y"
+    echo "  ./init.sh -n MyApi --email me@example.com --password MyPass123!"
 }
 
 check_prerequisites() {
@@ -259,6 +264,8 @@ prompt_checklist() {
 # ─────────────────────────────────────────────────────────────────────────────
 PROJECT_NAME=""
 BASE_PORT=13000
+ADMIN_EMAIL="admin@localhost"
+ADMIN_PASSWORD="Admin123!"
 YES_TO_ALL="false"
 CREATE_MIGRATION="ask"
 DO_COMMIT="ask"
@@ -272,6 +279,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         -p|--port)
             BASE_PORT="$2"
+            shift 2
+            ;;
+        -e|--email)
+            ADMIN_EMAIL="$2"
+            shift 2
+            ;;
+        --password)
+            ADMIN_PASSWORD="$2"
             shift 2
             ;;
         -y|--yes)
@@ -366,6 +381,13 @@ echo -e "  ───────────────────────
 echo -e "  Frontend:     ${CYAN}$FRONTEND_PORT${NC}"
 echo -e "  API:          ${CYAN}$API_PORT${NC}"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Step 3: Superuser Credentials
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
+ADMIN_EMAIL=$(prompt_value "Superuser email" "$ADMIN_EMAIL")
+ADMIN_PASSWORD=$(prompt_value "Superuser password" "$ADMIN_PASSWORD")
+
 # Convert PascalCase to kebab-case (MyAwesomeApi -> my-awesome-api)
 to_kebab_case() {
     echo "$1" | sed 's/\([a-z]\)\([A-Z]\)/\1-\2/g' | tr '[:upper:]' '[:lower:]'
@@ -439,6 +461,11 @@ echo -e "
   Frontend:         ${CYAN}$FRONTEND_PORT${NC}
   API:              ${CYAN}$API_PORT${NC}
 
+  ${BOLD}Superuser${NC}
+  ─────────────────────────────────────
+  Email:            ${CYAN}$ADMIN_EMAIL${NC}
+  Password:         ${CYAN}$ADMIN_PASSWORD${NC}
+
   ${BOLD}Options${NC}
   ─────────────────────────────────────
   Create migration: $([ "$CREATE_MIGRATION" == "y" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${DIM}No${NC}")
@@ -484,19 +511,23 @@ ENCRYPTION_KEY=$(openssl rand -base64 64 | tr -d '\n/+=' | cut -c1-64)
 
 print_substep "Replacing placeholders..."
 if [ "$OS" = "Darwin" ]; then
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}\|{INIT_ENCRYPTION_KEY}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}\|{INIT_ENCRYPTION_KEY}\|{INIT_SUPERUSER_EMAIL}\|{INIT_SUPERUSER_PASSWORD}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i '' \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
         -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" \
         -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" \
-        -e "s/{INIT_ENCRYPTION_KEY}/$ENCRYPTION_KEY/g" 2>/dev/null || true
+        -e "s/{INIT_ENCRYPTION_KEY}/$ENCRYPTION_KEY/g" \
+        -e "s/{INIT_SUPERUSER_EMAIL}/$ADMIN_EMAIL/g" \
+        -e "s/{INIT_SUPERUSER_PASSWORD}/$ADMIN_PASSWORD/g" 2>/dev/null || true
 else
-    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}\|{INIT_ENCRYPTION_KEY}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
+    grep -rIl --null "{INIT_FRONTEND_PORT}\|{INIT_API_PORT}\|{INIT_PROJECT_SLUG}\|{INIT_JWT_SECRET}\|{INIT_ENCRYPTION_KEY}\|{INIT_SUPERUSER_EMAIL}\|{INIT_SUPERUSER_PASSWORD}" . $EXCLUDE_PATTERNS 2>/dev/null | xargs -0 sed -i \
         -e "s/{INIT_FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{INIT_API_PORT}/$API_PORT/g" \
         -e "s/{INIT_PROJECT_SLUG}/$PROJECT_SLUG/g" \
         -e "s/{INIT_JWT_SECRET}/$JWT_SECRET/g" \
-        -e "s/{INIT_ENCRYPTION_KEY}/$ENCRYPTION_KEY/g" 2>/dev/null || true
+        -e "s/{INIT_ENCRYPTION_KEY}/$ENCRYPTION_KEY/g" \
+        -e "s/{INIT_SUPERUSER_EMAIL}/$ADMIN_EMAIL/g" \
+        -e "s/{INIT_SUPERUSER_PASSWORD}/$ADMIN_PASSWORD/g" 2>/dev/null || true
 fi
 
 print_success "Port configuration complete"

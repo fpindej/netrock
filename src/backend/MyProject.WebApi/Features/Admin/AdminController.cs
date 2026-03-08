@@ -542,13 +542,13 @@ public class AdminController(IAdminService adminService, IRoleManagementService 
 
     /// <summary>
     /// Replaces all permissions on a role. Rotates security stamps for affected users.
-    /// SuperAdmin permissions cannot be modified.
+    /// Superuser permissions cannot be modified.
     /// </summary>
     /// <param name="id">The role ID</param>
     /// <param name="request">The new set of permissions</param>
     /// <returns>No content on success</returns>
     /// <response code="204">Permissions updated successfully</response>
-    /// <response code="400">If the permissions are invalid or SuperAdmin is targeted</response>
+    /// <response code="400">If the permissions are invalid or Superuser is targeted</response>
     /// <response code="401">If the user is not authenticated</response>
     /// <response code="403">If the user does not have the required permission</response>
     /// <response code="404">If the role was not found</response>

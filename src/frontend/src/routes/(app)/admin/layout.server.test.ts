@@ -34,13 +34,13 @@ const MOCK_REGULAR_USER = {
 	emailConfirmed: true
 };
 
-const MOCK_SUPERADMIN_USER = {
+const MOCK_SUPERUSER_USER = {
 	id: '00000000-0000-0000-0000-000000000003',
-	username: 'superadmin@example.com',
-	email: 'superadmin@example.com',
+	username: 'superuser@example.com',
+	email: 'superuser@example.com',
 	firstName: 'Super',
 	lastName: 'Admin',
-	roles: ['SuperAdmin'],
+	roles: ['Superuser'],
 	permissions: [],
 	emailConfirmed: true
 };
@@ -73,7 +73,7 @@ const EVENT_DEFAULTS = {
 
 /** Builds a complete mock SvelteKit load event for the admin layout. */
 function mockLoadEvent(
-	user: typeof MOCK_ADMIN_USER | typeof MOCK_REGULAR_USER | typeof MOCK_SUPERADMIN_USER
+	user: typeof MOCK_ADMIN_USER | typeof MOCK_REGULAR_USER | typeof MOCK_SUPERUSER_USER
 ) {
 	return {
 		...EVENT_DEFAULTS,
@@ -127,9 +127,9 @@ describe('admin layout server load', () => {
 		expect(result).toEqual({ user });
 	});
 
-	it('SuperAdmin without explicit permissions - returns user data (implicit all)', async () => {
-		const result = await load(mockLoadEvent(MOCK_SUPERADMIN_USER));
-		expect(result).toEqual({ user: MOCK_SUPERADMIN_USER });
+	it('Superuser without explicit permissions - returns user data (implicit all)', async () => {
+		const result = await load(mockLoadEvent(MOCK_SUPERUSER_USER));
+		expect(result).toEqual({ user: MOCK_SUPERUSER_USER });
 	});
 
 	// ── Denied access ───────────────────────────────────────────────
