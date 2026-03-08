@@ -11,7 +11,7 @@ Thanks for your interest in contributing! NETrock is a production-grade template
 1. **Fork the repository** and clone your fork
 2. **Run the init script** - `./init.sh` (macOS/Linux) or `.\init.ps1` (Windows)
 3. **Start Aspire** - `dotnet run --project src/backend/MyProject.AppHost`
-4. **Read the docs** - at minimum, read [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) before making changes
+4. **Read the docs** - at minimum, read [`CLAUDE.md`](CLAUDE.md) before making changes
 
 ## How to Contribute
 
@@ -35,7 +35,7 @@ Not every feature belongs in a template. NETrock provides a solid foundation - f
 ### Submitting Code
 
 1. **Create a branch** from `master` - never push directly to `master`
-2. **Follow the conventions** documented in [`AGENTS.md`](AGENTS.md), [`src/backend/AGENTS.md`](src/backend/AGENTS.md), and [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md)
+2. **Follow the conventions** documented in [`CLAUDE.md`](CLAUDE.md), [`src/backend/AGENTS.md`](src/backend/AGENTS.md), and [`src/frontend/AGENTS.md`](src/frontend/AGENTS.md)
 3. **Run all checks** before opening a PR:
 
 ```bash

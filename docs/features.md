@@ -67,7 +67,7 @@
 | **Dependabot** | Weekly NuGet, npm, and GitHub Actions updates with grouped minor+patch PRs |
 | **Environment Config** | `.env` overrides for everything, documented precedence, working dev defaults out of the box |
 | **Production Hardening** | Dev config stripping from production images, reverse proxy trust configuration, CORS production safeguard |
-| **Claude Code Skills** | 20+ native skills for development workflows - feature scaffolding, endpoint creation, PR management, design review, type generation. Project-aware context files (`CLAUDE.md`, `AGENTS.md`, `FILEMAP.md`) for deep codebase understanding |
+| **Claude Code Skills** | 20+ native skills for development workflows - feature scaffolding, endpoint creation, PR management, design review, type generation. 10 specialized agents, lifecycle hooks, and context files (`CLAUDE.md`, `FILEMAP.md`) for deep codebase understanding |
 
 ## What Your Users Get
 
