@@ -203,14 +203,7 @@ Pagination: `Paginate(int pageNumber, int pageSize)` extension on `IQueryable<T>
 
 ## Email Templates
 
-Fluid (Liquid) templates rendered by `IEmailTemplateRenderer`. Templates are embedded resources compiled once and cached.
-
-**3-file pattern** per email in `Infrastructure/Features/Email/Templates/`:
-- `{name}.liquid` - HTML body fragment (injected into `_base.liquid`)
-- `{name}.subject.liquid` - Subject line
-- `{name}.text.liquid` - Plain text alternative
-
-**Model records** in `Application/Features/Email/Models/EmailTemplateModels.cs` - one record per template. Properties auto-map to snake_case Liquid variables.
+Fluid (Liquid) templates with 3-file pattern (`{name}.liquid`, `{name}.subject.liquid`, `{name}.text.liquid`). See the `/add-email-template` skill for full template patterns and model records.
 
 ## OpenAPI
 
@@ -249,12 +242,6 @@ Response contracts: frozen records in `Contracts/ResponseContracts.cs` - deseria
 
 ## Aspire (Local Development)
 
-**ServiceDefaults** (`MyProject.ServiceDefaults`): Shared Aspire project providing OpenTelemetry (logging, metrics, tracing), service discovery, HTTP resilience. Called via `builder.AddServiceDefaults()`.
+Run: `dotnet run --project src/backend/MyProject.AppHost` - launches PostgreSQL, MinIO, MailPit, API, and Frontend. See `/add-aspire-dep` skill for adding dependencies.
 
-**AppHost** (`MyProject.AppHost`): Aspire orchestrator launching PostgreSQL + PgAdmin, MinIO, MailPit, API, and Frontend.
-
-Run: `dotnet run --project src/backend/MyProject.AppHost`
-
-### Logging: Serilog -> OpenTelemetry
-
-Serilog bridges to OpenTelemetry via ServiceDefaults `AddOpenTelemetry()` logger provider. With `writeToProviders: true`, Serilog forwards logs to all registered `ILoggerProvider` instances including the OTEL one - no separate Serilog OTEL sink needed.
+**Logging gotcha**: Serilog bridges to OTEL via `writeToProviders: true` - do NOT add `Serilog.Sinks.OpenTelemetry` (causes duplicate logs).

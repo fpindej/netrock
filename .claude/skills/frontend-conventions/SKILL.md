@@ -138,14 +138,7 @@ Add via CLI: `pnpm dlx shadcn-svelte@latest add <name>`. Check [ui.shadcn.com](h
 
 ### Logical Properties Only
 
-| Physical (avoid - breaks RTL) | Logical (preferred) |
-|---|---|
-| `ml-*` / `mr-*` | `ms-*` / `me-*` |
-| `pl-*` / `pr-*` | `ps-*` / `pe-*` |
-| `left-*` / `right-*` | `start-*` / `end-*` |
-| `text-left` / `text-right` | `text-start` / `text-end` |
-| `border-l` / `border-r` | `border-s` / `border-e` |
-| `space-x-*` on flex/grid | `gap-*` (preferred) |
+Use `ms-*`/`me-*`/`ps-*`/`pe-*`/`start-*`/`end-*`/`text-start`/`text-end`/`border-s`/`border-e`/`gap-*` instead of physical equivalents (`ml-*`/`mr-*`/`pl-*`/`pr-*`/`left-*`/`right-*`/`text-left`/`text-right`/`border-l`/`border-r`/`space-x-*`). Full mapping in the [design tokens reference](../review-design/references/design-tokens.md).
 
 ### Button Layout (Action/Submit Buttons)
 
@@ -239,22 +232,11 @@ API proxy validates `Origin` header on mutations. Same-origin + `ALLOWED_ORIGINS
 
 ## Testing
 
-Uses vitest with SvelteKit vite config. Aliases like `$lib/*` and `$app/*` resolve automatically.
-
-### Conventions
-
-- **Co-locate tests with source:** `foo.ts` -> `foo.test.ts` in the same directory
-- **Structure:** `describe('moduleName')` -> `it('does X')` with explicit imports from `vitest`
-- **Import from vitest:** `import { describe, it, expect, vi } from 'vitest'` (no implicit globals)
-- **Default environment: `node`**. Add `// @vitest-environment jsdom` for DOM tests.
-- **Mock modules:** `vi.mock('$lib/...')` - mock internal modules by path
-- **`restoreMocks: true`** handles cleanup globally
-- Use `MOCK_USER`, `createMockLoadEvent`, `createMockCookies` from `src/test-utils.ts`
+Co-locate tests: `foo.ts` -> `foo.test.ts`. Use vitest with explicit `import { describe, it, expect, vi } from 'vitest'`. Default environment is `node`; add `// @vitest-environment jsdom` for DOM tests. `restoreMocks: true` handles cleanup globally. See the `/add-test` skill for full setup, mock patterns, and test helpers.
 
 ```bash
 pnpm run test              # all tests (CI mode)
 pnpm run test:watch        # watch mode
-pnpm run test -- -t "name" # filter by test name
 ```
 
 ## TypeScript Strictness
