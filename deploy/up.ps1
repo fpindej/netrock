@@ -1,92 +1,70 @@
 <#
 .SYNOPSIS
-    Environment Launcher
+    Compose Launcher
 
 .DESCRIPTION
-    Thin wrapper that constructs the correct `docker compose` command
-    for a given environment profile.
-
-.PARAMETER Environment
-    The environment to launch (e.g., production)
+    Runs docker compose against the Aspire-generated deployment package.
 
 .PARAMETER ComposeArgs
-    Additional arguments passed to docker compose
+    Arguments passed to docker compose
 
 .EXAMPLE
-    .\deploy\up.ps1 production up -d
+    .\deploy\up.ps1 up -d
 
 .EXAMPLE
-    .\deploy\up.ps1 production logs -f api
+    .\deploy\up.ps1 logs -f api
 
 .NOTES
-    Local development uses Aspire (see MyProject.AppHost).
+    First-time setup:
+      1. .\deploy\publish.ps1
+      2. Fill in deploy\compose\.env and deploy\compose\envs\*.env
+      3. .\deploy\up.ps1 up -d
+
+    Local development uses Aspire (see MyProject.AppHost):
+      dotnet run --project src\backend\MyProject.AppHost
 #>
 
 param(
-    [Parameter(Position = 0, Mandatory = $true)]
-    [string]$Environment,
-
-    [Parameter(Position = 1, ValueFromRemainingArguments = $true)]
+    [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$ComposeArgs
 )
 
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProjectRoot = Split-Path -Parent $ScriptDir
+$ComposeDir = Join-Path $ScriptDir "compose"
+$ComposeFile = Join-Path $ComposeDir "docker-compose.yaml"
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Resolve files
-# ─────────────────────────────────────────────────────────────────────────────
-$Overlay = Join-Path $ScriptDir "docker-compose.$Environment.yml"
-$EnvDir = Join-Path $ScriptDir "envs\$Environment"
-$ComposeEnv = Join-Path $EnvDir "compose.env"
-
-if (-not (Test-Path $Overlay)) {
-    Write-Host "Error: Unknown environment '$Environment'" -ForegroundColor Red
+if (-not $ComposeArgs -or $ComposeArgs.Count -eq 0) {
+    Write-Host "Usage: .\deploy\up.ps1 [docker compose args...]"
     Write-Host ""
-    Write-Host "Available environments:"
-    Get-ChildItem -Path $ScriptDir -Filter "docker-compose.*.yml" | ForEach-Object {
-        $envName = $_.Name -replace '^docker-compose\.(.*)\.yml$', '$1'
-        Write-Host "  $envName"
-    }
-    exit 1
-}
-
-if (-not (Test-Path $EnvDir)) {
-    Write-Host "Error: Environment directory not found: $EnvDir" -ForegroundColor Red
+    Write-Host "Examples:"
+    Write-Host "  .\deploy\up.ps1 up -d          Start the stack"
+    Write-Host "  .\deploy\up.ps1 logs -f api    Follow API logs"
+    Write-Host "  .\deploy\up.ps1 down           Stop the stack"
+    Write-Host "  .\deploy\up.ps1 ps             List running services"
     Write-Host ""
-    $Example = Join-Path $ScriptDir "envs\$Environment-example"
-    if (Test-Path $Example) {
-        Write-Host "Create it from the example:"
-        Write-Host "  Copy-Item -Recurse `"$Example`" `"$EnvDir`""
-    } else {
-        Write-Host "Ensure the environment directory exists at: $EnvDir"
-    }
+    Write-Host "Setup:"
+    Write-Host "  1. .\deploy\publish.ps1          Generate compose files"
+    Write-Host "  2. Edit deploy\compose\.env       Fill in secrets"
+    Write-Host "  3. .\deploy\up.ps1 up -d         Start"
     exit 1
 }
 
-if (-not (Test-Path $ComposeEnv)) {
-    Write-Host "Error: compose.env not found in $EnvDir" -ForegroundColor Red
+if (-not (Test-Path $ComposeFile)) {
+    Write-Host "Error: No deployment package found at $ComposeDir" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Generate it first:"
+    Write-Host "  .\deploy\publish.ps1"
     exit 1
 }
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Execute
-# ─────────────────────────────────────────────────────────────────────────────
-$baseCompose = Join-Path $ScriptDir "docker-compose.yml"
 
 $dockerArgs = @(
     "compose",
-    "--project-directory", $ProjectRoot,
-    "-f", $baseCompose,
-    "-f", $Overlay,
-    "--env-file", $ComposeEnv
+    "--project-directory", $ComposeDir,
+    "-f", $ComposeFile
 )
-
-if ($ComposeArgs) {
-    $dockerArgs += $ComposeArgs
-}
+$dockerArgs += $ComposeArgs
 
 & docker @dockerArgs
 exit $LASTEXITCODE

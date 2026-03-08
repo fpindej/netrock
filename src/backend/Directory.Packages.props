@@ -4,6 +4,7 @@
     <FrameworkVersion>10.0.3</FrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="Aspire.Hosting.Docker" Version="13.1.2-preview.1.26125.13" />
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.1.2" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.1.2" />
 
@@ -35,7 +36,7 @@
     <PackageVersion Include="Serilog" Version="4.3.1" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
-    <!-- Hangfire transitively depends on an older Newtonsoft.Json with CVE-2024-21907. Pinning to 13.0.4 forces the patched version. Not used directly — our code uses System.Text.Json only. -->
+    <!-- Hangfire transitively depends on an older Newtonsoft.Json with CVE-2024-21907. Pinning to 13.0.4 forces the patched version. Not used directly - our code uses System.Text.Json only. -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.23" />
     <PackageVersion Include="Hangfire.Core" Version="1.8.23" />

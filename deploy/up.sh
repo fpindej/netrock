@@ -1,93 +1,57 @@
 #!/bin/bash
 
 #══════════════════════════════════════════════════════════════════════════════
-#  Environment Launcher
+#  Compose Launcher
 #══════════════════════════════════════════════════════════════════════════════
 #
-#  Thin wrapper that constructs the correct `docker compose` command
-#  for a given environment profile.
+#  Runs docker compose against the Aspire-generated deployment package.
 #
 #  Usage:
-#    ./deploy/up.sh <environment> [docker compose args...]
+#    ./deploy/up.sh up -d              # Start the stack
+#    ./deploy/up.sh logs -f api        # Follow API logs
+#    ./deploy/up.sh down               # Stop the stack
+#    ./deploy/up.sh ps                 # List running services
 #
-#  Examples:
-#    ./deploy/up.sh production up -d          # Start production stack
-#    ./deploy/up.sh production logs -f api    # Follow API logs
+#  First-time setup:
+#    1. Generate: ./deploy/publish.sh
+#    2. Fill in:  deploy/compose/.env and deploy/compose/envs/*.env
+#    3. Start:    ./deploy/up.sh up -d
 #
-#  Note: Local development uses Aspire (see MyProject.AppHost).
+#  Local development uses Aspire (see MyProject.AppHost):
+#    dotnet run --project src/backend/MyProject.AppHost
 #
 #══════════════════════════════════════════════════════════════════════════════
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+COMPOSE_DIR="$SCRIPT_DIR/compose"
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Validate arguments
-# ─────────────────────────────────────────────────────────────────────────────
 if [[ $# -lt 1 ]]; then
-    echo "Usage: $0 <environment> [docker compose args...]"
-    echo ""
-    echo "Environments:"
-    for f in "$SCRIPT_DIR"/docker-compose.*.yml; do
-        env_name=$(basename "$f" | sed 's/docker-compose\.\(.*\)\.yml/\1/')
-        echo "  $env_name"
-    done
+    echo "Usage: $0 [docker compose args...]"
     echo ""
     echo "Examples:"
-    echo "  $0 production up -d"
-    echo "  $0 production logs -f api"
+    echo "  $0 up -d          Start the stack"
+    echo "  $0 logs -f api    Follow API logs"
+    echo "  $0 down           Stop the stack"
+    echo "  $0 ps             List running services"
     echo ""
-    echo "Note: Local development uses Aspire (see MyProject.AppHost)."
+    echo "Setup:"
+    echo "  1. ./deploy/publish.sh          Generate compose files"
+    echo "  2. Edit deploy/compose/.env     Fill in secrets"
+    echo "  3. $0 up -d                     Start"
     exit 1
 fi
 
-ENV_NAME="$1"
-shift
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Resolve files
-# ─────────────────────────────────────────────────────────────────────────────
-OVERLAY="$SCRIPT_DIR/docker-compose.${ENV_NAME}.yml"
-ENV_DIR="$SCRIPT_DIR/envs/${ENV_NAME}"
-COMPOSE_ENV="$ENV_DIR/compose.env"
-
-if [[ ! -f "$OVERLAY" ]]; then
-    echo "Error: Unknown environment '$ENV_NAME'"
+if [[ ! -f "$COMPOSE_DIR/docker-compose.yaml" ]]; then
+    echo "Error: No deployment package found at $COMPOSE_DIR"
     echo ""
-    echo "Available environments:"
-    for f in "$SCRIPT_DIR"/docker-compose.*.yml; do
-        env_name=$(basename "$f" | sed 's/docker-compose\.\(.*\)\.yml/\1/')
-        echo "  $env_name"
-    done
+    echo "Generate it first:"
+    echo "  ./deploy/publish.sh"
     exit 1
 fi
 
-if [[ ! -d "$ENV_DIR" ]]; then
-    echo "Error: Environment directory not found: $ENV_DIR"
-    echo ""
-    EXAMPLE="${SCRIPT_DIR}/envs/${ENV_NAME}-example"
-    if [[ -d "$EXAMPLE" ]]; then
-        echo "Create it from the example:"
-        echo "  cp -r $EXAMPLE $ENV_DIR"
-    else
-        echo "Ensure the environment directory exists at: $ENV_DIR"
-    fi
-    exit 1
-fi
-
-if [[ ! -f "$COMPOSE_ENV" ]]; then
-    echo "Error: compose.env not found in $ENV_DIR"
-    exit 1
-fi
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Execute
-# ─────────────────────────────────────────────────────────────────────────────
 exec docker compose \
-    --project-directory "$PROJECT_ROOT" \
-    -f "$SCRIPT_DIR/docker-compose.yml" \
-    -f "$OVERLAY" \
-    --env-file "$COMPOSE_ENV" \
+    --project-directory "$COMPOSE_DIR" \
+    -f "$COMPOSE_DIR/docker-compose.yaml" \
     "$@"
