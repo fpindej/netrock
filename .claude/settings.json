@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '=== NETrock Environment Check ===' && (dotnet --version 2>/dev/null && echo 'OK .NET SDK' || echo 'MISSING .NET SDK') && (cd src/frontend && pnpm --version 2>/dev/null && echo 'OK pnpm' || echo 'MISSING pnpm') && (dotnet tool list -g 2>/dev/null | grep -q 'dotnet-ef' && echo 'OK dotnet-ef tool' || echo 'MISSING dotnet-ef (run: dotnet tool restore)') && (docker info >/dev/null 2>&1 && echo 'OK Docker' || echo 'MISSING Docker not running') && echo '=== Ready ==='",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.mjs\"",
             "timeout": 15000
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/validate-bash.sh"
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/validate-bash.mjs\""
           }
         ]
       }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/auto-format.sh",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/auto-format.mjs\"",
             "async": true,
             "timeout": 30000
           }
@@ -42,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-quality-gate.sh"
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-quality-gate.mjs\""
           }
         ]
       }
