@@ -3,12 +3,7 @@
  * Mirrors the backend AppRoles.GetRoleRank() logic.
  */
 
-/** Well-known system role names. Mirrors backend AppRoles constants. */
-export const SystemRoles = {
-	Superuser: 'Superuser',
-	Admin: 'Admin',
-	User: 'User'
-} as const;
+import { SystemRoles } from './permissions';
 
 const ROLE_RANKS: Record<string, number> = {
 	[SystemRoles.Superuser]: 3,

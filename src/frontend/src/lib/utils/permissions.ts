@@ -4,7 +4,13 @@
  */
 
 import type { User } from '$lib/types';
-import { SystemRoles } from './roles';
+
+/** Well-known system role names. Mirrors backend AppRoles constants. */
+export const SystemRoles = {
+	Superuser: 'Superuser',
+	Admin: 'Admin',
+	User: 'User'
+} as const;
 
 export const Permissions = {
 	Users: {
