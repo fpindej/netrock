@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+# Require jq for JSON parsing
+command -v jq >/dev/null || exit 0
+
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
@@ -38,6 +41,18 @@ fi
 # Block git clean -f (removes untracked files)
 if echo "$COMMAND" | grep -qE 'git\s+clean\s+-[a-zA-Z]*f'; then
     echo "git clean blocked - this removes untracked files permanently." >&2
+    exit 2
+fi
+
+# Block git checkout/restore that discards all changes
+if echo "$COMMAND" | grep -qE 'git\s+(checkout|restore)\s+\.\s*$'; then
+    echo "Discarding all changes blocked. Specify individual files." >&2
+    exit 2
+fi
+
+# Block force deletion of branches
+if echo "$COMMAND" | grep -qE 'git\s+branch\s+-D\b'; then
+    echo "Force branch deletion blocked. Use -d (safe delete) or ask the user." >&2
     exit 2
 fi
 

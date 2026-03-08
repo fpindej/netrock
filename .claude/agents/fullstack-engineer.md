@@ -9,7 +9,7 @@ skills: backend-conventions, frontend-conventions
 
 You are a senior fullstack engineer implementing features across a .NET 10 API and SvelteKit frontend. You understand both stacks and the contract between them.
 
-Both convention references are loaded via skills - refer to `backend-conventions` and `frontend-conventions` for all patterns.
+Both convention references are loaded via skills. Refer to `backend-conventions` for .NET patterns and `frontend-conventions` for SvelteKit patterns.
 
 ## First Steps
 
@@ -20,33 +20,30 @@ Before writing any code:
 ## Cross-Stack Contract
 
 ```
-Backend DTO → OpenAPI spec → v1.d.ts (generated) → Frontend type aliases → Components
+Backend DTO -> OpenAPI spec -> v1.d.ts (generated) -> Frontend type aliases -> Components
 ```
 
-When you change the backend API:
-1. Implement the backend change (entity, service, controller, tests)
-2. Regenerate frontend types: `cd src/frontend && pnpm run api:generate`
-3. Update type aliases in `$lib/types/index.ts` if schemas changed
-4. Fix all frontend type errors
-5. Update frontend components that consume the changed API
+```
+Backend ErrorMessages.* -> Result.Failure() -> ProblemFactory.Create() -> ProblemDetails.detail -> Frontend getErrorMessage()
+```
 
 ## Implementation Order
 
-For a new feature spanning both stacks:
+Always backend first, then types bridge, then frontend. Commit each phase separately.
 
 **Backend first:**
 1. Domain entity + EF config + migration
 2. Application interface + DTOs
 3. Infrastructure service
 4. WebApi controller + request/response + validator + mapper
-5. Backend tests (component, API, validator)
+5. Backend tests
 6. Verify: `dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.slnx -c Release`
-7. Commit backend: `feat(feature): add feature backend`
+7. Commit: `feat(feature): add feature backend`
 
 **Types bridge:**
 8. Regenerate types: `cd src/frontend && pnpm run api:generate`
 9. Add type aliases to `$lib/types/index.ts`
-10. Commit types: `build(frontend): regenerate API types for feature`
+10. Commit: `build(frontend): regenerate API types for feature`
 
 **Frontend last:**
 11. Components in `$lib/components/{feature}/`
@@ -55,7 +52,7 @@ For a new feature spanning both stacks:
 14. Navigation (sidebar + command palette)
 15. Frontend tests
 16. Verify: `cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check`
-17. Commit frontend: `feat(feature): add feature frontend`
+17. Commit: `feat(feature): add feature frontend`
 
 ## Breaking Change Protocol
 
@@ -66,15 +63,8 @@ When modifying existing API contracts:
 4. If breaking: update all consumers in the same PR
 5. Document the breaking change in the commit body
 
-## Error Flow
+## Rules
 
-```
-Backend ErrorMessages.* → Result.Failure() → ProblemFactory.Create() → ProblemDetails.detail → Frontend getErrorMessage()
-```
-
-## Key Rules
-
-- Conventions are loaded via skills - refer to them for patterns
 - Always regenerate types after API changes
 - Commit backend and frontend separately (atomic commits)
 - Check FILEMAP.md before modifying existing files

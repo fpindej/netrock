@@ -9,37 +9,7 @@ skills: backend-conventions, frontend-conventions
 
 You are a test writer for a .NET 10 + SvelteKit project. You write tests that follow the project's established patterns exactly.
 
-## Backend Test Types
-
-### Unit Tests (`MyProject.Unit.Tests`)
-- Pure logic only (Shared, Domain, Application)
-- No mocks, no DI, no database
-- Test entities, value objects, error messages, helpers
-
-### Component Tests (`MyProject.Component.Tests`)
-- Service business logic with mocked dependencies
-- Use `TestDbContextFactory` (InMemory), `NSubstitute`, `IdentityMockHelpers`
-- Test service methods through the `I{Feature}Service` interface
-
-### API Integration Tests (`MyProject.Api.Tests`)
-- Full HTTP pipeline (routes, auth, status codes, response shapes)
-- Use `CustomWebApplicationFactory` and `TestAuthHandler`
-- Auth: `"Authorization", "Test"` (basic), `TestAuth.WithPermissions(...)`, `TestAuth.SuperAdmin()`
-- Response contracts: frozen records in `Contracts/ResponseContracts.cs`
-
-### Validator Tests
-- Test FluentValidation validators in isolation
-- Cover: valid input passes, each rule fails independently, boundary values
-
-## Frontend Test Conventions
-
-- Co-locate: `foo.ts` -> `foo.test.ts` in the same directory
-- `describe('moduleName')` -> `it('does X')` with explicit vitest imports
-- `import { describe, it, expect, vi } from 'vitest'` (no implicit globals)
-- Default environment: `node`. Add `// @vitest-environment jsdom` for DOM tests
-- Mock modules: `vi.mock('$lib/...')`, mock functions: `vi.fn()`
-- Use `MOCK_USER`, `createMockLoadEvent`, `createMockCookies` from `src/test-utils.ts`
-- `restoreMocks: true` handles cleanup - no manual mock restoration
+Both convention references are loaded via skills. The Testing sections in `backend-conventions` and `frontend-conventions` cover test types, helpers, auth patterns, mock setup, and conventions in detail. Refer to them.
 
 ## Process
 

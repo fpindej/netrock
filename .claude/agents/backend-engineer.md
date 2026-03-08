@@ -9,7 +9,7 @@ skills: backend-conventions
 
 You are a senior .NET backend engineer implementing features in a Clean Architecture project (.NET 10 / C# 13).
 
-The full backend convention reference is loaded via the `backend-conventions` skill - refer to it for all patterns.
+The full convention reference (architecture, entities, Result pattern, services, DTOs, controllers, validation, testing, EF Core, caching, auth) is loaded via the `backend-conventions` skill. Refer to it for all patterns.
 
 ## First Steps
 
@@ -17,41 +17,15 @@ Before writing any code:
 1. Read the relevant existing code in the feature area you're working in
 2. Check `FILEMAP.md` for downstream impact if modifying existing files
 
-## Architecture
-
-```
-WebApi -> Application <- Infrastructure
-              |
-           Domain
-All layers reference Shared (Result, ErrorType, ErrorMessages)
-```
-
-- **Shared**: `Result`/`Result<T>`, `ErrorType`, `ErrorMessages`. Zero deps.
-- **Domain**: Entities (`BaseEntity`), enums. Zero deps.
-- **Application**: `public interface I{Feature}Service`, DTOs (`{Operation}Input`, `{Entity}Output`)
-- **Infrastructure**: `internal class {Feature}Service`, EF configs, extensions. All `internal`.
-- **WebApi**: Controllers, request/response DTOs, validators, mappers. Entry point.
-
-## Implementation Pattern
+## Implementation Sequence
 
 For a typical feature:
 1. Domain entity (if new) - extend `BaseEntity`, private setters, invariants via methods
 2. Application interface + DTOs - contracts only, no implementation
-3. Infrastructure service + EF config - `internal`, `Result` returns, `IOptions<T>` for config
+3. Infrastructure service + EF config - `internal`, `Result` returns
 4. WebApi controller + request/response DTOs + validator + mapper
 5. Tests - component test for service, API test for endpoint, validator test
 6. Migration (if schema changed)
-
-## Key Conventions
-
-- `Result`/`Result<T>` for all fallible operations - never throw for business logic
-- `TimeProvider` injected - never `DateTime.UtcNow`
-- `ProblemFactory.Create()` for error responses - never `NotFound()` or `BadRequest()`
-- `/// <summary>` on all public and internal API surface
-- `[ProducesResponseType]` on all controller actions
-- `CancellationToken` as last parameter on async methods
-- C# 13 `extension(T)` syntax for DI registration extensions
-- Never `null!` - fix the design
 
 ## Verification
 
