@@ -109,7 +109,7 @@ After creating the PRs, a detailed review identified 4 critical and 4 minor issu
 | **Duplicate OTEL logs**: ServiceDefaults + Serilog OTEL sink both exported to collector | Removed `Serilog.Sinks.OpenTelemetry` entirely; ServiceDefaults handles log export via `writeToProviders: true` |
 | **SQL text in traces**: `SetDbStatementForText = true` captured full SQL (WHERE clauses with PII) | Removed the option (defaults to false) |
 | **CAPTCHA failure on fresh setup**: `.env.example` had `<TURNSTILE_SITE_KEY>` placeholder | Set to Cloudflare's always-pass test key `1x00000000000000000000AA` |
-| **JWT secret regression**: Init scripts no longer generated random keys | Restored JWT generation in `init.sh`/`init.ps1`, added `{INIT_JWT_SECRET}` placeholder to `appsettings.json` |
+| **JWT secret regression**: Init scripts no longer generated random keys | Restored JWT generation in `init.sh`/`init.ps1`, added `j8fDDNrtJg9kpHzlJ2S8XrPo515jg5oSraxLBAuX8dJcPeJx13Y5jTFpCozuQDpV` placeholder to `appsettings.json` |
 
 ### Minor
 
@@ -122,7 +122,7 @@ After creating the PRs, a detailed review identified 4 critical and 4 minor issu
 
 ### Test fix
 
-The `{INIT_JWT_SECRET}` placeholder (17 chars) broke 138 API tests — too short for HMAC SHA-256. Fixed by adding a JWT key override in `appsettings.Testing.json`.
+The `j8fDDNrtJg9kpHzlJ2S8XrPo515jg5oSraxLBAuX8dJcPeJx13Y5jTFpCozuQDpV` placeholder (17 chars) broke 138 API tests — too short for HMAC SHA-256. Fixed by adding a JWT key override in `appsettings.Testing.json`.
 
 ## Follow-Up Items
 

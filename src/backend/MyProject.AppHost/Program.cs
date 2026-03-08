@@ -25,7 +25,7 @@ var jwtSecret = builder.AddParameter("jwt-secret", secret: true);
 
 var postgres = builder.AddPostgres("db", password: pgPassword)
     .WithEndpoint("tcp", e => e.Port = postgresPort)
-    .WithDataVolume("{INIT_PROJECT_SLUG}-db-data");
+    .WithDataVolume("test-db-data");
 
 // pgAdmin only for local development
 if (builder.ExecutionContext.IsRunMode)
@@ -38,7 +38,7 @@ var db = postgres.AddDatabase("Database");
 var storage = builder.AddMinioContainer("storage", rootUser: storageUser, rootPassword: storagePassword)
     .WithEndpoint("http", e => e.Port = minioPort)
     .WithEndpoint("console", e => e.Port = minioConsolePort)
-    .WithDataVolume("{INIT_PROJECT_SLUG}-storage-data");
+    .WithDataVolume("test-storage-data");
 
 // ── API ─────────────────────────────────────────────────────────────────────
 // Migrations and seeding are handled by the API on startup (development only).
@@ -57,7 +57,7 @@ var api = builder.AddProject<Projects.MyProject_WebApi>("api")
     .WithEnvironment("FileStorage__Endpoint", storage.GetEndpoint("http"))
     .WithEnvironment("FileStorage__AccessKey", storage.Resource.RootUser)
     .WithEnvironment("FileStorage__SecretKey", storage.Resource.PasswordParameter)
-    .WithEnvironment("FileStorage__BucketName", "{INIT_PROJECT_SLUG}-files")
+    .WithEnvironment("FileStorage__BucketName", "test-files")
     .WithEnvironment("FileStorage__UseSSL", "false");
 
 // Mailpit only for local development - production uses real SMTP (configured via environment variables)
