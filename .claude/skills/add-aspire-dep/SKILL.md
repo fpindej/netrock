@@ -30,5 +30,4 @@ Adds an infrastructure dependency to Aspire AppHost.
    .WaitFor(myResource)
    ```
 6. Add standalone defaults to `appsettings.Development.json` so the API can run without Aspire.
-7. Document the required production env vars in `deploy/envs/production-example/api.env`.
-8. Verify: `dotnet build src/backend/MyProject.slnx`
+7. Verify: `dotnet build src/backend/MyProject.slnx`

@@ -61,12 +61,12 @@
 | **Aspire Local Dev** | One `dotnet run` for the full stack - API, frontend (hot-reload), PostgreSQL, MinIO (S3 storage), MailPit (email testing), OpenTelemetry Dashboard with traces, logs, and metrics |
 | **Production Docker** | Multi-stage Dockerfiles for API (.NET) and frontend (Node), dev config stripping, non-root users, health probe binary. Deploy to any platform - Docker Compose, Coolify, Railway, Kubernetes |
 | **Init Script** | Interactive project bootstrapping - renames solution, configures ports, creates migration, launches Aspire. Works on macOS, Linux, and Windows |
-| **Deploy Script** | Multi-registry support (Docker Hub, GHCR, ACR, ECR, DigitalOcean), semantic versioning, platform selection |
+| **Dockerfiles** | Multi-stage builds for API and frontend, dev config stripping, non-root users, health probe binary |
 | **CI Pipeline** | GitHub Actions with smart path filtering - backend-only PRs skip frontend checks and vice versa. Coverage reports with ReportGenerator |
 | **Docker Validation** | CI validates image builds on Dockerfile/dependency changes, with layer caching |
 | **Dependabot** | Weekly NuGet, npm, and GitHub Actions updates with grouped minor+patch PRs |
-| **Environment Config** | `.env` overrides for everything, documented precedence, working dev defaults out of the box |
-| **Production Hardening** | Dev config stripping from production images, reverse proxy trust configuration, CORS production safeguard |
+| **Environment Config** | `appsettings.json` defines all options, `appsettings.Development.json` provides working dev defaults, env vars override for production |
+| **Production Hardening** | Dev config stripping from production images, reverse proxy trust configuration, CORS startup safeguard (crashes on `AllowAllOrigins=true` in production) |
 | **Claude Code Skills** | 20+ native skills for development workflows - feature scaffolding, endpoint creation, PR management, design review, type generation. 12 specialized agents (engineers, reviewers, UX designer, product owner, tech writer), lifecycle hooks, and context files (`CLAUDE.md`, `FILEMAP.md`) for deep codebase understanding |
 
 ## What Your Users Get

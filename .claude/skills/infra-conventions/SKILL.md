@@ -14,8 +14,7 @@ Production: User's choice - Docker Compose, Coolify, Railway, Kubernetes, etc.
 
 - **Backend Dockerfile**: Multi-stage .NET build at `src/backend/MyProject.WebApi/Dockerfile`
 - **Frontend Dockerfile**: Multi-stage Node/SvelteKit build at `src/frontend/Dockerfile`
-- **Build script**: `deploy/build.sh` - builds, tags, pushes images with version management
-- **Env templates**: `deploy/envs/production-example/` - reference config for any deployment target
+- **Production config**: `appsettings.json` defines the full config structure; `docs/before-you-ship.md` lists what to configure
 
 ## Deployment Checklist
 
@@ -29,8 +28,8 @@ Production: User's choice - Docker Compose, Coolify, Railway, Kubernetes, etc.
 - [ ] `.dockerignore` excludes unnecessary files (bin, obj, node_modules, .git)
 
 ### Environment Variables
-- [ ] All required env vars documented in `deploy/envs/production-example/`
-- [ ] Sensitive values (passwords, keys, tokens) not committed - only examples/placeholders
+- [ ] All configurable options have sensible defaults in `appsettings.json`
+- [ ] Sensitive values use placeholders in base config (not real secrets)
 - [ ] Connection strings use env var substitution, not hardcoded values
 - [ ] `ASPNETCORE_ENVIRONMENT` set to `Production`
 
@@ -47,13 +46,6 @@ Production: User's choice - Docker Compose, Coolify, Railway, Kubernetes, etc.
 - [ ] Health probe binary used in Docker (not curl/wget which add attack surface)
 - [ ] Frontend: HTTP check on port 3000
 - [ ] Start periods appropriate for cold starts (API: 60s, DB: 15s)
-
-### Build & Release
-- [ ] `deploy/config.json` has correct registry, image names, platform
-- [ ] Version bumping works (patch/minor/major)
-- [ ] Build script finds WebApi directory and Dockerfile dynamically
-- [ ] Images tagged with both version and `:latest`
-- [ ] Build context is minimal (only src/backend or src/frontend)
 
 ### Reproducibility
 - [ ] Can clone and run with `dotnet run --project src/backend/MyProject.AppHost` (local dev)

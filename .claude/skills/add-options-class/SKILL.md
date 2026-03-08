@@ -33,4 +33,4 @@ Adds a typed options/configuration class.
        .ValidateDataAnnotations()
        .ValidateOnStart();
    ```
-5. Add to `deploy/envs/production-example/api.env` if configurable at deploy time
+5. Update `docs/before-you-ship.md` if this is a must-configure production setting

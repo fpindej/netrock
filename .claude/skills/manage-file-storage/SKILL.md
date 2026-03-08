@@ -9,7 +9,7 @@ Swaps S3 provider or removes file storage entirely.
 
 No code changes needed - `S3FileStorageService` uses the standard S3 API. Only configuration:
 
-Set the `FileStorage__*` values as environment variables on your API container (see `deploy/envs/production-example/api.env`):
+Set the `FileStorage__*` environment variables on your API container:
 
 ```env
 # Cloudflare R2
@@ -41,5 +41,5 @@ Pre-create the bucket in your provider's console. Restart - no rebuild needed.
 6. **DI:** Remove `AddFileStorageServices()` and `AddAvatarServices()` from `Program.cs`
 7. **NuGet:** Remove `AWSSDK.S3`, `SkiaSharp`, `SkiaSharp.NativeAssets.Linux.NoDependencies` from `Directory.Packages.props`
 8. **Frontend:** Remove `AvatarDialog.svelte`, update `ProfileHeader.svelte` and `UserNav.svelte` to remove avatar image
-9. **Config:** Remove `FileStorage` section from all `appsettings*.json` and env files
+9. **Config:** Remove `FileStorage` section from all `appsettings*.json`
 10. **Health check:** Remove S3 health check from `HealthCheckExtensions.cs`

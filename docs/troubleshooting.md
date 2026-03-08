@@ -408,7 +408,7 @@ These must be set on the API container before it will start correctly:
 | `Cors__AllowedOrigins__0` | Production domain (e.g., `https://your-domain.com`) |
 | `ASPNETCORE_ENVIRONMENT` | Must be `Production` |
 
-See `deploy/envs/production-example/api.env` for the full list with descriptions.
+See `appsettings.json` for the full configuration structure and [Before You Ship](before-you-ship.md) for the production checklist.
 
 ---
 
@@ -439,12 +439,6 @@ Stop the Aspire AppHost (Ctrl+C) - all containers stop and system resources are 
 docker volume ls | grep <project-slug>
 docker volume rm <volume-name>
 ```
-
-### What's in the `deploy/` directory?
-
-- `build.sh` / `build.ps1` - build and push Docker images with semantic versioning
-- `config.json` - registry and version tracking for the build scripts
-- `envs/production-example/` - environment variable templates for production (api.env, seed.env)
 
 ---
 
