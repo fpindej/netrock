@@ -59,7 +59,7 @@
 | Feature | Implementation |
 |---|---|
 | **Aspire Local Dev** | One `dotnet run` for the full stack - API, frontend (hot-reload), PostgreSQL, MinIO (S3 storage), MailPit (email testing), OpenTelemetry Dashboard with traces, logs, and metrics |
-| **Production Docker** | Docker Compose with base + production overlay - hardened containers (cap_drop, read_only, no-new-privileges), resource limits, two-tier network segmentation |
+| **Production Docker** | Multi-stage Dockerfiles for API (.NET) and frontend (Node), dev config stripping, non-root users, health probe binary. Deploy to any platform - Docker Compose, Coolify, Railway, Kubernetes |
 | **Init Script** | Interactive project bootstrapping - renames solution, configures ports, creates migration, launches Aspire. Works on macOS, Linux, and Windows |
 | **Deploy Script** | Multi-registry support (Docker Hub, GHCR, ACR, ECR, DigitalOcean), semantic versioning, platform selection |
 | **CI Pipeline** | GitHub Actions with smart path filtering - backend-only PRs skip frontend checks and vice versa. Coverage reports with ReportGenerator |

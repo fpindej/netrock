@@ -39,7 +39,7 @@ Every project starts the same way: authentication, role management, rate limitin
 
 **Frontend** - Svelte 5 runes, type-safe API client from OpenAPI, Tailwind CSS 4 with shadcn-svelte component library, Cmd+K command palette with permission-gated navigation, BFF proxy with CSRF protection, i18n (English + Czech, add more with a single JSON file), dark mode, responsive design with 44px touch targets, admin panel with user/role/job/OAuth provider management. [See full details ->](docs/features.md#frontend--sveltekit--svelte-5)
 
-**Infrastructure** - Aspire AppHost for local development (one command for the full stack with OTEL dashboard and MailPit for email testing), Docker Compose for production, init script for project bootstrapping, build script with multi-registry support, GitHub Actions CI with smart path filtering, Claude Code skills for development workflows. [See full details ->](docs/features.md#infrastructure--devops)
+**Infrastructure** - Aspire AppHost for local development (one command for the full stack with OTEL dashboard and MailPit for email testing), production-ready Dockerfiles, init script for project bootstrapping, build script with multi-registry support, GitHub Actions CI with smart path filtering, Claude Code skills for development workflows. [See full details ->](docs/features.md#infrastructure--devops)
 
 **Security** - HttpOnly JWT cookies, refresh token rotation with reuse detection, TOTP 2FA with challenge tokens and recovery codes, OAuth state tokens with TOCTOU protection, AES-256-GCM encrypted provider credentials, PII compliance with server-side masking, security stamp propagation, CSP with nonces, rate limiting, input validation everywhere. [See full details ->](docs/security.md)
 
