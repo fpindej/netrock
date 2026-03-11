@@ -41,11 +41,10 @@
 		role="alert"
 	>
 		<MailWarning class="h-4 w-4 shrink-0" />
-		<span class="flex-1">{m.auth_emailBanner_message()}</span>
+		<span class="min-w-0 flex-1">{m.auth_emailBanner_message()}</span>
 		<Button
 			variant="ghost"
-			size="sm"
-			class="h-auto px-2 py-1 text-xs font-medium hover:bg-warning/20"
+			class="min-h-11 shrink-0 px-2 text-xs font-medium hover:bg-warning/20"
 			disabled={isResending || cooldown.active}
 			onclick={resend}
 		>
@@ -59,8 +58,8 @@
 		</Button>
 		<Button
 			variant="ghost"
-			size="icon-sm"
-			class="text-warning-foreground/60 hover:bg-warning/20 hover:text-warning-foreground"
+			size="icon"
+			class="min-h-11 min-w-11 text-warning-foreground/60 hover:bg-warning/20 hover:text-warning-foreground"
 			onclick={() => (isDismissed = true)}
 			aria-label={m.common_close()}
 		>
