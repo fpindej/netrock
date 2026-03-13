@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { PageHeader } from '$lib/components/common';
-	import { WelcomeGuide, QuickActions, AccountStatus } from '$lib/components/dashboard';
+	import {
+		WelcomeGuide,
+		DeveloperGuide,
+		QuickActions,
+		AccountStatus
+	} from '$lib/components/dashboard';
 	import * as m from '$lib/paraglide/messages';
 	import type { PageData } from './$types';
 
@@ -21,8 +26,9 @@
 	<PageHeader title={greeting} description={m.dashboard_subtitle()} />
 
 	<div class="space-y-8">
-		<!-- Explainer - remove this component when customizing your dashboard -->
+		<!-- Explainers - remove these when customizing your dashboard -->
 		<WelcomeGuide {user} />
+		<DeveloperGuide />
 
 		<!-- Dashboard widgets -->
 		<QuickActions {user} />
