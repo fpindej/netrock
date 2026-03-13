@@ -153,7 +153,7 @@ pnpm dlx shadcn-svelte@latest add <component-name>
 
 ```typescript
 // Use barrel exports
-import { Header, Sidebar } from '$lib/components/layout';
+import { Header, AppSidebar } from '$lib/components/layout';
 import { browserClient } from '$lib/api';
 
 // Don't import directly from files

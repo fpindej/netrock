@@ -72,7 +72,7 @@
 
 NETrock is not just a developer tool - the included frontend delivers features that end users of your product interact with directly:
 
-- **Sign in with their existing accounts** - Google, GitHub, Discord, Apple, Microsoft, Facebook, LinkedIn, X. Admins enable providers from the UI without any redeploy
+- **Sign in with their existing accounts** - Google, GitHub, Discord, Apple, Microsoft, Facebook, LinkedIn, GitLab, Slack, Twitch. Admins enable providers from the UI without any redeploy
 - **Two-factor authentication** - TOTP setup with QR code, recovery codes for account recovery. Admins can disable 2FA for locked-out users
 - **Profile management** - Avatar upload with image cropping, profile editing, connected OAuth accounts management, password management
 - **Dark mode and language switching** - Light/dark/system theme, language auto-detection with manual override

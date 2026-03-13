@@ -60,7 +60,7 @@ NETrock is built **security-first**. Every decision defaults to the most restric
 
 ## Data Protection & Audit
 
-- **Full audit trail** - append-only `AuditEvents` table with JSONB metadata, 25+ action constants covering login, registration, password changes, role modifications, OAuth connections, 2FA changes, and admin actions
+- **Full audit trail** - append-only `AuditEvents` table with JSONB metadata, 40 action constants covering login, registration, password changes, role modifications, OAuth connections, 2FA changes, and admin actions
 - **Soft delete** - nothing is ever truly gone, every mutation tracked with who/when audit fields (`CreatedAt/By`, `UpdatedAt/By`, `DeletedAt/By`)
 - **Dev config stripping** - `appsettings.Development.json` and `appsettings.Testing.json` excluded from production Docker images
 
