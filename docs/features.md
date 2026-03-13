@@ -43,7 +43,7 @@
 | **Two-Factor Authentication UI** | QR code TOTP setup wizard, shadcn InputOTP with auto-submit, recovery codes display with copy-to-clipboard, disable confirmation dialog |
 | **Automatic Token Refresh** | 401 interceptor with refresh and retry, transparent to components, thundering-herd protection |
 | **BFF Architecture** | Server-side API proxy handles cookies, CSRF validation, header filtering, and `X-Forwarded-For` propagation |
-| **i18n** | Paraglide JS - type-safe keys, compile-time validation, SSR-compatible, auto-detection via Accept-Language. Ships with English and Czech |
+| **i18n** | Paraglide JS - type-safe keys, compile-time validation, SSR-compatible, auto-detection via Accept-Language. Per-feature message files, add any locale |
 | **Security Headers** | CSP with nonce mode, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy on every response |
 | **Permission Guards** | Layout-level + page-level route guards, per-permission nav item filtering, component-level conditional rendering |
 | **Dark Mode** | Light/dark/system theme with localStorage persistence, FOUC prevention, CSS variable theming |

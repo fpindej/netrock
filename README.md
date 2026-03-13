@@ -38,7 +38,7 @@ Every project starts the same way: authentication, role management, rate limitin
 
 **Backend** - JWT auth with token rotation and reuse detection, TOTP two-factor authentication with recovery codes, OAuth/OIDC external login with 8 providers (admin-configurable from the UI), permission-based authorization with role hierarchy, transactional email with Fluid templates, rate limiting, HybridCache, PostgreSQL with soft delete and audit trails, S3-compatible file storage, Hangfire background jobs, OpenAPI docs, health checks, Result pattern with ProblemDetails. [See full details ->](docs/features.md#backend--net-10--c-13)
 
-**Frontend** - Svelte 5 runes, type-safe API client from OpenAPI, Tailwind CSS 4 with shadcn-svelte component library, Cmd+K command palette with permission-gated navigation, BFF proxy with CSRF protection, i18n (English + Czech, add more with a single JSON file), dark mode, responsive design with 44px touch targets, admin panel with user/role/job/OAuth provider management. [See full details ->](docs/features.md#frontend--sveltekit--svelte-5)
+**Frontend** - Svelte 5 runes, type-safe API client from OpenAPI, Tailwind CSS 4 with shadcn-svelte component library, Cmd+K command palette with permission-gated navigation, BFF proxy with CSRF protection, i18n with per-feature message files (add locales in one config), dark mode, responsive design with 44px touch targets, admin panel with user/role/job/OAuth provider management. [See full details ->](docs/features.md#frontend--sveltekit--svelte-5)
 
 **Infrastructure** - Aspire AppHost for local development (one command for the full stack with OTEL dashboard and MailPit for email testing), production-ready Dockerfiles, init script for project bootstrapping, GitHub Actions CI with smart path filtering, Claude Code skills for development workflows. [See full details ->](docs/features.md#infrastructure--devops)
 
@@ -138,7 +138,7 @@ Deep dives: **[Features](docs/features.md)** · **[Security](docs/security.md)**
 
 ## Localization
 
-i18n with [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) - type-safe keys, SSR-compatible, auto-detection via `Accept-Language`. Ships with English and Czech. Adding a language is a single JSON file.
+i18n with [Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) - type-safe keys, SSR-compatible, auto-detection via `Accept-Language`. Messages are split into per-feature files (`core`, `auth`, `admin`, etc.) under `messages/{locale}/`. Adding a locale means creating a new directory and translating the feature files you use.
 
 ---
 

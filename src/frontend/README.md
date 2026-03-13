@@ -84,7 +84,7 @@ For example, to remove the profile feature entirely:
 
 1. Delete `src/lib/components/profile/`
 2. Delete `src/routes/(app)/profile/`
-3. Remove profile-related keys from `src/messages/en/auth.json` and `src/messages/cs/auth.json`
+3. Remove profile-related keys from `auth.json` in each locale directory under `src/messages/`
 4. Remove any imports referencing profile components
 
 ## Working with the Codebase
