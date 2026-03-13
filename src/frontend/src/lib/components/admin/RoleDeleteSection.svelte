@@ -7,7 +7,7 @@
 	import { toast } from '$lib/components/ui/sonner';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { routes } from '$lib/config';
+	import { adminRoutes } from '$lib/config';
 	import type { Cooldown } from '$lib/state';
 	import * as m from '$lib/paraglide/messages';
 
@@ -31,7 +31,7 @@
 
 		if (response.ok) {
 			toast.success(m.admin_roles_deleteSuccess());
-			await goto(resolve(routes.admin.roles));
+			await goto(resolve(adminRoutes.roles.path));
 		} else {
 			handleMutationError(response, error, {
 				cooldown,

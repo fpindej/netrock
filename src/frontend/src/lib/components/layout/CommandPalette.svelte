@@ -2,8 +2,8 @@
 	import * as Command from '$lib/components/ui/command';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { routes } from '$lib/config';
-	import { hasPermission, Permissions } from '$lib/utils';
+	import { adminRoutes, routes } from '$lib/config';
+	import { hasPermission } from '$lib/utils';
 	import { shortcutsState, ShortcutAction, getShortcutSymbol } from '$lib/state/shortcuts.svelte';
 	import { toggleTheme } from '$lib/state/theme.svelte';
 	import { logout } from '$lib/auth';
@@ -76,36 +76,36 @@
 			icon: Users,
 			action: () => {
 				close();
-				goto(resolve(routes.admin.users));
+				goto(resolve(adminRoutes.users.path));
 			},
-			permission: Permissions.Users.View
+			permission: adminRoutes.users.permission
 		},
 		{
 			label: m.nav_adminRoles,
 			icon: Shield,
 			action: () => {
 				close();
-				goto(resolve(routes.admin.roles));
+				goto(resolve(adminRoutes.roles.path));
 			},
-			permission: Permissions.Roles.View
+			permission: adminRoutes.roles.permission
 		},
 		{
 			label: m.nav_adminJobs,
 			icon: Clock,
 			action: () => {
 				close();
-				goto(resolve(routes.admin.jobs));
+				goto(resolve(adminRoutes.jobs.path));
 			},
-			permission: Permissions.Jobs.View
+			permission: adminRoutes.jobs.permission
 		},
 		{
 			label: m.nav_adminOAuthProviders,
 			icon: KeyRound,
 			action: () => {
 				close();
-				goto(resolve(routes.admin.oauthProviders));
+				goto(resolve(adminRoutes.oauthProviders.path));
 			},
-			permission: Permissions.OAuthProviders.View
+			permission: adminRoutes.oauthProviders.permission
 		}
 	];
 

@@ -2,8 +2,8 @@
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { routes } from '$lib/config';
-	import { hasPermission, Permissions } from '$lib/utils';
+	import { adminRoutes, routes } from '$lib/config';
+	import { hasPermission } from '$lib/utils';
 	import {
 		LayoutDashboard,
 		Users,
@@ -44,27 +44,27 @@
 	const adminItems: AdminNavItem[] = [
 		{
 			title: m.nav_adminUsers,
-			href: resolve(routes.admin.users),
+			href: resolve(adminRoutes.users.path),
 			icon: Users,
-			permission: Permissions.Users.View
+			permission: adminRoutes.users.permission
 		},
 		{
 			title: m.nav_adminRoles,
-			href: resolve(routes.admin.roles),
+			href: resolve(adminRoutes.roles.path),
 			icon: Shield,
-			permission: Permissions.Roles.View
+			permission: adminRoutes.roles.permission
 		},
 		{
 			title: m.nav_adminJobs,
-			href: resolve(routes.admin.jobs),
+			href: resolve(adminRoutes.jobs.path),
 			icon: Clock,
-			permission: Permissions.Jobs.View
+			permission: adminRoutes.jobs.permission
 		},
 		{
 			title: m.nav_adminOAuthProviders,
-			href: resolve(routes.admin.oauthProviders),
+			href: resolve(adminRoutes.oauthProviders.path),
 			icon: KeyRound,
-			permission: Permissions.OAuthProviders.View
+			permission: adminRoutes.oauthProviders.permission
 		}
 	];
 

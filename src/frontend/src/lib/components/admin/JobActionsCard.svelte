@@ -6,7 +6,7 @@
 	import { toast } from '$lib/components/ui/sonner';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { routes } from '$lib/config';
+	import { adminRoutes } from '$lib/config';
 	import { createCooldown } from '$lib/state';
 	import { Play, Pause, RotateCcw, Trash2, Loader2 } from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
@@ -91,7 +91,7 @@
 
 		if (response.ok) {
 			toast.success(m.admin_jobDetail_deleteSuccess());
-			await goto(resolve(routes.admin.jobs));
+			await goto(resolve(adminRoutes.jobs.path));
 		} else {
 			handleMutationError(response, error, {
 				cooldown,

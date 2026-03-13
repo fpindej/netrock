@@ -5,7 +5,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { breadcrumbState } from '$lib/state/breadcrumb.svelte';
-	import { routes } from '$lib/config';
+	import { adminRoutes, routes } from '$lib/config';
 	import * as m from '$lib/paraglide/messages';
 
 	const segmentLabels: Record<string, () => string> = {
@@ -21,10 +21,10 @@
 	const segmentHrefs: Record<string, string> = {
 		profile: resolve(routes.profile),
 		settings: resolve(routes.settings),
-		users: resolve(routes.admin.users),
-		roles: resolve(routes.admin.roles),
-		jobs: resolve(routes.admin.jobs),
-		'oauth-providers': resolve(routes.admin.oauthProviders)
+		users: resolve(adminRoutes.users.path),
+		roles: resolve(adminRoutes.roles.path),
+		jobs: resolve(adminRoutes.jobs.path),
+		'oauth-providers': resolve(adminRoutes.oauthProviders.path)
 	};
 
 	interface Crumb {
