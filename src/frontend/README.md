@@ -57,12 +57,17 @@ src/
 │   ├── auth/          # Authentication utilities
 │   ├── components/    # UI components (grouped by feature)
 │   │   ├── ui/        # shadcn base components
+│   │   ├── admin/     # Admin management components
 │   │   ├── auth/      # Login, Register components
+│   │   ├── common/    # Shared components
 │   │   ├── dashboard/ # Dashboard widgets
 │   │   ├── layout/    # Header, Sidebar, Navigation
+│   │   ├── oauth/     # OAuth provider components
 │   │   ├── profile/   # Profile page components
-│   │   └── common/    # Shared components
-│   ├── config/        # Configuration (i18n, server)
+│   │   └── settings/  # Settings and security components
+│   ├── config/        # Configuration (i18n, server, routes)
+│   ├── hooks/         # Svelte hooks and reactive utilities
+│   ├── schemas/       # Zod validation schemas
 │   ├── state/         # Reactive state (.svelte.ts files)
 │   ├── types/         # Type definitions
 │   └── utils/         # Pure utility functions
@@ -95,7 +100,11 @@ For example, to remove the profile feature entirely:
 
 ```svelte
 <script lang="ts">
-	let { user }: { user: User } = $props();
+	interface Props {
+		user: User;
+	}
+
+	let { user }: Props = $props();
 	let count = $state(0);
 	let doubled = $derived(count * 2);
 </script>
@@ -106,7 +115,7 @@ For example, to remove the profile feature entirely:
 ```typescript
 import { browserClient } from '$lib/api';
 
-const { data, error } = await browserClient.GET('/api/users/me');
+const { response, data, error } = await browserClient.GET('/api/users/me');
 ```
 
 **Translations** - Use Paraglide with type-safe keys:
@@ -171,12 +180,15 @@ For detailed coding conventions, patterns, and best practices, see [`CLAUDE.md`]
 
 ## Available Scripts
 
-| Script         | Description                          |
-| -------------- | ------------------------------------ |
-| `dev`          | Start development server             |
-| `build`        | Create production build              |
-| `preview`      | Preview production build             |
-| `check`        | Run Svelte/TypeScript checks         |
-| `lint`         | Run ESLint and Prettier checks       |
-| `format`       | Format code with Prettier            |
-| `api:generate` | Generate API types from OpenAPI spec |
+| Script         | Description                              |
+| -------------- | ---------------------------------------- |
+| `dev`          | Start development server                 |
+| `build`        | Create production build                  |
+| `preview`      | Preview production build                 |
+| `test`         | Run tests with Vitest                    |
+| `test:watch`   | Run tests in watch mode                  |
+| `check`        | Run Svelte/TypeScript checks             |
+| `check:watch`  | Run Svelte/TypeScript checks (watch)     |
+| `lint`         | Run ESLint and Prettier checks           |
+| `format`       | Format code with Prettier                |
+| `api:generate` | Generate API types from OpenAPI spec     |

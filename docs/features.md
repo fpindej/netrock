@@ -9,7 +9,7 @@
 | **Clean Architecture** | Domain, Application, Infrastructure, WebApi - with [architecture tests](../src/backend/tests/MyProject.Architecture.Tests) enforcing dependency rules at build time |
 | **Authentication** | JWT in HttpOnly cookies, refresh token rotation with reuse detection (stolen token revokes entire family), security stamp validation, remember-me persistent sessions |
 | **Two-Factor Authentication** | TOTP-based 2FA with QR code setup, 6-digit verification, 8 single-use recovery codes, challenge token flow (login returns challenge, client submits TOTP code), admin can disable 2FA for locked-out users with automatic session revocation and notification email |
-| **OAuth / External Login** | OAuth 2.0 / OIDC external authentication with 8 providers out of the box - Google, GitHub, Discord, Apple, Microsoft, Facebook, LinkedIn, and X (Twitter). Manual `HttpClient`-based code exchange (no ASP.NET middleware). Auto-links accounts by verified email. 2FA is bypassed for OAuth logins (provider already verified identity). Provider credentials stored with AES-256-GCM encryption |
+| **OAuth / External Login** | OAuth 2.0 / OIDC external authentication with 10 providers out of the box - Google, GitHub, Discord, Apple, Microsoft, Facebook, LinkedIn, GitLab, Slack, and Twitch. Manual `HttpClient`-based code exchange (no ASP.NET middleware). Auto-links accounts by verified email. 2FA is bypassed for OAuth logins (provider already verified identity). Provider credentials stored with AES-256-GCM encryption |
 | **OAuth Admin Management** | Admins configure OAuth providers entirely from the UI - enable/disable providers, set client ID and secret, configure scopes and endpoints, test connection with a single click. No redeploy required. Credentials encrypted at rest with AES-256-GCM |
 | **Authorization** | Permission-based with custom roles - atomic permissions (`users.view`, `roles.manage`, ...) assigned per role, enforced via `[RequirePermission]` attribute. Superuser has implicit full access |
 | **Role Hierarchy** | Superuser > Admin > User - privilege escalation prevention, self-protection rules, system role guards. Custom roles with arbitrary permission sets |
@@ -17,7 +17,7 @@
 | **Validation** | FluentValidation + Data Annotations, flowing constraints into OpenAPI spec and generated TypeScript types |
 | **Caching** | HybridCache (in-process L1) with auto-invalidation via EF Core interceptor, stampede protection, key management |
 | **Database** | PostgreSQL + EF Core with soft delete, full audit trail (created/updated/deleted by + at), global query filters |
-| **Audit Trail** | Append-only audit events table with JSONB metadata, 25+ action constants covering auth, account, admin, role, and OAuth operations. Admin per-user view and user self-activity log |
+| **Audit Trail** | Append-only audit events table with JSONB metadata, 40 action constants covering auth, account, admin, role, and OAuth operations. Admin per-user view and user self-activity log |
 | **API Documentation** | OpenAPI spec + Scalar UI, with custom transformers for enums, nullable types, numeric schemas, and camelCase query params |
 | **Error Handling** | Result pattern for business logic, `ProblemDetails` ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)) on every error response, structured error messages |
 | **Logging** | Serilog bridged to OpenTelemetry with structured request logging, correlation, and Aspire Dashboard |

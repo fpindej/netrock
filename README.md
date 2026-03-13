@@ -4,7 +4,7 @@
 
 **Full-stack .NET 10 + SvelteKit foundation for building real products.**
 
-OAuth with 8 providers. TOTP two-factor auth. Admin-configurable everything. 1000+ tests. API-first - use the included frontend or bring your own.
+OAuth with 10 providers. TOTP two-factor auth. Admin-configurable everything. 1200+ tests. API-first - use the included frontend or bring your own.
 
 [![Generator](https://img.shields.io/badge/Generator-netrock.dev-FF6B35?logo=rocket&logoColor=white)](https://netrock.dev)
 [![CI](https://github.com/fpindej/netrock/actions/workflows/ci.yml/badge.svg)](https://github.com/fpindej/netrock/actions/workflows/ci.yml)
@@ -26,7 +26,7 @@ OAuth with 8 providers. TOTP two-factor auth. Admin-configurable everything. 100
 
 Every project starts the same way: authentication, role management, rate limiting, validation, API documentation, Docker setup... You spend weeks on infrastructure before writing a single line of business logic.
 
-**NETrock skips all of that.** It ships a production-grade .NET 10 API with a SvelteKit frontend that goes far beyond boilerplate. Users can log in with Google, GitHub, Discord, Apple, Microsoft, Facebook, LinkedIn, or X - configured by admins from the UI, no redeploy needed. Two-factor authentication with TOTP and recovery codes is built in. The permission system enforces role hierarchy. The admin panel manages users, roles, background jobs, and OAuth providers with AES-256-GCM encrypted credentials. Full audit trail, PII compliance, and rate limiting are part of the foundation.
+**NETrock skips all of that.** It ships a production-grade .NET 10 API with a SvelteKit frontend that goes far beyond boilerplate. Users can log in with Google, GitHub, Discord, Apple, Microsoft, Facebook, LinkedIn, GitLab, Slack, or Twitch - configured by admins from the UI, no redeploy needed. Two-factor authentication with TOTP and recovery codes is built in. The permission system enforces role hierarchy. The admin panel manages users, roles, background jobs, and OAuth providers with AES-256-GCM encrypted credentials. Full audit trail, PII compliance, and rate limiting are part of the foundation.
 
 **For developers**, every convention is documented, the architecture is tested at the layer boundary, and Claude Code skills automate common workflows. **For end users**, the product they interact with has dark mode, i18n, a command palette, responsive design, and security features they expect from a real application.
 
@@ -36,7 +36,7 @@ Every project starts the same way: authentication, role management, rate limitin
 
 ## What You Get
 
-**Backend** - JWT auth with token rotation and reuse detection, TOTP two-factor authentication with recovery codes, OAuth/OIDC external login with 8 providers (admin-configurable from the UI), permission-based authorization with role hierarchy, transactional email with Fluid templates, rate limiting, HybridCache, PostgreSQL with soft delete and audit trails, S3-compatible file storage, Hangfire background jobs, OpenAPI docs, health checks, Result pattern with ProblemDetails. [See full details ->](docs/features.md#backend--net-10--c-13)
+**Backend** - JWT auth with token rotation and reuse detection, TOTP two-factor authentication with recovery codes, OAuth/OIDC external login with 10 providers (admin-configurable from the UI), permission-based authorization with role hierarchy, transactional email with Fluid templates, rate limiting, HybridCache, PostgreSQL with soft delete and audit trails, S3-compatible file storage, Hangfire background jobs, OpenAPI docs, health checks, Result pattern with ProblemDetails. [See full details ->](docs/features.md#backend--net-10--c-13)
 
 **Frontend** - Svelte 5 runes, type-safe API client from OpenAPI, Tailwind CSS 4 with shadcn-svelte component library, Cmd+K command palette with permission-gated navigation, BFF proxy with CSRF protection, i18n with per-feature message files (add locales in one config), dark mode, responsive design with 44px touch targets, admin panel with user/role/job/OAuth provider management. [See full details ->](docs/features.md#frontend--sveltekit--svelte-5)
 

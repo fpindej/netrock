@@ -16,7 +16,7 @@ Backend API (.NET :8080)
     |-- PostgreSQL           - EF Core, soft delete, audit trails, Hangfire storage
     |-- MinIO                - S3-compatible blob storage (avatars, file uploads)
     |-- Hangfire             - Recurring + fire-and-forget background jobs
-    |-- OAuth Providers      - Google, GitHub, Discord, Apple, Microsoft, Facebook, LinkedIn, X
+    |-- OAuth Providers      - Google, GitHub, Discord, Apple, Microsoft, Facebook, LinkedIn, GitLab, Slack, Twitch
     |-- SMTP (MailKit)       - Transactional email with Fluid templates
     +-- OpenTelemetry -------> Aspire Dashboard (local) / OTLP endpoint (production)
 ```
