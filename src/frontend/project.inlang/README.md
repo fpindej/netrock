@@ -17,9 +17,9 @@ Do not edit:
 - `.gitignore`
 
 Key files:
-- `settings.json` — locales, plugins, file patterns (source of truth)
-- `cache/` — plugin caches (safe to delete)
-- `.gitignore` — generated
+- `settings.json` - locales, plugins, file patterns (source of truth)
+- `cache/` - plugin caches (safe to delete)
+- `.gitignore` - generated
 
 ```
 *.inlang/
@@ -34,9 +34,9 @@ Translation files (like `messages/{locale}/core.json`) live **outside** this fol
 
 [Inlang](https://inlang.com) is an open file format for building custom localization (i18n) tooling. It provides:
 
-- **CRUD API** — Read and write translations programmatically via SQL
-- **Plugin system** — Import/export any format (JSON, XLIFF, etc.)
-- **Version control** — Built-in version control via [lix](https://lix.dev)
+- **CRUD API** - Read and write translations programmatically via SQL
+- **Plugin system** - Import/export any format (JSON, XLIFF, etc.)
+- **Version control** - Built-in version control via [lix](https://lix.dev)
 
 ```
 ┌──────────┐        ┌───────────┐         ┌────────────┐
