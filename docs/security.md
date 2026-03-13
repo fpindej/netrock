@@ -16,7 +16,7 @@ NETrock is built **security-first**. Every decision defaults to the most restric
 
 - **TOTP-based** - standard RFC 6238 time-based one-time passwords, compatible with any authenticator app (Google Authenticator, Authy, 1Password, etc.)
 - **Challenge token flow** - login returns a short-lived challenge token instead of full auth; client must submit valid TOTP code to complete authentication
-- **Recovery codes** - 8 single-use recovery codes generated during setup, each usable exactly once for account recovery if the authenticator is lost
+- **Recovery codes** - 10 single-use recovery codes generated during setup, each usable exactly once for account recovery if the authenticator is lost
 - **Admin disable** - admins with `users.manage_2fa` permission can disable 2FA for locked-out users, with automatic session revocation and notification email to the user
 - **OAuth bypass** - OAuth logins skip 2FA verification since the identity provider has already authenticated the user
 
@@ -60,7 +60,7 @@ NETrock is built **security-first**. Every decision defaults to the most restric
 
 ## Data Protection & Audit
 
-- **Full audit trail** - append-only `AuditEvents` table with JSONB metadata, 40 action constants covering login, registration, password changes, role modifications, OAuth connections, 2FA changes, and admin actions
+- **Full audit trail** - append-only `AuditEvents` table with JSONB metadata, action constants covering login, registration, password changes, role modifications, OAuth connections, 2FA changes, and admin actions
 - **Soft delete** - nothing is ever truly gone, every mutation tracked with who/when audit fields (`CreatedAt/By`, `UpdatedAt/By`, `DeletedAt/By`)
 - **Dev config stripping** - `appsettings.Development.json` and `appsettings.Testing.json` excluded from production Docker images
 

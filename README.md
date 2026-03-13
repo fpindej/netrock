@@ -4,7 +4,7 @@
 
 **Full-stack .NET 10 + SvelteKit foundation for building real products.**
 
-OAuth with 10 providers. TOTP two-factor auth. Admin-configurable everything. 1200+ tests. API-first - use the included frontend or bring your own.
+OAuth with 10 providers. TOTP two-factor auth. Admin-configurable everything. Thoroughly tested. API-first - use the included frontend or bring your own.
 
 [![Generator](https://img.shields.io/badge/Generator-netrock.dev-FF6B35?logo=rocket&logoColor=white)](https://netrock.dev)
 [![CI](https://github.com/fpindej/netrock/actions/workflows/ci.yml/badge.svg)](https://github.com/fpindej/netrock/actions/workflows/ci.yml)

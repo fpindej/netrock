@@ -8,7 +8,7 @@ NETrock works out of the box for local development, but there are things you nee
 
 ## Must Do
 
-- [ ] **Email service** - replace `NoOpEmailService` with a real provider (SMTP, SendGrid, Postmark, etc.). The NoOp service just logs emails to the console. Configure via `Email__Smtp__*` env vars or swap the service registration in `ServiceCollectionExtensions.cs`
+- [ ] **Email service** - configure a real SMTP provider for production. In development, email is enabled by default and routed to MailPit. If `Email__Enabled` is `false`, a `NoOpEmailService` logs emails via Serilog instead of sending them. Configure via `Email__Smtp__*` env vars
 - [ ] **CORS origins** - set `Cors__AllowedOrigins__0` to your production domain (add `__1`, `__2` for additional origins). The app **will refuse to start** if `AllowAllOrigins` is `true` outside of Development - this is intentional
 - [ ] **JWT secret** - the init script generates a random 64-char key in `appsettings.json`. For production, set `Authentication__Jwt__Key` as an environment variable (minimum 32 chars, cryptographically random)
 - [ ] **Database** - point `ConnectionStrings__Database` to your production PostgreSQL instance

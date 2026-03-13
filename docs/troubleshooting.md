@@ -89,14 +89,18 @@ pwsh -ExecutionPolicy Bypass -File init.ps1
 
 ### Port conflict during init (`EADDRINUSE` / `address already in use`)
 
-**Cause:** The base port (default `13000`) or one of its offsets is already in use. The init script allocates 2 ports:
+**Cause:** The base port (default `13000`) or one of its offsets is already in use. The init script allocates ports across the full range:
 
 | Offset | Service |
 |---|---|
 | +0 | Frontend |
 | +2 | API |
-
-Infrastructure ports (PostgreSQL, MinIO) are managed automatically by Aspire.
+| +3 | pgAdmin |
+| +4 | PostgreSQL |
+| +5 | MinIO |
+| +6 | MinIO Console |
+| +7 | MailPit SMTP |
+| +8 | MailPit HTTP |
 
 **Fix:** Check what's using the port and pick a different base:
 
@@ -326,7 +330,7 @@ Files are split per feature: `core`, `dashboard`, `auth`, `admin`, `jobs`, `audi
 **Cause:** The auth system uses HttpOnly JWT cookies. If the cookie isn't being set, common causes are:
 
 - **Wrong domain / origin** - the API and frontend must share the same origin or be properly proxied through the BFF
-- **SameSite / Secure flags** - in production, cookies require HTTPS. Locally, HTTP works because `SameSite=Lax` is the default
+- **SameSite / Secure flags** - cookies use `SameSite=None` + `Secure=true` for cross-origin support. In production, this requires HTTPS
 - **CORS misconfiguration** - the API has a CORS startup guard; check the allowed origins
 
 **Fix:** Open browser DevTools → Network tab. Inspect the login response headers - look for `Set-Cookie`. If the cookie is present but not being sent on subsequent requests, check the `Domain`, `Path`, `SameSite`, and `Secure` attributes.
