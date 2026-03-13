@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import * as m from '$lib/paraglide/messages';
 	import { Loader2, CircleAlert } from '@lucide/svelte';
 	import { IconCircle } from '$lib/components/common';
@@ -46,7 +47,7 @@
 					{errorMessage}
 				</p>
 			</div>
-			<Button href={resolve('/login')} class="w-full">
+			<Button href={resolve(routes.login)} class="w-full">
 				{m.oauth_callback_backToLogin()}
 			</Button>
 		</div>

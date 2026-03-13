@@ -2,6 +2,7 @@
 	import { onMount, tick } from 'svelte';
 	import { replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { LoginForm } from '$lib/components/auth';
 	import { toast } from '$lib/components/ui/sonner';
 	import * as m from '$lib/paraglide/messages';
@@ -28,7 +29,7 @@
 
 		// Clean URL so bookmarking or refreshing won't re-show toasts or pre-fill
 		if (data.reason || data.prefillEmail) {
-			replaceState(resolve('/login'), {});
+			replaceState(resolve(routes.login), {});
 		}
 	});
 </script>

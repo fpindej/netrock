@@ -76,7 +76,7 @@
 					</a>
 					<div class="text-center text-sm">
 						<a
-							href={resolve('/login')}
+							href={resolve(routes.login)}
 							class="inline-flex min-h-11 items-center font-medium text-primary hover:underline"
 						>
 							{m.auth_verifyEmail_goToLogin()}
@@ -96,7 +96,7 @@
 					</p>
 				</div>
 				<a
-					href={resolve('/login')}
+					href={resolve(routes.login)}
 					class="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
 				>
 					{m.common_backToLogin()}

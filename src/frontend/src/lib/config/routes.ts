@@ -6,6 +6,8 @@
 export const routes = {
 	dashboard: '/dashboard',
 	login: '/login',
+	register: '/register',
+	forgotPassword: '/forgot-password',
 	profile: '/profile',
 	settings: '/settings',
 	admin: {

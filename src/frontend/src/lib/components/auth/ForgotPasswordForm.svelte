@@ -3,6 +3,7 @@
 	import { cn } from '$lib/utils';
 	import { createShake, createCooldown } from '$lib/state';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -105,7 +106,7 @@
 
 			<div class="text-center text-sm">
 				<a
-					href={resolve('/login')}
+					href={resolve(routes.login)}
 					class="inline-flex min-h-11 items-center font-medium text-primary hover:underline"
 				>
 					{m.common_backToLogin()}
@@ -122,7 +123,7 @@
 				</p>
 			</div>
 			<a
-				href={resolve('/login')}
+				href={resolve(routes.login)}
 				class="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
 			>
 				{m.common_backToLogin()}

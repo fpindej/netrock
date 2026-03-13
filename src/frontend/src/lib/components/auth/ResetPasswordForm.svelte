@@ -136,7 +136,7 @@
 				</p>
 			</div>
 			<a
-				href={resolve('/forgot-password')}
+				href={resolve(routes.forgotPassword)}
 				class="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
 			>
 				{m.auth_resetPassword_requestNew()}
@@ -160,7 +160,7 @@
 					</p>
 				{:else}
 					<a
-						href={resolve('/forgot-password')}
+						href={resolve(routes.forgotPassword)}
 						class="inline-flex min-h-11 items-center font-medium text-primary hover:underline"
 					>
 						{m.auth_resetPassword_requestNew()}
@@ -235,7 +235,7 @@
 						: m.auth_resetPassword_successDescription()}
 				</p>
 			</div>
-			<a href={resolve('/login')} class="block">
+			<a href={resolve(routes.login)} class="block">
 				<Button class="w-full">{m.auth_resetPassword_signIn()}</Button>
 			</a>
 		</div>
