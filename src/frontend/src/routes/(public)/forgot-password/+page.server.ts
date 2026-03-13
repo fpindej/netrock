@@ -1,10 +1,11 @@
 import { redirect } from '@sveltejs/kit';
+import { routes } from '$lib/config';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { user } = await parent();
 
 	if (user) {
-		throw redirect(303, '/');
+		throw redirect(303, routes.dashboard);
 	}
 };

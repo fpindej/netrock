@@ -4,6 +4,7 @@
 	import { createShake, createCooldown } from '$lib/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { onMount } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -52,7 +53,7 @@
 				if (response.ok) {
 					toast.success(m.auth_register_success());
 					clearDraft();
-					const loginUrl = `${resolve('/login')}?email=${encodeURIComponent(form.data.email)}`;
+					const loginUrl = `${resolve(routes.login)}?email=${encodeURIComponent(form.data.email)}`;
 					// eslint-disable-next-line svelte/no-navigation-without-resolve -- path is resolved above, query string appended
 					await goto(loginUrl);
 				} else {
@@ -271,7 +272,7 @@
 		<div class="text-center text-sm">
 			<span class="text-muted-foreground">{m.auth_register_haveAccount()}</span>
 			<a
-				href={resolve('/login')}
+				href={resolve(routes.login)}
 				class="ms-1 inline-flex min-h-11 items-center font-medium text-primary hover:underline"
 			>
 				{m.auth_register_signIn()}

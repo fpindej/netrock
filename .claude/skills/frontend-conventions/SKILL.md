@@ -176,13 +176,19 @@ Root layout fetches user **once** via `getUser()` which returns `GetUserResult` 
 
 ### Permission Guards
 
-1. **Admin layout**: broad gate - any admin permission
-2. **Individual pages**: specific permission check -> redirect to `/`
-3. **Sidebar**: filters items per-permission via `hasPermission(user, item.permission)`
-4. **Backend is authoritative** - frontend guards are UX only
+1. **`adminRoutes` registry** (`$lib/config/routes.ts`): single source of truth pairing each admin path with its required permission
+2. **Admin layout**: broad gate - derives permission list from `Object.values(adminRoutes)`
+3. **Individual pages**: specific permission check via `adminRoutes.X.permission` -> redirect to `routes.dashboard`
+4. **Sidebar/CommandPalette**: filter items per-permission using `adminRoutes.X.permission`
+5. **Backend is authoritative** - frontend guards are UX only
 
 ```typescript
-import { hasPermission, hasAnyPermission, Permissions } from '$lib/utils';
+// Route guards (server-side)
+import { adminRoutes, routes } from '$lib/config';
+if (!hasPermission(user, adminRoutes.users.permission)) throw redirect(303, routes.dashboard);
+
+// UI permission checks (client-side)
+import { hasPermission, Permissions } from '$lib/utils';
 let canManage = $derived(hasPermission(data.user, Permissions.Users.Manage));
 ```
 

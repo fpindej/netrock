@@ -5,9 +5,11 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { breadcrumbState } from '$lib/state/breadcrumb.svelte';
+	import { adminRoutes, routes } from '$lib/config';
 	import * as m from '$lib/paraglide/messages';
 
 	const segmentLabels: Record<string, () => string> = {
+		dashboard: m.nav_dashboard,
 		profile: m.nav_profile,
 		settings: m.nav_settings,
 		users: m.nav_adminUsers,
@@ -17,12 +19,13 @@
 	};
 
 	const segmentHrefs: Record<string, string> = {
-		profile: resolve('/profile'),
-		settings: resolve('/settings'),
-		users: resolve('/admin/users'),
-		roles: resolve('/admin/roles'),
-		jobs: resolve('/admin/jobs'),
-		'oauth-providers': resolve('/admin/oauth-providers')
+		dashboard: resolve(routes.dashboard),
+		profile: resolve(routes.profile),
+		settings: resolve(routes.settings),
+		users: resolve(adminRoutes.users.path),
+		roles: resolve(adminRoutes.roles.path),
+		jobs: resolve(adminRoutes.jobs.path),
+		'oauth-providers': resolve(adminRoutes.oauthProviders.path)
 	};
 
 	interface Crumb {
@@ -40,17 +43,13 @@
 		const pathname = page.url.pathname;
 		const segments = pathname.split('/').filter(Boolean);
 
-		// Root page
-		if (segments.length === 0) {
-			return [{ label: m.nav_dashboard() }];
-		}
-
 		// Filter out "admin" - it's not a navigable page
 		const meaningful = segments.filter((s) => s !== 'admin');
 
 		const result: Crumb[] = [];
 		for (let i = 0; i < meaningful.length; i++) {
-			const segment = meaningful[i] as string;
+			const segment = meaningful[i];
+			if (!segment) continue;
 			const isLast = i === meaningful.length - 1;
 			const labelFn = segmentLabels[segment];
 

@@ -2,6 +2,7 @@
 	import { browserClient, getErrorMessage } from '$lib/api';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { onMount } from 'svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { Button } from '$lib/components/ui/button';
@@ -70,12 +71,12 @@
 					</p>
 				</div>
 				<div class="flex w-full flex-col gap-2">
-					<a href={resolve('/')}>
+					<a href={resolve(routes.dashboard)}>
 						<Button class="w-full">{m.auth_verifyEmail_goToDashboard()}</Button>
 					</a>
 					<div class="text-center text-sm">
 						<a
-							href={resolve('/login')}
+							href={resolve(routes.login)}
 							class="inline-flex min-h-11 items-center font-medium text-primary hover:underline"
 						>
 							{m.auth_verifyEmail_goToLogin()}
@@ -95,7 +96,7 @@
 					</p>
 				</div>
 				<a
-					href={resolve('/login')}
+					href={resolve(routes.login)}
 					class="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
 				>
 					{m.common_backToLogin()}

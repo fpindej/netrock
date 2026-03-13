@@ -29,7 +29,7 @@ function mockLoadEvent(
 describe('login page server load', () => {
 	// ── Already authenticated ───────────────────────────────────────
 
-	it('authenticated user - redirects to /', async () => {
+	it('authenticated user - redirects to /dashboard', async () => {
 		try {
 			await load(mockLoadEvent({ user: MOCK_USER }));
 			expect.fail('Expected redirect to be thrown');
@@ -37,7 +37,7 @@ describe('login page server load', () => {
 			expect(isRedirect(e)).toBe(true);
 			if (isRedirect(e)) {
 				expect(e.status).toBe(303);
-				expect(e.location).toBe('/');
+				expect(e.location).toBe('/dashboard');
 			}
 		}
 	});

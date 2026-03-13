@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import {
@@ -120,7 +121,7 @@
 						{m.error_503_retrying()}
 					</div>
 				{:else}
-					<Button href={resolve('/')} variant="default" size="lg" class="gap-2">
+					<Button href={resolve(routes.dashboard)} variant="default" size="lg" class="gap-2">
 						<Home class="h-4 w-4" />
 						{m.error_goHome()}
 					</Button>

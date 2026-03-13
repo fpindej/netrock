@@ -1,5 +1,6 @@
 import { goto, invalidateAll } from '$app/navigation';
 import { resolve } from '$app/paths';
+import { routes } from '$lib/config';
 import { browserClient, createApiClient } from '$lib/api';
 import type { User } from '$lib/types';
 import { createAuthMiddleware } from './middleware';
@@ -70,5 +71,5 @@ export async function logout() {
 		console.warn('Logout request failed:', e);
 	}
 	await invalidateAll();
-	await goto(resolve('/login'));
+	await goto(resolve(routes.login));
 }

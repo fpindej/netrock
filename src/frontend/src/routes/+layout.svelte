@@ -9,6 +9,7 @@
 	import { globalShortcuts } from '$lib/state/shortcuts.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { logout, createAuthMiddleware } from '$lib/auth';
 	import { initBrowserAuth } from '$lib/api';
 	import { initBackendMonitor } from '$lib/api/backend-monitor';
@@ -25,7 +26,7 @@
 					description: m.auth_sessionExpired_description()
 				});
 				await invalidateAll();
-				await goto(resolve('/login'));
+				await goto(resolve(routes.login));
 			})
 		);
 		const cleanupTheme = initTheme();
@@ -37,7 +38,7 @@
 	});
 
 	async function handleSettings() {
-		await goto(resolve('/settings'));
+		await goto(resolve(routes.settings));
 	}
 </script>
 

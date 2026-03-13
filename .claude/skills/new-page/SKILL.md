@@ -29,20 +29,21 @@ Use these as starting points - fill in the specifics from context:
    - Or `(public)/{feature}/` for unauthenticated pages
 5. Create `+page.svelte` with `<svelte:head>` using i18n title
 6. If server data needed: create `+page.server.ts` using `createApiClient(fetch, url.origin)`
-7. If permission-guarded: add check in `+page.server.ts`:
+7. If admin page: add entry to `adminRoutes` in `$lib/config/routes.ts` with path and permission
+8. If permission-guarded: add check in `+page.server.ts`:
    ```typescript
-   if (!hasPermission(user, Permissions.Feature.View)) throw redirect(303, '/');
+   if (!hasPermission(user, adminRoutes.feature.permission)) throw redirect(303, routes.dashboard);
    ```
 
 **Integration:**
 
-8. Add i18n keys to both `en.json` and `cs.json`
-9. Add navigation entry in `AppSidebar.svelte` (with `permission` field if guarded)
-10. Add matching entry in `CommandPalette.svelte` (with `permission` field if admin-guarded)
+9. Add i18n keys to both `en.json` and `cs.json`
+10. Add navigation entry in `AppSidebar.svelte` (using `adminRoutes.feature.path` and `.permission` for admin pages)
+11. Add matching entry in `CommandPalette.svelte` (using `adminRoutes.feature.path` and `.permission` for admin pages)
 
 **Verify and commit:**
 
-11. `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check` - fix errors, loop until green
-12. Commit: `feat({feature}): add {feature} page`
+12. `cd src/frontend && pnpm run format && pnpm run lint && pnpm run check` - fix errors, loop until green
+13. Commit: `feat({feature}): add {feature} page`
 
 Paraglide module errors (~32) are expected at check time - ignore those. Fix everything else.

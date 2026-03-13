@@ -8,6 +8,7 @@
 	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { goto } from '$app/navigation';
+	import { routes } from '$lib/config';
 	import { resolve } from '$app/paths';
 	import { createFieldShakes, createCooldown } from '$lib/state';
 
@@ -45,7 +46,7 @@
 			if (response.ok) {
 				open = false;
 				toast.success(m.settings_deleteAccount_success());
-				await goto(resolve('/login'));
+				await goto(resolve(routes.login));
 				return;
 			}
 

@@ -1,4 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
+import { routes } from '$lib/config';
 import * as m from '$lib/paraglide/messages';
 import type { LayoutServerLoad } from './$types';
 
@@ -23,7 +24,7 @@ export const load: LayoutServerLoad = async ({ parent, cookies }) => {
 		// the browser stops sending it and the user sees a clean login instead
 		// of "session expired." This is intentional - showing a stale expiry
 		// message for a long-gone session would be more confusing than helpful.
-		const target = hadSession ? '/login?reason=session_expired' : '/login';
+		const target = hadSession ? `${routes.login}?reason=session_expired` : routes.login;
 		throw redirect(303, target);
 	}
 

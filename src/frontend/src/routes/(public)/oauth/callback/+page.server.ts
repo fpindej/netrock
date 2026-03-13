@@ -1,4 +1,5 @@
 import { isRedirect, redirect } from '@sveltejs/kit';
+import { routes } from '$lib/config';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, fetch }) => {
@@ -32,7 +33,7 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 
 		if (data.isLinkOnly) {
 			// Account linking from settings - redirect back to settings
-			throw redirect(303, '/settings');
+			throw redirect(303, routes.settings);
 		}
 	} catch (e) {
 		if (isRedirect(e)) throw e;
@@ -40,5 +41,5 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 	}
 
 	// Successful login - redirect to dashboard
-	throw redirect(303, '/');
+	throw redirect(303, routes.dashboard);
 };
