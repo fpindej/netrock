@@ -49,6 +49,6 @@
 	"dashboard_dev_cmdMigration": "Vytvořit databázovou migraci",
 	"dashboard_dev_cleanup": "Úklid po přizpůsobení",
 	"dashboard_dev_cleanupComponents": "Smažte vysvětlující komponenty z",
-	"dashboard_dev_cleanupKeys": "Remove i18n keys from the dashboard message files:",
+	"dashboard_dev_cleanupKeys": "Odstraňte i18n klíče z en/dashboard.json a cs/dashboard.json:",
 	"dashboard_dev_cleanupBarrel": "Aktualizujte barrel export v"
 }

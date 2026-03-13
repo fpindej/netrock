@@ -49,6 +49,6 @@
 	"dashboard_dev_cmdMigration": "Create a database migration",
 	"dashboard_dev_cleanup": "Clean up when done",
 	"dashboard_dev_cleanupComponents": "Delete explainer components from",
-	"dashboard_dev_cleanupKeys": "Remove i18n keys from the dashboard message files:",
+	"dashboard_dev_cleanupKeys": "Remove i18n keys from en/dashboard.json and cs/dashboard.json:",
 	"dashboard_dev_cleanupBarrel": "Update the barrel export in"
 }
