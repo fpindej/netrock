@@ -2,7 +2,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { adminRoutes, routes } from '$lib/config';
+	import { adminRoutes, routes, type AdminRoute } from '$lib/config';
 	import { hasPermission } from '$lib/utils';
 	import {
 		LayoutDashboard,
@@ -31,7 +31,7 @@
 	let collapsed = $derived(sidebar.state === 'collapsed');
 
 	type NavItem = { title: () => string; href: string; icon: Component<IconProps> };
-	type AdminNavItem = NavItem & { permission: string };
+	type AdminNavItem = NavItem & { permission: AdminRoute['permission'] };
 
 	const items: NavItem[] = [
 		{

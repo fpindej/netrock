@@ -2,7 +2,7 @@
 	import * as Command from '$lib/components/ui/command';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { adminRoutes, routes } from '$lib/config';
+	import { adminRoutes, routes, type AdminRoute } from '$lib/config';
 	import { hasPermission } from '$lib/utils';
 	import { shortcutsState, ShortcutAction, getShortcutSymbol } from '$lib/state/shortcuts.svelte';
 	import { toggleTheme } from '$lib/state/theme.svelte';
@@ -36,7 +36,7 @@
 		shortcut?: string;
 	};
 
-	type AdminCommandItem = CommandItem & { permission: string };
+	type AdminCommandItem = CommandItem & { permission: AdminRoute['permission'] };
 
 	function close() {
 		shortcutsState.isCommandPaletteOpen = false;

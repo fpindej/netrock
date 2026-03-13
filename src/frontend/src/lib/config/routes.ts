@@ -15,13 +15,20 @@ export const routes = {
 } as const;
 
 /**
- * Admin route registry - single source of truth for admin paths and their
- * required RBAC permissions. Consumed by route guards, sidebar, command
- * palette, and breadcrumbs so that path-permission pairs are never duplicated.
+ * Union of all permission string literals from the Permissions object.
+ * Catches typos at compile time - only known permission values are accepted.
  */
-interface AdminRoute {
+type PermissionValue =
+	(typeof Permissions)[keyof typeof Permissions][keyof (typeof Permissions)[keyof typeof Permissions]];
+
+/**
+ * Admin route registry entry - pairs a path with its required RBAC permission.
+ * Consumed by route guards, sidebar, command palette, and breadcrumbs so that
+ * path-permission pairs are never duplicated.
+ */
+export interface AdminRoute {
 	path: string;
-	permission: string;
+	permission: PermissionValue;
 }
 
 export const adminRoutes = {

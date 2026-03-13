@@ -19,6 +19,7 @@
 	};
 
 	const segmentHrefs: Record<string, string> = {
+		dashboard: resolve(routes.dashboard),
 		profile: resolve(routes.profile),
 		settings: resolve(routes.settings),
 		users: resolve(adminRoutes.users.path),
@@ -47,7 +48,8 @@
 
 		const result: Crumb[] = [];
 		for (let i = 0; i < meaningful.length; i++) {
-			const segment = meaningful[i] as string;
+			const segment = meaningful[i];
+			if (!segment) continue;
 			const isLast = i === meaningful.length - 1;
 			const labelFn = segmentLabels[segment];
 
