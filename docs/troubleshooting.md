@@ -309,12 +309,12 @@ Run `pnpm run lint` to catch violations. See the frontend conventions skill in `
 
 **Cause:** Translation keys must exist in all locale files. The project ships with English (`en`) and Czech (`cs`).
 
-**Fix:** Add the key to both files:
+**Fix:** Add the key to the correct feature file in both locale directories:
 
-- `src/frontend/src/messages/en.json`
-- `src/frontend/src/messages/cs.json`
+- `src/frontend/src/messages/en/{feature}.json`
+- `src/frontend/src/messages/cs/{feature}.json`
 
-English is the base locale. The path pattern is `./src/messages/{locale}.json` as defined in `project.inlang/settings.json`.
+Files are split per feature: `core`, `dashboard`, `auth`, `admin`, `jobs`, `audit`, `2fa`, `oauth`, `avatars`. English is the base locale. Path patterns are defined in `project.inlang/settings.json`.
 
 ---
 

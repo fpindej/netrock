@@ -1,0 +1,83 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+
+	"app_name": "MyProject",
+
+	"meta_titleTemplate": "{title} | MyProject",
+	"meta_description": "Produkční šablona webové aplikace.",
+
+	"nav_dashboard": "Nástěnka",
+	"nav_profile": "Profil",
+	"nav_settings": "Nastavení",
+	"nav_logout": "Odhlásit se",
+
+	"common_user": "Uživatel",
+	"common_language": "Jazyk",
+	"common_theme": "Motiv",
+	"common_close": "Zavřít",
+	"common_cancel": "Zrušit",
+	"common_delete": "Smazat",
+	"common_backToLogin": "Zpět na přihlášení",
+	"common_dangerZone": "Nebezpečná zóna",
+	"common_waitSeconds": "Počkejte {seconds}s",
+	"common_readOnlyNotice": "Nemáte oprávnění provádět změny.",
+
+	"shortcuts_title": "Klávesové zkratky",
+	"shortcuts_settings": "Otevřít nastavení",
+	"shortcuts_logout": "Odhlásit se",
+	"shortcuts_toggleSidebar": "Přepnout postranní panel",
+	"shortcuts_commandPalette": "Otevřít příkazovou paletu",
+	"shortcuts_help": "Klávesové zkratky",
+
+	"commandPalette_placeholder": "Zadejte příkaz nebo hledejte...",
+	"commandPalette_noResults": "Žádné výsledky.",
+	"commandPalette_navigation": "Navigace",
+	"commandPalette_actions": "Akce",
+	"commandPalette_search": "Hledat...",
+	"commandPalette_toggleTheme": "Přepnout motiv",
+
+	"wip_title": "Již brzy",
+	"wip_description": "Na této funkci právě pracujeme. Brzy se dozvíte více!",
+
+	"country_cz": "Česká republika",
+	"country_sk": "Slovensko",
+	"country_de": "Německo",
+	"country_at": "Rakousko",
+	"country_pl": "Polsko",
+	"country_gb": "Spojené království",
+	"country_us": "Spojené státy",
+	"country_fr": "Francie",
+	"country_it": "Itálie",
+	"country_es": "Španělsko",
+	"country_nl": "Nizozemsko",
+	"country_be": "Belgie",
+	"country_ch": "Švýcarsko",
+	"country_hu": "Maďarsko",
+	"country_ro": "Rumunsko",
+	"country_ua": "Ukrajina",
+
+	"theme_light": "Světlý",
+	"theme_dark": "Tmavý",
+	"theme_system": "Systémový",
+
+	"error_429_title": "Zpomalte",
+	"error_429_description": "Odesíláte příliš mnoho požadavků. Počkejte chvíli a zkuste to znovu.",
+	"error_rateLimited": "Příliš mnoho požadavků",
+	"error_rateLimitedDescription": "Počkejte chvíli a zkuste to znovu.",
+	"error_rateLimitedDescriptionWithRetry": "Počkejte {seconds} sekund a zkuste to znovu.",
+
+	"error_403_title": "Tudy neprojdeš!",
+	"error_403_description": "Nemáte oprávnění k prohlížení této stránky. Ale snaha se cení.",
+	"error_404_title": "Ztraceno v časoprostoru?",
+	"error_404_description": "Stránku, kterou hledáte, se nepodařilo najít. Možná ji unesli mimozemšťané.",
+	"error_500_title": "Chyba serveru",
+	"error_500_description": "Něco se pokazilo na naší straně. Zkuste to prosím později.",
+	"error_503_title": "Pauza na kafe",
+	"error_503_description": "Server zrovna řeší drby v kuchyňce. Snažíme se jej zavolat zpátky do práce.",
+	"error_503_retrying": "Zkouším se připojit...",
+	"error_default_title": "Počítač říká ne",
+	"error_default_description": "Něco se pokazilo. Nejsme si jistí co, ale pravděpodobně to není dobré.",
+	"error_goHome": "Zpět na úvod",
+
+	"serverError_backendUnavailable": "Backend není dostupný"
+}

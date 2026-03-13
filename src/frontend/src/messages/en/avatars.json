@@ -1,0 +1,22 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+
+	"profile_avatar_change": "Change Avatar",
+	"profile_avatar_dialogTitle": "Change Avatar",
+	"profile_avatar_dialogDescription": "Upload an image to use as your avatar. Accepted formats: JPEG, PNG, WebP, GIF. Max 5 MB.",
+	"profile_avatar_dropzone": "Click to browse or drag and drop an image",
+	"profile_avatar_dropzoneActive": "Drop image here",
+	"profile_avatar_fileTooLarge": "File is too large. Maximum size is 5 MB.",
+	"profile_avatar_unsupportedFormat": "Unsupported format. Use JPEG, PNG, WebP, or GIF.",
+	"profile_avatar_uploading": "Uploading...",
+	"profile_avatar_remove": "Remove Avatar",
+	"profile_avatar_updateSuccess": "Avatar updated successfully",
+	"profile_avatar_updateError": "Failed to update avatar",
+	"profile_avatar_removeSuccess": "Avatar removed successfully",
+	"profile_avatar_removeError": "Failed to remove avatar",
+	"profile_avatar_cropTitle": "Adjust Your Photo",
+	"profile_avatar_cropDescription": "Drag to reposition. Scroll or pinch to zoom.",
+	"profile_avatar_zoom": "Zoom",
+	"profile_avatar_back": "Back",
+	"profile_avatar_saveCrop": "Save Avatar"
+}

@@ -14,7 +14,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Add backend endpoint** | Controller + DTOs + validator + mapper → `pnpm run api:generate` → frontend types → frontend calls |
 | **Change WebApi response DTO** | Mapper, `Api.Tests/Contracts/ResponseContracts.cs`, `pnpm run api:generate`, frontend components |
 | **Add permission** | `AppPermissions.cs` → `[RequirePermission]` → seed in `ApplicationBuilderExtensions` → frontend `permissions.ts` → sidebar + page guards |
-| **Add i18n key** | Both `en.json` AND `cs.json` - always both files |
+| **Add i18n key** | Add to the correct feature file in both `en/` AND `cs/` locale directories |
 
 ---
 
@@ -50,7 +50,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`IImageProcessingService`** (change avatar processing) | `ImageProcessingService`, `UserService.UploadAvatarAsync` |
 | **`ApplicationUser.HasAvatar`** (change avatar flag) | `UserOutput`, `AdminUserOutput`, `UserResponse`, `AdminUserResponse`, `UserMapper`, `AdminMapper`, frontend `v1.d.ts` types, `ProfileHeader.svelte`, `UserNav.svelte` |
 | **Avatar endpoints** (`PUT/DELETE/GET`) | `UploadAvatarRequest`, `UploadAvatarRequestValidator`, `UserMapper`, frontend `AvatarDialog.svelte` |
-| **`AuditActions.cs`** (add action constant) | Service that logs it, frontend `$lib/utils/audit.ts` (label, color, icon), i18n keys in `en.json`/`cs.json` |
+| **`AuditActions.cs`** (add action constant) | Service that logs it, frontend `$lib/utils/audit.ts` (label, color, icon), i18n keys in `messages/{locale}/audit.json` |
 | **`AuditEvent` entity** (change fields) | `AuditEventConfiguration`, `AuditService`, Application DTOs (`AuditEventOutput`), WebApi DTOs, `AuditMapper`, frontend types |
 | **`HybridCache`** (caching abstraction - change caching usage) | `NoOpHybridCache`, `UserCacheInvalidationInterceptor`, all services using `HybridCache` (`AdminService`, `AuthenticationService`, `UserService`, `RoleManagementService`), `CustomWebApplicationFactory` mock |
 | **`CacheKeys.cs`** (Application - rename/remove key) | All services referencing the changed key, `UserCacheInvalidationInterceptor` |
@@ -100,8 +100,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`svelte.config.js`** (CSP) | Test that scripts/styles/images still load; Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com` |
 | **`app.html`** | FOUC prevention, nonce attribute, theme init |
 | **`UserManagementCard.svelte`** | Thin shell - delegates to `RoleManagement.svelte` and `AccountActions.svelte` |
-| **i18n keys** (rename/remove in `en.json`) | Same key in `cs.json`, all `m.{key}()` usages |
-| **i18n keys** (add) | Add to both `en.json` and `cs.json` |
+| **i18n keys** (rename/remove) | Same key in the matching `cs/` file, all `m.{key}()` usages |
+| **i18n keys** (add) | Add to the correct feature file in both `en/` and `cs/` directories |
 | **Layout components** (Sidebar, Header, ContentHeader) | All pages that use the app shell |
 | **`AppSidebar.svelte`** | Navigation links for all pages; admin items are per-permission gated; search trigger opens command palette |
 | **`ContentHeader.svelte`** | Breadcrumb route-to-label mapping; segment labels must match sidebar nav items; detail pages set `dynamicLabel` via `$lib/state/breadcrumb.svelte` |
@@ -178,7 +178,7 @@ src/frontend/src/
   lib/state/        {feature}.svelte.ts
   lib/types/        index.ts (type aliases)
   lib/utils/        ui.ts (cn()), permissions.ts, audit.ts, platform.ts, roles.ts, jobs.ts
-  messages/         en.json, cs.json
+  messages/         {locale}/*.json (core, dashboard, auth, admin, jobs, audit, 2fa, oauth, avatars)
   routes/(app)/     {feature}/+page.svelte, +page.server.ts
   routes/(public)/  login/+page.svelte
   styles/           themes.css, tailwind.css, animations.css

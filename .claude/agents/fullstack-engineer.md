@@ -48,7 +48,7 @@ Always backend first, then types bridge, then frontend. Commit each phase separa
 **Frontend last:**
 11. Components in `$lib/components/{feature}/`
 12. Page route + server load + permission guard
-13. i18n keys in both `en.json` and `cs.json`
+13. i18n keys in the correct feature file in both `en/` and `cs/` directories
 14. Navigation (sidebar + command palette)
 15. Frontend tests
 16. Verify: `cd src/frontend && pnpm run test && pnpm run format && pnpm run lint && pnpm run check`

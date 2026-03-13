@@ -29,7 +29,7 @@ src/
 │   │   └── admin/                 # Permission-guarded per page
 │   ├── (public)/login/            # Redirect away if logged in
 │   └── api/[...path]/             # Catch-all proxy to backend
-├── messages/en.json, cs.json      # i18n
+├── messages/{locale}/*.json        # i18n (per-feature: core, auth, admin, etc.)
 └── styles/                        # themes.css, tailwind.css, animations.css, base.css, utilities.css
 ```
 
@@ -200,7 +200,7 @@ Primary entity failure throws (hard error), but secondary data failures return e
 
 Keys: `{domain}_{feature}_{element}` (e.g., `auth_login_title`, `profile_personalInfo_firstName`).
 
-Add to both `en.json` and `cs.json`. Use: `import * as m from '$lib/paraglide/messages'; m.key_name()`.
+Add to the correct feature file in both `en/` and `cs/` directories (e.g., `messages/en/auth.json`). Files: `core`, `dashboard`, `auth`, `admin`, `jobs`, `audit`, `2fa`, `oauth`, `avatars`. Use: `import * as m from '$lib/paraglide/messages'; m.key_name()`.
 
 `svelte-check` reports ~32 paraglide module errors - these are expected (generated at build time). Ignore them.
 
