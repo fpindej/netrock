@@ -76,7 +76,7 @@ export const load: PageServerLoad = async ({ parent, fetch, url }) => {
 
 - `interface Props` + `$props()` - never `export let` or `$props<{...}>()`
 - Feature folders in `$lib/components/{feature}/` with barrel `index.ts`
-- i18n keys in the correct feature file in both `en/` and `cs/` directories
+- i18n keys in the correct feature file in all locale directories
 - Logical CSS only: `ms-*`/`me-*`/`ps-*`/`pe-*`
 - Button layout: `w-full sm:w-auto` + `flex flex-col gap-2 sm:flex-row sm:justify-end`
 - Touch targets minimum 44px on interactive elements

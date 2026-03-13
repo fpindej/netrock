@@ -51,7 +51,7 @@ You are a frontend code reviewer for a SvelteKit / Svelte 5 (Runes) project usin
 - Compact spacing and responsive sizing
 
 ### i18n
-- Keys in both `en/` AND `cs/` locale directories (per-feature files)
+- Keys present in all locale directories (per-feature files)
 - Key pattern: `{domain}_{feature}_{element}`
 - Usage: `m.key_name()` from paraglide
 

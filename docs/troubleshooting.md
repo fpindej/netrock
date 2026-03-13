@@ -307,14 +307,15 @@ Run `pnpm run lint` to catch violations. See the frontend conventions skill in `
 
 ### i18n key not found
 
-**Cause:** Translation keys must exist in all locale files. The project ships with English (`en`) and Czech (`cs`).
+**Cause:** Translation keys must exist in all locale files.
 
-**Fix:** Add the key to the correct feature file in both locale directories:
+**Fix:** Add the key to the correct feature file in every locale directory under `src/frontend/src/messages/`:
 
-- `src/frontend/src/messages/en/{feature}.json`
-- `src/frontend/src/messages/cs/{feature}.json`
+```
+src/frontend/src/messages/{locale}/{feature}.json
+```
 
-Files are split per feature: `core`, `dashboard`, `auth`, `admin`, `jobs`, `audit`, `2fa`, `oauth`, `avatars`. English is the base locale. Path patterns are defined in `project.inlang/settings.json`.
+Files are split per feature: `core`, `dashboard`, `auth`, `admin`, `jobs`, `audit`, `2fa`, `oauth`, `avatars`. Configured locales and the base locale are defined in `project.inlang/settings.json`.
 
 ---
 

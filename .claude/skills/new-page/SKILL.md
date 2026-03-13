@@ -37,7 +37,7 @@ Use these as starting points - fill in the specifics from context:
 
 **Integration:**
 
-9. Add i18n keys to the correct feature file in both `en/` and `cs/` directories
+9. Add i18n keys to the correct feature file in all locale directories
 10. Add navigation entry in `AppSidebar.svelte` (using `adminRoutes.feature.path` and `.permission` for admin pages)
 11. Add matching entry in `CommandPalette.svelte` (using `adminRoutes.feature.path` and `.permission` for admin pages)
 

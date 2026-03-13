@@ -29,7 +29,7 @@ Argument: PR number or URL. If omitted, reviews the current branch's open PR.
 - **Correctness**: Does the code do what the PR description says? Edge cases handled?
 - **Type safety**: TypeScript types align, no `any`, no unsafe casts
 - **Security**: No information leakage, no auth bypasses, inputs validated
-- **i18n**: If i18n keys added - present in both `en/` AND `cs/` locale directories, Czech translations correct
+- **i18n**: If i18n keys added - present in all locale directories, translations correct
 - **Conventions**: Matches project patterns (Props, logical CSS, Result pattern, etc.)
 - **Completeness**: Are new flags/props consumed where needed? No dead code introduced?
 - **Tests**: If behavior changed, are tests added or updated?

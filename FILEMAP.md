@@ -14,7 +14,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Add backend endpoint** | Controller + DTOs + validator + mapper → `pnpm run api:generate` → frontend types → frontend calls |
 | **Change WebApi response DTO** | Mapper, `Api.Tests/Contracts/ResponseContracts.cs`, `pnpm run api:generate`, frontend components |
 | **Add permission** | `AppPermissions.cs` → `[RequirePermission]` → seed in `ApplicationBuilderExtensions` → frontend `permissions.ts` → sidebar + page guards |
-| **Add i18n key** | Add to the correct feature file in both `en/` AND `cs/` locale directories |
+| **Add i18n key** | Add to the correct feature file in all locale directories under `messages/` |
 
 ---
 
@@ -100,8 +100,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`svelte.config.js`** (CSP) | Test that scripts/styles/images still load; Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com` |
 | **`app.html`** | FOUC prevention, nonce attribute, theme init |
 | **`UserManagementCard.svelte`** | Thin shell - delegates to `RoleManagement.svelte` and `AccountActions.svelte` |
-| **i18n keys** (rename/remove) | Same key in the matching `cs/` file, all `m.{key}()` usages |
-| **i18n keys** (add) | Add to the correct feature file in both `en/` and `cs/` directories |
+| **i18n keys** (rename/remove) | Same key in all other locale directories, all `m.{key}()` usages |
+| **i18n keys** (add) | Add to the correct feature file in all locale directories |
 | **Layout components** (Sidebar, Header, ContentHeader) | All pages that use the app shell |
 | **`AppSidebar.svelte`** | Navigation links for all pages; admin items are per-permission gated; search trigger opens command palette |
 | **`ContentHeader.svelte`** | Breadcrumb route-to-label mapping; segment labels must match sidebar nav items; detail pages set `dynamicLabel` via `$lib/state/breadcrumb.svelte` |
