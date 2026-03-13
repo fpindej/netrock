@@ -4,6 +4,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import * as m from '$lib/paraglide/messages';
 	import type { User } from '$lib/types';
 	import { getShortcutSymbol, ShortcutAction } from '$lib/state/shortcuts.svelte';
@@ -49,10 +50,10 @@
 		</DropdownMenu.Label>
 		<DropdownMenu.Separator />
 		<DropdownMenu.Group>
-			<DropdownMenu.Item onclick={() => goto(resolve('/profile'))}>
+			<DropdownMenu.Item onclick={() => goto(resolve(routes.profile))}>
 				{m.nav_profile()}
 			</DropdownMenu.Item>
-			<DropdownMenu.Item onclick={() => goto(resolve('/settings'))}>
+			<DropdownMenu.Item onclick={() => goto(resolve(routes.settings))}>
 				{m.nav_settings()}
 				<DropdownMenu.Shortcut>{getShortcutSymbol(ShortcutAction.Settings)}</DropdownMenu.Shortcut>
 			</DropdownMenu.Item>

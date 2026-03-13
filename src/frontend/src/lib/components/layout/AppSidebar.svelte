@@ -2,6 +2,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { hasPermission, Permissions } from '$lib/utils';
 	import {
 		LayoutDashboard,
@@ -35,7 +36,7 @@
 	const items: NavItem[] = [
 		{
 			title: m.nav_dashboard,
-			href: resolve('/'),
+			href: resolve(routes.dashboard),
 			icon: LayoutDashboard
 		}
 	];
@@ -43,25 +44,25 @@
 	const adminItems: AdminNavItem[] = [
 		{
 			title: m.nav_adminUsers,
-			href: resolve('/admin/users'),
+			href: resolve(routes.admin.users),
 			icon: Users,
 			permission: Permissions.Users.View
 		},
 		{
 			title: m.nav_adminRoles,
-			href: resolve('/admin/roles'),
+			href: resolve(routes.admin.roles),
 			icon: Shield,
 			permission: Permissions.Roles.View
 		},
 		{
 			title: m.nav_adminJobs,
-			href: resolve('/admin/jobs'),
+			href: resolve(routes.admin.jobs),
 			icon: Clock,
 			permission: Permissions.Jobs.View
 		},
 		{
 			title: m.nav_adminOAuthProviders,
-			href: resolve('/admin/oauth-providers'),
+			href: resolve(routes.admin.oauthProviders),
 			icon: KeyRound,
 			permission: Permissions.OAuthProviders.View
 		}
@@ -73,7 +74,7 @@
 
 	function isActive(href: string): boolean {
 		const pathname = page.url.pathname;
-		if (href === resolve('/')) {
+		if (href === resolve(routes.dashboard)) {
 			return pathname === href;
 		}
 		return pathname.startsWith(href);
@@ -93,7 +94,7 @@
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton size="lg">
 					{#snippet child({ props })}
-						<a href={resolve('/')} onclick={handleNavigate} {...props}>
+						<a href={resolve(routes.dashboard)} onclick={handleNavigate} {...props}>
 							<div
 								class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
 							>

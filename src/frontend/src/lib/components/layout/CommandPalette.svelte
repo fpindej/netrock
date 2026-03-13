@@ -2,6 +2,7 @@
 	import * as Command from '$lib/components/ui/command';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { hasPermission, Permissions } from '$lib/utils';
 	import { shortcutsState, ShortcutAction, getShortcutSymbol } from '$lib/state/shortcuts.svelte';
 	import { toggleTheme } from '$lib/state/theme.svelte';
@@ -47,7 +48,7 @@
 			icon: LayoutDashboard,
 			action: () => {
 				close();
-				goto(resolve('/'));
+				goto(resolve(routes.dashboard));
 			}
 		},
 		{
@@ -55,7 +56,7 @@
 			icon: User,
 			action: () => {
 				close();
-				goto(resolve('/profile'));
+				goto(resolve(routes.profile));
 			}
 		},
 		{
@@ -63,7 +64,7 @@
 			icon: Settings,
 			action: () => {
 				close();
-				goto(resolve('/settings'));
+				goto(resolve(routes.settings));
 			},
 			shortcut: getShortcutSymbol(ShortcutAction.Settings)
 		}
@@ -75,7 +76,7 @@
 			icon: Users,
 			action: () => {
 				close();
-				goto(resolve('/admin/users'));
+				goto(resolve(routes.admin.users));
 			},
 			permission: Permissions.Users.View
 		},
@@ -84,7 +85,7 @@
 			icon: Shield,
 			action: () => {
 				close();
-				goto(resolve('/admin/roles'));
+				goto(resolve(routes.admin.roles));
 			},
 			permission: Permissions.Roles.View
 		},
@@ -93,7 +94,7 @@
 			icon: Clock,
 			action: () => {
 				close();
-				goto(resolve('/admin/jobs'));
+				goto(resolve(routes.admin.jobs));
 			},
 			permission: Permissions.Jobs.View
 		},
@@ -102,7 +103,7 @@
 			icon: KeyRound,
 			action: () => {
 				close();
-				goto(resolve('/admin/oauth-providers'));
+				goto(resolve(routes.admin.oauthProviders));
 			},
 			permission: Permissions.OAuthProviders.View
 		}

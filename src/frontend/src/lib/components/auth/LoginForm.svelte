@@ -4,6 +4,7 @@
 	import { createShake, createCooldown, healthState } from '$lib/state';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Checkbox } from '$lib/components/ui/checkbox';
@@ -106,7 +107,7 @@
 			await new Promise((r) => setTimeout(r, 400));
 		}
 		await invalidateAll();
-		await goto(resolve('/'));
+		await goto(resolve(routes.dashboard));
 	}
 
 	function handleTwoFactorBack() {

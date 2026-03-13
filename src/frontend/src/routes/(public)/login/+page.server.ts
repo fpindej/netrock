@@ -1,4 +1,5 @@
 import { redirect } from '@sveltejs/kit';
+import { routes } from '$lib/config';
 import type { PageServerLoad } from './$types';
 
 /** Reason values that the login page recognizes and shows toasts for. */
@@ -9,7 +10,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	const { user } = await parent();
 
 	if (user) {
-		throw redirect(303, '/');
+		throw redirect(303, routes.dashboard);
 	}
 
 	const raw = url.searchParams.get('reason');

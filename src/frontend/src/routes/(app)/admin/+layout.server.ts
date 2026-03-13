@@ -1,4 +1,5 @@
 import { redirect } from '@sveltejs/kit';
+import { routes } from '$lib/config';
 import { hasAnyPermission, Permissions } from '$lib/utils';
 import type { LayoutServerLoad } from './$types';
 
@@ -13,7 +14,7 @@ export const load: LayoutServerLoad = async ({ parent }) => {
 		Permissions.OAuthProviders.View
 	]);
 	if (!hasAdminAccess) {
-		throw redirect(303, '/');
+		throw redirect(303, routes.dashboard);
 	}
 
 	return { user };

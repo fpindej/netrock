@@ -2,7 +2,7 @@
  * Tests for the admin layout server guard - the permission boundary for admin routes.
  *
  * The admin layout requires at least one of: users.view, roles.view, jobs.view, or oauth_providers.view.
- * Users without any of these permissions are redirected to /.
+ * Users without any of these permissions are redirected to /dashboard.
  *
  * Follows the same pattern as the parent (app) layout test.
  */
@@ -134,12 +134,12 @@ describe('admin layout server load', () => {
 
 	// ── Denied access ───────────────────────────────────────────────
 
-	it('user without admin permissions - redirects to /', async () => {
-		await expectRedirect(() => load(mockLoadEvent(MOCK_REGULAR_USER)), 303, '/');
+	it('user without admin permissions - redirects to /dashboard', async () => {
+		await expectRedirect(() => load(mockLoadEvent(MOCK_REGULAR_USER)), 303, '/dashboard');
 	});
 
-	it('user with unrelated permissions - redirects to /', async () => {
+	it('user with unrelated permissions - redirects to /dashboard', async () => {
 		const user = { ...MOCK_REGULAR_USER, permissions: ['some.other.permission'] };
-		await expectRedirect(() => load(mockLoadEvent(user)), 303, '/');
+		await expectRedirect(() => load(mockLoadEvent(user)), 303, '/dashboard');
 	});
 });

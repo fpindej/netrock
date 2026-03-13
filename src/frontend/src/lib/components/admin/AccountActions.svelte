@@ -7,6 +7,7 @@
 	import { toast } from '$lib/components/ui/sonner';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { Loader2, Lock, Unlock, Trash2, KeyRound } from '@lucide/svelte';
 	import type { AdminUser } from '$lib/types';
 	import type { Cooldown } from '$lib/state';
@@ -73,7 +74,7 @@
 
 		if (response.ok) {
 			toast.success(m.admin_userDetail_deleteSuccess());
-			await goto(resolve('/admin/users'));
+			await goto(resolve(routes.admin.users));
 		} else {
 			handleMutationError(response, error, {
 				cooldown,

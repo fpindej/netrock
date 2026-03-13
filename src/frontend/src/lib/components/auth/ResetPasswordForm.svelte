@@ -4,6 +4,7 @@
 	import { createFieldShakes, createCooldown } from '$lib/state';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { FieldError, IconCircle } from '$lib/components/common';
@@ -116,7 +117,7 @@
 						? m.auth_resetPassword_signingOut()
 						: m.auth_resetPassword_signOutAndContinue()}
 				</Button>
-				<a href={resolve('/')} class="block">
+				<a href={resolve(routes.dashboard)} class="block">
 					<Button variant="outline" class="w-full">
 						{m.auth_resetPassword_goToDashboard()}
 					</Button>

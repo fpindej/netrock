@@ -8,6 +8,7 @@
 	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
 	import { toast } from '$lib/components/ui/sonner';
 	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
 	import { createFieldShakes, createCooldown } from '$lib/state';
 
 	// Form state
@@ -45,7 +46,7 @@
 				// Hard navigation clears all client-side state (cached JWT, SvelteKit
 				// load data). The backend already revoked all refresh tokens - the
 				// first SSR load will fail to authenticate and show the login page.
-				window.location.href = `${resolve('/login')}?reason=password_changed`;
+				window.location.href = `${resolve(routes.login)}?reason=password_changed`;
 			} else {
 				handleMutationError(response, apiError, {
 					cooldown,
