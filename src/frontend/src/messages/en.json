@@ -56,15 +56,18 @@
 	"dashboard_welcome": "Welcome back, {name}",
 	"dashboard_welcomeGeneric": "Welcome back",
 	"dashboard_subtitle": "Your personal dashboard with quick access to key areas.",
+
 	"dashboard_guide_title": "Getting Started",
 	"dashboard_guide_description": "Here's what your application includes to help you get started.",
 	"dashboard_guide_profile": "Personalize your experience with a custom profile and avatar.",
 	"dashboard_guide_security": "Keep your account secure with password management and two-factor authentication.",
 	"dashboard_guide_admin": "Manage users, roles, and system settings from the admin panel.",
+
 	"dashboard_quickActions": "Quick Actions",
 	"dashboard_quickAction_profile": "View and update your personal information and avatar.",
 	"dashboard_quickAction_settings": "Manage your password, security, and preferences.",
 	"dashboard_quickAction_admin": "Manage users, roles, and system configuration.",
+
 	"dashboard_status_title": "Account Status",
 	"dashboard_status_profile": "Profile",
 	"dashboard_status_profileComplete": "Complete",
@@ -78,7 +81,7 @@
 	"dashboard_status_roles": "Roles",
 
 	"dashboard_dev_title": "Developer Quick Start",
-	"dashboard_dev_description": "This card is for you, the developer. Remove it when you're ready to ship.",
+	"dashboard_dev_description": "This card is for you, the developer. Remove it when you start building. Or never. Your call.",
 	"dashboard_dev_customize": "Customize this dashboard",
 	"dashboard_dev_customizeDesc": "Edit the dashboard page and remove the explainer components. Keep the widgets or replace them with your own.",
 	"dashboard_dev_customizeRemove": "Remove components:",
