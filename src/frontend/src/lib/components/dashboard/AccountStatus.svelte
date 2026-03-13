@@ -75,9 +75,9 @@
 					{:else}
 						<CircleDashed aria-hidden="true" class="size-5 shrink-0 text-muted-foreground" />
 					{/if}
-					<div>
+					<div class="min-w-0">
 						<p class="text-sm font-medium">{m.dashboard_status_roles()}</p>
-						<p class="text-xs text-muted-foreground">
+						<p class="truncate text-xs text-muted-foreground">
 							{hasRoles ? user?.roles?.join(', ') : m.profile_account_noRoles()}
 						</p>
 					</div>

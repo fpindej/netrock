@@ -25,9 +25,9 @@
 	<h4 class="mb-4 text-sm font-medium text-muted-foreground">
 		{m.dashboard_quickActions()}
 	</h4>
-	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+	<div class="grid gap-4 sm:grid-cols-2" class:lg:grid-cols-3={hasAdminAccess}>
 		<a href={resolve(routes.profile)} class="group block min-h-11 text-foreground">
-			<Card.Root class="h-full transition-colors hover:border-primary/50">
+			<Card.Root class="card-hover h-full hover:border-primary/50">
 				<Card.Header>
 					<div class="flex items-center justify-between">
 						<div
@@ -46,7 +46,7 @@
 		</a>
 
 		<a href={resolve(routes.settings)} class="group block min-h-11 text-foreground">
-			<Card.Root class="h-full transition-colors hover:border-primary/50">
+			<Card.Root class="card-hover h-full hover:border-primary/50">
 				<Card.Header>
 					<div class="flex items-center justify-between">
 						<div
@@ -66,7 +66,7 @@
 
 		{#if hasAdminAccess}
 			<a href={resolve(adminRoutes.users.path)} class="group block min-h-11 text-foreground">
-				<Card.Root class="h-full transition-colors hover:border-primary/50">
+				<Card.Root class="card-hover h-full hover:border-primary/50">
 					<Card.Header>
 						<div class="flex items-center justify-between">
 							<div
