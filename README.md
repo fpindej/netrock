@@ -6,6 +6,7 @@
 
 OAuth with 8 providers. TOTP two-factor auth. Admin-configurable everything. 1000+ tests. API-first - use the included frontend or bring your own.
 
+[![Generator](https://img.shields.io/badge/Generator-netrock.dev-FF6B35?logo=rocket&logoColor=white)](https://netrock.dev)
 [![CI](https://github.com/fpindej/netrock/actions/workflows/ci.yml/badge.svg)](https://github.com/fpindej/netrock/actions/workflows/ci.yml)
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-Svelte_5-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev/)
@@ -15,7 +16,7 @@ OAuth with 8 providers. TOTP two-factor auth. Admin-configurable everything. 100
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/5rHquRptSh)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fpindej/netrock)
 
-**[Live Demo](https://demo.netrock.dev)** · **[Documentation](#documentation)** · **[Quick Start](#quick-start)** · **[Discord](https://discord.gg/5rHquRptSh)**
+**[Generator](https://netrock.dev)** · **[Live Demo](https://demo.netrock.dev)** · **[Documentation](#documentation)** · **[Quick Start](#quick-start)** · **[Discord](https://discord.gg/5rHquRptSh)**
 
 </div>
 
@@ -47,7 +48,9 @@ Every project starts the same way: authentication, role management, rate limitin
 
 ## Quick Start
 
-> **Want to see it first?** Check out the [live demo](https://demo.netrock.dev).
+> **Use the [NETrock Generator](https://netrock.dev) to pick your features and get a ready-to-run project.** No cloning, no init script - just choose what you need, download, and start building.
+>
+> The manual setup below gives you the full template with all features included.
 
 ### Prerequisites
 
