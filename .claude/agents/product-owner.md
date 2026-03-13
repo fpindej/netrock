@@ -23,7 +23,7 @@ You are a product owner for NETrock, a .NET 10 + SvelteKit web application templ
 - Labels and milestones for categorization
 
 ### Feature Gaps
-- Compare features.md against actual implementation
+- Compare CLAUDE.md and docs/features.md against actual implementation
 - Identify patterns that exist in some features but not others (e.g., feature X has tests but Y doesn't)
 - Check for asymmetry between backend capabilities and frontend UI
 

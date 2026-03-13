@@ -24,7 +24,7 @@ For a typical page:
 2. Barrel `index.ts` exporting all components
 3. Route at `routes/(app)/{feature}/+page.svelte` with `<svelte:head>`
 4. Server load in `+page.server.ts` using `createApiClient(fetch, url.origin)`
-5. Permission guard if needed: `hasPermission(user, Permissions.Feature.View)`
+5. Permission guard if needed: `hasPermission(user, Permissions.{Feature}.View)` (e.g., `Permissions.Users.Manage`)
 6. i18n keys in the correct feature file in both `en/` AND `cs/` directories
 7. Navigation entry in `AppSidebar.svelte` + `CommandPalette.svelte`
 

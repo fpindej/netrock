@@ -56,7 +56,7 @@ The backend API is public-facing. Treat every contract change with the same care
 | **Frontend API types** | Always regenerated - broken by any backend DTO change |
 | **i18n keys** | Renaming a key (all usages break) |
 
-**Pre-modification checklist:** (1) Check FILEMAP.md for impact, (2) Search all usages, (3) Regenerate frontend types if API changed, (4) Update i18n in both JSON files, (5) Document in commit body. Prefer additive changes. If breaking, update all consumers in the same PR.
+**Pre-modification checklist:** (1) Check FILEMAP.md for impact, (2) Search all usages, (3) Regenerate frontend types if API changed, (4) Update i18n in the correct feature files for both locales, (5) Document in commit body. Prefer additive changes. If breaking, update all consumers in the same PR.
 
 ## Verification
 

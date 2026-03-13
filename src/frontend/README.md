@@ -11,13 +11,13 @@ A production-ready SvelteKit template with Svelte 5, TypeScript, Tailwind CSS 4,
 | Styling   | Tailwind CSS 4               |
 | UI        | shadcn-svelte (bits-ui)      |
 | i18n      | Paraglide JS                 |
-| API       | openapi-fetch (type-safe)    |
+| API       | openapi-typescript + openapi-fetch (type-safe) |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - Backend API running (for API type generation)
 
 ### Installation
@@ -58,6 +58,7 @@ src/
 │   ├── components/    # UI components (grouped by feature)
 │   │   ├── ui/        # shadcn base components
 │   │   ├── auth/      # Login, Register components
+│   │   ├── dashboard/ # Dashboard widgets
 │   │   ├── layout/    # Header, Sidebar, Navigation
 │   │   ├── profile/   # Profile page components
 │   │   └── common/    # Shared components
@@ -65,7 +66,7 @@ src/
 │   ├── state/         # Reactive state (.svelte.ts files)
 │   ├── types/         # Type definitions
 │   └── utils/         # Pure utility functions
-├── messages/          # i18n translation files (en.json, cs.json)
+├── messages/          # i18n translation files ({locale}/*.json per feature)
 └── routes/
     ├── (app)/         # Authenticated routes
     ├── (public)/      # Public routes (login)
@@ -83,7 +84,7 @@ For example, to remove the profile feature entirely:
 
 1. Delete `src/lib/components/profile/`
 2. Delete `src/routes/(app)/profile/`
-3. Remove profile-related keys from `src/messages/*.json`
+3. Remove profile-related keys from `src/messages/en/auth.json` and `src/messages/cs/auth.json`
 4. Remove any imports referencing profile components
 
 ## Working with the Codebase
@@ -136,7 +137,7 @@ const { data, error } = await browserClient.GET('/api/users/me');
 Check [shadcn-svelte](https://shadcn-svelte.com/) before creating custom components:
 
 ```bash
-pnpm dlx shadcn-svelte@next add <component-name>
+pnpm dlx shadcn-svelte@latest add <component-name>
 ```
 
 ### Import Conventions
