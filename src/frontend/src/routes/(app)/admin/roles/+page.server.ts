@@ -1,13 +1,13 @@
 import { createApiClient, getErrorMessage } from '$lib/api';
 import { error, redirect } from '@sveltejs/kit';
-import { routes } from '$lib/config';
-import { hasPermission, Permissions } from '$lib/utils';
+import { adminRoutes, routes } from '$lib/config';
+import { hasPermission } from '$lib/utils';
 import * as m from '$lib/paraglide/messages';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ fetch, url, parent }) => {
 	const { user } = await parent();
-	if (!hasPermission(user, Permissions.Roles.View)) {
+	if (!hasPermission(user, adminRoutes.roles.permission)) {
 		throw redirect(303, routes.dashboard);
 	}
 
