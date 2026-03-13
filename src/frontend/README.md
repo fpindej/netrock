@@ -4,13 +4,13 @@ A production-ready SvelteKit template with Svelte 5, TypeScript, Tailwind CSS 4,
 
 ## Tech Stack
 
-| Layer     | Technology                   |
-| --------- | ---------------------------- |
-| Framework | SvelteKit + Svelte 5 (Runes) |
-| Language  | TypeScript (Strict)          |
-| Styling   | Tailwind CSS 4               |
-| UI        | shadcn-svelte (bits-ui)      |
-| i18n      | Paraglide JS                 |
+| Layer     | Technology                                     |
+| --------- | ---------------------------------------------- |
+| Framework | SvelteKit + Svelte 5 (Runes)                   |
+| Language  | TypeScript (Strict)                            |
+| Styling   | Tailwind CSS 4                                 |
+| UI        | shadcn-svelte (bits-ui)                        |
+| i18n      | Paraglide JS                                   |
 | API       | openapi-typescript + openapi-fetch (type-safe) |
 
 ## Getting Started
@@ -180,15 +180,15 @@ For detailed coding conventions, patterns, and best practices, see [`CLAUDE.md`]
 
 ## Available Scripts
 
-| Script         | Description                              |
-| -------------- | ---------------------------------------- |
-| `dev`          | Start development server                 |
-| `build`        | Create production build                  |
-| `preview`      | Preview production build                 |
-| `test`         | Run tests with Vitest                    |
-| `test:watch`   | Run tests in watch mode                  |
-| `check`        | Run Svelte/TypeScript checks             |
-| `check:watch`  | Run Svelte/TypeScript checks (watch)     |
-| `lint`         | Run ESLint and Prettier checks           |
-| `format`       | Format code with Prettier                |
-| `api:generate` | Generate API types from OpenAPI spec     |
+| Script         | Description                          |
+| -------------- | ------------------------------------ |
+| `dev`          | Start development server             |
+| `build`        | Create production build              |
+| `preview`      | Preview production build             |
+| `test`         | Run tests with Vitest                |
+| `test:watch`   | Run tests in watch mode              |
+| `check`        | Run Svelte/TypeScript checks         |
+| `check:watch`  | Run Svelte/TypeScript checks (watch) |
+| `lint`         | Run ESLint and Prettier checks       |
+| `format`       | Format code with Prettier            |
+| `api:generate` | Generate API types from OpenAPI spec |
