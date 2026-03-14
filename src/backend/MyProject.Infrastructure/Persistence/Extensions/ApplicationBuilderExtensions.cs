@@ -41,7 +41,34 @@ public static class ApplicationBuilderExtensions
     private static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider)
     {
         var dbContext = serviceProvider.GetRequiredService<MyProjectDbContext>();
+        await WaitForDatabaseAsync(dbContext);
         await dbContext.Database.MigrateAsync();
+    }
+
+    /// <summary>
+    /// Blocks until PostgreSQL accepts connections. On first Aspire launch the container
+    /// may report healthy before the server is fully ready. <see cref="DatabaseFacade.CanConnectAsync"/>
+    /// returns <c>false</c> without logging errors, unlike <see cref="RelationalDatabaseFacadeExtensions.MigrateAsync"/>
+    /// which logs at Error level on transient failures.
+    /// </summary>
+    private static async Task WaitForDatabaseAsync(MyProjectDbContext dbContext)
+    {
+        const int maxAttempts = 30;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            if (await dbContext.Database.CanConnectAsync())
+            {
+                return;
+            }
+
+            Log.Information("Waiting for database to accept connections (attempt {Attempt}/{MaxAttempts})",
+                attempt, maxAttempts);
+            await Task.Delay(TimeSpan.FromSeconds(2));
+        }
+
+        throw new InvalidOperationException(
+            $"Database did not become available after {maxAttempts} attempts ({maxAttempts * 2}s).");
     }
 
     private static async Task SeedRolesAsync(IServiceProvider serviceProvider)
