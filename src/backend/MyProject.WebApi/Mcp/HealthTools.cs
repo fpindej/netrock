@@ -28,7 +28,7 @@ internal static class HealthTools
                 status = e.Value.Status.ToString(),
                 description = e.Value.Description,
                 duration = e.Value.Duration.ToString(),
-                exception = e.Value.Exception?.Message
+                hasError = e.Value.Exception is not null
             }),
             totalDuration = report.TotalDuration.ToString()
         };

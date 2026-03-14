@@ -222,8 +222,8 @@ try
 
     if (app.Environment.IsDevelopment())
     {
-        Log.Debug("Mapping MCP endpoint (development only)");
-        app.MapMcp();
+        Log.Debug("Mapping MCP endpoint (development only, localhost)");
+        app.MapMcp().RequireHost("localhost", "127.0.0.1", "[::1]");
     }
 
     await app.RunAsync();
