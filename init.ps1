@@ -23,6 +23,9 @@
 .PARAMETER NoMigration
     Skip creating the initial database migration.
 
+.PARAMETER NoBuild
+    Skip building and running tests.
+
 .PARAMETER NoCommit
     Skip git commits.
 
@@ -68,6 +71,7 @@ param (
     [string]$Password = "Superuser123!",
 
     [switch]$NoMigration,
+    [switch]$NoBuild,
     [switch]$NoCommit,
     [switch]$NoAspire
 )
@@ -169,7 +173,16 @@ function Test-Prerequisites {
 
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) { $missing += "git" }
     if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { $missing += "dotnet" }
-    if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { $missing += "docker" }
+
+    if (Get-Command docker -ErrorAction SilentlyContinue) {
+        $null = docker info 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            $missing += "docker (installed but not running - start Docker Desktop)"
+        }
+    } else {
+        $missing += "docker"
+    }
+
     if (-not (Get-Command node -ErrorAction SilentlyContinue)) { $missing += "node" }
     if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) { $missing += "pnpm (run: corepack enable)" }
 
@@ -276,7 +289,7 @@ function Read-Checklist {
             }
         }
 
-        # Single keypress — no Enter needed to toggle
+        # Single keypress - no Enter needed to toggle
         $key = [Console]::ReadKey($true)
 
         if ($key.Key -eq [ConsoleKey]::Enter) {
@@ -374,6 +387,12 @@ if (-not $NoMigration) {
     $checklistMap += "migration"
 }
 
+if (-not $NoBuild) {
+    $checklistOptions += "Build and run tests"
+    $checklistDefaults += $true
+    $checklistMap += "build"
+}
+
 if (-not $NoCommit) {
     $checklistOptions += "Auto-commit changes to git"
     $checklistDefaults += $true
@@ -388,6 +407,7 @@ if (-not $NoAspire) {
 
 # Initialize from CLI flags
 $CreateMigration = -not $NoMigration
+$BuildTest = -not $NoBuild
 $DoCommit = -not $NoCommit
 $StartAspire = -not $NoAspire
 
@@ -398,6 +418,7 @@ if ($checklistOptions.Count -gt 0) {
     for ($i = 0; $i -lt $checklistMap.Count; $i++) {
         switch ($checklistMap[$i]) {
             "migration" { $CreateMigration = $results[$i] }
+            "build" { $BuildTest = $results[$i] }
             "commit" { $DoCommit = $results[$i] }
             "aspire" { $StartAspire = $results[$i] }
         }
@@ -429,6 +450,8 @@ Write-Host "  Options" -ForegroundColor White
 Write-Host "  -------------------------------------"
 Write-Host "  Create migration: " -NoNewline
 if ($CreateMigration) { Write-Host "Yes" -ForegroundColor Green } else { Write-Host "No" -ForegroundColor DarkGray }
+Write-Host "  Build and test:   " -NoNewline
+if ($BuildTest) { Write-Host "Yes" -ForegroundColor Green } else { Write-Host "No" -ForegroundColor DarkGray }
 Write-Host "  Git commits:      " -NoNewline
 if ($DoCommit) { Write-Host "Yes" -ForegroundColor Green } else { Write-Host "No" -ForegroundColor DarkGray }
 Write-Host "  Launch Aspire:    " -NoNewline
@@ -674,7 +697,30 @@ if ($CreateMigration) {
     }
 }
 
-# Step 5: Delete template-specific files (always — fire and forget)
+# Step 5: Build and Run Tests
+if ($BuildTest) {
+    Write-Step "Building solution..."
+    $ErrorActionPreference = "Continue"
+    $output = dotnet build "src/backend/$NewName.slnx" -c Debug --verbosity quiet 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Success "Build succeeded"
+    } else {
+        Write-ErrorMessage "Build failed"
+        Write-Host $output -ForegroundColor DarkGray
+    }
+
+    Write-Step "Running tests..."
+    $output = dotnet test "src/backend/$NewName.slnx" -c Release --verbosity quiet --no-restore 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Success "All tests passed"
+    } else {
+        Write-WarnMsg "Some tests failed - check output above"
+        Write-Host $output -ForegroundColor DarkGray
+    }
+    $ErrorActionPreference = "Stop"
+}
+
+# Step 6: Delete template-specific files (always, fire and forget)
 Write-Step "Cleaning up template files..."
 
 $initPs1 = Join-Path $ScriptDir "init.ps1"
@@ -754,8 +800,17 @@ if ($StartAspire) {
     Write-Host "  Completed in ${elapsed}s" -ForegroundColor DarkGray
     Write-Host ""
     Write-Step "Launching Aspire..."
-    Write-Info "The Aspire Dashboard URL will appear below. Press Ctrl+C to stop."
+    Write-Host "  Opening Aspire Dashboard in your browser. Press Ctrl+C to stop." -ForegroundColor DarkGray
     Write-Host ""
+    Start-Job -ScriptBlock {
+        for ($i = 0; $i -lt 30; $i++) {
+            try {
+                $null = Invoke-WebRequest -Uri "http://localhost:15244" -UseBasicParsing -TimeoutSec 1 -ErrorAction Stop
+                Start-Process "http://localhost:15244"
+                break
+            } catch { Start-Sleep -Seconds 1 }
+        }
+    } | Out-Null
     & dotnet run --project "src\backend\$NewName.AppHost"
 }
 else {
