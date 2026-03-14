@@ -30,7 +30,7 @@ public static class ApplicationBuilderExtensions
 
         if (isDevelopment)
         {
-            ApplyMigrations(services);
+            await ApplyMigrationsAsync(services);
         }
 
         await SeedRolesAsync(services);
@@ -38,10 +38,10 @@ public static class ApplicationBuilderExtensions
         await SeedUsersFromConfigurationAsync(services);
     }
 
-    private static void ApplyMigrations(IServiceProvider serviceProvider)
+    private static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider)
     {
         var dbContext = serviceProvider.GetRequiredService<MyProjectDbContext>();
-        dbContext.Database.Migrate();
+        await dbContext.Database.MigrateAsync();
     }
 
     private static async Task SeedRolesAsync(IServiceProvider serviceProvider)

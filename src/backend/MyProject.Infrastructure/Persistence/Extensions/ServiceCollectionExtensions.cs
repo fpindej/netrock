@@ -46,7 +46,8 @@ public static class ServiceCollectionExtensions
             services.AddDbContext<MyProjectDbContext>((sp, opt) =>
             {
                 var connectionString = configuration.GetConnectionString("Database");
-                opt.UseNpgsql(connectionString);
+                opt.UseNpgsql(connectionString, npgsqlOptions =>
+                    npgsqlOptions.EnableRetryOnFailure());
                 opt.AddInterceptors(
                     sp.GetRequiredService<AuditingInterceptor>(),
                     sp.GetRequiredService<UserCacheInvalidationInterceptor>());
