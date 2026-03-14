@@ -98,6 +98,9 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`$lib/config/i18n.ts`** | `LanguageSelector`, root layout |
 | **`hooks.server.ts`** | All server responses (security headers, locale) |
 | **`svelte.config.js`** (CSP) | Test that scripts/styles/images still load; Turnstile needs `script-src` + `frame-src` for `challenges.cloudflare.com` |
+| **`+layout.svelte`** (root) | OG/Twitter meta defaults, canonical URL, global title/description - all pages inherit these |
+| **`robots.txt/+server.ts`** | Disallow rules for route groups - update when adding new protected route groups |
+| **`sitemap.xml/+server.ts`** | Public routes list - update `publicRoutes` array when adding public (non-auth) pages |
 | **`app.html`** | FOUC prevention, nonce attribute, theme init |
 | **`UserManagementCard.svelte`** | Thin shell - delegates to `RoleManagement.svelte` and `AccountActions.svelte` |
 | **i18n keys** (rename/remove) | Same key in all other locale directories, all `m.{key}()` usages |

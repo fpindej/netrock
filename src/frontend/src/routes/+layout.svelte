@@ -15,8 +15,11 @@
 	import { initBackendMonitor } from '$lib/api/backend-monitor';
 	import { ShortcutsHelp } from '$lib/components/layout';
 	import { initHealthCheck } from '$lib/state';
+	import { page } from '$app/state';
 
 	let { children } = $props();
+
+	let canonicalUrl = $derived(page.url.origin + page.url.pathname);
 
 	onMount(() => {
 		initBackendMonitor();
@@ -54,6 +57,15 @@
 <svelte:head>
 	<title>{m.app_name()}</title>
 	<meta name="description" content={m.meta_description()} />
+	<link rel="canonical" href={canonicalUrl} />
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content={m.app_name()} />
+	<meta property="og:url" content={canonicalUrl} />
+	<meta property="og:title" content={m.app_name()} />
+	<meta property="og:description" content={m.meta_description()} />
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content={m.app_name()} />
+	<meta name="twitter:description" content={m.meta_description()} />
 </svelte:head>
 
 <Tooltip.Provider>

@@ -29,6 +29,13 @@ NETrock works out of the box for local development, but there are things you nee
 - [ ] **Monitoring** - the health check endpoints (`/health`, `/health/ready`, `/health/live`) are ready for your uptime monitoring
 - [ ] **Resource limits** - configure CPU/memory limits in your deployment platform. Recommended starting points: API 2 CPU / 1G, frontend 1 CPU / 512M, PostgreSQL 1 CPU / 1G. PostgreSQL alone typically wants 25% of available memory for `shared_buffers`
 
+## Frontend
+
+- [ ] **SEO meta tags** - the root layout includes default Open Graph and Twitter Card meta tags using `app_name` and `meta_description` from i18n. Update these in `src/frontend/src/messages/{locale}/core.json` with your actual product name and description. Add per-page `og:title` and `og:description` overrides in `<svelte:head>` for important public pages
+- [ ] **Open Graph image** - add an `og:image` meta tag pointing to a 1200x630px preview image for social sharing. Place the image in `static/` and reference it with an absolute URL in the root layout
+- [ ] **Sitemap** - the sitemap at `/sitemap.xml` only includes the root URL by default. Add your public routes to `src/frontend/src/routes/sitemap.xml/+server.ts` as you build them
+- [ ] **Webmanifest** - update `name` and `short_name` in `src/frontend/static/site.webmanifest` to match your product name
+
 ## Good to Know
 
 - **Hangfire dashboard** is automatically disabled in production. Use the admin API endpoints (`/api/admin/jobs/*`) instead
