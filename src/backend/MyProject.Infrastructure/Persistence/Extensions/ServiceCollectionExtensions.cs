@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MyProject.Application.Persistence;
 using MyProject.Infrastructure.Features.Authentication.Extensions;
 using MyProject.Infrastructure.Persistence.Interceptors;
@@ -48,6 +50,8 @@ public static class ServiceCollectionExtensions
                 var connectionString = configuration.GetConnectionString("Database");
                 opt.UseNpgsql(connectionString, npgsqlOptions =>
                     npgsqlOptions.EnableRetryOnFailure());
+                opt.ConfigureWarnings(w =>
+                    w.Log((RelationalEventId.CommandError, LogLevel.Warning)));
                 opt.AddInterceptors(
                     sp.GetRequiredService<AuditingInterceptor>(),
                     sp.GetRequiredService<UserCacheInvalidationInterceptor>());
