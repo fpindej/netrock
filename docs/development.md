@@ -12,6 +12,8 @@ dotnet run --project src/backend/MyProject.AppHost
 
 The Aspire Dashboard URL appears in the console. All service URLs (API docs, pgAdmin, MinIO, MailPit) are linked from the Dashboard.
 
+> **Note:** The init scripts launch Aspire with `DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true` so the dashboard opens without a login token. When running `dotnet run` manually, you'll need the token from the console output (or set the same variable).
+
 ### Debugging with breakpoints in Rider/VS
 
 Launch the AppHost project from your IDE. The API runs in-process with full debugger support. Infrastructure containers are still managed by Aspire.

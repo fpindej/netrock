@@ -812,8 +812,7 @@ if ($StartAspire) {
         }
     } | Out-Null
     $env:DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS = "true"
-    try { dotnet run --project "src\backend\$NewName.AppHost" }
-    finally { Remove-Item Env:\DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS -ErrorAction SilentlyContinue }
+    & dotnet run --project "src\backend\$NewName.AppHost"
 }
 else {
     Write-Host ""
