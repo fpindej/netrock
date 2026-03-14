@@ -49,6 +49,25 @@ The project context files (`CLAUDE.md`, `FILEMAP.md`) plus specialized agents, c
 
 ---
 
+## MCP Server (Claude Code integration)
+
+The API embeds an MCP (Model Context Protocol) server at `/mcp`, enabled in Development only. When the API is running (via Aspire), Claude Code can use it to query the database, inspect schema, check health, list users, and manage background jobs - all through the running application's DI container.
+
+The `.mcp.json` at the project root configures Claude Code to connect automatically. Tools available:
+
+| Tool | Description |
+|---|---|
+| `get-health` | Health status of all dependencies (DB, S3) |
+| `query-database` | Execute read-only SQL (SELECT only, 100-row limit) |
+| `get-schema` | Database schema from EF Core model |
+| `list-users` | Paginated user list with search |
+| `list-jobs` | All recurring background jobs |
+| `trigger-job` | Trigger immediate job execution |
+
+The MCP endpoint is never exposed in production - gated by `IsDevelopment()`.
+
+---
+
 ## Database Migrations
 
 ```bash

@@ -35,6 +35,10 @@ dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.sln
 ```
 Fix failures. Loop until green. Never commit broken code.
 
+## MCP Tools
+
+The API embeds an MCP server (`WebApi/Mcp/`) with dev-only tools for Claude Code. When adding a new service or feature, consider whether an MCP tool would help Claude interact with the running application. MCP tools are simple: one static method per tool, `[McpServerTool]` + `[Description]` attributes, DI-injected parameters, auto-discovered by `WithToolsFromAssembly()`. See existing tools in `WebApi/Mcp/` for the pattern.
+
 ## Rules
 
 - Match existing patterns exactly - read sibling files first

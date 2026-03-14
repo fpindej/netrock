@@ -63,6 +63,10 @@ When modifying existing API contracts:
 4. If breaking: update all consumers in the same PR
 5. Document the breaking change in the commit body
 
+## MCP Tools
+
+The API embeds an MCP server (`WebApi/Mcp/`) with dev-only tools for Claude Code. When adding a new service or feature, consider whether an MCP tool would help Claude interact with the running application. MCP tools are simple: one static method per tool, `[McpServerTool]` + `[Description]` attributes, DI-injected parameters, auto-discovered by `WithToolsFromAssembly()`. See existing tools in `WebApi/Mcp/` for the pattern.
+
 ## Rules
 
 - Always regenerate types after API changes

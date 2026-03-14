@@ -132,6 +132,14 @@ try
     Log.Debug("ConfigureServices => Setting AddHealthChecks");
     builder.Services.AddApplicationHealthChecks(builder.Configuration);
 
+    if (builder.Environment.IsDevelopment())
+    {
+        Log.Debug("Adding MCP server (development only)");
+        builder.Services.AddMcpServer()
+            .WithHttpTransport()
+            .WithToolsFromAssembly();
+    }
+
     Log.Debug("ConfigureServices => Setting AddApiDefinition");
     builder.AddOpenApiSpecification();
 
@@ -211,6 +219,12 @@ try
 
     Log.Debug("Setting endpoints => MapHealthChecks");
     app.MapHealthCheckEndpoints();
+
+    if (app.Environment.IsDevelopment())
+    {
+        Log.Debug("Mapping MCP endpoint (development only)");
+        app.MapMcp();
+    }
 
     await app.RunAsync();
 }

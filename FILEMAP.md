@@ -79,6 +79,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Connection string config** (change format/name) | Verify `MyProject.AppHost/Program.cs` environment variable mapping still works |
 | **`MyProject.ServiceDefaults/Extensions.cs`** | All projects referencing ServiceDefaults, `Program.cs` `AddServiceDefaults()` call |
 | **`MyProject.AppHost/Program.cs`** | Verify resource names match `ConnectionStrings:*` and `WithEnvironment` keys match `appsettings.json` option paths |
+| **`WebApi/Mcp/*.cs`** (MCP tool classes) | `Program.cs` MCP registration, `ModelContextProtocol.AspNetCore` package |
+| **`.mcp.json`** (Claude Code MCP config) | Must match API port; init scripts replace `{INIT_API_PORT}` |
 | **`ProblemDetailsAuthorizationHandler`** | `ProblemDetails` shape, `ErrorMessages.Auth` constants, `Program.cs` registration |
 | **`CaptchaOptions`** (Infrastructure - Captcha config) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `TurnstileCaptchaService`, `ServiceCollectionExtensions` |
 | **`TurnstileCaptchaService`** (Infrastructure - Captcha service) | `ICaptchaService` interface, `CaptchaOptions`, `AuthController` captcha gate |
