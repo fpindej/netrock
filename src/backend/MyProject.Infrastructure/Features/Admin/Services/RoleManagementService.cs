@@ -217,28 +217,32 @@ internal class RoleManagementService(
             return escalationResult;
         }
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var strategy = dbContext.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        // Bulk-remove existing permission claims
-        await dbContext.RoleClaims
-            .Where(rc => rc.RoleId == roleId && rc.ClaimType == AppPermissions.ClaimType)
-            .ExecuteDeleteAsync(cancellationToken);
+            // Bulk-remove existing permission claims
+            await dbContext.RoleClaims
+                .Where(rc => rc.RoleId == roleId && rc.ClaimType == AppPermissions.ClaimType)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        // Bulk-add new permission claims
-        var distinctPermissions = input.Permissions.Distinct(StringComparer.Ordinal).ToList();
-        dbContext.RoleClaims.AddRange(distinctPermissions.Select(permission =>
-            new IdentityRoleClaim<Guid>
-            {
-                RoleId = roleId,
-                ClaimType = AppPermissions.ClaimType,
-                ClaimValue = permission
-            }));
-        await dbContext.SaveChangesAsync(cancellationToken);
+            // Bulk-add new permission claims
+            var distinctPermissions = input.Permissions.Distinct(StringComparer.Ordinal).ToList();
+            dbContext.RoleClaims.AddRange(distinctPermissions.Select(permission =>
+                new IdentityRoleClaim<Guid>
+                {
+                    RoleId = roleId,
+                    ClaimType = AppPermissions.ClaimType,
+                    ClaimValue = permission
+                }));
+            await dbContext.SaveChangesAsync(cancellationToken);
 
-        // Rotate security stamps for all users in this role to force re-auth
-        await RotateSecurityStampsForRoleAsync(roleId, cancellationToken);
+            // Rotate security stamps for all users in this role to force re-auth
+            await RotateSecurityStampsForRoleAsync(roleId, cancellationToken);
 
-        await transaction.CommitAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        });
 
         logger.LogInformation("Permissions updated for role '{RoleName}' (ID '{RoleId}'): [{Permissions}]",
             role.Name, roleId, string.Join(", ", input.Permissions));
