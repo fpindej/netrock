@@ -15,6 +15,7 @@
 #    --password     Superuser password (default: Superuser123!)
 #    --yes, -y      Accept all defaults, no prompts
 #    --no-migration Skip migration creation
+#    --no-build     Skip building and running tests
 #    --no-commit    Skip git commits
 #    --no-aspire    Don't launch Aspire after setup
 #    --help, -h     Show this help
@@ -122,6 +123,7 @@ show_help() {
     echo "      --password PASS   Superuser password (default: Superuser123!)"
     echo "  -y, --yes             Accept all defaults without prompting"
     echo "      --no-migration    Skip creating initial migration"
+    echo "      --no-build        Skip building and running tests"
     echo "      --no-commit       Skip git commits"
     echo "      --no-aspire       Don't launch Aspire after setup"
     echo "  -h, --help            Show this help message"
@@ -142,7 +144,17 @@ check_prerequisites() {
 
     command -v git >/dev/null 2>&1 || missing+=("git")
     command -v dotnet >/dev/null 2>&1 || missing+=("dotnet")
-    command -v docker >/dev/null 2>&1 || missing+=("docker")
+
+    if command -v docker &>/dev/null; then
+        if docker info &>/dev/null; then
+            : # Docker running, ok
+        else
+            missing+=("docker (installed but not running)")
+        fi
+    else
+        missing+=("docker")
+    fi
+
     command -v node >/dev/null 2>&1 || missing+=("node")
     command -v pnpm >/dev/null 2>&1 || missing+=("pnpm")
 
@@ -268,6 +280,7 @@ ADMIN_EMAIL="superuser@test.com"
 ADMIN_PASSWORD="Superuser123!"
 YES_TO_ALL="false"
 CREATE_MIGRATION="ask"
+BUILD_TEST="ask"
 DO_COMMIT="ask"
 START_ASPIRE="ask"
 
@@ -295,6 +308,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-migration)
             CREATE_MIGRATION="n"
+            shift
+            ;;
+        --no-build)
+            BUILD_TEST="n"
             shift
             ;;
         --no-commit)
@@ -415,6 +432,12 @@ if [[ "$CREATE_MIGRATION" == "ask" ]]; then
     CHECKLIST_MAP+=("migration")
 fi
 
+if [[ "$BUILD_TEST" == "ask" ]]; then
+    CHECKLIST_OPTIONS+=("Build and run tests")
+    CHECKLIST_DEFAULTS+=(1)
+    CHECKLIST_MAP+=("build")
+fi
+
 if [[ "$DO_COMMIT" == "ask" ]]; then
     CHECKLIST_OPTIONS+=("Auto-commit changes to git")
     CHECKLIST_DEFAULTS+=(1)
@@ -437,6 +460,9 @@ if [[ ${#CHECKLIST_OPTIONS[@]} -gt 0 ]]; then
             migration)
                 [[ "${CHECKLIST_RESULTS[$i]}" == "1" ]] && CREATE_MIGRATION="y" || CREATE_MIGRATION="n"
                 ;;
+            build)
+                [[ "${CHECKLIST_RESULTS[$i]}" == "1" ]] && BUILD_TEST="y" || BUILD_TEST="n"
+                ;;
             commit)
                 [[ "${CHECKLIST_RESULTS[$i]}" == "1" ]] && DO_COMMIT="y" || DO_COMMIT="n"
                 ;;
@@ -449,6 +475,7 @@ fi
 
 # Apply defaults for any options set via CLI flags
 [[ "$CREATE_MIGRATION" == "ask" ]] && CREATE_MIGRATION="y"
+[[ "$BUILD_TEST" == "ask" ]] && BUILD_TEST="y"
 [[ "$DO_COMMIT" == "ask" ]] && DO_COMMIT="y"
 [[ "$START_ASPIRE" == "ask" ]] && START_ASPIRE="y"
 
@@ -476,6 +503,7 @@ echo -e "
   ${BOLD}Options${NC}
   ─────────────────────────────────────
   Create migration: $([ "$CREATE_MIGRATION" == "y" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${DIM}No${NC}")
+  Build and test:   $([ "$BUILD_TEST" == "y" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${DIM}No${NC}")
   Git commits:      $([ "$DO_COMMIT" == "y" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${DIM}No${NC}")
   Launch Aspire:    $([ "$START_ASPIRE" == "y" ] && echo -e "${GREEN}Yes${NC}" || echo -e "${DIM}No${NC}")
 "
@@ -670,7 +698,24 @@ if [[ "$CREATE_MIGRATION" == "y" ]]; then
     fi
 fi
 
-# Step 5: Delete template-specific files (always — fire and forget)
+# Step 5: Build and Run Tests
+if [[ "$BUILD_TEST" == "y" ]]; then
+    print_step "Building solution..."
+    if dotnet build "src/backend/$NEW_NAME.slnx" -c Debug --verbosity quiet; then
+        print_success "Build succeeded"
+    else
+        print_error "Build failed"
+    fi
+
+    print_step "Running tests..."
+    if dotnet test "src/backend/$NEW_NAME.slnx" -c Release --verbosity quiet --no-restore; then
+        print_success "All tests passed"
+    else
+        print_warning "Some tests failed - check output above"
+    fi
+fi
+
+# Step 6: Delete template-specific files (always — fire and forget)
 print_step "Cleaning up template files..."
 
 TEMPLATE_FILES=(
@@ -718,8 +763,16 @@ if [[ "$START_ASPIRE" == "y" ]]; then
   ${DIM}Completed in $(($(date +%s) - START_TIME))s${NC}
 "
     print_step "Launching Aspire..."
-    print_info "The Aspire Dashboard URL will appear below. Press Ctrl+C to stop."
+    echo -e "  ${DIM}Opening Aspire Dashboard in your browser. Press Ctrl+C to stop.${NC}"
     echo ""
+    (for i in $(seq 1 30); do
+        if curl -s -o /dev/null -w '' http://localhost:15244 2>/dev/null; then
+            if command -v open &>/dev/null; then open "http://localhost:15244";
+            elif command -v xdg-open &>/dev/null; then xdg-open "http://localhost:15244"; fi
+            break
+        fi
+        sleep 1
+    done) &
     exec dotnet run --project "src/backend/$NEW_NAME.AppHost"
 else
     echo -e "
