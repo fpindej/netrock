@@ -249,7 +249,7 @@ prompt_checklist() {
             fi
         done
 
-        # Single keypress — no Enter needed to toggle
+        # Single keypress - no Enter needed to toggle
         read -rsn1 choice
 
         # Enter (empty) confirms selection
@@ -715,7 +715,7 @@ if [[ "$BUILD_TEST" == "y" ]]; then
     fi
 fi
 
-# Step 6: Delete template-specific files (always — fire and forget)
+# Step 6: Delete template-specific files (always, fire and forget)
 print_step "Cleaning up template files..."
 
 TEMPLATE_FILES=(

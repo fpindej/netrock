@@ -289,7 +289,7 @@ function Read-Checklist {
             }
         }
 
-        # Single keypress — no Enter needed to toggle
+        # Single keypress - no Enter needed to toggle
         $key = [Console]::ReadKey($true)
 
         if ($key.Key -eq [ConsoleKey]::Enter) {
@@ -720,7 +720,7 @@ if ($BuildTest) {
     $ErrorActionPreference = "Stop"
 }
 
-# Step 6: Delete template-specific files (always — fire and forget)
+# Step 6: Delete template-specific files (always, fire and forget)
 Write-Step "Cleaning up template files..."
 
 $initPs1 = Join-Path $ScriptDir "init.ps1"
