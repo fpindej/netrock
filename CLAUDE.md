@@ -62,7 +62,7 @@ The top-level agent is an orchestrator. By default it plans, delegates, and coor
 
 ## Agent Team
 
-Delegate implementation to specialized agents by default (see Delegation Rule above for override). Run reviewers in parallel after every implementation.
+All application code in `src/` goes to specialized agents. User override is the only exception (see Delegation Rule). Run reviewers in parallel after every implementation.
 
 | Agent | Role | When to use |
 |---|---|---|
