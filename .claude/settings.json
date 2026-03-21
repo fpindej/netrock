@@ -1,4 +1,48 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(pnpm *)",
+      "Bash(pnpm)",
+      "Bash(dotnet *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git checkout*)",
+      "Bash(git switch*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git rebase*)",
+      "Bash(git stash*)",
+      "Bash(git cat-file*)",
+      "Bash(git rev-parse*)",
+      "Bash(gh *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(docker *)",
+      "Bash(which *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)"
+    ],
+    "deny": [
+      "Bash(git push --force *main*)",
+      "Bash(git push --force *master*)",
+      "Bash(git push origin main*)",
+      "Bash(git push origin master*)",
+      "Bash(rm -rf *)",
+      "Bash(git checkout main && git merge*)",
+      "Bash(git checkout master && git merge*)",
+      "Bash(curl * | sh*)",
+      "Bash(curl * | bash*)",
+      "Bash(wget * | sh*)",
+      "Write(.env*)",
+      "Edit(.env*)",
+      "Write(pnpm-lock.yaml)",
+      "Edit(pnpm-lock.yaml)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {

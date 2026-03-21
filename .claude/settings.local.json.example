@@ -1,0 +1,7 @@
+{
+  "// README": "Copy to .claude/settings.local.json and customize. This file is gitignored.",
+  "permissions": {
+    "allow": [],
+    "deny": []
+  }
+}

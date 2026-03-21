@@ -458,3 +458,6 @@ $RECYCLE.BIN/
 
 # Legacy root .env (not used - config is in appsettings.json and src/frontend/.env.local)
 /.env
+
+# Claude Code local settings (user-specific permission overrides)
+.claude/settings.local.json
