@@ -44,6 +44,44 @@ Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 - No dead code - remove unused imports, variables, functions, files, and stale references in the same commit
 - No em dashes - never use `—` anywhere (code, comments, docs, UI). Use `-` or rewrite the sentence.
 
+## Delegation Rule
+
+The top-level agent is an orchestrator. It plans, delegates, and coordinates - it does NOT write application code directly. All implementation goes to specialized agents. All reviews run in parallel after implementation.
+
+- **Never** write application code (backend or frontend) directly in the top-level context
+- **Always** delegate implementation to `backend-engineer`, `frontend-engineer`, or `fullstack-engineer`
+- **Always** run relevant reviewers in parallel after implementation completes
+- **Always** run `filemap-checker` after modifying files with known consumers
+
+## Agent Team
+
+Always delegate implementation to specialized agents. Never implement directly. Run reviewers in parallel after every implementation.
+
+| Agent | Role | When to use |
+|---|---|---|
+| `backend-engineer` | Implements .NET features | Task stays within `src/backend/` |
+| `frontend-engineer` | Implements SvelteKit features | Task stays within `src/frontend/` |
+| `fullstack-engineer` | Implements cross-stack features | Task touches both backend and frontend |
+| `backend-reviewer` | Audits C# code (read-only) | Reviewing backend changes |
+| `frontend-reviewer` | Audits Svelte code (read-only) | Reviewing frontend changes |
+| `ux-designer` | Audits UI/UX design quality (read-only) | Checking responsiveness, visual consistency, theming |
+| `security-reviewer` | Audits for vulnerabilities (read-only) | Auth, permissions, PII, tokens, middleware changes |
+| `devops-reviewer` | Audits infra/deployment (read-only) | Dockerfiles, compose, Aspire, CI/CD changes |
+| `test-writer` | Writes tests | Tests needed alongside implementation |
+| `filemap-checker` | Verifies downstream updates (read-only) | After modifying files with known consumers |
+| `tech-writer` | Writes documentation | READMEs, session docs, guides |
+| `product-owner` | Proposes prioritized work items (read-only) | Deciding what to work on next, backlog review |
+
+**Delegation patterns:**
+- **New backend feature**: `backend-engineer` implements, then `backend-reviewer` + `security-reviewer` audit in parallel
+- **New frontend feature**: `frontend-engineer` implements, then `frontend-reviewer` + `ux-designer` audit in parallel
+- **Full-stack feature**: `fullstack-engineer` implements end-to-end
+- **PR review** (`/review-pr`): `backend-reviewer` + `frontend-reviewer` + `security-reviewer` in parallel, add `ux-designer` for UI changes
+- **Design review**: `ux-designer` validates responsiveness and visual consistency
+- **Pre-release check**: `devops-reviewer` validates deployment readiness
+- **What to work on next**: `product-owner` analyzes codebase, issues, and TODOs to propose prioritized work
+- **After modifying shared files**: `filemap-checker` verifies all consumers updated
+
 ## Breaking Changes
 
 The backend API is public-facing. Treat every contract change with the same care as a published library.
@@ -87,35 +125,11 @@ Do these automatically - never wait to be asked:
 | **Adding any feature** | Write tests alongside the implementation - component, API integration, validator as applicable. |
 | **Build/test failure** | Read the error, fix it, re-run. Repeat until green. Don't stop and report the error unless stuck after 3 attempts. |
 | **Unclear requirement** | Infer from context and existing patterns first. Ask the user only when genuinely ambiguous (multiple valid approaches with different tradeoffs). |
-
-## Agent Team
-
-Delegate to the right agent for the task. Run reviewers in parallel when reviewing.
-
-| Agent | Role | When to use |
-|---|---|---|
-| `backend-engineer` | Implements .NET features | Task stays within `src/backend/` |
-| `frontend-engineer` | Implements SvelteKit features | Task stays within `src/frontend/` |
-| `fullstack-engineer` | Implements cross-stack features | Task touches both backend and frontend |
-| `backend-reviewer` | Audits C# code (read-only) | Reviewing backend changes |
-| `frontend-reviewer` | Audits Svelte code (read-only) | Reviewing frontend changes |
-| `ux-designer` | Audits UI/UX design quality (read-only) | Checking responsiveness, visual consistency, theming |
-| `security-reviewer` | Audits for vulnerabilities (read-only) | Auth, permissions, PII, tokens, middleware changes |
-| `devops-reviewer` | Audits infra/deployment (read-only) | Dockerfiles, compose, Aspire, CI/CD changes |
-| `test-writer` | Writes tests | Tests needed alongside implementation |
-| `filemap-checker` | Verifies downstream updates (read-only) | After modifying files with known consumers |
-| `tech-writer` | Writes documentation | READMEs, session docs, guides |
-| `product-owner` | Proposes prioritized work items (read-only) | Deciding what to work on next, backlog review |
-
-**Delegation patterns:**
-- **New backend feature**: `backend-engineer` implements, then `backend-reviewer` + `security-reviewer` audit in parallel
-- **New frontend feature**: `frontend-engineer` implements, then `frontend-reviewer` + `ux-designer` audit in parallel
-- **Full-stack feature**: `fullstack-engineer` implements end-to-end
-- **PR review** (`/review-pr`): `backend-reviewer` + `frontend-reviewer` + `security-reviewer` in parallel, add `ux-designer` for UI changes
-- **Design review**: `ux-designer` validates responsiveness and visual consistency
-- **Pre-release check**: `devops-reviewer` validates deployment readiness
-- **What to work on next**: `product-owner` analyzes codebase, issues, and TODOs to propose prioritized work
-- **After modifying shared files**: `filemap-checker` verifies all consumers updated
+| **Backend-only task** | Delegate to `backend-engineer`. Run `backend-reviewer` + `security-reviewer` in parallel after. |
+| **Frontend-only task** | Delegate to `frontend-engineer`. Run `frontend-reviewer` + `ux-designer` in parallel after. |
+| **Cross-stack task** | Delegate to `fullstack-engineer`. Run relevant reviewers in parallel after. |
+| **After any implementation** | Run relevant reviewers in parallel (backend-reviewer, frontend-reviewer, security-reviewer, ux-designer as applicable). |
+| **After modifying shared files** | Run `filemap-checker` to verify all downstream consumers are updated. |
 
 ## File Roles
 
