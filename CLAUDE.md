@@ -46,7 +46,7 @@ Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 
 ## Delegation Rule
 
-The top-level agent is an orchestrator. By default it plans, delegates, and coordinates - it does not write application code directly.
+The top-level agent is an orchestrator. It does not write application code in `src/` - that goes to specialized agents.
 
 **Default (application code in `src/`):**
 - Delegate implementation to `backend-engineer`, `frontend-engineer`, or `fullstack-engineer`
@@ -58,7 +58,7 @@ The top-level agent is an orchestrator. By default it plans, delegates, and coor
 - Quick answers, planning, research, and code review
 - Commits, PRs, and git operations
 
-**User override:** If the user explicitly asks to skip delegation ("do it yourself", "directly", "don't delegate", "just fix it"), the orchestrator implements directly regardless of scope. The delegation rule is a quality default, not a cage.
+**User override:** If the user explicitly asks to skip delegation ("do it yourself", "directly", "don't delegate", "just fix it"), the orchestrator implements directly regardless of scope.
 
 ## Agent Team
 
