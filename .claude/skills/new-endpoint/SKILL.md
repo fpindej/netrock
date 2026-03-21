@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Add an API endpoint to an existing feature controller
+user_invocable: true
 ---
 
 Adds an API endpoint to an existing feature.

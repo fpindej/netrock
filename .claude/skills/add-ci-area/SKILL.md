@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Add a new project area to CI workflows
+user_invocable: true
 ---
 
 Adds a new project area to CI.

@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Scaffold a full-stack feature from entity to frontend page
+user_invocable: true
 ---
 
 Creates a full-stack feature: backend entity through to frontend page.

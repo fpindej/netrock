@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Add a rate limit policy to an endpoint
+user_invocable: true
 ---
 
 Adds a rate limit policy.

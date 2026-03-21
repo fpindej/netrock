@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Add a permission constant across backend and frontend
+user_invocable: true
 ---
 
 Adds a permission constant across backend and frontend.

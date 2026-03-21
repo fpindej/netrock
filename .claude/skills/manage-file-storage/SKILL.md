@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Swap or remove the file storage provider (S3/MinIO)
+user_invocable: true
 argument-hint: "[swap|remove]"
 ---
 

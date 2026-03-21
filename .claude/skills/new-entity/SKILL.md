@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Create a backend entity with EF Core configuration and migration
+user_invocable: true
 ---
 
 Creates a new backend entity with EF Core configuration and migration.

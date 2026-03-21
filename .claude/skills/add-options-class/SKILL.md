@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Add a typed options/configuration class with validation
+user_invocable: true
 ---
 
 Adds a typed options/configuration class.

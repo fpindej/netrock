@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Add an environment variable to backend or frontend
+user_invocable: true
 ---
 
 Adds an environment variable (backend or frontend).

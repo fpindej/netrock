@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Add a transactional email template using Fluid (Liquid)
+user_invocable: true
 ---
 
 Adds a transactional email template using Fluid (Liquid).
