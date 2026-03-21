@@ -2,7 +2,7 @@
 name: security-reviewer
 description: "Reviews code for security vulnerabilities, auth bypasses, PII leakage, and OWASP risks. Use proactively when reviewing security-sensitive changes (auth, permissions, user data, API endpoints, middleware, cookies, tokens)."
 tools: Read, Grep, Glob
-model: sonnet
+model: inherit
 maxTurns: 20
 skills: security-conventions
 ---

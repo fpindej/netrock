@@ -73,6 +73,7 @@ All application code in `src/` goes to specialized agents. User override is the 
 | `frontend-reviewer` | Audits Svelte code (read-only) | Reviewing frontend changes |
 | `ux-designer` | Audits UI/UX design quality (read-only) | Checking responsiveness, visual consistency, theming |
 | `security-reviewer` | Audits for vulnerabilities (read-only) | Auth, permissions, PII, tokens, middleware changes |
+| `devops-engineer` | Implements infra changes | Dockerfiles, Aspire, CI/CD, health checks, env vars |
 | `devops-reviewer` | Audits infra/deployment (read-only) | Dockerfiles, compose, Aspire, CI/CD changes |
 | `test-writer` | Writes tests | Tests needed alongside implementation |
 | `filemap-checker` | Verifies downstream updates (read-only) | After modifying files with known consumers |
@@ -85,6 +86,7 @@ All application code in `src/` goes to specialized agents. User override is the 
 - **Full-stack feature**: `fullstack-engineer` implements end-to-end
 - **PR review** (`/review-pr`): `backend-reviewer` + `frontend-reviewer` + `security-reviewer` in parallel, add `ux-designer` for UI changes
 - **Design review**: `ux-designer` validates responsiveness and visual consistency
+- **Infra task**: `devops-engineer` implements, then `devops-reviewer` + `security-reviewer` audit in parallel
 - **Pre-release check**: `devops-reviewer` validates deployment readiness
 - **What to work on next**: `product-owner` analyzes codebase, issues, and TODOs to propose prioritized work
 - **After modifying shared files**: `filemap-checker` verifies all consumers updated
@@ -135,6 +137,7 @@ Do these automatically - never wait to be asked:
 | **Backend-only task** | Delegate to `backend-engineer` (unless user overrides). Run `backend-reviewer` + `security-reviewer` in parallel after. |
 | **Frontend-only task** | Delegate to `frontend-engineer` (unless user overrides). Run `frontend-reviewer` + `ux-designer` in parallel after. |
 | **Cross-stack task** | Delegate to `fullstack-engineer` (unless user overrides). Run relevant reviewers in parallel after. |
+| **Infra-only task** (Dockerfiles, Aspire, CI/CD, env vars) | Delegate to `devops-engineer` (unless user overrides). Run `devops-reviewer` + `security-reviewer` in parallel after. |
 | **After any implementation** | Run relevant reviewers in parallel (backend-reviewer, frontend-reviewer, security-reviewer, ux-designer as applicable). |
 | **After modifying shared files** | Run `filemap-checker` to verify all downstream consumers are updated. |
 
