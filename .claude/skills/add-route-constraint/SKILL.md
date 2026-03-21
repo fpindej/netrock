@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Add a route constraint for path parameter validation
+user-invocable: true
 ---
 
 Adds a route constraint for validating string path parameters at the routing layer.

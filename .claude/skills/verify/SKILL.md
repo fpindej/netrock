@@ -1,6 +1,6 @@
 ---
 description: Run full verification (backend build+test, frontend test+lint+check)
-user_invocable: true
+user-invocable: true
 ---
 
 # /verify

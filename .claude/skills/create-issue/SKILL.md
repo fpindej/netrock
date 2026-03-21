@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Create a GitHub issue with labels and optional sub-issues
+user-invocable: true
 ---
 
 Creates a GitHub issue.

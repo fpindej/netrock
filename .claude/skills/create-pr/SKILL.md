@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Create a pull request for the current branch
+user-invocable: true
 argument-hint: "[base branch]"
 ---
 

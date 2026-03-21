@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Create a versioned GitHub release with changelog
+user-invocable: true
 argument-hint: "[major|minor|patch] or [vX.Y.Z]"
 ---
 

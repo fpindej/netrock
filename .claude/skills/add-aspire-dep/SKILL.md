@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Add an infrastructure dependency to Aspire AppHost
+user-invocable: true
 ---
 
 Adds an infrastructure dependency to Aspire AppHost.

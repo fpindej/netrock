@@ -1,5 +1,6 @@
 ---
-disable-model-invocation: true
+description: Add tests following project test patterns
+user-invocable: true
 argument-hint: "[unit|component|api|validator|frontend-unit|frontend-component]"
 ---
 

@@ -28,3 +28,4 @@ Both convention references are loaded via skills. The Testing sections in `backe
 - Cover the happy path and meaningful edge cases - not every permutation
 - Backend: use `Result` pattern assertions (`result.IsSuccess`, `result.Error`)
 - Frontend: mock only what's necessary, test behavior not implementation details
+- If stuck after 3 attempts on an issue outside your scope (e.g., production code bugs, missing dependencies), stop and report the blocker to the orchestrator with what you tried
