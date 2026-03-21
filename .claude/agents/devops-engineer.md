@@ -51,4 +51,4 @@ dotnet build src/backend/MyProject.slnx
 - Pin passwords and credentials explicitly - never let Aspire generate random ones
 - Commit atomically: `type(scope): imperative description`
 - No Co-Authored-By lines in commits
-- If stuck after 3 attempts on an issue outside your scope (e.g., application logic, frontend components), stop and report the blocker to the orchestrator with what you tried
+- If stuck after 3 attempts on an issue outside your scope (e.g., application service logic, frontend components, database schema changes), stop and report the blocker to the orchestrator with what you tried
