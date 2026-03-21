@@ -46,12 +46,19 @@ Backend layers: WebApi → Application ← Infrastructure → Domain + Shared
 
 ## Delegation Rule
 
-The top-level agent is an orchestrator. It plans, delegates, and coordinates - it does NOT write application code directly. All implementation goes to specialized agents. All reviews run in parallel after implementation.
+The top-level agent is an orchestrator. By default it plans, delegates, and coordinates - it does not write application code directly.
 
-- **Never** write application code (backend or frontend) directly in the top-level context
-- **Always** delegate implementation to `backend-engineer`, `frontend-engineer`, or `fullstack-engineer`
-- **Always** run relevant reviewers in parallel after implementation completes
-- **Always** run `filemap-checker` after modifying files with known consumers
+**Default (application code in `src/`):**
+- Delegate implementation to `backend-engineer`, `frontend-engineer`, or `fullstack-engineer`
+- Run relevant reviewers in parallel after implementation completes
+- Run `filemap-checker` after modifying files with known consumers
+
+**Orchestrator handles directly (no delegation needed):**
+- Documentation, configuration, and tooling files (`.claude/`, `CLAUDE.md`, `FILEMAP.md`, `.gitignore`, `docs/`, CI/CD)
+- Quick answers, planning, research, and code review
+- Commits, PRs, and git operations
+
+**User override:** If the user explicitly asks to skip delegation ("do it yourself", "directly", "don't delegate", "just fix it"), the orchestrator implements directly regardless of scope. The delegation rule is a quality default, not a cage.
 
 ## Agent Team
 
@@ -125,9 +132,9 @@ Do these automatically - never wait to be asked:
 | **Adding any feature** | Write tests alongside the implementation - component, API integration, validator as applicable. |
 | **Build/test failure** | Read the error, fix it, re-run. Repeat until green. Don't stop and report the error unless stuck after 3 attempts. |
 | **Unclear requirement** | Infer from context and existing patterns first. Ask the user only when genuinely ambiguous (multiple valid approaches with different tradeoffs). |
-| **Backend-only task** | Delegate to `backend-engineer`. Run `backend-reviewer` + `security-reviewer` in parallel after. |
-| **Frontend-only task** | Delegate to `frontend-engineer`. Run `frontend-reviewer` + `ux-designer` in parallel after. |
-| **Cross-stack task** | Delegate to `fullstack-engineer`. Run relevant reviewers in parallel after. |
+| **Backend-only task** | Delegate to `backend-engineer` (unless user overrides). Run `backend-reviewer` + `security-reviewer` in parallel after. |
+| **Frontend-only task** | Delegate to `frontend-engineer` (unless user overrides). Run `frontend-reviewer` + `ux-designer` in parallel after. |
+| **Cross-stack task** | Delegate to `fullstack-engineer` (unless user overrides). Run relevant reviewers in parallel after. |
 | **After any implementation** | Run relevant reviewers in parallel (backend-reviewer, frontend-reviewer, security-reviewer, ux-designer as applicable). |
 | **After modifying shared files** | Run `filemap-checker` to verify all downstream consumers are updated. |
 
