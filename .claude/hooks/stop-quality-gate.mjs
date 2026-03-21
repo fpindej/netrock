@@ -53,8 +53,7 @@ try {
 if (warnings) {
   console.log(
     JSON.stringify({
-      hookSpecificOutput: { hookEventName: 'Stop' },
-      systemMessage: `Quality gate: ${warnings}`,
+      stopReason: `Quality gate: ${warnings}`,
     }),
   );
 }
