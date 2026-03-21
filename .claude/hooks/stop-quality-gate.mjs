@@ -53,7 +53,7 @@ try {
 if (warnings) {
   console.log(
     JSON.stringify({
-      stopReason: `Quality gate: ${warnings}`,
+      systemMessage: `Quality gate: ${warnings}`,
     }),
   );
 }
