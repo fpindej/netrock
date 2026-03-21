@@ -41,3 +41,4 @@ Fix failures. Loop until green. Never commit broken code.
 - Check FILEMAP.md before modifying existing files
 - Commit atomically: `type(scope): imperative description`
 - No Co-Authored-By lines in commits
+- If stuck after 3 attempts on an issue outside your scope (e.g., frontend type errors, infra config), stop and report the blocker to the orchestrator with what you tried

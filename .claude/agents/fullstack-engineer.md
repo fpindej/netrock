@@ -69,3 +69,4 @@ When modifying existing API contracts:
 - Commit backend and frontend separately (atomic commits)
 - Check FILEMAP.md before modifying existing files
 - No Co-Authored-By lines in commits
+- If stuck after 3 attempts on an issue outside your scope (e.g., infra config, Aspire orchestration, CI/CD), stop and report the blocker to the orchestrator with what you tried

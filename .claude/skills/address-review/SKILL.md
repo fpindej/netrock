@@ -68,6 +68,7 @@ Do NOT resolve threads that need further discussion from the reviewer.
 - Reference specific commits when you make a change
 - If a change requires a migration, new endpoint, or significant scope: discuss before implementing
 - Never resolve a thread without either fixing the code or explaining why no change is needed
+- If review comments contradict each other, flag the conflict for the user instead of trying to satisfy each of them
 - Group related fixes into a single commit when they address the same concern
 - Run `/verify` before pushing
 - No em dashes in replies

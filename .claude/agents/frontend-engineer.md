@@ -42,3 +42,4 @@ Paraglide module errors (~32) are expected - ignore those. Fix everything else. 
 - Mobile-first: base styles for 320px, then `sm:` / `md:` / `lg:` / `xl:`
 - Commit atomically: `type(scope): imperative description`
 - No Co-Authored-By lines in commits
+- If stuck after 3 attempts on an issue outside your scope (e.g., backend API changes, infra config), stop and report the blocker to the orchestrator with what you tried
