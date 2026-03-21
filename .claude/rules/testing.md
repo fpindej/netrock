@@ -1,5 +1,7 @@
 # Testing Rules
 
+Extends CLAUDE.md with test project structure and patterns.
+
 ## Backend Test Projects
 - `Unit.Tests` - pure logic (Shared, Domain, Application), no mocks, no DI
 - `Component.Tests` - service logic with `TestDbContextFactory` (InMemory), `NSubstitute`, `IdentityMockHelpers`
@@ -19,6 +21,5 @@
 - `restoreMocks: true` handles cleanup globally - no manual restore needed
 
 ## General
-- Write tests alongside implementation - never defer
 - No conditional tests - always assert deterministic outcomes
 - No `any` in test code - type mocks properly

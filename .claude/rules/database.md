@@ -1,5 +1,7 @@
 # Database Rules
 
+Extends CLAUDE.md with EF Core patterns and commands.
+
 ## Entity Configuration
 - Inherit `BaseEntityConfiguration<T>` (public abstract), override `ConfigureEntity`
 - Derived configurations are `internal` - auto-discovered via `ApplyConfigurationsFromAssembly()`
