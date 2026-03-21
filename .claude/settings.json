@@ -67,6 +67,7 @@
       "Bash(Remove-Item * -Recurse*)",
       "Bash(rd /s *)",
       "Bash(rmdir /s *)",
+      "Bash(del /s *)",
       "Bash(Invoke-Expression *)",
       "Bash(iex *)",
       "Bash(iwr * | iex*)",
