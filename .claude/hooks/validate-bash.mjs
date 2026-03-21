@@ -36,7 +36,7 @@ const blocks = [
     msg: 'git clean blocked - this removes untracked files permanently.',
   },
   {
-    pattern: /git\s+(checkout|restore)\s+\.\s*$/m,
+    pattern: /git\s+(checkout|restore)\s+(--\s+)?\.\s*$/m,
     msg: 'Discarding all changes blocked. Specify individual files.',
   },
   {

@@ -12,6 +12,12 @@ const git = (cmd) =>
 let warnings = '';
 
 try {
+  // Check if on main/master branch
+  const branch = git('git rev-parse --abbrev-ref HEAD').trim();
+  if (branch === 'main' || branch === 'master') {
+    warnings += `On ${branch} branch! Create a feature branch before committing. `;
+  }
+
   // Check for uncommitted changes
   let hasChanges = false;
   try {
@@ -47,7 +53,6 @@ try {
 if (warnings) {
   console.log(
     JSON.stringify({
-      hookSpecificOutput: { hookEventName: 'Stop' },
       systemMessage: `Quality gate: ${warnings}`,
     }),
   );
