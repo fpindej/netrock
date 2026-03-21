@@ -35,7 +35,11 @@
       "Bash(which *)",
       "Bash(head *)",
       "Bash(tail *)",
-      "Bash(wc *)"
+      "Bash(wc *)",
+      "Write(*.env.example)",
+      "Write(*.env.test)",
+      "Edit(*.env.example)",
+      "Edit(*.env.test)"
     ],
     "deny": [
       "Bash(git push --force *main*)",
@@ -72,8 +76,10 @@
       "Bash(iex *)",
       "Bash(iwr * | iex*)",
       "Bash(Invoke-WebRequest * | Invoke-Expression*)",
-      "Write(.env*)",
-      "Edit(.env*)",
+      "Write(.env)",
+      "Write(.env.local)",
+      "Edit(.env)",
+      "Edit(.env.local)",
       "Write(pnpm-lock.yaml)",
       "Edit(pnpm-lock.yaml)"
     ]

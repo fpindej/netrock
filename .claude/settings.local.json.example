@@ -1,7 +1,15 @@
 {
   "// README": "Copy to .claude/settings.local.json and customize. This file is gitignored.",
+  "// examples": "Uncomment patterns you need. Deny rules take precedence over allow.",
   "permissions": {
-    "allow": [],
+    "allow": [
+      "// Bash(npm *)",
+      "// Bash(yarn *)",
+      "// Bash(kubectl *)",
+      "// Bash(terraform *)",
+      "// Bash(az *)",
+      "// Bash(aws *)"
+    ],
     "deny": []
   }
 }
