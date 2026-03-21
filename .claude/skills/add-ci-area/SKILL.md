@@ -1,6 +1,6 @@
 ---
 description: Add a new project area to CI workflows
-user_invocable: true
+user-invocable: true
 ---
 
 Adds a new project area to CI.

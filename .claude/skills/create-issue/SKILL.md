@@ -1,6 +1,6 @@
 ---
 description: Create a GitHub issue with labels and optional sub-issues
-user_invocable: true
+user-invocable: true
 ---
 
 Creates a GitHub issue.

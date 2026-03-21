@@ -1,6 +1,6 @@
 ---
 description: Add a permission constant across backend and frontend
-user_invocable: true
+user-invocable: true
 ---
 
 Adds a permission constant across backend and frontend.

@@ -1,6 +1,6 @@
 ---
 description: Add an infrastructure dependency to Aspire AppHost
-user_invocable: true
+user-invocable: true
 ---
 
 Adds an infrastructure dependency to Aspire AppHost.

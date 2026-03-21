@@ -1,6 +1,6 @@
 ---
 description: Swap or remove the file storage provider (S3/MinIO)
-user_invocable: true
+user-invocable: true
 argument-hint: "[swap|remove]"
 ---
 

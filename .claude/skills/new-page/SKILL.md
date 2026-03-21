@@ -1,6 +1,6 @@
 ---
 description: Create a frontend page with routing, i18n, and navigation
-user_invocable: true
+user-invocable: true
 ---
 
 Creates a new frontend page with routing, i18n, and navigation.

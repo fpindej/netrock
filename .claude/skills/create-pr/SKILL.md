@@ -1,6 +1,6 @@
 ---
 description: Create a pull request for the current branch
-user_invocable: true
+user-invocable: true
 argument-hint: "[base branch]"
 ---
 

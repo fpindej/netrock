@@ -1,6 +1,6 @@
 ---
 description: Add an environment variable to backend or frontend
-user_invocable: true
+user-invocable: true
 ---
 
 Adds an environment variable (backend or frontend).

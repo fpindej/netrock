@@ -1,6 +1,6 @@
 ---
 description: Read PR review comments from GitHub, evaluate, address, and reply
-user_invocable: true
+user-invocable: true
 argument-hint: '[PR number]'
 ---
 

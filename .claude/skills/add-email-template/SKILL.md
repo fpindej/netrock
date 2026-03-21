@@ -1,6 +1,6 @@
 ---
 description: Add a transactional email template using Fluid (Liquid)
-user_invocable: true
+user-invocable: true
 ---
 
 Adds a transactional email template using Fluid (Liquid).

@@ -1,6 +1,6 @@
 ---
 description: Add a typed options/configuration class with validation
-user_invocable: true
+user-invocable: true
 ---
 
 Adds a typed options/configuration class.

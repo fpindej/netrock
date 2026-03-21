@@ -1,6 +1,6 @@
 ---
 description: Add tests following project test patterns
-user_invocable: true
+user-invocable: true
 argument-hint: "[unit|component|api|validator|frontend-unit|frontend-component]"
 ---
 

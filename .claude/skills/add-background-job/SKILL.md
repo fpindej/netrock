@@ -1,6 +1,6 @@
 ---
 description: Add a Hangfire background job (recurring or one-time)
-user_invocable: true
+user-invocable: true
 ---
 
 Adds a recurring or one-time Hangfire background job.

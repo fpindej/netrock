@@ -1,6 +1,6 @@
 ---
 description: Add an API endpoint to an existing feature controller
-user_invocable: true
+user-invocable: true
 ---
 
 Adds an API endpoint to an existing feature.

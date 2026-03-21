@@ -1,6 +1,6 @@
 ---
 description: Create a versioned GitHub release with changelog
-user_invocable: true
+user-invocable: true
 argument-hint: "[major|minor|patch] or [vX.Y.Z]"
 ---
 

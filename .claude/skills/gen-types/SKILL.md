@@ -1,6 +1,6 @@
 ---
 description: Regenerate frontend API types from the backend OpenAPI spec
-user_invocable: true
+user-invocable: true
 ---
 
 Regenerates frontend API types from the backend OpenAPI spec.

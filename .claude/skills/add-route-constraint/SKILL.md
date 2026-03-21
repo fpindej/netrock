@@ -1,6 +1,6 @@
 ---
 description: Add a route constraint for path parameter validation
-user_invocable: true
+user-invocable: true
 ---
 
 Adds a route constraint for validating string path parameters at the routing layer.
