@@ -21,4 +21,4 @@ Extends CLAUDE.md Hard Rules with implementation patterns.
 ## i18n
 - Keys: `{domain}_{feature}_{element}`, add to correct feature file in ALL locale directories
 - Import: `import * as m from '$lib/paraglide/messages'`
-- ~32 paraglide module errors in svelte-check are expected - ignore them
+- Paraglide module errors in svelte-check are expected (generated at build time) - ignore them
