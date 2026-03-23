@@ -4,8 +4,8 @@
     <FrameworkVersion>10.0.5</FrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.1.2" />
-    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.1.2" />
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.2.0" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.2.0" />
 
     <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.4.0" />
@@ -30,7 +30,7 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.12.0-beta.2" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.15.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.0" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.9" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.13" />
     <PackageVersion Include="Serilog" Version="4.3.1" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
