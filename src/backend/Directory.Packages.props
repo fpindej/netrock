@@ -55,6 +55,6 @@
     <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.4.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(FrameworkVersion)" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="coverlet.collector" Version="8.0.1" />
   </ItemGroup>
 </Project>
