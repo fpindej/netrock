@@ -41,7 +41,7 @@
     <PackageVersion Include="CommunityToolkit.Aspire.Hosting.MailPit" Version="13.3.0" />
     <PackageVersion Include="CommunityToolkit.Aspire.Hosting.Minio" Version="13.3.0" />
     <PackageVersion Include="AWSSDK.S3" Version="4.0.23.4" />
-    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp" Version="4.150.0" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
   </ItemGroup>
   <ItemGroup Label="Test">
