@@ -38,7 +38,7 @@ docker compose version
 | Tool | Required | Check |
 |---|---|---|
 | .NET SDK | 10.0+ (pinned in `global.json`) | `dotnet --version` |
-| Node.js | 22+ | `node --version` |
+| Node.js | 24+ | `node --version` |
 | pnpm | 10.x (managed via corepack) | `pnpm --version` |
 | Docker | Recent with Compose V2 | `docker compose version` |
 | Git | Any recent version | `git --version` |

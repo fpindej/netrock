@@ -56,7 +56,7 @@ Every project starts the same way: authentication, role management, rate limitin
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- [Node.js 22+](https://nodejs.org/) (run `corepack enable` for pnpm)
+- [Node.js 24+](https://nodejs.org/) (run `corepack enable` for pnpm)
 - [Git](https://git-scm.com/)
 
 ### 1. Clone & Initialize
