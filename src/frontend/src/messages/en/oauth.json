@@ -17,6 +17,8 @@
 	"oauth_callback_alreadyLinked": "This external account is already linked to another user.",
 	"oauth_callback_emailNotVerified": "Your email must be verified before linking an external account. Please verify your email first.",
 	"oauth_callback_stateExpired": "The sign-in session has expired. Please try again.",
+	"oauth_callback_invalidState": "The sign-in request is invalid or was already used. Please try again.",
+	"oauth_callback_providerError": "The sign-in provider returned an error. Please try again later.",
 	"oauth_callback_accountLocked": "Your account is temporarily locked. Please try again later.",
 
 	"settings_oauth_title": "Connected Accounts",

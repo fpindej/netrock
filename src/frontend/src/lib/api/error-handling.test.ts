@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	getErrorCode,
 	getErrorMessage,
 	getRetryAfterSeconds,
 	isFetchErrorWithCode,
@@ -185,7 +186,67 @@ describe('mapFieldErrors', () => {
 	});
 });
 
+// ── getErrorCode ────────────────────────────────────────────────────
+
+describe('getErrorCode', () => {
+	it('ProblemDetails with code - returns code', () => {
+		const error = {
+			status: 409,
+			detail: 'Already linked.',
+			code: 'external_auth_already_linked_to_other_user'
+		};
+		expect(getErrorCode(error)).toBe('external_auth_already_linked_to_other_user');
+	});
+
+	it('ProblemDetails without code - returns null', () => {
+		expect(getErrorCode({ status: 404, detail: 'Not found.' })).toBeNull();
+	});
+
+	it('code is empty string - returns null', () => {
+		expect(getErrorCode({ code: '' })).toBeNull();
+	});
+
+	it('code is non-string - returns null', () => {
+		expect(getErrorCode({ code: 42 })).toBeNull();
+	});
+
+	it('null error - returns null', () => {
+		expect(getErrorCode(null)).toBeNull();
+	});
+
+	it('string error - returns null', () => {
+		expect(getErrorCode('oops')).toBeNull();
+	});
+});
+
 // ── getErrorMessage ─────────────────────────────────────────────────
+
+describe('getErrorMessage with messagesByCode', () => {
+	const messages = {
+		auth_login_account_locked: () => 'translated locked',
+		auth_login_invalid_credentials: () => 'translated invalid'
+	};
+
+	it('code matches a message - returns translated message over detail', () => {
+		const error = { detail: 'Account is temporarily locked.', code: 'auth_login_account_locked' };
+		expect(getErrorMessage(error, 'fallback', messages)).toBe('translated locked');
+	});
+
+	it('code without a matching message - falls back to detail', () => {
+		const error = { detail: 'Some other error.', code: 'unknown_code' };
+		expect(getErrorMessage(error, 'fallback', messages)).toBe('Some other error.');
+	});
+
+	it('no code - falls back to detail', () => {
+		const error = { detail: 'Detail only.' };
+		expect(getErrorMessage(error, 'fallback', messages)).toBe('Detail only.');
+	});
+
+	it('code without a matching message and no detail - returns fallback', () => {
+		const error = { code: 'unknown_code' };
+		expect(getErrorMessage(error, 'fallback', messages)).toBe('fallback');
+	});
+});
 
 describe('getErrorMessage', () => {
 	it('error with detail - returns detail', () => {
