@@ -31,7 +31,6 @@ internal sealed class EmailDeliveryJob(SmtpEmailService smtpEmailService)
     /// </summary>
     /// <param name="message">The rendered email message to deliver.</param>
     /// <param name="cancellationToken">Hangfire-injected token signalling server shutdown.</param>
-    // Backoff between retries: 30s, 2m, 10m, 30m, 1h (roughly 1.7 hours in total).
     [AutomaticRetry(Attempts = RetryAttempts, DelaysInSeconds = [30, 120, 600, 1800, 3600],
         OnAttemptsExceeded = AttemptsExceededAction.Fail)]
     public Task ExecuteAsync(EmailMessage message, CancellationToken cancellationToken) =>
