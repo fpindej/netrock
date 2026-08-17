@@ -8,7 +8,11 @@ namespace MyProject.Infrastructure.Features.Email.Jobs;
 /// Hangfire job that delivers a single rendered email via SMTP.
 /// Enqueued by <see cref="BackgroundEmailService"/> so that transient SMTP failures
 /// are retried automatically instead of being silently lost. Failed deliveries remain
-/// visible in the Hangfire dashboard, where they can be retried manually.
+/// in Hangfire storage (visible in the development dashboard), where they can be retried manually.
+/// <para>
+/// The rendered <see cref="EmailMessage"/> (including any verification or reset links) is persisted
+/// as the job payload until the job expires, so Hangfire storage must be treated as sensitive data.
+/// </para>
 /// </summary>
 internal sealed class EmailDeliveryJob(SmtpEmailService smtpEmailService)
 {
