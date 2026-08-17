@@ -58,33 +58,38 @@ services.AddScoped<IRecurringJobDefinition>(sp => sp.GetRequiredService<MyCleanu
 
 ## One-Time Job
 
-For ad-hoc background work (send email, call API, process file), use `IBackgroundJobClient` directly.
+For ad-hoc background work (call API, process file, generate report), use `IBackgroundJobClient` directly.
 
-**1. Create the job class** in `src/backend/MyProject.Infrastructure/Features/Jobs/`:
+Note: transactional emails are already queued automatically - `ITemplatedEmailSender.SendSafeAsync()` routes through `BackgroundEmailService` -> `EmailDeliveryJob` (`Features/Email/Jobs/`) whenever email and job scheduling are both enabled. Do not wrap email sends in another job.
+
+**1. Create the job class** in `src/backend/MyProject.Infrastructure/Features/{Feature}/Jobs/` (or `Features/Jobs/` for cross-cutting jobs):
 
 ```csharp
-internal sealed class WelcomeEmailJob(
-    ITemplatedEmailSender templatedEmailSender,
-    ILogger<WelcomeEmailJob> logger)
+internal sealed class ReportGenerationJob(
+    IReportService reportService,
+    ILogger<ReportGenerationJob> logger)
 {
-    public async Task ExecuteAsync(string userId, string email)
+    [AutomaticRetry(Attempts = 3, DelaysInSeconds = [30, 120, 600])]
+    public async Task ExecuteAsync(Guid reportId, CancellationToken cancellationToken)
     {
-        await templatedEmailSender.SendSafeAsync("welcome", new WelcomeModel(email), email, default);
-        logger.LogInformation("Sent welcome email to user '{UserId}'", userId);
+        await reportService.GenerateAsync(reportId, cancellationToken);
+        logger.LogInformation("Generated report '{ReportId}'", reportId);
     }
 }
 ```
 
-All parameters must be **JSON-serializable** (Hangfire persists them). Never pass `IServiceProvider`, `HttpContext`, or `DbContext` as arguments.
+All parameters must be **JSON-serializable** (Hangfire persists them). Never pass `IServiceProvider`, `HttpContext`, or `DbContext` as arguments. A trailing `CancellationToken` parameter is injected by Hangfire (server shutdown) - pass `CancellationToken.None` in the enqueue expression.
 
-**2. Register:** `services.AddScoped<WelcomeEmailJob>();`
+Let exceptions propagate - `[AutomaticRetry]` only retries when the method throws. Retries re-run the whole method, so keep it idempotent.
+
+**2. Register:** `services.AddScoped<ReportGenerationJob>();`
 
 **3. Enqueue:**
 
 ```csharp
 // Fire-and-forget
-backgroundJobClient.Enqueue<WelcomeEmailJob>(job => job.ExecuteAsync(user.Id, user.Email));
+backgroundJobClient.Enqueue<ReportGenerationJob>(job => job.ExecuteAsync(reportId, CancellationToken.None));
 
 // Delayed
-backgroundJobClient.Schedule<WelcomeEmailJob>(job => job.ExecuteAsync(user.Id, user.Email), TimeSpan.FromMinutes(30));
+backgroundJobClient.Schedule<ReportGenerationJob>(job => job.ExecuteAsync(reportId, CancellationToken.None), TimeSpan.FromMinutes(30));
 ```
