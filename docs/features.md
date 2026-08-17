@@ -19,7 +19,7 @@
 | **Database** | PostgreSQL + EF Core with soft delete, full audit trail (created/updated/deleted by + at), global query filters |
 | **Audit Trail** | Append-only audit events table with JSONB metadata, action constants covering auth, account, admin, role, and OAuth operations. Admin per-user view and user self-activity log |
 | **API Documentation** | OpenAPI spec + Scalar UI, with custom transformers for enums, nullable types, numeric schemas, and camelCase query params |
-| **Error Handling** | Result pattern for business logic, `ProblemDetails` ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)) on every error response, structured error messages |
+| **Error Handling** | Result pattern for business logic, `ProblemDetails` ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)) on every error response with a stable machine-readable `code` extension alongside the human-readable `detail` |
 | **Logging** | Serilog bridged to OpenTelemetry with structured request logging, correlation, and Aspire Dashboard |
 | **Account Management** | Registration with CAPTCHA, login/logout, remember me, email verification, password reset, profile updates with avatar upload, account deletion, connected OAuth accounts management, set password for OAuth-only users |
 | **Admin Panel API** | User CRUD with search/pagination, custom role management with permission editor, role assignment with hierarchy enforcement, background job management, OAuth provider configuration, 2FA management |

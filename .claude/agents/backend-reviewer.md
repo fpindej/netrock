@@ -18,7 +18,7 @@ WebApi -> Application <- Infrastructure
 All layers reference Shared (Result, ErrorType, ErrorMessages)
 ```
 
-- **Shared**: `Result`/`Result<T>`, `ErrorType`, `ErrorMessages`. Zero deps.
+- **Shared**: `Result`/`Result<T>`, `Error` (code + message), `ErrorType`, `ErrorMessages`. Zero deps.
 - **Domain**: Entities (`BaseEntity`). Zero deps.
 - **Application**: Interfaces, DTOs (Input/Output), service contracts.
 - **Infrastructure**: EF Core, Identity, services. All implementations `internal`.
@@ -28,7 +28,7 @@ All layers reference Shared (Result, ErrorType, ErrorMessages)
 
 ### Result Pattern
 - All fallible operations return `Result`/`Result<T>` - never throw for business logic
-- `Result.Failure(ErrorMessages.*, ErrorType.*)` with centralized constants
+- `Result.Failure(ErrorMessages.*, ErrorType.*)` with centralized `Error` entries (stable snake_case `code` + message; never rename a code)
 - Runtime values in logs, never in Result messages
 - Controllers use `ProblemFactory.Create(result.Error, result.ErrorType)` for failures
 

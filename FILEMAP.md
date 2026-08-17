@@ -26,8 +26,9 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 |---|---|
 | **Domain entity** (add/rename property) | EF configuration, migration, Application DTOs, WebApi DTOs, mapper, frontend types (`pnpm run api:generate`) |
 | **Domain entity** (add enum property) | EF config (`.HasComment()`), `EnumSchemaTransformer` handles the rest automatically |
-| **`ErrorMessages.cs`** (Shared - add/rename constant) | Service that uses it; frontend may display message directly |
-| **`Result.cs`** (Shared - change pattern) | Every service + every controller that matches on `Result` |
+| **`ErrorMessages.cs`** (Shared - add/rename `Error` entry) | Service that uses it; `ErrorMessagesTests` (code must be `{nested_class}_{field_name}` snake_case); frontend `ErrorMessagesByCode` maps keyed on the code (renaming a code is a breaking API change) |
+| **`Result.cs`** / **`Error.cs`** (Shared - change pattern) | Every service + every controller that matches on `Result`; `ProblemFactory` |
+| **`ProblemFactory`** (WebApi - ProblemDetails shape, `code` extension) | `ProblemDetailsSchemaTransformer` (OpenAPI), `ExceptionHandlingMiddleware`, `OriginValidationMiddleware`, `RateLimiterExtensions`, `ProblemDetailsAuthorizationHandler`, `Program.cs` (`EnsureCode`), `ProblemDetailsAssert` + `ProblemDetailsCodeTests` (Api.Tests), frontend `v1.d.ts` regeneration |
 | **Application interface** (change signature) | Infrastructure service implementation, controller calling the service |
 | **Application DTO** (add/rename/remove field) | Infrastructure service, WebApi mapper, WebApi request/response DTO, frontend types |
 | **Infrastructure Options class** | `appsettings.json`, `appsettings.Development.json` (excluded from production publish - see `StripDevConfig`), DI registration |
@@ -79,7 +80,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Connection string config** (change format/name) | Verify `MyProject.AppHost/Program.cs` environment variable mapping still works |
 | **`MyProject.ServiceDefaults/Extensions.cs`** | All projects referencing ServiceDefaults, `Program.cs` `AddServiceDefaults()` call |
 | **`MyProject.AppHost/Program.cs`** | Verify resource names match `ConnectionStrings:*` and `WithEnvironment` keys match `appsettings.json` option paths |
-| **`ProblemDetailsAuthorizationHandler`** | `ProblemDetails` shape, `ErrorMessages.Auth` constants, `Program.cs` registration |
+| **`ProblemDetailsAuthorizationHandler`** | `ProblemFactory.CreateProblemDetails`, `ErrorMessages.Auth` entries, `Program.cs` registration |
 | **`CaptchaOptions`** (Infrastructure - Captcha config) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `TurnstileCaptchaService`, `ServiceCollectionExtensions` |
 | **`TurnstileCaptchaService`** (Infrastructure - Captcha service) | `ICaptchaService` interface, `CaptchaOptions`, `AuthController` captcha gate |
 | **`TurnstileWidget.svelte`** (Frontend - Captcha widget) | `RegisterForm.svelte`, `ForgotPasswordForm.svelte`, `app.d.ts` (`Window.turnstile`), `TURNSTILE_SITE_KEY` env var (runtime-configurable via `$env/dynamic/private` and SSR layout data) |
@@ -91,7 +92,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`$lib/utils/permissions.ts`** (add permission) | Backend `AppPermissions.cs` must have matching constant; update components checking that permission |
 | **`v1.d.ts`** (regenerated) | Type aliases in `$lib/types/index.ts`, any component using changed schemas |
 | **`$lib/api/client.ts`** | Every component using `browserClient` or `createApiClient` |
-| **`$lib/api/error-handling.ts`** | Components that call `getErrorMessage`, `mapFieldErrors`, `isValidationProblemDetails`, `isRateLimited`, `getRetryAfterSeconds`; `mutation.ts` (wraps these utilities) |
+| **`$lib/api/error-handling.ts`** | Components that call `getErrorMessage`, `getErrorCode`, `mapFieldErrors`, `isValidationProblemDetails`, `isRateLimited`, `getRetryAfterSeconds`; `mutation.ts` (wraps these utilities); OAuth callback page and `LoginForm` (`ErrorMessagesByCode` maps) |
 | **`$lib/api/mutation.ts`** | All form components using `handleMutationError()` for rate-limit, validation, and generic error handling |
 | **`$lib/state/cooldown.svelte.ts`** | Components that call `createCooldown` for rate limit button disable |
 | **`$lib/config/server.ts`** | Server load functions that import `SERVER_CONFIG` |
@@ -145,7 +146,7 @@ Files that are frequently referenced in impact tables above. For anything not li
 
 ```
 src/backend/MyProject.{Layer}/
-  Shared:          Result.cs, ErrorType.cs, ErrorMessages.cs, PhoneNumberHelper.cs
+  Shared:          Result.cs, Error.cs, ErrorType.cs, ErrorMessages.cs, PhoneNumberHelper.cs
   Domain:          Entities/{Entity}.cs
   Application:     Features/{Feature}/I{Feature}Service.cs
                    Features/{Feature}/Dtos/{Operation}Input.cs, {Entity}Output.cs
@@ -167,7 +168,8 @@ src/backend/MyProject.{Layer}/
                    Authorization/RequirePermissionAttribute.cs (+ handler, provider, requirement)
                    Authorization/ProblemDetailsAuthorizationHandler.cs
                    Routing/{Name}RouteConstraint.cs
-                   Shared/RateLimitPolicies.cs
+                   Shared/RateLimitPolicies.cs, ProblemFactory.cs
+                   Features/OpenApi/Transformers/{Name}SchemaTransformer.cs
                    Program.cs
 ```
 
@@ -245,6 +247,9 @@ src/backend/tests/
   MyProject.Api.Tests/
     Fixtures/CustomWebApplicationFactory.cs      WebApplicationFactory config
     Fixtures/TestAuthHandler.cs                  Fake auth handler
+    Fixtures/ProblemDetailsAssert.cs             Shared ProblemDetails (status/detail/code) assertions
+    Shared/ProblemFactoryTests.cs                ProblemFactory + code fallback tests
+    Middlewares/ProblemDetailsCodeTests.cs       End-to-end `code` presence across the pipeline
     Contracts/ResponseContracts.cs               Frozen response shapes for contract testing
     Controllers/{Controller}Tests.cs             HTTP integration tests
     Validators/{Validator}Tests.cs               FluentValidation tests
@@ -260,7 +265,7 @@ src/backend/tests/
 |---|---|
 | `src/backend/MyProject.WebApi/Program.cs` | DI wiring, middleware pipeline |
 | `src/backend/MyProject.Infrastructure/Persistence/MyProjectDbContext.cs` | DbSets, migrations |
-| `src/backend/MyProject.Shared/ErrorMessages.cs` | All static error strings |
+| `src/backend/MyProject.Shared/ErrorMessages.cs` | All client-facing errors (`Error` = stable snake_case code + message) |
 | `src/backend/MyProject.Application/Identity/Constants/AppRoles.cs` | Role definitions |
 | `src/backend/MyProject.Application/Identity/Constants/AppPermissions.cs` | Permission definitions (reflection-discovered) |
 | `src/backend/MyProject.Application/Caching/Constants/CacheKeys.cs` | Cache key constants (used across services) |

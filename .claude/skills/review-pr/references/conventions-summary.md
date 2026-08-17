@@ -45,7 +45,7 @@
 
 ## Error Flow
 
-Backend `ErrorMessages.*` -> `Result.Failure()` -> `ProblemFactory.Create()` -> `ProblemDetails.detail` -> Frontend `getErrorMessage()`
+Backend `ErrorMessages.*` (`Error`: code + message) -> `Result.Failure()` -> `ProblemFactory.Create()` -> `ProblemDetails.detail` + `code` -> Frontend `getErrorMessage(error, fallback, messagesByCode)` / `getErrorCode()`
 
 ## Dockerfile
 

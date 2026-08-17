@@ -24,7 +24,7 @@ Use these as starting points - fill in the specifics from context:
 1. Create `src/backend/MyProject.Domain/Entities/{Entity}.cs`:
    - Extend `BaseEntity`, private setters, protected parameterless ctor, public ctor with `Id = Guid.NewGuid()`
 2. If enums: create alongside entity with explicit integer values
-3. Add error messages to `src/backend/MyProject.Shared/ErrorMessages.cs`
+3. Add `Error` entries (snake_case code + message) to `src/backend/MyProject.Shared/ErrorMessages.cs`
 
 **Infrastructure:**
 
