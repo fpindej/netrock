@@ -384,7 +384,7 @@ public class UserServiceTests : IDisposable
         var result = await _sut.UploadAvatarAsync([0xFF], "photo.exe", CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        Assert.Contains("Unsupported", result.Error);
+        Assert.Equal(ErrorMessages.Avatar.UnsupportedFormat, result.Error);
         await _fileStorageService.DidNotReceive()
             .UploadAsync(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
@@ -400,7 +400,7 @@ public class UserServiceTests : IDisposable
         _imageProcessingService.ProcessAvatar(Arg.Any<byte[]>(), Arg.Any<string>(), Arg.Any<int>())
             .Returns(Result<ProcessedImageOutput>.Success(processed));
         _fileStorageService.UploadAsync(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Failure("S3 error"));
+            .Returns(Result.Failure(ErrorMessages.FileStorage.UploadFailed));
 
         var result = await _sut.UploadAvatarAsync([0xFF], "photo.jpg", CancellationToken.None);
 
@@ -499,7 +499,7 @@ public class UserServiceTests : IDisposable
         _userManager.UpdateAsync(user).Returns(IdentityResult.Success);
         _userManager.GetRolesAsync(user).Returns(new List<string> { "User" });
         _fileStorageService.DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Failure("S3 error"));
+            .Returns(Result.Failure(ErrorMessages.FileStorage.DeleteFailed));
 
         var result = await _sut.RemoveAvatarAsync(CancellationToken.None);
 
@@ -570,7 +570,7 @@ public class UserServiceTests : IDisposable
         var user = new ApplicationUser { Id = _userId, UserName = "test@example.com", HasAvatar = true };
         _userManager.FindByIdAsync(_userId.ToString()).Returns(user);
         _fileStorageService.DownloadAsync($"avatars/{_userId}.webp", Arg.Any<CancellationToken>())
-            .Returns(Result<FileDownloadOutput>.Failure("Storage error"));
+            .Returns(Result<FileDownloadOutput>.Failure(ErrorMessages.FileStorage.DownloadFailed));
 
         var result = await _sut.GetAvatarAsync(_userId, CancellationToken.None);
 
@@ -610,7 +610,7 @@ public class UserServiceTests : IDisposable
         _userManager.GetRolesAsync(user).Returns(new List<string> { "User" });
         _userManager.DeleteAsync(user).Returns(IdentityResult.Success);
         _fileStorageService.DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Failure("S3 error"));
+            .Returns(Result.Failure(ErrorMessages.FileStorage.DeleteFailed));
 
         var result = await _sut.DeleteAccountAsync(new DeleteAccountInput("correct"));
 

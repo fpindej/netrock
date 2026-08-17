@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Features.Authentication.Dtos;
@@ -36,16 +35,6 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
         return msg;
     }
 
-    private static async Task AssertProblemDetailsAsync(
-        HttpResponseMessage response, int expectedStatus, string? expectedDetail = null)
-    {
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(expectedStatus, json.GetProperty("status").GetInt32());
-        if (expectedDetail is not null)
-        {
-            Assert.Equal(expectedDetail, json.GetProperty("detail").GetString());
-        }
-    }
 
     #region GetProviders
 
@@ -118,7 +107,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
                 JsonContent.Create(new { Provider = "Unknown", RedirectUri = "https://example.com/oauth/callback" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.ExternalAuth.ProviderNotConfigured);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.ExternalAuth.ProviderNotConfigured);
     }
 
     [Fact]
@@ -223,7 +212,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
                 JsonContent.Create(new { Code = "auth-code", State = "bad-state" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.ExternalAuth.InvalidState);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.ExternalAuth.InvalidState);
     }
 
     [Fact]
@@ -269,7 +258,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
                 TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.ExternalAuth.CannotUnlinkLastMethod);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.ExternalAuth.CannotUnlinkLastMethod);
     }
 
     [Fact]
@@ -315,7 +304,7 @@ public class ExternalAuthControllerTests : IClassFixture<CustomWebApplicationFac
                 TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.ExternalAuth.PasswordAlreadySet);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.ExternalAuth.PasswordAlreadySet);
     }
 
     [Fact]

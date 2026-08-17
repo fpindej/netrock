@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Identity.Constants;
 using MyProject.Shared;
@@ -28,16 +27,6 @@ public class AdminControllerDisableTwoFactorTests : IClassFixture<CustomWebAppli
         return request;
     }
 
-    private static async Task AssertProblemDetailsAsync(
-        HttpResponseMessage response, int expectedStatus, string? expectedDetail = null)
-    {
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(expectedStatus, json.GetProperty("status").GetInt32());
-        if (expectedDetail is not null)
-        {
-            Assert.Equal(expectedDetail, json.GetProperty("detail").GetString());
-        }
-    }
 
     [Fact]
     public async Task DisableTwoFactor_WithPermission_Returns204()
@@ -92,7 +81,7 @@ public class AdminControllerDisableTwoFactorTests : IClassFixture<CustomWebAppli
                 JsonContent.Create(new { Reason = (string?)null })));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Admin.UserNotFound);
+        await ProblemDetailsAssert.MatchesAsync(response, 404, ErrorMessages.Admin.UserNotFound);
     }
 
     [Fact]
@@ -109,7 +98,7 @@ public class AdminControllerDisableTwoFactorTests : IClassFixture<CustomWebAppli
                 JsonContent.Create(new { Reason = (string?)null })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Admin.TwoFactorNotEnabled);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Admin.TwoFactorNotEnabled);
     }
 
     [Fact]

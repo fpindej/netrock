@@ -4,6 +4,8 @@ namespace MyProject.Unit.Tests.Shared;
 
 public class ResultGenericTests
 {
+    private static readonly Error TestError = new("test_error", "error");
+
     [Fact]
     public void Success_ShouldSetIsSuccessTrue()
     {
@@ -33,24 +35,29 @@ public class ResultGenericTests
     [Fact]
     public void Failure_ShouldSetIsSuccessFalse()
     {
-        var result = Result<int>.Failure("error");
+        var result = Result<int>.Failure(TestError);
 
         Assert.False(result.IsSuccess);
         Assert.True(result.IsFailure);
     }
 
     [Fact]
-    public void Failure_ShouldPreserveErrorMessage()
+    public void Failure_ShouldPreserveError()
     {
-        var result = Result<int>.Failure("something broke");
+        var error = new Error("something_broke", "something broke");
 
-        Assert.Equal("something broke", result.Error);
+        var result = Result<int>.Failure(error);
+
+        Assert.NotNull(result.Error);
+        Assert.Same(error, result.Error);
+        Assert.Equal("something_broke", result.Error.Code);
+        Assert.Equal("something broke", result.Error.Message);
     }
 
     [Fact]
-    public void Failure_WithMessage_ShouldDefaultToValidationErrorType()
+    public void Failure_WithError_ShouldDefaultToValidationErrorType()
     {
-        var result = Result<int>.Failure("error");
+        var result = Result<int>.Failure(TestError);
 
         Assert.Equal(ErrorType.Validation, result.ErrorType);
     }
@@ -59,9 +66,9 @@ public class ResultGenericTests
     [InlineData(ErrorType.Validation)]
     [InlineData(ErrorType.Unauthorized)]
     [InlineData(ErrorType.NotFound)]
-    public void Failure_WithMessageAndErrorType_ShouldPreserveErrorType(ErrorType errorType)
+    public void Failure_WithErrorAndErrorType_ShouldPreserveErrorType(ErrorType errorType)
     {
-        var result = Result<string>.Failure("error", errorType);
+        var result = Result<string>.Failure(TestError, errorType);
 
         Assert.Equal(errorType, result.ErrorType);
     }
@@ -69,7 +76,7 @@ public class ResultGenericTests
     [Fact]
     public void Value_OnFailure_ShouldThrowInvalidOperationException()
     {
-        var result = Result<int>.Failure("error");
+        var result = Result<int>.Failure(TestError);
 
         var exception = Assert.Throws<InvalidOperationException>(() => result.Value);
         Assert.Equal("Cannot access Value on a failed result.", exception.Message);
@@ -96,10 +103,10 @@ public class ResultGenericTests
     [Fact]
     public void ResultGeneric_Failure_InheritsFromResult()
     {
-        Result result = Result<int>.Failure("error", ErrorType.NotFound);
+        Result result = Result<int>.Failure(TestError, ErrorType.NotFound);
 
         Assert.True(result.IsFailure);
-        Assert.Equal("error", result.Error);
+        Assert.Equal(TestError, result.Error);
         Assert.Equal(ErrorType.NotFound, result.ErrorType);
     }
 }

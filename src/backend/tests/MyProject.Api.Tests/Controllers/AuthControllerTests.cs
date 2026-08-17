@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Cookies.Constants;
@@ -30,16 +29,6 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         return msg;
     }
 
-    private static async Task AssertProblemDetailsAsync(
-        HttpResponseMessage response, int expectedStatus, string? expectedDetail = null)
-    {
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(expectedStatus, json.GetProperty("status").GetInt32());
-        if (expectedDetail is not null)
-        {
-            Assert.Equal(expectedDetail, json.GetProperty("detail").GetString());
-        }
-    }
 
     #region Login
 
@@ -75,7 +64,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/login", JsonContent.Create(new { Username = "test@example.com", Password = "wrong" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.LoginInvalidCredentials);
+        await ProblemDetailsAssert.MatchesAsync(response, 401, ErrorMessages.Auth.LoginInvalidCredentials);
     }
 
     [Fact]
@@ -132,13 +121,13 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         _factory.CaptchaService.ValidateTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(true);
         _factory.AuthenticationService.Register(Arg.Any<RegisterInput>(), Arg.Any<CancellationToken>())
-            .Returns(Result<Guid>.Failure("Email already registered."));
+            .Returns(Result<Guid>.Failure(ErrorMessages.Admin.EmailAlreadyRegistered));
 
         var response = await _client.SendAsync(
             Post("/api/auth/register", JsonContent.Create(new { Email = "dup@example.com", Password = "Password1!", CaptchaToken = "valid-token" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, "Email already registered.");
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Admin.EmailAlreadyRegistered);
     }
 
     [Fact]
@@ -151,7 +140,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/register", JsonContent.Create(new { Email = "new@example.com", Password = "Password1!", CaptchaToken = "invalid-token" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.CaptchaInvalid);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Auth.CaptchaInvalid);
     }
 
     [Fact]
@@ -208,7 +197,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/refresh", JsonContent.Create(new { })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.TokenMissing);
+        await ProblemDetailsAssert.MatchesAsync(response, 401, ErrorMessages.Auth.TokenMissing);
     }
 
     [Fact]
@@ -240,7 +229,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/refresh", JsonContent.Create(new { RefreshToken = "invalid" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.TokenInvalidated);
+        await ProblemDetailsAssert.MatchesAsync(response, 401, ErrorMessages.Auth.TokenInvalidated);
     }
 
     [Fact]
@@ -279,7 +268,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
         var response = await _client.SendAsync(Post("/api/auth/logout"));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
+        await ProblemDetailsAssert.MatchesAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
     }
 
     #endregion
@@ -316,7 +305,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
     {
         _factory.AuthenticationService.ChangePasswordAsync(
                 Arg.Any<ChangePasswordInput>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Failure("Current password is incorrect."));
+            .Returns(Result.Failure(ErrorMessages.Auth.PasswordIncorrect));
 
         var response = await _client.SendAsync(
             Post("/api/auth/password/change",
@@ -324,7 +313,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, "Current password is incorrect.");
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Auth.PasswordIncorrect);
     }
 
     #endregion
@@ -374,7 +363,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/password/forgot", JsonContent.Create(new { Email = "test@example.com", CaptchaToken = "invalid-token" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.CaptchaInvalid);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Auth.CaptchaInvalid);
     }
 
     [Fact]
@@ -422,7 +411,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.ResetPasswordTokenInvalid);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Auth.ResetPasswordTokenInvalid);
     }
 
     [Fact]
@@ -484,7 +473,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.EmailVerificationFailed);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Auth.EmailVerificationFailed);
     }
 
     [Fact]
@@ -531,7 +520,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/email/resend-verification", auth: TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.EmailAlreadyVerified);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Auth.EmailAlreadyVerified);
     }
 
     #endregion
@@ -593,7 +582,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/two-factor/login", JsonContent.Create(new { ChallengeToken = "challenge-token", Code = "000000" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 401, ErrorMessages.TwoFactor.InvalidCode);
+        await ProblemDetailsAssert.MatchesAsync(response, 401, ErrorMessages.TwoFactor.InvalidCode);
     }
 
     [Fact]
@@ -647,7 +636,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/two-factor/login/recovery", JsonContent.Create(new { ChallengeToken = "challenge-token", RecoveryCode = "BAD-CODE" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 401, ErrorMessages.TwoFactor.RecoveryCodeInvalid);
+        await ProblemDetailsAssert.MatchesAsync(response, 401, ErrorMessages.TwoFactor.RecoveryCodeInvalid);
     }
 
     [Fact]
@@ -687,7 +676,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
             Post("/api/auth/two-factor/setup"));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
+        await ProblemDetailsAssert.MatchesAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
     }
 
     #endregion
@@ -725,7 +714,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.TwoFactor.VerificationFailed);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.TwoFactor.VerificationFailed);
     }
 
     [Fact]
@@ -736,7 +725,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 JsonContent.Create(new { Code = "123456" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
+        await ProblemDetailsAssert.MatchesAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
     }
 
     #endregion
@@ -765,7 +754,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 JsonContent.Create(new { Password = "Password1!" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
+        await ProblemDetailsAssert.MatchesAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
     }
 
     [Fact]
@@ -780,7 +769,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.TwoFactor.NotEnabled);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.TwoFactor.NotEnabled);
     }
 
     #endregion
@@ -813,7 +802,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 JsonContent.Create(new { Password = "Password1!" })));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
+        await ProblemDetailsAssert.MatchesAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
     }
 
     [Fact]
@@ -828,7 +817,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>, I
                 TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.TwoFactor.NotEnabled);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.TwoFactor.NotEnabled);
     }
 
     #endregion

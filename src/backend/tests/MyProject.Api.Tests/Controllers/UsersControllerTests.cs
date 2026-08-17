@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text.Json;
 using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Features.Audit.Dtos;
@@ -65,16 +64,6 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         return content;
     }
 
-    private static async Task AssertProblemDetailsAsync(
-        HttpResponseMessage response, int expectedStatus, string? expectedDetail = null)
-    {
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(expectedStatus, json.GetProperty("status").GetInt32());
-        if (expectedDetail is not null)
-        {
-            Assert.Equal(expectedDetail, json.GetProperty("detail").GetString());
-        }
-    }
 
     #region GetMe
 
@@ -103,7 +92,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var response = await _client.SendAsync(Get("/api/users/me"));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
+        await ProblemDetailsAssert.MatchesAsync(response, 401, ErrorMessages.Auth.NotAuthenticated);
     }
 
     [Fact]
@@ -115,7 +104,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var response = await _client.SendAsync(Get("/api/users/me", TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.User.NotFound);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.User.NotFound);
     }
 
     #endregion
@@ -191,7 +180,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Put("/api/users/me/avatar", CreateAvatarUpload(), TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Avatar.FileTooLarge);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Avatar.FileTooLarge);
     }
 
     #endregion
@@ -257,7 +246,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get($"/api/users/{userId}/avatar", TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Avatar.NotFound);
+        await ProblemDetailsAssert.MatchesAsync(response, 404, ErrorMessages.Avatar.NotFound);
     }
 
     [Fact]
@@ -308,7 +297,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Delete("/api/users/me", JsonContent.Create(new { Password = "WrongPass1!" }), TestAuth.User()));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.User.DeleteInvalidPassword);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.User.DeleteInvalidPassword);
     }
 
     #endregion

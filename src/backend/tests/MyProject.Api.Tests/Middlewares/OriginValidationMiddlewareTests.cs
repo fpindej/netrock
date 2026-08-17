@@ -1,6 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Shared;
 
@@ -127,9 +125,7 @@ public class OriginValidationMiddlewareTests : IClassFixture<CustomWebApplicatio
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
 
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(403, json.GetProperty("status").GetInt32());
-        Assert.Equal(ErrorMessages.Security.CrossOriginRequestBlocked, json.GetProperty("detail").GetString());
+        await ProblemDetailsAssert.MatchesAsync(response, 403, ErrorMessages.Security.CrossOriginRequestBlocked);
     }
 
     // ── Origin case insensitivity ───────────────────────────────────

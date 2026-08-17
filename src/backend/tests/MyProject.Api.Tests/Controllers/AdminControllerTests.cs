@@ -52,16 +52,6 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         return request;
     }
 
-    private static async Task AssertProblemDetailsAsync(
-        HttpResponseMessage response, int expectedStatus, string? expectedDetail = null)
-    {
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(expectedStatus, json.GetProperty("status").GetInt32());
-        if (expectedDetail is not null)
-        {
-            Assert.Equal(expectedDetail, json.GetProperty("detail").GetString());
-        }
-    }
 
     #region ListUsers
 
@@ -155,7 +145,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get($"/api/v1/admin/users/{userId}", TestAuth.WithPermissions(AppPermissions.Users.View)));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Admin.UserNotFound);
+        await ProblemDetailsAssert.MatchesAsync(response, 404, ErrorMessages.Admin.UserNotFound);
     }
 
     [Fact]
@@ -331,7 +321,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
                 JsonContent.Create(new { Role = "Admin" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Admin.RoleAssignAboveRank);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Admin.RoleAssignAboveRank);
     }
 
     [Fact]
@@ -348,7 +338,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
                 JsonContent.Create(new { Role = "PrivilegedRole" })));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 403, ErrorMessages.Admin.RoleAssignEscalation);
+        await ProblemDetailsAssert.MatchesAsync(response, 403, ErrorMessages.Admin.RoleAssignEscalation);
     }
 
     [Fact]
@@ -365,7 +355,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
                 JsonContent.Create(new { Role = "User" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Admin.EmailVerificationRequired);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Admin.EmailVerificationRequired);
     }
 
     #endregion
@@ -467,7 +457,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Delete($"/api/v1/admin/users/{userId}", TestAuth.WithPermissions(AppPermissions.Users.Manage)));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Admin.UserNotFound);
+        await ProblemDetailsAssert.MatchesAsync(response, 404, ErrorMessages.Admin.UserNotFound);
     }
 
     [Fact]
@@ -516,7 +506,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Post($"/api/v1/admin/users/{userId}/verify-email", TestAuth.WithPermissions(AppPermissions.Users.Manage)));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Admin.UserNotFound);
+        await ProblemDetailsAssert.MatchesAsync(response, 404, ErrorMessages.Admin.UserNotFound);
     }
 
     [Fact]
@@ -530,7 +520,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Post($"/api/v1/admin/users/{userId}/verify-email", TestAuth.WithPermissions(AppPermissions.Users.Manage)));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Auth.EmailAlreadyVerified);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Auth.EmailAlreadyVerified);
     }
 
     #endregion
@@ -570,7 +560,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Post($"/api/v1/admin/users/{userId}/send-password-reset", TestAuth.WithPermissions(AppPermissions.Users.Manage)));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Admin.UserNotFound);
+        await ProblemDetailsAssert.MatchesAsync(response, 404, ErrorMessages.Admin.UserNotFound);
     }
 
     #endregion
@@ -616,7 +606,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
                 JsonContent.Create(new { Email = "existing@test.com" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, ErrorMessages.Admin.EmailAlreadyRegistered);
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.Admin.EmailAlreadyRegistered);
     }
 
     #endregion
@@ -682,7 +672,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Get($"/api/v1/admin/roles/{roleId}", TestAuth.WithPermissions(AppPermissions.Roles.View)));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Roles.RoleNotFound);
+        await ProblemDetailsAssert.MatchesAsync(response, 404, ErrorMessages.Roles.RoleNotFound);
     }
 
     [Fact]
@@ -806,7 +796,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
                 JsonContent.Create(new { Permissions = new[] { "users.view" } })));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 403, ErrorMessages.Roles.CannotGrantUnheldPermission);
+        await ProblemDetailsAssert.MatchesAsync(response, 403, ErrorMessages.Roles.CannotGrantUnheldPermission);
     }
 
     [Fact]
@@ -823,7 +813,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
                 JsonContent.Create(new { Permissions = new[] { "users.view" } })));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 404, ErrorMessages.Roles.RoleNotFound);
+        await ProblemDetailsAssert.MatchesAsync(response, 404, ErrorMessages.Roles.RoleNotFound);
     }
 
     [Fact]
