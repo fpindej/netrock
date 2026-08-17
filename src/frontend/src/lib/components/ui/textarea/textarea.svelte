@@ -11,5 +11,4 @@
 		className
 	)}
 	bind:value
-	{...restProps}
-></textarea>
+	{...restProps}></textarea>

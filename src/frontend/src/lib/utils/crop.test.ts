@@ -26,9 +26,10 @@ vi.stubGlobal('document', {
 	})
 });
 
+// Must be a regular function (not an arrow) so it can be invoked with `new Image()`.
 vi.stubGlobal(
 	'Image',
-	vi.fn(() => {
+	vi.fn(function () {
 		const img = { onload: null as (() => void) | null, onerror: null, src: '' };
 		setTimeout(() => img.onload?.(), 0);
 		return img;
