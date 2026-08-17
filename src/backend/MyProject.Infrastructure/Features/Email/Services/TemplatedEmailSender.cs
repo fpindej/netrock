@@ -4,9 +4,10 @@ using MyProject.Application.Features.Email;
 namespace MyProject.Infrastructure.Features.Email.Services;
 
 /// <summary>
-/// Renders an email template and sends the result, swallowing both rendering
-/// and delivery failures. Transient provider outages (quota, auth, network)
-/// and template errors are logged but never propagate to the caller.
+/// Renders an email template and hands the result to <see cref="IEmailService"/>, swallowing both
+/// rendering and hand-off failures. Depending on configuration the hand-off is a Hangfire enqueue
+/// (<see cref="BackgroundEmailService"/>, retried by <c>EmailDeliveryJob</c>) or a direct SMTP send;
+/// either way, failures are logged but never propagate to the caller.
 /// <see cref="OperationCanceledException"/> is re-thrown to respect cooperative cancellation.
 /// </summary>
 internal class TemplatedEmailSender(

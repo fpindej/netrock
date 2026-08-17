@@ -37,8 +37,11 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`Program.cs`** (change middleware order) | Test full request pipeline - order matters for auth, CORS, rate limiting; update `CustomWebApplicationFactory` if new services need mocking |
 | **`BaseEntity.cs`** | `BaseEntityConfiguration`, `AuditingInterceptor`, all entities |
 | **`FileStorageOptions`** (change S3/MinIO config) | `appsettings.json`, `MyProject.AppHost/Program.cs` (`.WithEnvironment()`), `appsettings.Testing.json` |
-| **`EmailOptions`** (change config shape) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `ServiceCollectionExtensions` (email DI), `EmailOptionsValidationTests` |
-| **`IEmailService`** (change sending contract) | `NoOpEmailService`, `SmtpEmailService`, `CustomWebApplicationFactory` |
+| **`EmailOptions`** (change config shape) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `ServiceCollectionExtensions` (email DI), `EmailOptionsValidationTests`, `EmailServiceRegistrationTests` |
+| **`IEmailService`** (change sending contract) | `NoOpEmailService`, `SmtpEmailService`, `BackgroundEmailService`, `EmailDeliveryJob`, `CustomWebApplicationFactory` |
+| **`SmtpEmailService`** (change SMTP delivery) | `EmailDeliveryJob` (job executor), `SmtpEmailServiceTests`, `EmailDeliveryJobTests` |
+| **`EmailDeliveryJob`** (change job signature/retry policy) | `BackgroundEmailService` (enqueue expression), `EmailDeliveryJobTests`, `BackgroundEmailServiceTests`, `docs/features.md` |
+| **Email DI routing** (`AddEmailServices` - background vs direct vs no-op) | `EmailServiceRegistrationTests`, `docs/before-you-ship.md` |
 | **`IEmailTemplateRenderer`** (change rendering contract) | `FluidEmailTemplateRenderer`, `TemplatedEmailSender`, `FluidEmailTemplateRendererTests` |
 | **`ITemplatedEmailSender`** (change send-safe contract) | `TemplatedEmailSender`, all services calling `SendSafeAsync()` (`AuthenticationService`, `AdminService`), `TemplatedEmailSenderTests` |
 | **`EmailTemplateModels.cs`** (add/rename model record) | Matching `.liquid` templates (variables must match snake_case model properties), `FluidEmailTemplateRenderer.CreateOptions()` (register new model type), services that construct the model, `FluidEmailTemplateRendererTests` |
@@ -67,6 +70,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`RoleManagementService`** (change role behavior) | Verify system role protection rules, check security stamp rotation, verify frontend role detail page |
 | **`IRecurringJobDefinition`** (add new job) | Register in `ServiceCollectionExtensions.AddJobScheduling()`, job auto-discovered at startup |
 | **Job scheduling config** (`ServiceCollectionExtensions.AddJobScheduling`) | `Program.cs` must call `AddJobScheduling()` and `UseJobScheduling()` |
+| **`JobSchedulingOptions`** (change `Enabled` semantics) | Email DI (`AddEmailServices` reads `JobScheduling:Enabled` to pick `BackgroundEmailService`), `EmailServiceRegistrationTests` |
 | **`RateLimitPolicies.cs`** (add/rename constant) | `RateLimiterExtensions.cs` policy registration, `RateLimitingOptions.cs` config class, `appsettings.json` section, `[EnableRateLimiting]` attribute on controllers |
 | **`RateLimitingOptions.cs`** (add/rename option class) | `RateLimiterExtensions.cs`, `appsettings.json`, `appsettings.Development.json` |
 | **`RateLimiterExtensions.cs`** (add policy) | Requires matching constant in `RateLimitPolicies.cs` and config in `RateLimitingOptions.cs` |
@@ -194,6 +198,8 @@ src/backend/MyProject.Infrastructure/Features/Jobs/
   IRecurringJobDefinition.cs                          Interface for recurring jobs
   RecurringJobs/{JobName}Job.cs                       Recurring job implementations
   Examples/ExampleFireAndForgetJob.cs                 Example one-time job (removable)
+src/backend/MyProject.Infrastructure/Features/Email/Jobs/
+  EmailDeliveryJob.cs                                 Real one-time job: retrying SMTP delivery
   Models/PausedJob.cs                                 Persisted pause state entity
   Configurations/PausedJobConfiguration.cs            EF config → hangfire.pausedjobs
   Services/JobManagementService.cs                    Admin API service (DB-backed pause)
@@ -222,8 +228,10 @@ src/backend/MyProject.Application/Features/Email/
 src/backend/MyProject.Infrastructure/Features/Email/
   Services/FluidEmailTemplateRenderer.cs            Fluid-based renderer (singleton, cached)
   Services/TemplatedEmailSender.cs                  Render+send wrapper (swallows failures)
-  Services/SmtpEmailService.cs                      MailKit SMTP sender (when Enabled)
+  Services/BackgroundEmailService.cs                Queues EmailDeliveryJob (Enabled + JobScheduling:Enabled)
+  Services/SmtpEmailService.cs                      MailKit SMTP sender (direct when jobs disabled; job executor otherwise)
   Services/NoOpEmailService.cs                      Dev/test no-op sender (when disabled)
+  Jobs/EmailDeliveryJob.cs                          Hangfire job: SMTP send with [AutomaticRetry] backoff
   Templates/_base.liquid                            Shared HTML email layout (header, card, footer)
   Templates/{name}.liquid                           HTML body fragment
   Templates/{name}.text.liquid                      Plain text variant (optional)
