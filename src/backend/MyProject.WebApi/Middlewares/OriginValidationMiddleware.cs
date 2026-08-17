@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MyProject.Shared;
+using MyProject.WebApi.Shared;
 using CorsOptions = MyProject.WebApi.Options.CorsOptions;
 
 namespace MyProject.WebApi.Middlewares;
@@ -74,11 +74,8 @@ public class OriginValidationMiddleware(
         await problemDetailsService.WriteAsync(new ProblemDetailsContext
         {
             HttpContext = context,
-            ProblemDetails = new ProblemDetails
-            {
-                Status = StatusCodes.Status403Forbidden,
-                Detail = ErrorMessages.Security.CrossOriginRequestBlocked
-            }
+            ProblemDetails = ProblemFactory.CreateProblemDetails(
+                ErrorMessages.Security.CrossOriginRequestBlocked, StatusCodes.Status403Forbidden)
         });
     }
 }

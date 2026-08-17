@@ -9,7 +9,7 @@ user-invocable: false
 
 ```
 src/backend/
-├── MyProject.Shared/              # Result, ErrorType, ErrorMessages (zero deps)
+├── MyProject.Shared/              # Result, Error, ErrorType, ErrorMessages (zero deps)
 ├── MyProject.Domain/Entities/     # Business entities (BaseEntity)
 ├── MyProject.Application/         # Interfaces, DTOs, service contracts
 │   ├── Features/{Feature}/I{Feature}Service.cs
@@ -90,7 +90,7 @@ dotnet ef migrations add {Name} \
 // Success
 return Result<Guid>.Success(entity.Id);
 
-// Static message - prefer ErrorMessages constants
+// Static error (code + message) - always an ErrorMessages entry
 return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
 
 // Runtime values go in server-side logs, never in client responses
@@ -105,7 +105,7 @@ return Result.Failure(ErrorMessages.Admin.DeleteFailed);
 | `ErrorType.Forbidden` | 403 | Authenticated but insufficient privileges |
 | `ErrorType.NotFound` | 404 | Entity not found |
 
-Controller: `ProblemFactory.Create(result.Error, result.ErrorType)` for failures.
+Controller: `ProblemFactory.Create(result.Error, result.ErrorType)` for failures. `result.Error` is an `Error` record (`Code`, `Message`); the factory writes `Message` to `detail` and `Code` to the `code` extension.
 
 ## Service Pattern
 
@@ -149,13 +149,16 @@ FluentValidation auto-discovered from WebApi assembly. Co-locate validators with
 | URL fields | `Uri.TryCreate` + restrict to `http`/`https` schemes |
 | Shared patterns | Extract to `ValidationConstants.cs` |
 
-## Error Messages
+## Error Messages and Codes
 
-- Client-facing messages are centralized as `const string` in `ErrorMessages.cs` nested classes
+- Client-facing errors are centralized as `static readonly Error` entries in `ErrorMessages.cs` nested classes. `Error(Code, Message)` pairs a stable, machine-readable snake_case code with the human-readable message.
+- Codes are derived from the declaring location: `{nested_class}_{field_name}` in snake_case (`ErrorMessages.ExternalAuth.StateExpired` -> `external_auth_state_expired`). `ErrorMessagesTests` enforces the pattern and global uniqueness.
+- Every `ProblemDetails` response carries the code in the `code` extension (`ProblemFactory` for controllers/middleware, `ProblemFactory.EnsureCode` in `AddProblemDetails` for framework-generated bodies: `validation_failed` for model validation, snake_case reason phrase such as `not_found` otherwise). `ProblemDetailsSchemaTransformer` documents it in OpenAPI.
+- Codes are a public contract: adding one is additive, renaming or removing one is a breaking change for API consumers (frontend maps on codes, not on `detail` text).
 - Runtime values (role names, user IDs, framework errors): log server-side via `ILogger`, never in `Result.Failure()`
-- Identity errors: log `.Description` server-side, return a static `ErrorMessages` constant to the client
-- Exception: password validation errors (registration, change, reset) are forwarded as-is
-- To add: create `const string` in `ErrorMessages.cs` nested class. Dynamic values go in logs, not in Result.
+- Identity errors: log `.Description` server-side, return a static `ErrorMessages` entry to the client
+- Exception: password policy / registration feedback keeps its stable code and overrides only the message: `ErrorMessages.Auth.PasswordPolicyViolation with { Message = errors }`
+- To add: create `public static readonly Error X = new("{class}_{x}", "...")` in the matching `ErrorMessages.cs` nested class. Dynamic values go in logs, not in Result.
 
 ## Authorization
 

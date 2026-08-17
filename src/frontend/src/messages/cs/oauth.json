@@ -17,6 +17,8 @@
 	"oauth_callback_alreadyLinked": "Tento externí účet je již propojen s jiným uživatelem.",
 	"oauth_callback_emailNotVerified": "Před propojením externího účtu je nutné ověřit e-mailovou adresu. Nejprve prosím ověřte svůj e-mail.",
 	"oauth_callback_stateExpired": "Přihlašovací relace vypršela. Zkuste to prosím znovu.",
+	"oauth_callback_invalidState": "Přihlašovací požadavek je neplatný nebo již byl použit. Zkuste to prosím znovu.",
+	"oauth_callback_providerError": "Poskytovatel přihlášení vrátil chybu. Zkuste to prosím později.",
 	"oauth_callback_accountLocked": "Váš účet je dočasně uzamčen. Zkuste to prosím později.",
 
 	"settings_oauth_title": "Propojené účty",

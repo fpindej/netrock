@@ -21,11 +21,11 @@ public static class PaginationExtensions
     /// <exception cref="PaginationException">Thrown when page number is less than or equal to 0, or when page size is less than or equal to 0</exception>
     public static IQueryable<T> Paginate<T>(this IQueryable<T> ts, int pageNumber, int pageSize)
     {
-        if (pageNumber <= 0) throw new PaginationException(nameof(pageNumber), ErrorMessages.Pagination.InvalidPage);
+        if (pageNumber <= 0) throw new PaginationException(nameof(pageNumber), ErrorMessages.Pagination.InvalidPage.Message);
 
         pageSize = pageSize switch
         {
-            <= 0 => throw new PaginationException(nameof(pageSize), ErrorMessages.Pagination.InvalidPageSize),
+            <= 0 => throw new PaginationException(nameof(pageSize), ErrorMessages.Pagination.InvalidPageSize.Message),
             > MaxPageSize => MaxPageSize,
             _ => pageSize
         };

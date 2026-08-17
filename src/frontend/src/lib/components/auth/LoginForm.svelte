@@ -69,14 +69,10 @@
 						fallback: m.auth_login_error(),
 						onRateLimited: () => shake.trigger(),
 						onError() {
-							const detail = getErrorMessage(apiError, '');
-							const isLocked = detail.includes('temporarily locked');
-							const errorMessage =
-								response.status === 401
-									? isLocked
-										? m.auth_login_accountLocked()
-										: getErrorMessage(apiError, m.auth_login_invalidCredentials())
-									: getErrorMessage(apiError, m.auth_login_error());
+							const errorMessage = getErrorMessage(apiError, m.auth_login_error(), {
+								auth_login_invalid_credentials: m.auth_login_invalidCredentials,
+								auth_login_account_locked: m.auth_login_accountLocked
+							});
 							toast.error(m.auth_login_failed(), { description: errorMessage });
 							shake.trigger();
 						}

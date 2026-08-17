@@ -24,7 +24,7 @@ Backend DTO -> OpenAPI spec -> v1.d.ts (generated) -> Frontend type aliases -> C
 ```
 
 ```
-Backend ErrorMessages.* -> Result.Failure() -> ProblemFactory.Create() -> ProblemDetails.detail -> Frontend getErrorMessage()
+Backend ErrorMessages.* (Error: code + message) -> Result.Failure() -> ProblemFactory.Create() -> ProblemDetails.detail + code -> Frontend getErrorMessage(error, fallback, messagesByCode) / getErrorCode()
 ```
 
 ## Implementation Order

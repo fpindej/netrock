@@ -1,4 +1,5 @@
 import { isRedirect, redirect } from '@sveltejs/kit';
+import { getErrorCode } from '$lib/api';
 import { routes } from '$lib/config';
 import type { PageServerLoad } from './$types';
 
@@ -24,9 +25,8 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 		});
 
 		if (!response.ok) {
-			const body = await response.json().catch(() => null);
-			const detail = body?.detail ?? 'Unknown error';
-			return { error: detail };
+			const body: unknown = await response.json().catch(() => null);
+			return { error: getErrorCode(body) ?? 'unknown_error' };
 		}
 
 		const data = await response.json();

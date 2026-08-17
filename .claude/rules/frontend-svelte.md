@@ -7,7 +7,7 @@ Extends CLAUDE.md Hard Rules with implementation patterns.
 
 ## API Client
 - File uploads: native `fetch()` with `FormData` - not `browserClient` (openapi-fetch breaks with multipart)
-- Error handling: `getErrorMessage(error, fallback)` for simple errors, `handleMutationError()` for forms with validation
+- Error handling: `getErrorMessage(error, fallback)` for simple errors, `getErrorMessage(error, fallback, messagesByCode)` / `getErrorCode()` to translate by backend `code` (never match `detail` text), `handleMutationError()` for forms with validation
 
 ## Styling
 - `h-dvh` not `h-screen` for full-height layouts

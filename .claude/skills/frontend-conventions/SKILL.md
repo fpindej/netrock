@@ -70,6 +70,18 @@ const { response, error } = await browserClient.POST('/api/...', { body });
 if (!response.ok) toast.error(getErrorMessage(error, m.fallback_message()));
 ```
 
+### Translating Specific Errors
+
+Every backend `ProblemDetails` carries a stable snake_case `code` (see `ErrorMessages.cs`) next to the English `detail`. Branch on `code` - never on `detail` text. Pass an `ErrorMessagesByCode` map to translate known codes; unknown codes fall back to `detail`, then `title`, then the fallback:
+
+```typescript
+import { getErrorMessage } from '$lib/api';
+const message = getErrorMessage(error, m.auth_login_error(), {
+	auth_login_invalid_credentials: m.auth_login_invalidCredentials,
+	auth_login_account_locked: m.auth_login_accountLocked
+});
+```
+
 ### Mutations (Validation + Rate Limiting)
 
 ```typescript

@@ -23,6 +23,7 @@ internal static class WebApplicationBuilderExtensions
             opt.AddOperationTransformer<CamelCaseQueryParameterTransformer>();
             opt.AddSchemaTransformer<EnumSchemaTransformer>();
             opt.AddSchemaTransformer<NumericSchemaTransformer>();
+            opt.AddSchemaTransformer<ProblemDetailsSchemaTransformer>();
         });
 
         return builder;

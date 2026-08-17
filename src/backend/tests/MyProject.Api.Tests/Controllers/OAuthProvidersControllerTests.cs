@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using MyProject.Api.Tests.Contracts;
 using MyProject.Api.Tests.Fixtures;
 using MyProject.Application.Features.Authentication.Dtos;
@@ -44,16 +43,6 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
         return request;
     }
 
-    private static async Task AssertProblemDetailsAsync(
-        HttpResponseMessage response, int expectedStatus, string? expectedDetail = null)
-    {
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(expectedStatus, json.GetProperty("status").GetInt32());
-        if (expectedDetail is not null)
-        {
-            Assert.Equal(expectedDetail, json.GetProperty("detail").GetString());
-        }
-    }
 
     #region ListProviders
 
@@ -140,7 +129,7 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
                 JsonContent.Create(new { IsEnabled = true, ClientId = "id", ClientSecret = "secret" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400, "The specified authentication provider is not recognized.");
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.ExternalAuth.UnknownProvider);
     }
 
     [Fact]
@@ -217,8 +206,7 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
                 JsonContent.Create(new { IsEnabled = true, ClientId = "new-id" })));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400,
-            "A client secret is required when enabling a provider that has no existing secret.");
+        await ProblemDetailsAssert.MatchesAsync(response, 400, ErrorMessages.ExternalAuth.ClientSecretRequired);
     }
 
     [Fact]
@@ -264,7 +252,7 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
                 TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage)));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400,
+        await ProblemDetailsAssert.MatchesAsync(response, 400,
             ErrorMessages.ExternalAuth.TestConnectionInvalidCredentials);
     }
 
@@ -280,7 +268,7 @@ public class OAuthProvidersControllerTests : IClassFixture<CustomWebApplicationF
                 TestAuth.WithPermissions(AppPermissions.OAuthProviders.Manage)));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        await AssertProblemDetailsAsync(response, 400,
+        await ProblemDetailsAssert.MatchesAsync(response, 400,
             ErrorMessages.ExternalAuth.TestConnectionNotConfigured);
     }
 

@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using MyProject.Infrastructure.Persistence.Exceptions;
 using MyProject.Shared;
+using MyProject.WebApi.Shared;
 
 namespace MyProject.WebApi.Middlewares;
 
@@ -31,13 +32,13 @@ public class ExceptionHandlingMiddleware(
         {
             logger.LogWarning(keyNotFoundEx, "A KeyNotFoundException occurred.");
             await HandleExceptionAsync(context, keyNotFoundEx, HttpStatusCode.NotFound,
-                customMessage: ErrorMessages.Entity.NotFound);
+                ErrorMessages.Entity.NotFound);
         }
         catch (PaginationException paginationEx)
         {
             logger.LogWarning(paginationEx, "A PaginationException occurred.");
             await HandleExceptionAsync(context, paginationEx, HttpStatusCode.BadRequest,
-                customMessage: paginationEx.ParamName is "pageSize"
+                paginationEx.ParamName is "pageSize"
                     ? ErrorMessages.Pagination.InvalidPageSize
                     : ErrorMessages.Pagination.InvalidPage);
         }
@@ -45,7 +46,7 @@ public class ExceptionHandlingMiddleware(
         {
             logger.LogError(e, "An unhandled exception occurred.");
             await HandleExceptionAsync(context, e, HttpStatusCode.InternalServerError,
-                customMessage: ErrorMessages.Server.InternalError);
+                ErrorMessages.Server.InternalError);
         }
     }
 
@@ -53,16 +54,12 @@ public class ExceptionHandlingMiddleware(
         HttpContext context,
         Exception exception,
         HttpStatusCode statusCode,
-        string? customMessage = null)
+        Error error)
     {
         var status = (int)statusCode;
         context.Response.StatusCode = status;
 
-        var problemDetails = new ProblemDetails
-        {
-            Status = status,
-            Detail = customMessage ?? ErrorMessages.Server.InternalError
-        };
+        var problemDetails = ProblemFactory.CreateProblemDetails(error, status);
 
         if (env.IsDevelopment() && exception.StackTrace is not null)
         {

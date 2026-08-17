@@ -596,7 +596,7 @@ internal class AdminService(
 
     /// <summary>
     /// Verifies that the caller has a strictly higher role rank than the target user.
-    /// Returns <see cref="Result.Failure(string)"/> if the hierarchy check fails.
+    /// Returns <see cref="Result.Failure(Error)"/> if the hierarchy check fails.
     /// </summary>
     private async Task<Result> EnforceHierarchyAsync(Guid callerUserId, ApplicationUser targetUser)
     {

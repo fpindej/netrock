@@ -111,27 +111,30 @@ describe('OAuth callback page server load', () => {
 
 	// ── API error responses ────────────────────────────────────
 
-	it('API returns error with detail - returns detail message', async () => {
+	it('API returns ProblemDetails with code - returns the code', async () => {
 		const result = await load(
 			mockLoadEvent({
 				searchParams: { code: 'auth-code', state: 'state-token' },
 				fetchResponse: {
 					ok: false,
-					json: { detail: 'Invalid or missing OAuth state token.' }
+					json: {
+						detail: 'Invalid or missing OAuth state token.',
+						code: 'external_auth_invalid_state'
+					}
 				}
 			})
 		);
-		expect(result).toEqual({ error: 'Invalid or missing OAuth state token.' });
+		expect(result).toEqual({ error: 'external_auth_invalid_state' });
 	});
 
-	it('API returns error without detail - returns Unknown error', async () => {
+	it('API returns error without code - returns unknown_error', async () => {
 		const result = await load(
 			mockLoadEvent({
 				searchParams: { code: 'auth-code', state: 'state-token' },
-				fetchResponse: { ok: false, json: {} }
+				fetchResponse: { ok: false, json: { detail: 'Some message.' } }
 			})
 		);
-		expect(result).toEqual({ error: 'Unknown error' });
+		expect(result).toEqual({ error: 'unknown_error' });
 	});
 
 	// ── Network error ──────────────────────────────────────────

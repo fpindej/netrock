@@ -195,13 +195,13 @@ internal class TokenSessionService(
         return Result<AuthenticationOutput>.Success(
             new AuthenticationOutput(AccessToken: newAccessToken, RefreshToken: newRefreshTokenString));
 
-        Result<AuthenticationOutput> Fail(string message)
+        Result<AuthenticationOutput> Fail(Error error)
         {
             if (useCookies)
             {
                 DeleteAuthCookies();
             }
-            return Result<AuthenticationOutput>.Failure(message, ErrorType.Unauthorized);
+            return Result<AuthenticationOutput>.Failure(error, ErrorType.Unauthorized);
         }
     }
 

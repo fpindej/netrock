@@ -6,30 +6,28 @@
 	import { Loader2, CircleAlert } from '@lucide/svelte';
 	import { IconCircle } from '$lib/components/common';
 	import { AuthShell } from '$lib/components/auth';
+	import type { ErrorMessagesByCode } from '$lib/api';
 
 	let { data } = $props();
 
 	/**
-	 * Maps backend ProblemDetails `detail` strings to translated messages.
-	 * Keys are the exact English strings from ErrorMessages.cs.
-	 * Unmapped errors fall back to the generic description.
-	 *
-	 * TODO: Remove this map once the backend returns error codes instead of
-	 * English strings, and use those codes as i18n keys directly.
+	 * Translated messages keyed by error code. Backend codes come from the `code`
+	 * extension of the ProblemDetails response (see ErrorMessages.cs); the rest are
+	 * produced locally by the page load. Unmapped codes fall back to the generic description.
 	 */
-	const ERROR_MAP: Record<string, () => string> = {
-		provider_denied: () => m.oauth_callback_providerDenied(),
-		'This external account is already linked to another user.': () =>
-			m.oauth_callback_alreadyLinked(),
-		'Your email address must be verified before linking an external account. Please verify your email first.':
-			() => m.oauth_callback_emailNotVerified(),
-		'OAuth state token has expired. Please try again.': () => m.oauth_callback_stateExpired(),
-		'Account is temporarily locked. Please try again later or contact an administrator.': () =>
-			m.oauth_callback_accountLocked()
+	const ERROR_MESSAGES: ErrorMessagesByCode = {
+		provider_denied: m.oauth_callback_providerDenied,
+		external_auth_already_linked_to_other_user: m.oauth_callback_alreadyLinked,
+		external_auth_email_not_verified: m.oauth_callback_emailNotVerified,
+		external_auth_state_expired: m.oauth_callback_stateExpired,
+		external_auth_invalid_state: m.oauth_callback_invalidState,
+		external_auth_code_exchange_failed: m.oauth_callback_providerError,
+		external_auth_provider_error: m.oauth_callback_providerError,
+		auth_login_account_locked: m.oauth_callback_accountLocked
 	};
 
 	const errorMessage = $derived(
-		(data.error && ERROR_MAP[data.error]?.()) ?? m.oauth_callback_errorDescription()
+		(data.error && ERROR_MESSAGES[data.error]?.()) ?? m.oauth_callback_errorDescription()
 	);
 </script>
 

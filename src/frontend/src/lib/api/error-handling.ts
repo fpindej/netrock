@@ -9,19 +9,42 @@
  */
 
 /**
- * Extended ProblemDetails with validation errors.
- * ASP.NET Core returns field-level errors in an `errors` object.
+ * ProblemDetails (RFC 9457) as returned by the backend.
+ *
+ * Every error response carries a stable, machine-readable `code` (snake_case)
+ * alongside the human-readable `detail`. Branch on `code` - never on `detail` text.
  *
  * @see https://tools.ietf.org/html/rfc9457
  */
-export interface ValidationProblemDetails {
+export interface ProblemDetails {
 	type?: string | null;
 	title?: string | null;
 	status?: number | null;
 	detail?: string | null;
 	instance?: string | null;
+	code?: string | null;
+}
+
+/**
+ * Extended ProblemDetails with validation errors.
+ * ASP.NET Core returns field-level errors in an `errors` object.
+ */
+export interface ValidationProblemDetails extends ProblemDetails {
 	errors?: Record<string, string[]>;
 }
+
+/**
+ * Translated messages keyed by backend error `code`.
+ * Values are Paraglide message functions so translation happens lazily in the current locale.
+ *
+ * @example
+ * ```ts
+ * const messages: ErrorMessagesByCode = {
+ *   auth_login_account_locked: m.auth_login_accountLocked
+ * };
+ * ```
+ */
+export type ErrorMessagesByCode = Record<string, () => string>;
 
 /**
  * Type guard to check if an error response is a ValidationProblemDetails.
@@ -85,20 +108,51 @@ export function mapFieldErrors(
 }
 
 /**
+ * Extracts the machine-readable error `code` from a ProblemDetails API error response.
+ *
+ * @param error - The error object from the API response
+ * @returns The snake_case error code, or `null` when the response carries none
+ */
+export function getErrorCode(error: unknown): string | null {
+	if (
+		typeof error === 'object' &&
+		error !== null &&
+		'code' in error &&
+		typeof error.code === 'string' &&
+		error.code.length > 0
+	) {
+		return error.code;
+	}
+	return null;
+}
+
+/**
  * Extracts a user-friendly error message from a ProblemDetails API error response.
  *
  * Resolution order:
- * 1. `detail` field → ProblemDetails detail (the specific error message)
- * 2. `title` field → ProblemDetails title (generic status description)
- * 3. Fallback string
+ * 1. `code` field with a matching entry in `messagesByCode` -> translated message
+ * 2. `detail` field -> ProblemDetails detail (the specific English message)
+ * 3. `title` field -> ProblemDetails title (generic status description)
+ * 4. Fallback string
  *
- * The backend always returns specific, descriptive English messages in `detail`.
+ * Prefer passing `messagesByCode` for errors the UI wants to translate - the
+ * backend `code` is a stable contract, while `detail` text may change.
  *
  * @param error - The error object from the API response
  * @param fallback - Fallback message if no error message can be extracted
+ * @param messagesByCode - Optional translated messages keyed by backend error code
  * @returns A user-friendly error message
  */
-export function getErrorMessage(error: unknown, fallback: string): string {
+export function getErrorMessage(
+	error: unknown,
+	fallback: string,
+	messagesByCode?: ErrorMessagesByCode
+): string {
+	const code = getErrorCode(error);
+	const translated = code === null ? undefined : messagesByCode?.[code];
+	if (translated) {
+		return translated();
+	}
 	if (typeof error === 'object' && error !== null) {
 		if ('detail' in error && typeof error.detail === 'string') {
 			return error.detail;

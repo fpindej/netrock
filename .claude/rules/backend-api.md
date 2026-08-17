@@ -4,7 +4,7 @@ Extends CLAUDE.md Hard Rules with implementation patterns.
 
 ## Error Handling
 - `ProblemFactory.Create(result.Error, result.ErrorType)` for error responses - never `NotFound()`, `BadRequest()`, or anonymous objects
-- Client-facing error messages: `ErrorMessages.*` constants only - runtime values go in `ILogger`, never in `Result.Failure()`
+- Client-facing errors: `ErrorMessages.*` entries only (`Error` = stable snake_case `code` + message) - runtime values go in `ILogger`, never in `Result.Failure()`. Every ProblemDetails carries `code`; renaming a code is a breaking change
 
 ## Controllers
 - Authenticated endpoints extend `ApiController` - public endpoints use `ControllerBase` directly

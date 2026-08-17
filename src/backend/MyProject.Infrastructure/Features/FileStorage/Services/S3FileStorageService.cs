@@ -47,12 +47,12 @@ internal sealed class S3FileStorageService(
         catch (AmazonS3Exception ex)
         {
             logger.LogError(ex, "Failed to upload object '{Key}' to bucket '{Bucket}'", key, _bucketName);
-            return Result.Failure("Failed to upload file to storage.");
+            return Result.Failure(ErrorMessages.FileStorage.UploadFailed);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(ex, "Unexpected error uploading object '{Key}' to bucket '{Bucket}'", key, _bucketName);
-            return Result.Failure("Failed to upload file to storage.");
+            return Result.Failure(ErrorMessages.FileStorage.UploadFailed);
         }
     }
 
@@ -76,17 +76,17 @@ internal sealed class S3FileStorageService(
         }
         catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            return Result<FileDownloadOutput>.Failure("File not found.", ErrorType.NotFound);
+            return Result<FileDownloadOutput>.Failure(ErrorMessages.FileStorage.NotFound, ErrorType.NotFound);
         }
         catch (AmazonS3Exception ex)
         {
             logger.LogError(ex, "Failed to download object '{Key}' from bucket '{Bucket}'", key, _bucketName);
-            return Result<FileDownloadOutput>.Failure("Failed to retrieve file from storage.");
+            return Result<FileDownloadOutput>.Failure(ErrorMessages.FileStorage.DownloadFailed);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(ex, "Unexpected error downloading object '{Key}' from bucket '{Bucket}'", key, _bucketName);
-            return Result<FileDownloadOutput>.Failure("Failed to retrieve file from storage.");
+            return Result<FileDownloadOutput>.Failure(ErrorMessages.FileStorage.DownloadFailed);
         }
     }
 
@@ -109,12 +109,12 @@ internal sealed class S3FileStorageService(
         catch (AmazonS3Exception ex)
         {
             logger.LogError(ex, "Failed to delete object '{Key}' from bucket '{Bucket}'", key, _bucketName);
-            return Result.Failure("Failed to delete file from storage.");
+            return Result.Failure(ErrorMessages.FileStorage.DeleteFailed);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(ex, "Unexpected error deleting object '{Key}' from bucket '{Bucket}'", key, _bucketName);
-            return Result.Failure("Failed to delete file from storage.");
+            return Result.Failure(ErrorMessages.FileStorage.DeleteFailed);
         }
     }
 
