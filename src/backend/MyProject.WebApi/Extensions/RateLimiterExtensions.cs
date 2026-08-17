@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using MyProject.Shared;
 using MyProject.WebApi.Options;
 using MyProject.WebApi.Shared;
 
@@ -92,15 +93,15 @@ internal static class RateLimiterExtensions
             context.HttpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
 
             var problemDetailsService = context.HttpContext.RequestServices.GetRequiredService<IProblemDetailsService>();
+            var error = ErrorMessages.Server.TooManyRequests with
+            {
+                Message = $"Too many requests. Please try again in {retryAfterSeconds} seconds."
+            };
+
             await problemDetailsService.WriteAsync(new ProblemDetailsContext
             {
                 HttpContext = context.HttpContext,
-                ProblemDetails = new ProblemDetails
-                {
-                    Status = StatusCodes.Status429TooManyRequests,
-                    Title = "Too Many Requests",
-                    Detail = $"Too many requests. Please try again in {retryAfterSeconds} seconds."
-                }
+                ProblemDetails = ProblemFactory.CreateProblemDetails(error, StatusCodes.Status429TooManyRequests)
             });
         };
     }

@@ -384,7 +384,7 @@ internal sealed class UserService(
         {
             logger.LogWarning("DeleteAsync failed for user '{UserId}': {Errors}",
                 user.Id, string.Join(", ", result.Errors.Select(e => e.Description)));
-            throw new InvalidOperationException(ErrorMessages.User.DeleteFailed);
+            throw new InvalidOperationException(ErrorMessages.User.DeleteFailed.Message);
         }
     }
 

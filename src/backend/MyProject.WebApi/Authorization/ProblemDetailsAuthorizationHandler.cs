@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Mvc;
 using MyProject.Shared;
+using MyProject.WebApi.Shared;
 
 namespace MyProject.WebApi.Authorization;
 
@@ -28,11 +29,8 @@ internal sealed class ProblemDetailsAuthorizationHandler(
             await problemDetailsService.WriteAsync(new ProblemDetailsContext
             {
                 HttpContext = httpContext,
-                ProblemDetails = new ProblemDetails
-                {
-                    Status = StatusCodes.Status401Unauthorized,
-                    Detail = ErrorMessages.Auth.NotAuthenticated
-                }
+                ProblemDetails = ProblemFactory.CreateProblemDetails(
+                    ErrorMessages.Auth.NotAuthenticated, StatusCodes.Status401Unauthorized)
             });
             return;
         }
@@ -44,11 +42,8 @@ internal sealed class ProblemDetailsAuthorizationHandler(
             await problemDetailsService.WriteAsync(new ProblemDetailsContext
             {
                 HttpContext = httpContext,
-                ProblemDetails = new ProblemDetails
-                {
-                    Status = StatusCodes.Status403Forbidden,
-                    Detail = ErrorMessages.Auth.InsufficientPermissions
-                }
+                ProblemDetails = ProblemFactory.CreateProblemDetails(
+                    ErrorMessages.Auth.InsufficientPermissions, StatusCodes.Status403Forbidden)
             });
             return;
         }
