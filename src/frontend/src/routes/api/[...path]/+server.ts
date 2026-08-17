@@ -163,12 +163,17 @@ export const fallback: RequestHandler = async ({
 	const queryString = targetParams.toString();
 	const targetUrl = `${SERVER_CONFIG.API_URL}/api/${params.path}${queryString ? `?${queryString}` : ''}`;
 
+	// Buffer the body instead of forwarding the incoming ReadableStream. undici
+	// (Node 24.14 - 24.15) turns any 401 backend response into a network error
+	// when the request body is a stream without a byte source ("expected
+	// non-null body source"), which the proxy would surface as a 502 instead of
+	// the real 401 (nodejs/undici#5018).
+	const body = request.body ? await request.arrayBuffer() : null;
+
 	const newRequest = new Request(targetUrl, {
 		method: request.method,
 		headers: filterRequestHeaders(request.headers, getClientAddress()),
-		body: request.body,
-		// @ts-expect-error - duplex is needed for streaming bodies in some node versions/fetch implementations
-		duplex: 'half'
+		body
 	});
 
 	try {

@@ -67,9 +67,10 @@ function mockProxyEvent(
 		requestHeaders.set('origin', origin);
 	}
 
-	const requestInit: RequestInit = { method, headers: requestHeaders };
+	const requestInit: RequestInit & { duplex?: 'half' } = { method, headers: requestHeaders };
 	if (body && method !== 'GET' && method !== 'HEAD') {
 		requestInit.body = body;
+		requestInit.duplex = 'half';
 	}
 	const request = new Request(url.toString(), requestInit);
 
@@ -552,6 +553,45 @@ describe('API proxy - URL construction and cookie auth paths', () => {
 		await fallback(event);
 
 		expect(getProxiedRequest(event).method).toBe('PUT');
+	});
+});
+
+describe('API proxy - request body forwarding', () => {
+	/** Wraps a payload in a ReadableStream, matching what SvelteKit hands the proxy. */
+	function streamBody(payload: string): ReadableStream<Uint8Array> {
+		return new ReadableStream({
+			start(controller) {
+				controller.enqueue(new TextEncoder().encode(payload));
+				controller.close();
+			}
+		});
+	}
+
+	it('buffers a streamed request body before proxying', async () => {
+		// Regression for nodejs/undici#5018 (see the proxy handler for details).
+		const payload = '{"username":"user@example.com","password":"wrong"}';
+		const event = mockProxyEvent({
+			method: 'POST',
+			path: 'auth/login',
+			origin: 'http://localhost:5173',
+			headers: { 'content-type': 'application/json' },
+			body: streamBody(payload),
+			fetchResponse: new Response('{"title":"Unauthorized"}', { status: 401 })
+		});
+
+		const response = await fallback(event);
+
+		expect(response.status).toBe(401);
+		expect(event.request.bodyUsed).toBe(true);
+		expect(await getProxiedRequest(event).text()).toBe(payload);
+	});
+
+	it('does not attach a body to bodyless requests', async () => {
+		const event = mockProxyEvent({ method: 'GET' });
+
+		await fallback(event);
+
+		expect(getProxiedRequest(event).body).toBeNull();
 	});
 });
 
