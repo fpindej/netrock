@@ -568,10 +568,7 @@ describe('API proxy - request body forwarding', () => {
 	}
 
 	it('buffers a streamed request body before proxying', async () => {
-		// Regression: forwarding the incoming ReadableStream as-is leaves the
-		// proxied request without a byte source, which undici (Node 24.14-24.15)
-		// rejects with "expected non-null body source" on every 401 backend
-		// response - turning a wrong password into a 502 (nodejs/undici#5018).
+		// Regression for nodejs/undici#5018 (see the proxy handler for details).
 		const payload = '{"username":"user@example.com","password":"wrong"}';
 		const event = mockProxyEvent({
 			method: 'POST',
