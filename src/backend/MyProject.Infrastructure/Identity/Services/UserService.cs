@@ -24,7 +24,6 @@ namespace MyProject.Infrastructure.Identity.Services;
 /// </summary>
 internal sealed class UserService(
     UserManager<ApplicationUser> userManager,
-    RoleManager<ApplicationRole> roleManager,
     IUserContext userContext,
     HybridCache hybridCache,
     MyProjectDbContext dbContext,
@@ -296,7 +295,7 @@ internal sealed class UserService(
             return Result.Failure(ErrorMessages.User.DeleteInvalidPassword);
         }
 
-        var lastSuperuserResult = await EnforceLastSuperuserProtectionForDeletionAsync(user, cancellationToken);
+        var lastSuperuserResult = await EnforceLastSuperuserProtectionForDeletionAsync(userId.Value, cancellationToken);
         if (!lastSuperuserResult.IsSuccess)
         {
             return lastSuperuserResult;
@@ -324,28 +323,37 @@ internal sealed class UserService(
     }
 
     /// <summary>
-    /// Prevents self-deletion if the user is the last Superuser.
+    /// Enforces the lockout invariant for self-deletion: the operation may not leave zero
+    /// users holding any role that grants all permissions. Users without such a role are
+    /// always deletable.
     /// </summary>
     private async Task<Result> EnforceLastSuperuserProtectionForDeletionAsync(
-        ApplicationUser user, CancellationToken cancellationToken)
+        Guid userId, CancellationToken cancellationToken)
     {
-        var userRoles = await userManager.GetRolesAsync(user);
+        var userHoldsGrantsAll = await dbContext.UserRoles
+            .Where(ur => ur.UserId == userId)
+            .Join(dbContext.Roles.Where(r => r.GrantsAllPermissions),
+                ur => ur.RoleId,
+                r => r.Id,
+                (ur, _) => ur.UserId)
+            .AnyAsync(cancellationToken);
 
-        foreach (var role in userRoles.Where(r => r is AppRoles.Superuser))
+        if (!userHoldsGrantsAll)
         {
-            var roleEntity = await roleManager.FindByNameAsync(role);
-            if (roleEntity is null) continue;
-
-            var usersInRoleCount = await dbContext.UserRoles
-                .CountAsync(ur => ur.RoleId == roleEntity.Id, cancellationToken);
-
-            if (usersInRoleCount <= 1)
-            {
-                return Result.Failure(ErrorMessages.User.LastSuperuserCannotDelete);
-            }
+            return Result.Success();
         }
 
-        return Result.Success();
+        var otherHolderExists = await dbContext.UserRoles
+            .Where(ur => ur.UserId != userId)
+            .Join(dbContext.Roles.Where(r => r.GrantsAllPermissions),
+                ur => ur.RoleId,
+                r => r.Id,
+                (ur, _) => ur.UserId)
+            .AnyAsync(cancellationToken);
+
+        return otherHolderExists
+            ? Result.Success()
+            : Result.Failure(ErrorMessages.User.LastSuperuserCannotDelete);
     }
 
     private async Task RevokeUserTokens(ApplicationUser user, Guid userId, CancellationToken cancellationToken)

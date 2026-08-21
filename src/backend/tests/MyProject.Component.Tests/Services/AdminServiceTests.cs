@@ -62,6 +62,7 @@ public class AdminServiceTests : IDisposable
         _sut = new AdminService(
             _userManager, _roleManager, _dbContext, _hybridCache, _timeProvider,
             _templatedEmailSender, emailTokenService, _auditService,
+            new PermissionEscalationGuard(_dbContext),
             fileStorageService, authOptions, emailOptions, logger);
     }
 
@@ -71,11 +72,16 @@ public class AdminServiceTests : IDisposable
         _userManager.Dispose();
     }
 
-    private ApplicationUser SetupCallerAsAdmin()
+    /// <summary>
+    /// Mocks the caller as an Admin and seeds the Admin role assignment (with the given
+    /// permission claims) into the database so rank and escalation checks can resolve it.
+    /// </summary>
+    private ApplicationUser SetupCallerAsAdmin(params string[] heldPermissions)
     {
         var caller = new ApplicationUser { Id = _callerId, UserName = "admin@test.com" };
         _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
         _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Admin });
+        TestRoles.SeedAssigned(_dbContext, _callerId, AppRoles.Admin, heldPermissions);
         return caller;
     }
 
@@ -84,6 +90,7 @@ public class AdminServiceTests : IDisposable
         var target = new ApplicationUser { Id = _targetId, UserName = "user@test.com", EmailConfirmed = emailConfirmed };
         _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
         _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.User });
+        TestRoles.Seed(_dbContext, AppRoles.User);
         return target;
     }
 
@@ -94,7 +101,7 @@ public class AdminServiceTests : IDisposable
     {
         SetupCallerAsAdmin();
         var target = SetupTargetAsUser();
-        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _roleManager.FindByNameAsync("User").Returns(TestRoles.Create(AppRoles.User));
         _userManager.IsInRoleAsync(target, "User").Returns(false);
         _userManager.AddToRoleAsync(target, "User").Returns(IdentityResult.Success);
 
@@ -123,7 +130,7 @@ public class AdminServiceTests : IDisposable
     [Fact]
     public async Task AssignRole_UserNotFound_ReturnsNotFound()
     {
-        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _roleManager.FindByNameAsync("User").Returns(TestRoles.Create(AppRoles.User));
         _userManager.FindByIdAsync(_targetId.ToString()).Returns((ApplicationUser?)null);
 
         var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("User"));
@@ -138,7 +145,7 @@ public class AdminServiceTests : IDisposable
     {
         SetupCallerAsAdmin();
         SetupTargetAsUser();
-        _roleManager.FindByNameAsync("Admin").Returns(new ApplicationRole { Name = "Admin" });
+        _roleManager.FindByNameAsync("Admin").Returns(TestRoles.Create(AppRoles.Admin));
 
         var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("Admin"));
 
@@ -151,7 +158,7 @@ public class AdminServiceTests : IDisposable
     {
         SetupCallerAsAdmin();
         var target = SetupTargetAsUser();
-        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _roleManager.FindByNameAsync("User").Returns(TestRoles.Create(AppRoles.User));
         _userManager.IsInRoleAsync(target, "User").Returns(true);
 
         var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("User"));
@@ -167,7 +174,7 @@ public class AdminServiceTests : IDisposable
         var target = new ApplicationUser { Id = _targetId, UserName = "user@test.com", EmailConfirmed = false };
         _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
         _userManager.GetRolesAsync(target).Returns(new List<string>());
-        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _roleManager.FindByNameAsync("User").Returns(TestRoles.Create(AppRoles.User));
         _userManager.IsInRoleAsync(target, "User").Returns(false);
 
         var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("User"));
@@ -195,13 +202,8 @@ public class AdminServiceTests : IDisposable
     [Fact]
     public async Task AssignRole_CustomRoleWithUnheldPermissions_ReturnsForbidden()
     {
-        SetupCallerAsAdmin();
+        SetupCallerAsAdmin(AppPermissions.Users.View);
         SetupTargetAsUser();
-
-        var callerAdminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin };
-        _roleManager.FindByNameAsync(AppRoles.Admin).Returns(callerAdminRole);
-        _roleManager.GetClaimsAsync(callerAdminRole).Returns(
-            [new Claim(AppPermissions.ClaimType, AppPermissions.Users.View)]);
 
         var customRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "PrivilegedRole" };
         _roleManager.FindByNameAsync("PrivilegedRole").Returns(customRole);
@@ -218,13 +220,8 @@ public class AdminServiceTests : IDisposable
     [Fact]
     public async Task AssignRole_CustomRoleWithHeldPermissions_Succeeds()
     {
-        SetupCallerAsAdmin();
+        SetupCallerAsAdmin(AppPermissions.Users.View);
         var target = SetupTargetAsUser();
-
-        var callerAdminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin };
-        _roleManager.FindByNameAsync(AppRoles.Admin).Returns(callerAdminRole);
-        _roleManager.GetClaimsAsync(callerAdminRole).Returns(
-            [new Claim(AppPermissions.ClaimType, AppPermissions.Users.View)]);
 
         var customRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "ViewerRole" };
         _roleManager.FindByNameAsync("ViewerRole").Returns(customRole);
@@ -243,22 +240,14 @@ public class AdminServiceTests : IDisposable
     public async Task AssignRole_MultipleCallerRoles_AggregatesPermissions()
     {
         // Caller has Admin (with users.view) + a custom "Ops" role (with roles.manage).
-        // Target custom role requires both — should succeed via union of caller permissions.
+        // Target custom role requires both - should succeed via union of caller permissions.
         var caller = new ApplicationUser { Id = _callerId, UserName = "admin@test.com" };
         _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
         _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Admin, "Ops" });
+        TestRoles.SeedAssigned(_dbContext, _callerId, AppRoles.Admin, AppPermissions.Users.View);
+        TestRoles.SeedAssigned(_dbContext, _callerId, "Ops", AppPermissions.Roles.Manage);
 
         var target = SetupTargetAsUser();
-
-        var callerAdminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin };
-        _roleManager.FindByNameAsync(AppRoles.Admin).Returns(callerAdminRole);
-        _roleManager.GetClaimsAsync(callerAdminRole).Returns(
-            [new Claim(AppPermissions.ClaimType, AppPermissions.Users.View)]);
-
-        var callerOpsRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "Ops" };
-        _roleManager.FindByNameAsync("Ops").Returns(callerOpsRole);
-        _roleManager.GetClaimsAsync(callerOpsRole).Returns(
-            [new Claim(AppPermissions.ClaimType, AppPermissions.Roles.Manage)]);
 
         var customRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "PowerRole" };
         _roleManager.FindByNameAsync("PowerRole").Returns(customRole);
@@ -282,6 +271,7 @@ public class AdminServiceTests : IDisposable
         var caller = new ApplicationUser { Id = _callerId, UserName = "superuser@test.com" };
         _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
         _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Superuser });
+        TestRoles.SeedAssigned(_dbContext, _callerId, AppRoles.Superuser);
 
         var target = SetupTargetAsUser();
 
@@ -304,7 +294,7 @@ public class AdminServiceTests : IDisposable
         SetupCallerAsAdmin();
         var target = SetupTargetAsUser();
 
-        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _roleManager.FindByNameAsync("User").Returns(TestRoles.Create(AppRoles.User));
         _userManager.IsInRoleAsync(target, "User").Returns(false);
         _userManager.AddToRoleAsync(target, "User").Returns(IdentityResult.Success);
 
@@ -342,7 +332,7 @@ public class AdminServiceTests : IDisposable
     {
         SetupCallerAsAdmin();
         var target = SetupTargetAsUser();
-        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _roleManager.FindByNameAsync("User").Returns(TestRoles.Create(AppRoles.User));
         _userManager.IsInRoleAsync(target, "User").Returns(true);
         _userManager.RemoveFromRoleAsync(target, "User").Returns(IdentityResult.Success);
 
@@ -361,7 +351,7 @@ public class AdminServiceTests : IDisposable
     [Fact]
     public async Task RemoveRole_SelfRemoval_ReturnsFailure()
     {
-        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _roleManager.FindByNameAsync("User").Returns(TestRoles.Create(AppRoles.User));
         var user = new ApplicationUser { Id = _callerId, UserName = "self@test.com" };
         _userManager.FindByIdAsync(_callerId.ToString()).Returns(user);
 
@@ -376,7 +366,7 @@ public class AdminServiceTests : IDisposable
     {
         SetupCallerAsAdmin();
         var target = SetupTargetAsUser();
-        _roleManager.FindByNameAsync("Admin").Returns(new ApplicationRole { Name = "Admin" });
+        _roleManager.FindByNameAsync("Admin").Returns(TestRoles.Create(AppRoles.Admin));
         _userManager.IsInRoleAsync(target, "Admin").Returns(true);
 
         var result = await _sut.RemoveRoleAsync(_callerId, _targetId, "Admin");
@@ -390,13 +380,58 @@ public class AdminServiceTests : IDisposable
     {
         SetupCallerAsAdmin();
         var target = SetupTargetAsUser();
-        _roleManager.FindByNameAsync("User").Returns(new ApplicationRole { Name = "User" });
+        _roleManager.FindByNameAsync("User").Returns(TestRoles.Create(AppRoles.User));
         _userManager.IsInRoleAsync(target, "User").Returns(false);
 
         var result = await _sut.RemoveRoleAsync(_callerId, _targetId, "User");
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Admin.RoleNotAssigned, result.Error);
+    }
+
+    [Fact]
+    public async Task RemoveRole_LastGrantsAllHolder_ReturnsFailure()
+    {
+        // Removing the only assignment of any grants-all role would lock everyone out.
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+
+        var ownerRole = TestRoles.Create("Owner");
+        ownerRole.GrantsAllPermissions = true;
+        _dbContext.Roles.Add(ownerRole);
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = ownerRole.Id, UserId = _targetId });
+        await _dbContext.SaveChangesAsync();
+
+        _roleManager.FindByNameAsync("Owner").Returns(ownerRole);
+        _userManager.IsInRoleAsync(target, "Owner").Returns(true);
+
+        var result = await _sut.RemoveRoleAsync(_callerId, _targetId, "Owner");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.LastRoleHolder, result.Error);
+    }
+
+    [Fact]
+    public async Task RemoveRole_GrantsAllRole_SecondHolderUnblocksRemoval()
+    {
+        // A second user holding another grants-all role satisfies the lockout invariant.
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+
+        var ownerRole = TestRoles.Create("Owner");
+        ownerRole.GrantsAllPermissions = true;
+        _dbContext.Roles.Add(ownerRole);
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = ownerRole.Id, UserId = _targetId });
+        await _dbContext.SaveChangesAsync();
+        TestRoles.SeedAssigned(_dbContext, Guid.NewGuid(), AppRoles.Superuser);
+
+        _roleManager.FindByNameAsync("Owner").Returns(ownerRole);
+        _userManager.IsInRoleAsync(target, "Owner").Returns(true);
+        _userManager.RemoveFromRoleAsync(target, "Owner").Returns(IdentityResult.Success);
+
+        var result = await _sut.RemoveRoleAsync(_callerId, _targetId, "Owner");
+
+        Assert.True(result.IsSuccess);
     }
 
     #endregion
@@ -480,10 +515,12 @@ public class AdminServiceTests : IDisposable
         var caller = new ApplicationUser { Id = _callerId, UserName = "user@test.com" };
         _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
         _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.User });
+        TestRoles.Seed(_dbContext, AppRoles.User);
 
         var target = new ApplicationUser { Id = _targetId, UserName = "admin@test.com" };
         _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
         _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.Admin });
+        TestRoles.Seed(_dbContext, AppRoles.Admin);
 
         var result = await _sut.LockUserAsync(_callerId, _targetId);
 
@@ -589,20 +626,18 @@ public class AdminServiceTests : IDisposable
     [Fact]
     public async Task DeleteUser_LastAdmin_Succeeds()
     {
-        // Superuser (rank 3) can delete the last Admin (rank 2) - only Superuser role is protected
+        // Superuser (rank 3) can delete the last Admin (rank 2) - only grants-all roles are protected
         var caller = new ApplicationUser { Id = _callerId, UserName = "superuser@test.com" };
         _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
         _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Superuser });
+        TestRoles.Seed(_dbContext, AppRoles.Superuser);
 
         var target = new ApplicationUser { Id = _targetId, UserName = "admin@test.com" };
         _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
         _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.Admin });
 
-        // Only 1 user in Admin role - this should no longer block deletion
-        var adminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin };
-        _roleManager.FindByNameAsync(AppRoles.Admin).Returns(adminRole);
-        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = adminRole.Id, UserId = _targetId });
-        await _dbContext.SaveChangesAsync();
+        // Only 1 user in Admin role - this should not block deletion (Admin does not grant all permissions)
+        TestRoles.SeedAssigned(_dbContext, _targetId, AppRoles.Admin);
 
         _userManager.DeleteAsync(target).Returns(IdentityResult.Success);
 
@@ -614,30 +649,47 @@ public class AdminServiceTests : IDisposable
     [Fact]
     public async Task DeleteUser_LastSuperuser_ReturnsFailure()
     {
-        // Caller is Superuser; target also holds Superuser.
-        // EnforceHierarchyAsync needs callerRank > targetRank to pass.
-        // Mock GetRolesAsync on the target to return User first (for hierarchy check)
-        // then Superuser (for the last-superuser protection check).
+        // Caller is Superuser; target holds Superuser in the database (the lockout check
+        // reads assignments from the database). EnforceHierarchyAsync needs
+        // callerRank > targetRank to pass, so the target's mocked role list stays at User.
         var caller = new ApplicationUser { Id = _callerId, UserName = "superuser@test.com" };
         _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
         _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Superuser });
 
         var target = new ApplicationUser { Id = _targetId, UserName = "target@test.com" };
         _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
-        _userManager.GetRolesAsync(target).Returns(
-            new List<string> { AppRoles.User },
-            new List<string> { AppRoles.Superuser });
+        _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.User });
 
-        // Only 1 user in Superuser role - this should block deletion
-        var superuserRole = TestRoles.Create(AppRoles.Superuser);
-        _roleManager.FindByNameAsync(AppRoles.Superuser).Returns(superuserRole);
-        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = superuserRole.Id, UserId = _targetId });
-        await _dbContext.SaveChangesAsync();
+        // Only 1 user holds a grants-all role - this should block deletion
+        TestRoles.SeedAssigned(_dbContext, _targetId, AppRoles.Superuser);
 
         var result = await _sut.DeleteUserAsync(_callerId, _targetId);
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Admin.LastSuperuserCannotDelete, result.Error);
+    }
+
+    [Fact]
+    public async Task DeleteUser_SuperuserWithSecondGrantsAllHolder_Succeeds()
+    {
+        // A second user holding a grants-all role unblocks deleting a superuser.
+        var caller = new ApplicationUser { Id = _callerId, UserName = "superuser@test.com" };
+        _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
+        _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Superuser });
+
+        var target = new ApplicationUser { Id = _targetId, UserName = "target@test.com" };
+        _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
+        _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.User });
+
+        var superuserRole = TestRoles.SeedAssigned(_dbContext, _targetId, AppRoles.Superuser);
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = superuserRole.Id, UserId = _callerId });
+        await _dbContext.SaveChangesAsync();
+
+        _userManager.DeleteAsync(target).Returns(IdentityResult.Success);
+
+        var result = await _sut.DeleteUserAsync(_callerId, _targetId);
+
+        Assert.True(result.IsSuccess);
     }
 
     #endregion
@@ -763,7 +815,7 @@ public class AdminServiceTests : IDisposable
     [Fact]
     public async Task GetRoles_IdentifiesSystemRoles()
     {
-        var adminRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Admin, NormalizedName = "ADMIN" };
+        var adminRole = TestRoles.Create(AppRoles.Admin);
         var customRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "Custom", NormalizedName = "CUSTOM" };
 
         _dbContext.Roles.Add(adminRole);
@@ -852,10 +904,12 @@ public class AdminServiceTests : IDisposable
         var caller = new ApplicationUser { Id = _callerId, UserName = "user@test.com" };
         _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
         _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.User });
+        TestRoles.Seed(_dbContext, AppRoles.User);
 
         var target = new ApplicationUser { Id = _targetId, UserName = "admin@test.com", EmailConfirmed = false };
         _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
         _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.Admin });
+        TestRoles.Seed(_dbContext, AppRoles.Admin);
 
         var result = await _sut.VerifyEmailAsync(_callerId, _targetId);
 

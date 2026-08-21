@@ -23,6 +23,7 @@ internal class RoleManagementService(
     MyProjectDbContext dbContext,
     HybridCache hybridCache,
     IAuditService auditService,
+    PermissionEscalationGuard escalationGuard,
     ILogger<RoleManagementService> logger) : IRoleManagementService
 {
     /// <inheritdoc />
@@ -44,13 +45,11 @@ internal class RoleManagementService(
         var userCount = await dbContext.UserRoles
             .CountAsync(ur => ur.RoleId == roleId, cancellationToken);
 
-        var isSystem = AppRoles.All.Contains(role.Name ?? string.Empty);
-
         return Result<RoleDetailOutput>.Success(new RoleDetailOutput(
             role.Id,
             role.Name ?? string.Empty,
             role.Description,
-            isSystem,
+            role.IsSystem,
             permissions,
             userCount));
     }
@@ -103,11 +102,9 @@ internal class RoleManagementService(
             return Result.Failure(ErrorMessages.Roles.RoleNotFound, ErrorType.NotFound);
         }
 
-        var isSystem = AppRoles.All.Contains(role.Name ?? string.Empty);
-
         if (input.Name is not null && input.Name != role.Name)
         {
-            if (isSystem)
+            if (role.IsSystem)
             {
                 return Result.Failure(ErrorMessages.Roles.SystemRoleCannotBeRenamed);
             }
@@ -157,7 +154,7 @@ internal class RoleManagementService(
             return Result.Failure(ErrorMessages.Roles.RoleNotFound, ErrorType.NotFound);
         }
 
-        if (AppRoles.All.Contains(role.Name ?? string.Empty))
+        if (role.IsSystem)
         {
             return Result.Failure(ErrorMessages.Roles.SystemRoleCannotBeDeleted);
         }
@@ -196,7 +193,7 @@ internal class RoleManagementService(
             return Result.Failure(ErrorMessages.Roles.RoleNotFound, ErrorType.NotFound);
         }
 
-        if (role.Name == AppRoles.Superuser)
+        if (role.GrantsAllPermissions)
         {
             return Result.Failure(ErrorMessages.Roles.SuperuserPermissionsFixed);
         }
@@ -211,7 +208,8 @@ internal class RoleManagementService(
         }
 
         // Escalation guard: callers cannot grant permissions they don't hold
-        var escalationResult = await EnforcePermissionEscalationAsync(callerUserId, input.Permissions);
+        var escalationResult = await escalationGuard.EnsureCallerHoldsAllAsync(callerUserId,
+            input.Permissions, ErrorMessages.Roles.CannotGrantUnheldPermission, cancellationToken);
         if (escalationResult.IsFailure)
         {
             return escalationResult;
@@ -261,51 +259,6 @@ internal class RoleManagementService(
                 kvp.Key,
                 kvp.Value.Select(p => p.Value).ToList()))
             .ToList();
-    }
-
-    /// <summary>
-    /// Verifies that the caller holds every permission being granted.
-    /// Superuser callers are exempt (implicit all permissions).
-    /// </summary>
-    private async Task<Result> EnforcePermissionEscalationAsync(Guid callerUserId,
-        IReadOnlyList<string> requestedPermissions)
-    {
-        if (requestedPermissions.Count == 0)
-        {
-            return Result.Success();
-        }
-
-        var caller = await userManager.FindByIdAsync(callerUserId.ToString());
-        if (caller is null)
-        {
-            return Result.Failure(ErrorMessages.Auth.InsufficientPermissions, ErrorType.Forbidden);
-        }
-
-        var callerRoles = await userManager.GetRolesAsync(caller);
-        if (callerRoles.Contains(AppRoles.Superuser))
-        {
-            return Result.Success();
-        }
-
-        var callerPermissions = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var roleName in callerRoles)
-        {
-            var callerRole = await roleManager.FindByNameAsync(roleName);
-            if (callerRole is null) continue;
-
-            var claims = await roleManager.GetClaimsAsync(callerRole);
-            foreach (var claim in claims.Where(c => c.Type == AppPermissions.ClaimType))
-            {
-                callerPermissions.Add(claim.Value);
-            }
-        }
-
-        if (!requestedPermissions.All(callerPermissions.Contains))
-        {
-            return Result.Failure(ErrorMessages.Roles.CannotGrantUnheldPermission, ErrorType.Forbidden);
-        }
-
-        return Result.Success();
     }
 
     /// <summary>

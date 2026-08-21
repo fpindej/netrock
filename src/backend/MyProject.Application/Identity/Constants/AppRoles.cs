@@ -8,7 +8,8 @@ namespace MyProject.Application.Identity.Constants;
 /// values defined here use PascalCase for display purposes.
 /// </para>
 /// <para>
-/// Roles follow a strict hierarchy: <c>Superuser</c> (rank 3) &gt; <c>Admin</c> (rank 2) &gt; <c>User</c> (rank 1).
+/// Roles follow a strict hierarchy: <c>Superuser</c> (rank 3) &gt; <c>Admin</c> (rank 2) &gt; <c>User</c> (rank 1);
+/// custom roles have rank 0 and act as permission bundles with no hierarchy authority.
 /// A caller can only manage users whose highest role rank is strictly lower than their own.
 /// Rank and other role metadata are authored in <see cref="Definitions"/>, seeded into the database
 /// at startup, and read from the database at runtime.
@@ -76,31 +77,4 @@ public static class AppRoles
     public static readonly IReadOnlyList<string> All = Definitions
         .Select(d => d.Name)
         .ToList();
-
-    /// <summary>
-    /// Returns the hierarchy rank of a single role. Higher rank means more authority.
-    /// <para>
-    /// Custom roles intentionally receive rank 0, making them assignable by any admin (rank 2+).
-    /// Custom roles act as permission bundles with no hierarchy authority - they cannot be used
-    /// to manage other users' roles.
-    /// </para>
-    /// </summary>
-    /// <param name="role">The role name.</param>
-    /// <returns>The numeric rank: Superuser=3, Admin=2, User=1, custom/unknown=0.</returns>
-    public static int GetRoleRank(string role) => role switch
-    {
-        Superuser => 3,
-        Admin => 2,
-        User => 1,
-        _ => 0
-    };
-
-    /// <summary>
-    /// Returns the highest hierarchy rank from a collection of role names.
-    /// Returns 0 if the collection is empty or contains only unknown roles.
-    /// </summary>
-    /// <param name="roles">The role names to evaluate.</param>
-    /// <returns>The highest numeric rank found.</returns>
-    public static int GetHighestRank(IEnumerable<string> roles) =>
-        roles.Select(GetRoleRank).DefaultIfEmpty(0).Max();
 }

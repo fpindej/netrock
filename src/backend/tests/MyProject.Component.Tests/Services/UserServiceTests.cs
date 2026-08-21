@@ -25,7 +25,6 @@ namespace MyProject.Component.Tests.Services;
 public class UserServiceTests : IDisposable
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly IUserContext _userContext;
     private readonly HybridCache _hybridCache;
     private readonly ICookieService _cookieService;
@@ -40,7 +39,6 @@ public class UserServiceTests : IDisposable
     public UserServiceTests()
     {
         _userManager = IdentityMockHelpers.CreateMockUserManager();
-        _roleManager = IdentityMockHelpers.CreateMockRoleManager();
         _userContext = Substitute.For<IUserContext>();
         _hybridCache = Substitute.ForPartsOf<NoOpHybridCache>();
         _cookieService = Substitute.For<ICookieService>();
@@ -50,7 +48,7 @@ public class UserServiceTests : IDisposable
         _dbContext = TestDbContextFactory.Create();
 
         _sut = new UserService(
-            _userManager, _roleManager, _userContext, _hybridCache, _dbContext, _cookieService,
+            _userManager, _userContext, _hybridCache, _dbContext, _cookieService,
             _auditService, _fileStorageService, _imageProcessingService,
             Substitute.For<ILogger<UserService>>());
     }
@@ -248,18 +246,33 @@ public class UserServiceTests : IDisposable
         _userContext.UserId.Returns(_userId);
         _userManager.FindByIdAsync(_userId.ToString()).Returns(user);
         _userManager.CheckPasswordAsync(user, "correct").Returns(true);
-        _userManager.GetRolesAsync(user).Returns(new List<string> { AppRoles.Superuser });
 
-        // Set up single Superuser in role
-        var superuserRole = TestRoles.Create(AppRoles.Superuser);
-        _roleManager.FindByNameAsync(AppRoles.Superuser).Returns(superuserRole);
-        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = superuserRole.Id, UserId = _userId });
-        await _dbContext.SaveChangesAsync();
+        // Set up a single grants-all role holder in the database
+        TestRoles.SeedAssigned(_dbContext, _userId, AppRoles.Superuser);
 
         var result = await _sut.DeleteAccountAsync(new DeleteAccountInput("correct"));
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.User.LastSuperuserCannotDelete, result.Error);
+    }
+
+    [Fact]
+    public async Task DeleteAccount_SuperuserWithSecondGrantsAllHolder_Succeeds()
+    {
+        var user = new ApplicationUser { Id = _userId, UserName = "superuser@example.com" };
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns(user);
+        _userManager.CheckPasswordAsync(user, "correct").Returns(true);
+        _userManager.DeleteAsync(user).Returns(IdentityResult.Success);
+
+        // A second user holding the grants-all role satisfies the lockout invariant.
+        var superuserRole = TestRoles.SeedAssigned(_dbContext, _userId, AppRoles.Superuser);
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = superuserRole.Id, UserId = Guid.NewGuid() });
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _sut.DeleteAccountAsync(new DeleteAccountInput("correct"));
+
+        Assert.True(result.IsSuccess);
     }
 
     [Fact]

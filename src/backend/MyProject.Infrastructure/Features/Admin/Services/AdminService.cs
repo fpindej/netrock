@@ -44,6 +44,7 @@ internal class AdminService(
     ITemplatedEmailSender templatedEmailSender,
     EmailTokenService emailTokenService,
     IAuditService auditService,
+    PermissionEscalationGuard escalationGuard,
     IFileStorageService fileStorageService,
     IOptions<AuthenticationOptions> authenticationOptions,
     IOptions<EmailOptions> emailOptions,
@@ -98,8 +99,8 @@ internal class AdminService(
     public async Task<Result> AssignRoleAsync(Guid callerUserId, Guid userId, AssignRoleInput input,
         CancellationToken cancellationToken = default)
     {
-        var roleExists = await roleManager.FindByNameAsync(input.Role) is not null;
-        if (!roleExists)
+        var role = await roleManager.FindByNameAsync(input.Role);
+        if (role is null)
         {
             return Result.Failure(ErrorMessages.Admin.RoleNotFound);
         }
@@ -111,23 +112,23 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
         }
 
-        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
+        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user, cancellationToken);
         if (!hierarchyResult.IsSuccess)
         {
             return hierarchyResult;
         }
 
         var callerRoles = await GetUserRolesAsync(callerUserId);
-        var callerRank = AppRoles.GetHighestRank(callerRoles);
+        var callerRank = await GetHighestRankAsync(callerRoles, cancellationToken);
 
-        if (AppRoles.GetRoleRank(input.Role) >= callerRank)
+        if (role.Rank >= callerRank)
         {
             return Result.Failure(ErrorMessages.Admin.RoleAssignAboveRank);
         }
 
-        if (AppRoles.GetRoleRank(input.Role) == 0)
+        if (role.Rank == 0)
         {
-            var escalationResult = await EnforceRolePermissionEscalationAsync(input.Role, callerRoles);
+            var escalationResult = await EnforceRolePermissionEscalationAsync(role, callerUserId, cancellationToken);
             if (!escalationResult.IsSuccess)
             {
                 return escalationResult;
@@ -139,7 +140,7 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.RoleAlreadyAssigned);
         }
 
-        if (AppRoles.GetRoleRank(input.Role) > 0 && !user.EmailConfirmed)
+        if (role.Rank > 0 && !user.EmailConfirmed)
         {
             return Result.Failure(ErrorMessages.Admin.EmailVerificationRequired);
         }
@@ -169,8 +170,8 @@ internal class AdminService(
     public async Task<Result> RemoveRoleAsync(Guid callerUserId, Guid userId, string role,
         CancellationToken cancellationToken = default)
     {
-        var roleExists = await roleManager.FindByNameAsync(role) is not null;
-        if (!roleExists)
+        var roleEntity = await roleManager.FindByNameAsync(role);
+        if (roleEntity is null)
         {
             return Result.Failure(ErrorMessages.Admin.RoleNotFound);
         }
@@ -187,16 +188,16 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.RoleSelfRemove);
         }
 
-        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
+        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user, cancellationToken);
         if (!hierarchyResult.IsSuccess)
         {
             return hierarchyResult;
         }
 
         var callerRoles = await GetUserRolesAsync(callerUserId);
-        var callerRank = AppRoles.GetHighestRank(callerRoles);
+        var callerRank = await GetHighestRankAsync(callerRoles, cancellationToken);
 
-        if (AppRoles.GetRoleRank(role) >= callerRank)
+        if (roleEntity.Rank >= callerRank)
         {
             return Result.Failure(ErrorMessages.Admin.RoleRemoveAboveRank);
         }
@@ -206,10 +207,10 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.RoleNotAssigned);
         }
 
-        var lastSuperuserResult = await EnforceLastSuperuserProtectionAsync(userId, role, cancellationToken);
-        if (!lastSuperuserResult.IsSuccess)
+        var lockoutResult = await EnforceLockoutInvariantForRoleRemovalAsync(userId, roleEntity, cancellationToken);
+        if (!lockoutResult.IsSuccess)
         {
-            return lastSuperuserResult;
+            return lockoutResult;
         }
 
         var result = await userManager.RemoveFromRoleAsync(user, role);
@@ -249,7 +250,7 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.LockSelfAction);
         }
 
-        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
+        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user, cancellationToken);
         if (!hierarchyResult.IsSuccess)
         {
             return hierarchyResult;
@@ -288,7 +289,7 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
         }
 
-        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
+        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user, cancellationToken);
         if (!hierarchyResult.IsSuccess)
         {
             return hierarchyResult;
@@ -332,18 +333,16 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.DeleteSelfAction);
         }
 
-        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
+        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user, cancellationToken);
         if (!hierarchyResult.IsSuccess)
         {
             return hierarchyResult;
         }
 
-        var targetRoles = await userManager.GetRolesAsync(user);
-        var lastSuperuserCheckResult = await EnforceLastSuperuserProtectionForDeletionAsync(
-            targetRoles, cancellationToken);
-        if (!lastSuperuserCheckResult.IsSuccess)
+        var lockoutResult = await EnforceLockoutInvariantForUserDeletionAsync(userId, cancellationToken);
+        if (!lockoutResult.IsSuccess)
         {
-            return lastSuperuserCheckResult;
+            return lockoutResult;
         }
 
         await RevokeUserSessionsAsync(user, userId, cancellationToken);
@@ -403,7 +402,7 @@ internal class AdminService(
                 role.Id,
                 role.Name ?? string.Empty,
                 role.Description,
-                AppRoles.All.Contains(role.Name ?? string.Empty),
+                role.IsSystem,
                 roleCounts.GetValueOrDefault(role.Id),
                 roleClaims.GetValueOrDefault(role.Id, [])))
             .ToList();
@@ -420,7 +419,7 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
         }
 
-        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
+        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user, cancellationToken);
         if (!hierarchyResult.IsSuccess)
         {
             return hierarchyResult;
@@ -462,7 +461,7 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.UserNotFound, ErrorType.NotFound);
         }
 
-        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
+        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user, cancellationToken);
         if (!hierarchyResult.IsSuccess)
         {
             return hierarchyResult;
@@ -501,7 +500,7 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.DisableTwoFactorSelfAction);
         }
 
-        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user);
+        var hierarchyResult = await EnforceHierarchyAsync(callerUserId, user, cancellationToken);
         if (!hierarchyResult.IsSuccess)
         {
             return hierarchyResult;
@@ -596,15 +595,19 @@ internal class AdminService(
 
     /// <summary>
     /// Verifies that the caller has a strictly higher role rank than the target user.
+    /// Both effective ranks are resolved from role metadata in a single query.
     /// Returns <see cref="Result.Failure(Error)"/> if the hierarchy check fails.
     /// </summary>
-    private async Task<Result> EnforceHierarchyAsync(Guid callerUserId, ApplicationUser targetUser)
+    private async Task<Result> EnforceHierarchyAsync(Guid callerUserId, ApplicationUser targetUser,
+        CancellationToken cancellationToken)
     {
         var callerRoles = await GetUserRolesAsync(callerUserId);
         var targetRoles = await userManager.GetRolesAsync(targetUser);
 
-        var callerRank = AppRoles.GetHighestRank(callerRoles);
-        var targetRank = AppRoles.GetHighestRank(targetRoles);
+        var ranksByName = await GetRoleMetadataAsync(callerRoles.Concat(targetRoles), cancellationToken);
+
+        var callerRank = GetHighestRank(callerRoles, ranksByName);
+        var targetRank = GetHighestRank(targetRoles, ranksByName);
 
         if (callerRank <= targetRank)
         {
@@ -615,69 +618,111 @@ internal class AdminService(
     }
 
     /// <summary>
-    /// Prevents removal of the Superuser role if the target user is the last Superuser.
+    /// Loads role metadata for the given role names in a single query, keyed by normalized name.
+    /// Names without a matching role row are simply absent from the result (effective rank 0).
     /// </summary>
-    private async Task<Result> EnforceLastSuperuserProtectionAsync(Guid userId, string role,
-        CancellationToken cancellationToken)
+    private async Task<Dictionary<string, int>> GetRoleMetadataAsync(
+        IEnumerable<string> roleNames, CancellationToken cancellationToken)
     {
-        if (role is not AppRoles.Superuser)
-        {
-            return Result.Success();
-        }
+        var normalizedNames = roleNames
+            .Select(r => r.ToUpperInvariant())
+            .Distinct()
+            .ToList();
 
-        var roleEntity = await roleManager.FindByNameAsync(role);
-        if (roleEntity is null)
-        {
-            return Result.Success();
-        }
-
-        var usersInRoleCount = await dbContext.UserRoles
-            .CountAsync(ur => ur.RoleId == roleEntity.Id, cancellationToken);
-
-        if (usersInRoleCount <= 1)
-        {
-            return Result.Failure(ErrorMessages.Admin.LastRoleHolder);
-        }
-
-        return Result.Success();
+        return await dbContext.Roles
+            .AsNoTracking()
+            .Where(r => normalizedNames.Contains(r.NormalizedName!))
+            .ToDictionaryAsync(r => r.NormalizedName!, r => r.Rank, cancellationToken);
     }
 
     /// <summary>
-    /// Prevents deletion of a user if they are the last Superuser.
+    /// Returns the highest rank among the given role names based on stored role metadata.
+    /// Unknown roles contribute rank 0.
     /// </summary>
-    private async Task<Result> EnforceLastSuperuserProtectionForDeletionAsync(
-        IList<string> targetRoles, CancellationToken cancellationToken)
+    private static int GetHighestRank(IEnumerable<string> roleNames, Dictionary<string, int> ranksByName) =>
+        roleNames
+            .Select(r => ranksByName.GetValueOrDefault(r.ToUpperInvariant()))
+            .DefaultIfEmpty(0)
+            .Max();
+
+    /// <summary>
+    /// Resolves the caller's effective rank from stored role metadata.
+    /// </summary>
+    private async Task<int> GetHighestRankAsync(IEnumerable<string> roleNames,
+        CancellationToken cancellationToken)
     {
-        foreach (var role in targetRoles.Where(r => r is AppRoles.Superuser))
+        var roleNameList = roleNames.ToList();
+        var ranksByName = await GetRoleMetadataAsync(roleNameList, cancellationToken);
+        return GetHighestRank(roleNameList, ranksByName);
+    }
+
+    /// <summary>
+    /// Enforces the lockout invariant for a role removal: the operation may not leave zero
+    /// users holding any role that grants all permissions. Only checked when the role being
+    /// removed grants all permissions; the affected assignment itself is excluded from the count.
+    /// </summary>
+    private async Task<Result> EnforceLockoutInvariantForRoleRemovalAsync(Guid userId,
+        ApplicationRole role, CancellationToken cancellationToken)
+    {
+        if (!role.GrantsAllPermissions)
         {
-            var roleEntity = await roleManager.FindByNameAsync(role);
-            if (roleEntity is null) continue;
-
-            var usersInRoleCount = await dbContext.UserRoles
-                .CountAsync(ur => ur.RoleId == roleEntity.Id, cancellationToken);
-
-            if (usersInRoleCount <= 1)
-            {
-                return Result.Failure(ErrorMessages.Admin.LastSuperuserCannotDelete);
-            }
+            return Result.Success();
         }
 
-        return Result.Success();
+        var otherHolderExists = await dbContext.UserRoles
+            .Join(dbContext.Roles.Where(r => r.GrantsAllPermissions),
+                ur => ur.RoleId,
+                r => r.Id,
+                (ur, _) => new { ur.UserId, ur.RoleId })
+            .Where(x => x.UserId != userId || x.RoleId != role.Id)
+            .AnyAsync(cancellationToken);
+
+        return otherHolderExists
+            ? Result.Success()
+            : Result.Failure(ErrorMessages.Admin.LastRoleHolder);
+    }
+
+    /// <summary>
+    /// Enforces the lockout invariant for a user deletion: the operation may not leave zero
+    /// users holding any role that grants all permissions. Users without such a role are
+    /// always deletable.
+    /// </summary>
+    private async Task<Result> EnforceLockoutInvariantForUserDeletionAsync(Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var targetHoldsGrantsAll = await dbContext.UserRoles
+            .Where(ur => ur.UserId == userId)
+            .Join(dbContext.Roles.Where(r => r.GrantsAllPermissions),
+                ur => ur.RoleId,
+                r => r.Id,
+                (ur, _) => ur.UserId)
+            .AnyAsync(cancellationToken);
+
+        if (!targetHoldsGrantsAll)
+        {
+            return Result.Success();
+        }
+
+        var otherHolderExists = await dbContext.UserRoles
+            .Where(ur => ur.UserId != userId)
+            .Join(dbContext.Roles.Where(r => r.GrantsAllPermissions),
+                ur => ur.RoleId,
+                r => r.Id,
+                (ur, _) => ur.UserId)
+            .AnyAsync(cancellationToken);
+
+        return otherHolderExists
+            ? Result.Success()
+            : Result.Failure(ErrorMessages.Admin.LastSuperuserCannotDelete);
     }
 
     /// <summary>
     /// Verifies that the caller holds every permission granted by the target custom role.
-    /// Superuser callers are exempt (implicit all permissions).
     /// Roles with no permissions are allowed unconditionally.
     /// </summary>
-    private async Task<Result> EnforceRolePermissionEscalationAsync(string roleName, IList<string> callerRoles)
+    private async Task<Result> EnforceRolePermissionEscalationAsync(ApplicationRole targetRole,
+        Guid callerUserId, CancellationToken cancellationToken)
     {
-        var targetRole = await roleManager.FindByNameAsync(roleName);
-        if (targetRole is null)
-        {
-            return Result.Success();
-        }
-
         var targetClaims = await roleManager.GetClaimsAsync(targetRole);
         var targetPermissions = targetClaims
             .Where(c => c.Type == AppPermissions.ClaimType)
@@ -689,30 +734,8 @@ internal class AdminService(
             return Result.Success();
         }
 
-        if (callerRoles.Contains(AppRoles.Superuser))
-        {
-            return Result.Success();
-        }
-
-        var callerPermissions = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var callerRoleName in callerRoles)
-        {
-            var callerRole = await roleManager.FindByNameAsync(callerRoleName);
-            if (callerRole is null) continue;
-
-            var claims = await roleManager.GetClaimsAsync(callerRole);
-            foreach (var claim in claims.Where(c => c.Type == AppPermissions.ClaimType))
-            {
-                callerPermissions.Add(claim.Value);
-            }
-        }
-
-        if (!targetPermissions.All(callerPermissions.Contains))
-        {
-            return Result.Failure(ErrorMessages.Admin.RoleAssignEscalation, ErrorType.Forbidden);
-        }
-
-        return Result.Success();
+        return await escalationGuard.EnsureCallerHoldsAllAsync(callerUserId, targetPermissions,
+            ErrorMessages.Admin.RoleAssignEscalation, cancellationToken);
     }
 
     /// <summary>
