@@ -131,7 +131,7 @@ public static class ErrorMessages
         public static readonly Error RoleHasUsers = new("roles_role_has_users", "Cannot delete a role that has users assigned to it.");
         public static readonly Error InvalidPermission = new("roles_invalid_permission", "One or more permission values are invalid.");
         public static readonly Error SystemRoleNameReserved = new("roles_system_role_name_reserved", "This name is reserved for a system role.");
-        public static readonly Error SuperuserPermissionsFixed = new("roles_superuser_permissions_fixed", "Superuser permissions cannot be modified.");
+        public static readonly Error SuperuserPermissionsFixed = new("roles_superuser_permissions_fixed", "Permissions of a role that grants all permissions cannot be modified.");
         public static readonly Error CannotGrantUnheldPermission = new("roles_cannot_grant_unheld_permission", "Cannot grant permissions that you do not hold.");
         public static readonly Error CreateFailed = new("roles_create_failed", "Failed to create role.");
         public static readonly Error UpdateFailed = new("roles_update_failed", "Failed to update role.");

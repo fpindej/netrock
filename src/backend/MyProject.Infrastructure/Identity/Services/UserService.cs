@@ -62,7 +62,7 @@ internal sealed class UserService(
                 }
 
                 var roles = await userManager.GetRolesAsync(user);
-                var permissions = await GetPermissionsForRolesAsync(roles);
+                var permissions = await GetPermissionsForRolesAsync(roles, ct);
                 var logins = await userManager.GetLoginsAsync(user);
                 var hasPassword = await userManager.HasPasswordAsync(user);
 
@@ -143,7 +143,7 @@ internal sealed class UserService(
         await hybridCache.RemoveAsync(cacheKey, cancellationToken);
 
         var roles = await userManager.GetRolesAsync(user);
-        var permissions = await GetPermissionsForRolesAsync(roles);
+        var permissions = await GetPermissionsForRolesAsync(roles, cancellationToken);
         var logins = await userManager.GetLoginsAsync(user);
         var hasPassword = await userManager.HasPasswordAsync(user);
 
@@ -424,14 +424,16 @@ internal sealed class UserService(
     /// Roles that grant all permissions expand to the full permission catalog so API
     /// consumers can keep doing exact membership checks; the wildcard is never exposed.
     /// </summary>
-    private async Task<IReadOnlyList<string>> GetPermissionsForRolesAsync(IList<string> roleNames)
+    private async Task<IReadOnlyList<string>> GetPermissionsForRolesAsync(IList<string> roleNames,
+        CancellationToken cancellationToken)
     {
         var normalizedNames = roleNames
             .Select(r => r.ToUpperInvariant())
             .ToList();
 
         var grantsAll = await dbContext.Roles
-            .AnyAsync(r => normalizedNames.Contains(r.NormalizedName!) && r.GrantsAllPermissions);
+            .AnyAsync(r => normalizedNames.Contains(r.NormalizedName!) && r.GrantsAllPermissions,
+                cancellationToken);
 
         if (grantsAll)
         {
@@ -447,7 +449,7 @@ internal sealed class UserService(
                         && x.ClaimType == AppPermissions.ClaimType)
             .Select(x => x.ClaimValue!)
             .Distinct()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     /// <summary>

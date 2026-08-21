@@ -118,10 +118,7 @@ internal class AdminService(
             return hierarchyResult;
         }
 
-        var callerRoles = await GetUserRolesAsync(callerUserId);
-        var callerRank = await GetHighestRankAsync(callerRoles, cancellationToken);
-
-        if (role.Rank >= callerRank)
+        if (role.Rank >= hierarchyResult.Value)
         {
             return Result.Failure(ErrorMessages.Admin.RoleAssignAboveRank);
         }
@@ -194,10 +191,7 @@ internal class AdminService(
             return hierarchyResult;
         }
 
-        var callerRoles = await GetUserRolesAsync(callerUserId);
-        var callerRank = await GetHighestRankAsync(callerRoles, cancellationToken);
-
-        if (roleEntity.Rank >= callerRank)
+        if (roleEntity.Rank >= hierarchyResult.Value)
         {
             return Result.Failure(ErrorMessages.Admin.RoleRemoveAboveRank);
         }
@@ -650,9 +644,10 @@ internal class AdminService(
     /// <summary>
     /// Verifies that the caller has a strictly higher role rank than the target user.
     /// Both effective ranks are resolved from role metadata in a single query.
-    /// Returns <see cref="Result.Failure(Error)"/> if the hierarchy check fails.
+    /// On success the result carries the caller's effective rank so rank gates at the
+    /// call sites do not have to query it again.
     /// </summary>
-    private async Task<Result> EnforceHierarchyAsync(Guid callerUserId, ApplicationUser targetUser,
+    private async Task<Result<int>> EnforceHierarchyAsync(Guid callerUserId, ApplicationUser targetUser,
         CancellationToken cancellationToken)
     {
         var callerRoles = await GetUserRolesAsync(callerUserId);
@@ -665,10 +660,10 @@ internal class AdminService(
 
         if (callerRank <= targetRank)
         {
-            return Result.Failure(ErrorMessages.Admin.HierarchyInsufficient);
+            return Result<int>.Failure(ErrorMessages.Admin.HierarchyInsufficient);
         }
 
-        return Result.Success();
+        return Result<int>.Success(callerRank);
     }
 
     /// <summary>
@@ -698,17 +693,6 @@ internal class AdminService(
             .Select(r => ranksByName.GetValueOrDefault(r.ToUpperInvariant()))
             .DefaultIfEmpty(0)
             .Max();
-
-    /// <summary>
-    /// Resolves the caller's effective rank from stored role metadata.
-    /// </summary>
-    private async Task<int> GetHighestRankAsync(IEnumerable<string> roleNames,
-        CancellationToken cancellationToken)
-    {
-        var roleNameList = roleNames.ToList();
-        var ranksByName = await GetRoleMetadataAsync(roleNameList, cancellationToken);
-        return GetHighestRank(roleNameList, ranksByName);
-    }
 
     /// <summary>
     /// Enforces the lockout invariant for a role removal: the operation may not leave zero
