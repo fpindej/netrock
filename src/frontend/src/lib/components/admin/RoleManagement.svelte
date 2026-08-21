@@ -27,9 +27,9 @@
 	let targetRoles = $derived(user.roles ?? []);
 
 	let assignableRoles = $derived(
-		(roles ?? [])
-			.filter((r) => (r.rank ?? 0) < callerRank && !targetRoles.includes(r.name ?? ''))
-			.map((r) => r.name ?? '')
+		roles.flatMap((r) =>
+			r.name && (r.rank ?? 0) < callerRank && !targetRoles.includes(r.name) ? [r.name] : []
+		)
 	);
 
 	function canRemoveRole(role: string): boolean {
