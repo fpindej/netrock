@@ -33,10 +33,16 @@ NETrock is built **security-first**. Every decision defaults to the most restric
 ## Authorization & Access Control
 
 - **Permission-based authorization** - atomic permissions (`users.view`, `users.manage`, `roles.manage`, ...) enforced on every endpoint via `[RequirePermission]`
-- **Role hierarchy protection** - Superuser > Admin > User, with privilege escalation prevention (can't assign roles at or above your own rank, can't grant permissions you don't have)
+- **Role hierarchy protection** - rank-based via role metadata (`auth.Roles.Rank`: Superuser 3 > Admin 2 > User 1, custom roles 0), with privilege escalation prevention (can't assign roles at or above your own rank, can't grant permissions you don't have)
 - **Self-protection rules** - can't lock your own account, can't delete yourself, can't remove your own roles
-- **System role guards** - Superuser/Admin/User cannot be deleted or renamed, Superuser permissions are implicit (never stored in DB)
+- **System role guards** - roles flagged `IsSystem` cannot be deleted or renamed; roles flagged `GrantsAllPermissions` (Superuser) receive a single wildcard `permission: *` claim at token generation instead of stored permissions, and their permission set cannot be edited
+- **Lockout protection** - no operation may leave the system with zero users holding a `GrantsAllPermissions` role
+- **Single enforcement point** - `PermissionEvaluator` (Application layer) is the only authorization decision logic; both the `[RequirePermission]` policy handler and `IUserContext.HasPermission` delegate to it
 - **Frontend mirrors backend** - route guards, nav filtering, and conditional rendering use the same permission claims, but the backend is always authoritative
+
+### Multitenancy seam
+
+Role authority is data (`Rank`, `IsSystem`, `GrantsAllPermissions` columns seeded from `AppRoles.Definitions`), not role-name string matching. To add tenant scoping later: add a tenant claim at token generation, extend `PermissionEvaluator` with a scope parameter (or scope the claim values as `{tenantId}:{permission}` with `{tenantId}:*` as the tenant wildcard), and add a nullable `TenantId` scope column to `ApplicationRole`. A platform admin is then a `GrantsAllPermissions` role with a null (global) scope. Both enforcement call sites stay unchanged.
 
 ## PII Compliance
 

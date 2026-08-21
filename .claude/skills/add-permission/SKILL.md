@@ -19,7 +19,7 @@ Adds a permission constant across backend and frontend.
    ```
    `AppPermissions.All` discovers permissions via reflection - no manual registration needed.
 2. Add `[RequirePermission(AppPermissions.Orders.View)]` to the relevant controller actions
-3. *(Optional)* Seed the permission for existing roles in `SeedRolePermissionsAsync()` in `src/backend/MyProject.Infrastructure/Persistence/Extensions/ApplicationBuilderExtensions.cs`
+3. *(Optional)* Add the permission to a role's `DefaultPermissions` in `AppRoles.Definitions` (`src/backend/MyProject.Application/Identity/Constants/AppRoles.cs`) - the startup seeder applies it additively
 4. Verify: `dotnet build src/backend/MyProject.slnx`
 
 **Frontend:**
