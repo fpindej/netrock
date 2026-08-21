@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { User } from '$lib/types';
-import { hasAnyPermission, hasPermission, isSuperuser, Permissions } from './permissions';
+import { hasAnyPermission, hasPermission, Permissions } from './permissions';
 
 /** Creates a minimal User object for testing. */
 function makeUser(overrides: Partial<User> = {}): User {
@@ -13,44 +13,6 @@ function makeUser(overrides: Partial<User> = {}): User {
 		...overrides
 	};
 }
-
-// ── isSuperuser ────────────────────────────────────────────────────
-
-describe('isSuperuser', () => {
-	it('returns true when user has Superuser role', () => {
-		const user = makeUser({ roles: ['Superuser'] });
-		expect(isSuperuser(user)).toBe(true);
-	});
-
-	it('returns true when Superuser is among multiple roles', () => {
-		const user = makeUser({ roles: ['User', 'Superuser', 'Admin'] });
-		expect(isSuperuser(user)).toBe(true);
-	});
-
-	it('returns false when user has Admin but not Superuser', () => {
-		const user = makeUser({ roles: ['Admin'] });
-		expect(isSuperuser(user)).toBe(false);
-	});
-
-	it('returns false when user has no roles', () => {
-		const user = makeUser({ roles: [] });
-		expect(isSuperuser(user)).toBe(false);
-	});
-
-	it('returns false for null user', () => {
-		expect(isSuperuser(null)).toBe(false);
-	});
-
-	it('returns false for undefined user', () => {
-		expect(isSuperuser(undefined)).toBe(false);
-	});
-
-	it('returns false when roles property is undefined', () => {
-		const user = makeUser();
-		delete user.roles;
-		expect(isSuperuser(user)).toBe(false);
-	});
-});
 
 // ── hasPermission ───────────────────────────────────────────────────
 
@@ -70,16 +32,21 @@ describe('hasPermission', () => {
 		expect(hasPermission(user, Permissions.Users.View)).toBe(false);
 	});
 
-	it('Superuser implicitly has any permission', () => {
-		const user = makeUser({ roles: ['Superuser'], permissions: [] });
+	it('wildcard permission grants any permission', () => {
+		const user = makeUser({ permissions: ['*'] });
 		expect(hasPermission(user, Permissions.Users.Manage)).toBe(true);
 		expect(hasPermission(user, Permissions.Roles.Manage)).toBe(true);
 		expect(hasPermission(user, Permissions.Jobs.Manage)).toBe(true);
 	});
 
-	it('Superuser implicitly has permissions even for unknown permission strings', () => {
-		const user = makeUser({ roles: ['Superuser'], permissions: [] });
+	it('wildcard permission grants unknown permission strings', () => {
+		const user = makeUser({ permissions: ['*'] });
 		expect(hasPermission(user, 'some.custom.permission')).toBe(true);
+	});
+
+	it('role names alone grant nothing without permissions', () => {
+		const user = makeUser({ roles: ['Superuser'], permissions: [] });
+		expect(hasPermission(user, Permissions.Users.Manage)).toBe(false);
 	});
 
 	it('returns false for null user', () => {
@@ -135,8 +102,8 @@ describe('hasAnyPermission', () => {
 		expect(hasAnyPermission(user, [])).toBe(false);
 	});
 
-	it('Superuser implicitly satisfies any permission check', () => {
-		const user = makeUser({ roles: ['Superuser'], permissions: [] });
+	it('wildcard permission satisfies any permission check', () => {
+		const user = makeUser({ permissions: ['*'] });
 		expect(hasAnyPermission(user, [Permissions.Users.Manage, Permissions.Roles.Manage])).toBe(true);
 	});
 

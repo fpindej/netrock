@@ -5,13 +5,6 @@
 
 import type { User } from '$lib/types';
 
-/** Well-known system role names. Mirrors backend AppRoles constants. */
-export const SystemRoles = {
-	Superuser: 'Superuser',
-	Admin: 'Admin',
-	User: 'User'
-} as const;
-
 export const Permissions = {
 	Users: {
 		View: 'users.view',
@@ -34,14 +27,10 @@ export const Permissions = {
 	}
 } as const;
 
-/** Returns true if the user is a Superuser (implicit all permissions). */
-export function isSuperuser(user: User | null | undefined): boolean {
-	return user?.roles?.includes(SystemRoles.Superuser) ?? false;
-}
-
-/** Returns true if the user has a specific permission. Superuser implicitly has all. */
+/** Returns true if the user has a specific permission. The wildcard `*` grants all. */
 export function hasPermission(user: User | null | undefined, permission: string): boolean {
-	return isSuperuser(user) || (user?.permissions?.includes(permission) ?? false);
+	const permissions = user?.permissions ?? [];
+	return permissions.includes('*') || permissions.includes(permission);
 }
 
 /** Returns true if the user has at least one of the given permissions. */

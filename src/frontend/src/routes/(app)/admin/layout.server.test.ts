@@ -41,7 +41,7 @@ const MOCK_SUPERUSER_USER = {
 	firstName: 'Super',
 	lastName: 'Admin',
 	roles: ['Superuser'],
-	permissions: [],
+	permissions: ['*'],
 	emailConfirmed: true
 };
 
@@ -127,7 +127,7 @@ describe('admin layout server load', () => {
 		expect(result).toEqual({ user });
 	});
 
-	it('Superuser without explicit permissions - returns user data (implicit all)', async () => {
+	it('Superuser with wildcard permission - returns user data', async () => {
 		const result = await load(mockLoadEvent(MOCK_SUPERUSER_USER));
 		expect(result).toEqual({ user: MOCK_SUPERUSER_USER });
 	});

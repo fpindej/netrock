@@ -1,33 +1,39 @@
 /**
  * Client-side role hierarchy utilities.
- * Mirrors the backend AppRoles.GetRoleRank() logic.
+ * Ranks come from the admin roles API (`role.rank`) - the server is authoritative.
  */
 
-import { SystemRoles } from './permissions';
+import type { AdminRole } from '$lib/types';
 
-const ROLE_RANKS: Record<string, number> = {
-	[SystemRoles.Superuser]: 3,
-	[SystemRoles.Admin]: 2,
-	[SystemRoles.User]: 1
-};
+/** Map of role name to hierarchy rank, built from the admin roles API. */
+export type RoleRankMap = ReadonlyMap<string, number>;
+
+/** Builds a role name to rank map from the admin roles list. */
+export function buildRoleRankMap(roles: AdminRole[]): RoleRankMap {
+	const rankMap = new Map<string, number>();
+	for (const role of roles) {
+		if (role.name) {
+			rankMap.set(role.name, role.rank ?? 0);
+		}
+	}
+	return rankMap;
+}
 
 /** Returns the numeric rank for a role name. Unknown roles return 0. */
-export function getRoleRank(role: string): number {
-	return ROLE_RANKS[role] ?? 0;
+export function getRoleRank(role: string, rankMap: RoleRankMap): number {
+	return rankMap.get(role) ?? 0;
 }
 
 /** Returns the highest rank from a list of role names. */
-export function getHighestRank(roles: string[]): number {
-	return Math.max(0, ...roles.map(getRoleRank));
+export function getHighestRank(roles: string[], rankMap: RoleRankMap): number {
+	return Math.max(0, ...roles.map((role) => getRoleRank(role, rankMap)));
 }
 
 /** Returns true if the caller's roles outrank the target's roles (strictly greater). */
-export function canManageUser(callerRoles: string[], targetRoles: string[]): boolean {
-	return getHighestRank(callerRoles) > getHighestRank(targetRoles);
-}
-
-/** Returns roles that are below the caller's highest rank (assignable by them). */
-export function getAssignableRoles(callerRoles: string[], allRoleNames: string[]): string[] {
-	const callerRank = getHighestRank(callerRoles);
-	return allRoleNames.filter((role) => getRoleRank(role) < callerRank);
+export function canManageUser(
+	callerRoles: string[],
+	targetRoles: string[],
+	rankMap: RoleRankMap
+): boolean {
+	return getHighestRank(callerRoles, rankMap) > getHighestRank(targetRoles, rankMap);
 }
