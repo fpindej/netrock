@@ -23,9 +23,10 @@ internal record AdminUserListResponse(List<AdminUserResponse> Items, int TotalCo
     int TotalPages, bool HasPreviousPage, bool HasNextPage);
 
 // Admin - Roles
-internal record AdminRoleResponse(Guid Id, string Name, string? Description, bool IsSystem, int UserCount);
+internal record AdminRoleResponse(Guid Id, string Name, string? Description, bool IsSystem, int UserCount,
+    int Rank, bool GrantsAllPermissions);
 internal record RoleDetailResponse(Guid Id, string Name, string? Description, bool IsSystem,
-    List<string> Permissions, int UserCount);
+    List<string> Permissions, int UserCount, int Rank, bool GrantsAllPermissions);
 internal record CreateRoleResponse(Guid Id);
 internal record PermissionGroupResponse(string Category, List<string> Permissions);
 

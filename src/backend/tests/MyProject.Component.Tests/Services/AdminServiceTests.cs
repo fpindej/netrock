@@ -828,7 +828,11 @@ public class AdminServiceTests : IDisposable
         var admin = result.First(r => r.Name == AppRoles.Admin);
         var custom = result.First(r => r.Name == "Custom");
         Assert.True(admin.IsSystem);
+        Assert.Equal(2, admin.Rank);
+        Assert.False(admin.GrantsAllPermissions);
         Assert.False(custom.IsSystem);
+        Assert.Equal(0, custom.Rank);
+        Assert.False(custom.GrantsAllPermissions);
     }
 
     [Fact]

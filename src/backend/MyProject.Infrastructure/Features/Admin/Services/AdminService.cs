@@ -404,7 +404,9 @@ internal class AdminService(
                 role.Description,
                 role.IsSystem,
                 roleCounts.GetValueOrDefault(role.Id),
-                roleClaims.GetValueOrDefault(role.Id, [])))
+                roleClaims.GetValueOrDefault(role.Id, []),
+                role.Rank,
+                role.GrantsAllPermissions))
             .ToList();
     }
 

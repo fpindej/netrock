@@ -51,7 +51,9 @@ internal class RoleManagementService(
             role.Description,
             role.IsSystem,
             permissions,
-            userCount));
+            userCount,
+            role.Rank,
+            role.GrantsAllPermissions));
     }
 
     /// <inheritdoc />

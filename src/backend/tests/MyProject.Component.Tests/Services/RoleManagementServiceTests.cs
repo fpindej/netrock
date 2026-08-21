@@ -476,6 +476,23 @@ public class RoleManagementServiceTests : IDisposable
         Assert.True(result.IsSuccess);
         Assert.Equal("CustomRole", result.Value.Name);
         Assert.Equal("A role", result.Value.Description);
+        Assert.Equal(0, result.Value.Rank);
+        Assert.False(result.Value.GrantsAllPermissions);
+    }
+
+    [Fact]
+    public async Task GetRoleDetail_GrantsAllRole_ExposesMetadata()
+    {
+        var roleId = Guid.NewGuid();
+        var role = TestRoles.Create(AppRoles.Superuser, roleId);
+        _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
+
+        var result = await _sut.GetRoleDetailAsync(roleId);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(3, result.Value.Rank);
+        Assert.True(result.Value.GrantsAllPermissions);
+        Assert.True(result.Value.IsSystem);
     }
 
     [Fact]
