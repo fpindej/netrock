@@ -389,19 +389,23 @@ internal sealed class UserService(
     }
 
     /// <summary>
-    /// Collects deduplicated permission values for the given roles in a single query.
-    /// Superuser receives all permissions implicitly.
+    /// Collects deduplicated permission values for the given roles.
+    /// Roles that grant all permissions expand to the full permission catalog so API
+    /// consumers can keep doing exact membership checks; the wildcard is never exposed.
     /// </summary>
     private async Task<IReadOnlyList<string>> GetPermissionsForRolesAsync(IList<string> roleNames)
     {
-        if (roleNames.Contains(AppRoles.Superuser))
-        {
-            return AppPermissions.All;
-        }
-
         var normalizedNames = roleNames
             .Select(r => r.ToUpperInvariant())
             .ToList();
+
+        var grantsAll = await dbContext.Roles
+            .AnyAsync(r => normalizedNames.Contains(r.NormalizedName!) && r.GrantsAllPermissions);
+
+        if (grantsAll)
+        {
+            return AppPermissions.All;
+        }
 
         return await dbContext.RoleClaims
             .Join(dbContext.Roles,

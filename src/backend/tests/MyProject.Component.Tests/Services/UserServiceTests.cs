@@ -251,7 +251,7 @@ public class UserServiceTests : IDisposable
         _userManager.GetRolesAsync(user).Returns(new List<string> { AppRoles.Superuser });
 
         // Set up single Superuser in role
-        var superuserRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Superuser };
+        var superuserRole = TestRoles.Create(AppRoles.Superuser);
         _roleManager.FindByNameAsync(AppRoles.Superuser).Returns(superuserRole);
         _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = superuserRole.Id, UserId = _userId });
         await _dbContext.SaveChangesAsync();

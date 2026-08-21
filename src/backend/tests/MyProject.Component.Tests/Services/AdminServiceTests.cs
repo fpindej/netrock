@@ -629,7 +629,7 @@ public class AdminServiceTests : IDisposable
             new List<string> { AppRoles.Superuser });
 
         // Only 1 user in Superuser role - this should block deletion
-        var superuserRole = new ApplicationRole { Id = Guid.NewGuid(), Name = AppRoles.Superuser };
+        var superuserRole = TestRoles.Create(AppRoles.Superuser);
         _roleManager.FindByNameAsync(AppRoles.Superuser).Returns(superuserRole);
         _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { RoleId = superuserRole.Id, UserId = _targetId });
         await _dbContext.SaveChangesAsync();

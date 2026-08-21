@@ -10,7 +10,8 @@ namespace MyProject.Application.Identity.Constants;
 /// so that adding a new <c>public const string</c> field is sufficient — no manual registration required.
 /// </para>
 /// <para>
-/// Superuser bypasses all permission checks in the authorization handler (implicit all).
+/// Roles with <c>GrantsAllPermissions</c> receive a single <see cref="Wildcard"/> claim in the JWT
+/// instead of per-permission claims. The wildcard is evaluated by <c>PermissionEvaluator</c>.
 /// </para>
 /// </summary>
 public static class AppPermissions
@@ -19,6 +20,14 @@ public static class AppPermissions
     /// The claim type used for permission claims in JWT tokens and role claims.
     /// </summary>
     public const string ClaimType = "permission";
+
+    /// <summary>
+    /// The wildcard permission claim value that grants every permission.
+    /// Defined on the outer class deliberately: <see cref="All"/> is discovered from nested
+    /// types only, so the wildcard can never leak into the persisted permission catalog.
+    /// It is synthesized at token generation for grants-all roles and is never stored as a role claim.
+    /// </summary>
+    public const string Wildcard = "*";
 
     /// <summary>
     /// User management permissions.

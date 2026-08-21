@@ -269,7 +269,7 @@ public class RoleManagementServiceTests : IDisposable
     public async Task SetPermissions_SuperuserRole_ReturnsFailure()
     {
         var roleId = Guid.NewGuid();
-        var role = new ApplicationRole { Id = roleId, Name = AppRoles.Superuser };
+        var role = TestRoles.Create(AppRoles.Superuser, roleId);
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var result = await _sut.SetRolePermissionsAsync(roleId,
