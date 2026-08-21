@@ -207,19 +207,45 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.RoleNotAssigned);
         }
 
+        // Note: for the top-ranked Superuser role this guard is unreachable in practice -
+        // the rank gate above already blocks removing a role at or above the caller's rank.
+        // It protects rank-0 custom roles flagged GrantsAllPermissions.
         var lockoutResult = await EnforceLockoutInvariantForRoleRemovalAsync(userId, roleEntity, cancellationToken);
         if (!lockoutResult.IsSuccess)
         {
             return lockoutResult;
         }
 
-        var result = await userManager.RemoveFromRoleAsync(user, role);
-
-        if (!result.Succeeded)
+        // Mutation and lockout re-verification share one transaction so two concurrent
+        // removals against the last two grants-all holders cannot both slip past the
+        // pre-check and jointly leave zero holders.
+        var removalResult = Result.Success();
+        var strategy = dbContext.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
-            logger.LogWarning("RemoveFromRoleAsync failed for user '{UserId}': {Errors}",
-                userId, string.Join(", ", result.Errors.Select(e => e.Description)));
-            return Result.Failure(ErrorMessages.Admin.RoleRemoveFailed);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            var result = await userManager.RemoveFromRoleAsync(user, role);
+            if (!result.Succeeded)
+            {
+                logger.LogWarning("RemoveFromRoleAsync failed for user '{UserId}': {Errors}",
+                    userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+                removalResult = Result.Failure(ErrorMessages.Admin.RoleRemoveFailed);
+                return;
+            }
+
+            removalResult = await EnforceLockoutInvariantForRoleRemovalAsync(userId, roleEntity, cancellationToken);
+            if (removalResult.IsFailure)
+            {
+                return;
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        });
+
+        if (removalResult.IsFailure)
+        {
+            return removalResult;
         }
 
         await RotateSecurityStampAsync(user, userId, cancellationToken);
@@ -339,10 +365,13 @@ internal class AdminService(
             return hierarchyResult;
         }
 
-        var lockoutResult = await EnforceLockoutInvariantForUserDeletionAsync(userId, cancellationToken);
-        if (!lockoutResult.IsSuccess)
+        // Lockout invariant: deleting the target may not leave zero grants-all holders.
+        // The flag is captured before the mutation so the in-transaction re-check below
+        // still fires after the target's role assignments are gone.
+        var targetHeldGrantsAll = await UserHoldsGrantsAllRoleAsync(userId, cancellationToken);
+        if (targetHeldGrantsAll && !await OtherGrantsAllHolderExistsAsync(userId, cancellationToken))
         {
-            return lockoutResult;
+            return Result.Failure(ErrorMessages.Admin.LastSuperuserCannotDelete);
         }
 
         await RevokeUserSessionsAsync(user, userId, cancellationToken);
@@ -358,13 +387,36 @@ internal class AdminService(
             }
         }
 
-        var result = await userManager.DeleteAsync(user);
-
-        if (!result.Succeeded)
+        // Mutation and lockout re-verification share one transaction so two concurrent
+        // deletions of the last two grants-all holders cannot both slip past the pre-check
+        // and jointly leave zero holders.
+        var deletionResult = Result.Success();
+        var strategy = dbContext.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
-            logger.LogWarning("DeleteAsync failed for user '{UserId}': {Errors}",
-                userId, string.Join(", ", result.Errors.Select(e => e.Description)));
-            return Result.Failure(ErrorMessages.Admin.DeleteFailed);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            var result = await userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                logger.LogWarning("DeleteAsync failed for user '{UserId}': {Errors}",
+                    userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+                deletionResult = Result.Failure(ErrorMessages.Admin.DeleteFailed);
+                return;
+            }
+
+            if (targetHeldGrantsAll && !await OtherGrantsAllHolderExistsAsync(userId, cancellationToken))
+            {
+                deletionResult = Result.Failure(ErrorMessages.Admin.LastSuperuserCannotDelete);
+                return;
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        });
+
+        if (deletionResult.IsFailure)
+        {
+            return deletionResult;
         }
 
         await InvalidateUserCacheAsync(userId);
@@ -685,37 +737,32 @@ internal class AdminService(
     }
 
     /// <summary>
-    /// Enforces the lockout invariant for a user deletion: the operation may not leave zero
-    /// users holding any role that grants all permissions. Users without such a role are
-    /// always deletable.
+    /// Determines whether the given user currently holds any role that grants all permissions.
     /// </summary>
-    private async Task<Result> EnforceLockoutInvariantForUserDeletionAsync(Guid userId,
-        CancellationToken cancellationToken)
+    private async Task<bool> UserHoldsGrantsAllRoleAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var targetHoldsGrantsAll = await dbContext.UserRoles
+        return await dbContext.UserRoles
             .Where(ur => ur.UserId == userId)
             .Join(dbContext.Roles.Where(r => r.GrantsAllPermissions),
                 ur => ur.RoleId,
                 r => r.Id,
                 (ur, _) => ur.UserId)
             .AnyAsync(cancellationToken);
+    }
 
-        if (!targetHoldsGrantsAll)
-        {
-            return Result.Success();
-        }
-
-        var otherHolderExists = await dbContext.UserRoles
+    /// <summary>
+    /// Determines whether any user other than <paramref name="userId"/> holds a role that
+    /// grants all permissions.
+    /// </summary>
+    private async Task<bool> OtherGrantsAllHolderExistsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return await dbContext.UserRoles
             .Where(ur => ur.UserId != userId)
             .Join(dbContext.Roles.Where(r => r.GrantsAllPermissions),
                 ur => ur.RoleId,
                 r => r.Id,
                 (ur, _) => ur.UserId)
             .AnyAsync(cancellationToken);
-
-        return otherHolderExists
-            ? Result.Success()
-            : Result.Failure(ErrorMessages.Admin.LastSuperuserCannotDelete);
     }
 
     /// <summary>

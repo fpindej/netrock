@@ -86,6 +86,18 @@ public class AppRolesTests
     }
 
     [Fact]
+    public void Definitions_GrantsAllRoles_ShouldCarryMaximumRank()
+    {
+        // The lockout invariant relies on grants-all roles sitting at the top of the
+        // hierarchy; the seeder enforces the same rule at startup.
+        var maxRank = AppRoles.Definitions.Max(d => d.Rank);
+
+        Assert.All(
+            AppRoles.Definitions.Where(d => d.GrantsAllPermissions),
+            d => Assert.Equal(maxRank, d.Rank));
+    }
+
+    [Fact]
     public void Definitions_DefaultPermissions_ShouldAllBeKnownPermissions()
     {
         foreach (var definition in AppRoles.Definitions)

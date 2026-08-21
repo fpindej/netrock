@@ -295,10 +295,13 @@ internal sealed class UserService(
             return Result.Failure(ErrorMessages.User.DeleteInvalidPassword);
         }
 
-        var lastSuperuserResult = await EnforceLastSuperuserProtectionForDeletionAsync(userId.Value, cancellationToken);
-        if (!lastSuperuserResult.IsSuccess)
+        // Lockout invariant: self-deletion may not leave zero grants-all holders. The flag
+        // is captured before the mutation so the in-transaction re-check below still fires
+        // after the user's role assignments are gone.
+        var userHeldGrantsAll = await UserHoldsGrantsAllRoleAsync(userId.Value, cancellationToken);
+        if (userHeldGrantsAll && !await OtherGrantsAllHolderExistsAsync(userId.Value, cancellationToken))
         {
-            return lastSuperuserResult;
+            return Result.Failure(ErrorMessages.User.LastSuperuserCannotDelete);
         }
 
         await auditService.LogAsync(AuditActions.AccountDeletion, userId: userId.Value, ct: cancellationToken);
@@ -315,7 +318,32 @@ internal sealed class UserService(
         }
 
         await RevokeUserTokens(user, userId.Value, cancellationToken);
-        await DeleteUser(user);
+
+        // Mutation and lockout re-verification share one transaction so two concurrent
+        // self-deletions of the last two grants-all holders cannot both slip past the
+        // pre-check and jointly leave zero holders.
+        var deletionResult = Result.Success();
+        var strategy = dbContext.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            await DeleteUser(user);
+
+            if (userHeldGrantsAll && !await OtherGrantsAllHolderExistsAsync(userId.Value, cancellationToken))
+            {
+                deletionResult = Result.Failure(ErrorMessages.User.LastSuperuserCannotDelete);
+                return;
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        });
+
+        if (deletionResult.IsFailure)
+        {
+            return deletionResult;
+        }
+
         ClearAuthCookies();
         await InvalidateUserCache(userId.Value);
 
@@ -323,37 +351,32 @@ internal sealed class UserService(
     }
 
     /// <summary>
-    /// Enforces the lockout invariant for self-deletion: the operation may not leave zero
-    /// users holding any role that grants all permissions. Users without such a role are
-    /// always deletable.
+    /// Determines whether the given user currently holds any role that grants all permissions.
     /// </summary>
-    private async Task<Result> EnforceLastSuperuserProtectionForDeletionAsync(
-        Guid userId, CancellationToken cancellationToken)
+    private async Task<bool> UserHoldsGrantsAllRoleAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var userHoldsGrantsAll = await dbContext.UserRoles
+        return await dbContext.UserRoles
             .Where(ur => ur.UserId == userId)
             .Join(dbContext.Roles.Where(r => r.GrantsAllPermissions),
                 ur => ur.RoleId,
                 r => r.Id,
                 (ur, _) => ur.UserId)
             .AnyAsync(cancellationToken);
+    }
 
-        if (!userHoldsGrantsAll)
-        {
-            return Result.Success();
-        }
-
-        var otherHolderExists = await dbContext.UserRoles
+    /// <summary>
+    /// Determines whether any user other than <paramref name="userId"/> holds a role that
+    /// grants all permissions.
+    /// </summary>
+    private async Task<bool> OtherGrantsAllHolderExistsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return await dbContext.UserRoles
             .Where(ur => ur.UserId != userId)
             .Join(dbContext.Roles.Where(r => r.GrantsAllPermissions),
                 ur => ur.RoleId,
                 r => r.Id,
                 (ur, _) => ur.UserId)
             .AnyAsync(cancellationToken);
-
-        return otherHolderExists
-            ? Result.Success()
-            : Result.Failure(ErrorMessages.User.LastSuperuserCannotDelete);
     }
 
     private async Task RevokeUserTokens(ApplicationUser user, Guid userId, CancellationToken cancellationToken)

@@ -76,10 +76,13 @@ public static class ApplicationBuilderExtensions
     /// Upserts the built-in roles from <see cref="AppRoles.Definitions"/>: creates missing roles
     /// with their metadata, updates existing roles only when metadata drifted (no writes on a
     /// converged database), and additively seeds missing default permission claims so operator
-    /// customizations are preserved.
+    /// customizations are preserved. A failed role upsert aborts startup: running with wrong
+    /// role metadata could strip every superuser of the wildcard and lock all admins out.
     /// </summary>
     private static async Task SeedRolesAsync(IServiceProvider serviceProvider)
     {
+        ValidateRoleDefinitions();
+
         var roleManager = serviceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
 
         foreach (var definition in AppRoles.Definitions)
@@ -101,8 +104,8 @@ public static class ApplicationBuilderExtensions
                 if (!createResult.Succeeded)
                 {
                     var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
-                    Log.Error("Seed: failed to create role {RoleName}: {Errors}", definition.Name, errors);
-                    continue;
+                    throw new InvalidOperationException(
+                        $"Seeding failed to create role '{definition.Name}': {errors}");
                 }
 
                 Log.Information("Seed: created role {RoleName}", definition.Name);
@@ -117,11 +120,35 @@ public static class ApplicationBuilderExtensions
     }
 
     /// <summary>
+    /// Validates invariants of <see cref="AppRoles.Definitions"/> before seeding.
+    /// The lockout invariant relies on grants-all roles sitting at the top of the hierarchy
+    /// (only then can the last holder always be reached by another holder), so every
+    /// grants-all definition must carry the maximum rank among all definitions.
+    /// </summary>
+    private static void ValidateRoleDefinitions()
+    {
+        var maxRank = AppRoles.Definitions.Max(d => d.Rank);
+        var offending = AppRoles.Definitions
+            .Where(d => d.GrantsAllPermissions && d.Rank != maxRank)
+            .Select(d => d.Name)
+            .ToList();
+
+        if (offending.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Roles granting all permissions must carry the maximum rank ({maxRank}): " +
+                $"{string.Join(", ", offending)}.");
+        }
+    }
+
+    /// <summary>
     /// Updates a role's metadata columns when they differ from the declarative definition.
-    /// When <c>GrantsAllPermissions</c> transitions from false to true (first run against a
-    /// pre-refactor database), security stamps of users in the role are rotated so their old
-    /// access tokens (which lack the wildcard permission claim) are invalidated; the frontend
-    /// then silently refreshes and receives a wildcard token.
+    /// Description is deliberately excluded from drift detection: it is seeded only on create,
+    /// because operators may edit a system role's description at runtime and seeding must not
+    /// revert that. When <c>GrantsAllPermissions</c> transitions from false to true (first run
+    /// against a pre-refactor database), security stamps of users in the role are rotated so
+    /// their old access tokens (which lack the wildcard permission claim) are invalidated; the
+    /// frontend then silently refreshes and receives a wildcard token.
     /// </summary>
     private static async Task UpdateRoleMetadataIfDriftedAsync(
         IServiceProvider serviceProvider,
@@ -131,8 +158,7 @@ public static class ApplicationBuilderExtensions
     {
         var grantsAllTransitioned = !role.GrantsAllPermissions && definition.GrantsAllPermissions;
 
-        var drifted = role.Description != definition.Description
-                      || role.IsSystem != definition.IsSystem
+        var drifted = role.IsSystem != definition.IsSystem
                       || role.Rank != definition.Rank
                       || role.GrantsAllPermissions != definition.GrantsAllPermissions;
 
@@ -141,7 +167,6 @@ public static class ApplicationBuilderExtensions
             return;
         }
 
-        role.Description = definition.Description;
         role.IsSystem = definition.IsSystem;
         role.Rank = definition.Rank;
         role.GrantsAllPermissions = definition.GrantsAllPermissions;
@@ -149,9 +174,11 @@ public static class ApplicationBuilderExtensions
         var result = await roleManager.UpdateAsync(role);
         if (!result.Succeeded)
         {
+            // A partial metadata update (for example a missed GrantsAllPermissions flag) would
+            // leave superusers with neither the wildcard nor claims: a total admin lockout.
             var errors = string.Join("; ", result.Errors.Select(e => e.Description));
-            Log.Error("Seed: failed to update metadata for role {RoleName}: {Errors}", definition.Name, errors);
-            return;
+            throw new InvalidOperationException(
+                $"Seeding failed to update metadata for role '{definition.Name}': {errors}");
         }
 
         Log.Information("Seed: updated metadata for role {RoleName}", definition.Name);
