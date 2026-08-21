@@ -126,13 +126,13 @@ internal class AdminService(
             return Result.Failure(ErrorMessages.Admin.RoleAssignAboveRank);
         }
 
-        if (role.Rank == 0)
+        // Every assignment is escalation-checked: operators can expand any role's permission
+        // set at runtime, so system roles are not exempt. Callers holding the target's
+        // permissions (or the wildcard) pass; roles granting nothing pass unconditionally.
+        var escalationResult = await EnforceRolePermissionEscalationAsync(role, callerUserId, cancellationToken);
+        if (!escalationResult.IsSuccess)
         {
-            var escalationResult = await EnforceRolePermissionEscalationAsync(role, callerUserId, cancellationToken);
-            if (!escalationResult.IsSuccess)
-            {
-                return escalationResult;
-            }
+            return escalationResult;
         }
 
         if (await userManager.IsInRoleAsync(user, input.Role))
@@ -719,24 +719,30 @@ internal class AdminService(
     }
 
     /// <summary>
-    /// Verifies that the caller holds every permission granted by the target custom role.
-    /// Roles with no permissions are allowed unconditionally.
+    /// Verifies that the caller holds everything the target role grants. A grants-all role
+    /// carries no stored permission claims, so assigning it hands out wildcard access; the
+    /// caller must therefore hold the wildcard themselves. For other roles the stored
+    /// permission claims are required; roles granting nothing are allowed unconditionally.
     /// </summary>
     private async Task<Result> EnforceRolePermissionEscalationAsync(ApplicationRole targetRole,
         Guid callerUserId, CancellationToken cancellationToken)
     {
-        var targetClaims = await roleManager.GetClaimsAsync(targetRole);
-        var targetPermissions = targetClaims
-            .Where(c => c.Type == AppPermissions.ClaimType)
-            .Select(c => c.Value)
-            .ToList();
+        IReadOnlyCollection<string> requiredPermissions;
 
-        if (targetPermissions.Count == 0)
+        if (targetRole.GrantsAllPermissions)
         {
-            return Result.Success();
+            requiredPermissions = [AppPermissions.Wildcard];
+        }
+        else
+        {
+            var targetClaims = await roleManager.GetClaimsAsync(targetRole);
+            requiredPermissions = targetClaims
+                .Where(c => c.Type == AppPermissions.ClaimType)
+                .Select(c => c.Value)
+                .ToList();
         }
 
-        return await escalationGuard.EnsureCallerHoldsAllAsync(callerUserId, targetPermissions,
+        return await escalationGuard.EnsureCallerHoldsAllAsync(callerUserId, requiredPermissions,
             ErrorMessages.Admin.RoleAssignEscalation, cancellationToken);
     }
 

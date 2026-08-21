@@ -289,7 +289,7 @@ public class AdminServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task AssignRole_SystemRole_SkipsPermissionCheck()
+    public async Task AssignRole_SystemRoleWithoutStoredPermissions_Succeeds()
     {
         SetupCallerAsAdmin();
         var target = SetupTargetAsUser();
@@ -301,8 +301,69 @@ public class AdminServiceTests : IDisposable
         var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("User"));
 
         Assert.True(result.IsSuccess);
-        // GetClaimsAsync should NOT be called for system roles (rank > 0)
+    }
+
+    [Fact]
+    public async Task AssignRole_SystemRoleWithUnheldPermissions_ReturnsForbidden()
+    {
+        // Operators can expand a system role's permission set at runtime, so rank >= 1
+        // roles are escalation-checked too: the caller holds no permissions here.
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+
+        var userRole = TestRoles.Create(AppRoles.User);
+        _roleManager.FindByNameAsync("User").Returns(userRole);
+        _roleManager.GetClaimsAsync(userRole).Returns(
+            [new Claim(AppPermissions.ClaimType, AppPermissions.Roles.View)]);
+        _userManager.IsInRoleAsync(target, "User").Returns(false);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("User"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.RoleAssignEscalation, result.Error);
+        Assert.Equal(ErrorType.Forbidden, result.ErrorType);
+    }
+
+    [Fact]
+    public async Task AssignRole_GrantsAllRole_CallerWithoutWildcard_ReturnsForbidden()
+    {
+        // A grants-all role has no stored claims; assigning it hands out wildcard access.
+        // An admin holding users.assign_roles but not the wildcard must be blocked.
+        SetupCallerAsAdmin(AppPermissions.Users.AssignRoles, AppPermissions.Users.View);
+        SetupTargetAsUser();
+
+        var ownerRole = TestRoles.Create("Owner");
+        ownerRole.GrantsAllPermissions = true;
+        _roleManager.FindByNameAsync("Owner").Returns(ownerRole);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("Owner"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.RoleAssignEscalation, result.Error);
+        Assert.Equal(ErrorType.Forbidden, result.ErrorType);
+        // The wildcard requirement is synthesized; stored claims are never consulted.
         await _roleManager.DidNotReceive().GetClaimsAsync(Arg.Any<ApplicationRole>());
+    }
+
+    [Fact]
+    public async Task AssignRole_GrantsAllRole_SuperuserCaller_Succeeds()
+    {
+        var caller = new ApplicationUser { Id = _callerId, UserName = "superuser@test.com" };
+        _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
+        _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Superuser });
+        TestRoles.SeedAssigned(_dbContext, _callerId, AppRoles.Superuser);
+
+        var target = SetupTargetAsUser();
+
+        var ownerRole = TestRoles.Create("Owner");
+        ownerRole.GrantsAllPermissions = true;
+        _roleManager.FindByNameAsync("Owner").Returns(ownerRole);
+        _userManager.IsInRoleAsync(target, "Owner").Returns(false);
+        _userManager.AddToRoleAsync(target, "Owner").Returns(IdentityResult.Success);
+
+        var result = await _sut.AssignRoleAsync(_callerId, _targetId, new AssignRoleInput("Owner"));
+
+        Assert.True(result.IsSuccess);
     }
 
     [Fact]
