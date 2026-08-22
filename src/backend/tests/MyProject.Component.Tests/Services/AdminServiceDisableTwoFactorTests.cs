@@ -60,6 +60,7 @@ public class AdminServiceDisableTwoFactorTests : IDisposable
         _sut = new AdminService(
             _userManager, _roleManager, _dbContext, _hybridCache, _timeProvider,
             _templatedEmailSender, emailTokenService, _auditService,
+            new PermissionEscalationGuard(_dbContext),
             fileStorageService, authOptions, emailOptions, logger);
     }
 
@@ -74,6 +75,7 @@ public class AdminServiceDisableTwoFactorTests : IDisposable
         var caller = new ApplicationUser { Id = _callerId, UserName = "admin@test.com" };
         _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
         _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.Admin });
+        TestRoles.SeedAssigned(_dbContext, _callerId, AppRoles.Admin);
         return caller;
     }
 
@@ -240,10 +242,12 @@ public class AdminServiceDisableTwoFactorTests : IDisposable
         var caller = new ApplicationUser { Id = _callerId, UserName = "user@test.com" };
         _userManager.FindByIdAsync(_callerId.ToString()).Returns(caller);
         _userManager.GetRolesAsync(caller).Returns(new List<string> { AppRoles.User });
+        TestRoles.Seed(_dbContext, AppRoles.User);
 
         var target = new ApplicationUser { Id = _targetId, UserName = "admin@test.com" };
         _userManager.FindByIdAsync(_targetId.ToString()).Returns(target);
         _userManager.GetRolesAsync(target).Returns(new List<string> { AppRoles.Admin });
+        TestRoles.Seed(_dbContext, AppRoles.Admin);
 
         var result = await _sut.DisableTwoFactorAsync(_callerId, _targetId, null);
 

@@ -36,4 +36,14 @@ public class AdminRoleResponse
     /// The permission claim values assigned to this role.
     /// </summary>
     public IReadOnlyList<string> Permissions { [UsedImplicitly] get; [UsedImplicitly] init; } = [];
+
+    /// <summary>
+    /// The hierarchy rank. Higher rank means more authority; custom roles have rank 0.
+    /// </summary>
+    public int Rank { [UsedImplicitly] get; [UsedImplicitly] init; }
+
+    /// <summary>
+    /// Whether the role implicitly grants every permission.
+    /// </summary>
+    public bool GrantsAllPermissions { [UsedImplicitly] get; [UsedImplicitly] init; }
 }

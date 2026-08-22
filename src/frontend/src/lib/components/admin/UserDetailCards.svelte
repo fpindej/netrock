@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { AccountInfoCard, UserManagementCard } from '$lib/components/admin';
 	import type { AdminUser, AdminRole, User } from '$lib/types';
-	import { canManageUser, getHighestRank, hasPermission, Permissions } from '$lib/utils';
+	import {
+		buildRoleRankMap,
+		canManageUser,
+		getHighestRank,
+		hasPermission,
+		Permissions
+	} from '$lib/utils';
 	import { createCooldown } from '$lib/state';
 
 	interface Props {
@@ -15,9 +21,10 @@
 
 	const cooldown = createCooldown();
 
+	let rankMap = $derived(buildRoleRankMap(roles));
 	let callerRoles = $derived(currentUser.roles ?? []);
 	let targetRoles = $derived(user.roles ?? []);
-	let canManageByHierarchy = $derived(canManageUser(callerRoles, targetRoles));
+	let canManageByHierarchy = $derived(canManageUser(callerRoles, targetRoles, rankMap));
 	let canManage = $derived(
 		canManageByHierarchy && hasPermission(currentUser, Permissions.Users.Manage)
 	);
@@ -27,7 +34,7 @@
 	let canManageTwoFactor = $derived(
 		canManageByHierarchy && hasPermission(currentUser, Permissions.Users.ManageTwoFactor)
 	);
-	let callerRank = $derived(getHighestRank(callerRoles));
+	let callerRank = $derived(getHighestRank(callerRoles, rankMap));
 	let piiMasked = $derived(!hasPermission(currentUser, Permissions.Users.ViewPii));
 </script>
 

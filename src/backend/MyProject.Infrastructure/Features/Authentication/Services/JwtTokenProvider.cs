@@ -80,13 +80,24 @@ internal class JwtTokenProvider(
     }
 
     /// <summary>
-    /// Collects deduplicated permission claim values from all of the user's roles in a single query.
+    /// Collects deduplicated permission claim values from all of the user's roles.
+    /// When any role grants all permissions, a single <see cref="AppPermissions.Wildcard"/>
+    /// claim is emitted instead of per-permission claims, keeping the token constant-size
+    /// and never stale when new permissions are added.
     /// </summary>
     private async Task<HashSet<string>> GetPermissionsForRolesAsync(IList<string> roleNames)
     {
         var normalizedNames = roleNames
             .Select(r => r.ToUpperInvariant())
             .ToList();
+
+        var grantsAll = await dbContext.Roles
+            .AnyAsync(r => normalizedNames.Contains(r.NormalizedName!) && r.GrantsAllPermissions);
+
+        if (grantsAll)
+        {
+            return [AppPermissions.Wildcard];
+        }
 
         var permissions = await dbContext.RoleClaims
             .Join(dbContext.Roles,

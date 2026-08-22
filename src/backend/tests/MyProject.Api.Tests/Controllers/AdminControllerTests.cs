@@ -619,7 +619,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         _factory.AdminService.GetRolesAsync(Arg.Any<CancellationToken>())
             .Returns(new List<AdminRoleOutput>
             {
-                new(Guid.NewGuid(), "Admin", "Administrator role", true, 3, ["users.view", "roles.manage"])
+                new(Guid.NewGuid(), "Admin", "Administrator role", true, 3, ["users.view", "roles.manage"], 2, false)
             });
 
         var response = await _client.SendAsync(
@@ -631,6 +631,8 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         Assert.Single(body);
         Assert.Equal("Admin", body[0].Name);
         Assert.NotEqual(Guid.Empty, body[0].Id);
+        Assert.Equal(2, body[0].Rank);
+        Assert.False(body[0].GrantsAllPermissions);
     }
 
     [Fact]
@@ -648,7 +650,7 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var roleId = Guid.NewGuid();
         _factory.RoleManagementService.GetRoleDetailAsync(roleId, Arg.Any<CancellationToken>())
             .Returns(Result<RoleDetailOutput>.Success(
-                new RoleDetailOutput(roleId, "Admin", "Admin role", true, [], 5)));
+                new RoleDetailOutput(roleId, "Admin", "Admin role", true, [], 5, 2, false)));
 
         var response = await _client.SendAsync(
             Get($"/api/v1/admin/roles/{roleId}", TestAuth.WithPermissions(AppPermissions.Roles.View)));
@@ -659,6 +661,8 @@ public class AdminControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         Assert.Equal(roleId, body.Id);
         Assert.Equal("Admin", body.Name);
         Assert.NotNull(body.Permissions);
+        Assert.Equal(2, body.Rank);
+        Assert.False(body.GrantsAllPermissions);
     }
 
     [Fact]

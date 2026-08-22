@@ -13,7 +13,7 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **Add/change domain entity property** | EF config → migration → Application DTOs → WebApi DTOs → mapper → `pnpm run api:generate` → frontend |
 | **Add backend endpoint** | Controller + DTOs + validator + mapper → `pnpm run api:generate` → frontend types → frontend calls |
 | **Change WebApi response DTO** | Mapper, `Api.Tests/Contracts/ResponseContracts.cs`, `pnpm run api:generate`, frontend components |
-| **Add permission** | `AppPermissions.cs` → `[RequirePermission]` → seed in `ApplicationBuilderExtensions` → frontend `permissions.ts` → sidebar + page guards |
+| **Add permission** | `AppPermissions.cs` → `[RequirePermission]` → seed via `DefaultPermissions` in `AppRoles.Definitions` → frontend `permissions.ts` → sidebar + page guards |
 | **Add i18n key** | Add to the correct feature file in all locale directories under `messages/` |
 
 ---
@@ -64,8 +64,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`IUserService`** (Application/Identity - change user service contract) | `UserService`, `UsersController`, `CustomWebApplicationFactory` mock |
 | **`IUserContext`** (Application/Identity - change context contract) | `UserContext`, `AuthenticationService`, `UserService`, `AuditingInterceptor`, `UsersController`, `AdminController` |
 | **`EmailTemplateNames.cs`** (Application - add/rename template name) | Services constructing `SendSafeAsync()` calls, matching `.liquid` template files |
-| **`AppRoles.cs`** (add role) | Role seeding picks up automatically; consider what permissions to seed for the new role; `RoleManagementService` checks `AppRoles.All` for system role collisions |
-| **`AppPermissions.cs`** (add permission) | Seed in `ApplicationBuilderExtensions.SeedRolePermissionsAsync()`, add `[RequirePermission]` to endpoints, update frontend `$lib/utils/permissions.ts` |
+| **`AppRoles.cs`** (add role) | Add a `RoleDefinition` entry to `Definitions` (name, rank, flags, default permissions) - seeding upserts it automatically; `RoleManagementService` checks `AppRoles.All` for system role collisions |
+| **`AppPermissions.cs`** (add permission) | Seed via `DefaultPermissions` in `AppRoles.Definitions`, add `[RequirePermission]` to endpoints, update frontend `$lib/utils/permissions.ts` |
 | **`PiiMasker.cs`** (change masking rules) | `AdminMapper.WithMaskedPii` extensions, `PiiMaskerTests`, `AdminMapperPiiTests` |
 | **`RequirePermission` attribute** (add to endpoint) | Remove any class-level `[Authorize(Roles)]`; ensure permission is defined in `AppPermissions.cs` |
 | **`RoleManagementService`** (change role behavior) | Verify system role protection rules, check security stamp rotation, verify frontend role detail page |
@@ -274,7 +274,8 @@ src/backend/tests/
 | `src/backend/MyProject.WebApi/Program.cs` | DI wiring, middleware pipeline |
 | `src/backend/MyProject.Infrastructure/Persistence/MyProjectDbContext.cs` | DbSets, migrations |
 | `src/backend/MyProject.Shared/ErrorMessages.cs` | All client-facing errors (`Error` = stable snake_case code + message) |
-| `src/backend/MyProject.Application/Identity/Constants/AppRoles.cs` | Role definitions |
+| `src/backend/MyProject.Application/Identity/Constants/AppRoles.cs` | Declarative role definitions (`RoleDefinition`: rank, flags, default permissions) |
+| `src/backend/MyProject.Application/Identity/PermissionEvaluator.cs` | Single authorization decision point (wildcard-aware); consumed by `PermissionAuthorizationHandler` and `UserContext` |
 | `src/backend/MyProject.Application/Identity/Constants/AppPermissions.cs` | Permission definitions (reflection-discovered) |
 | `src/backend/MyProject.Application/Caching/Constants/CacheKeys.cs` | Cache key constants (used across services) |
 | `src/backend/MyProject.Application/Features/Email/EmailTemplateNames.cs` | Email template name constants |

@@ -7,7 +7,6 @@
 	import { invalidateAll } from '$app/navigation';
 	import { Plus, X, Loader2 } from '@lucide/svelte';
 	import type { AdminUser, AdminRole } from '$lib/types';
-	import { getRoleRank } from '$lib/utils';
 	import type { Cooldown } from '$lib/state';
 	import * as m from '$lib/paraglide/messages';
 
@@ -28,13 +27,14 @@
 	let targetRoles = $derived(user.roles ?? []);
 
 	let assignableRoles = $derived(
-		(roles ?? [])
-			.map((r) => r.name ?? '')
-			.filter((role) => getRoleRank(role) < callerRank && !targetRoles.includes(role))
+		roles.flatMap((r) =>
+			r.name && (r.rank ?? 0) < callerRank && !targetRoles.includes(r.name) ? [r.name] : []
+		)
 	);
 
 	function canRemoveRole(role: string): boolean {
-		return canAssignRoles && getRoleRank(role) < callerRank;
+		const rank = roles.find((r) => r.name === role)?.rank ?? 0;
+		return canAssignRoles && rank < callerRank;
 	}
 
 	async function assignRole() {

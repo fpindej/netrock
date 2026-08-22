@@ -9,11 +9,15 @@ namespace MyProject.Application.Features.Admin.Dtos;
 /// <param name="IsSystem">Whether this is a system-defined role that cannot be deleted or renamed.</param>
 /// <param name="Permissions">The permission claim values assigned to this role.</param>
 /// <param name="UserCount">The number of users assigned to this role.</param>
+/// <param name="Rank">The hierarchy rank. Higher rank means more authority; custom roles have rank 0.</param>
+/// <param name="GrantsAllPermissions">Whether the role implicitly grants every permission.</param>
 public record RoleDetailOutput(
     Guid Id,
     string Name,
     string? Description,
     bool IsSystem,
     IReadOnlyList<string> Permissions,
-    int UserCount
+    int UserCount,
+    int Rank,
+    bool GrantsAllPermissions
 );

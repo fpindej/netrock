@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -24,7 +25,6 @@ namespace MyProject.Infrastructure.Identity.Services;
 /// </summary>
 internal sealed class UserService(
     UserManager<ApplicationUser> userManager,
-    RoleManager<ApplicationRole> roleManager,
     IUserContext userContext,
     HybridCache hybridCache,
     MyProjectDbContext dbContext,
@@ -63,7 +63,7 @@ internal sealed class UserService(
                 }
 
                 var roles = await userManager.GetRolesAsync(user);
-                var permissions = await GetPermissionsForRolesAsync(roles);
+                var permissions = await GetPermissionsForRolesAsync(roles, ct);
                 var logins = await userManager.GetLoginsAsync(user);
                 var hasPassword = await userManager.HasPasswordAsync(user);
 
@@ -144,7 +144,7 @@ internal sealed class UserService(
         await hybridCache.RemoveAsync(cacheKey, cancellationToken);
 
         var roles = await userManager.GetRolesAsync(user);
-        var permissions = await GetPermissionsForRolesAsync(roles);
+        var permissions = await GetPermissionsForRolesAsync(roles, cancellationToken);
         var logins = await userManager.GetLoginsAsync(user);
         var hasPassword = await userManager.HasPasswordAsync(user);
 
@@ -296,16 +296,58 @@ internal sealed class UserService(
             return Result.Failure(ErrorMessages.User.DeleteInvalidPassword);
         }
 
-        var lastSuperuserResult = await EnforceLastSuperuserProtectionForDeletionAsync(user, cancellationToken);
-        if (!lastSuperuserResult.IsSuccess)
+        // Lockout invariant: self-deletion may not leave zero grants-all holders. The flag
+        // is captured before the mutation so the in-transaction re-check below still fires
+        // after the user's role assignments are gone.
+        var userHeldGrantsAll = await UserHoldsGrantsAllRoleAsync(userId.Value, cancellationToken);
+        if (userHeldGrantsAll && !await OtherGrantsAllHolderExistsAsync(userId.Value, cancellationToken))
         {
-            return lastSuperuserResult;
+            return Result.Failure(ErrorMessages.User.LastSuperuserCannotDelete);
         }
 
+        // Captured before the mutation: the entity is detached after a committed delete.
+        var hadAvatar = user.HasAvatar;
+
+        // Mutation and lockout re-verification share one transaction so two concurrent
+        // self-deletions of the last two grants-all holders cannot both slip past the
+        // pre-check and jointly leave zero holders. Serializable is required: at READ
+        // COMMITTED a reader neither blocks on nor sees a concurrent uncommitted delete of
+        // a different row, so both re-checks could still pass. Under serializable isolation
+        // Postgres aborts one transaction with a serialization failure, which Npgsql marks
+        // transient; the retrying execution strategy re-runs the delegate and the re-check
+        // then fails with the stable error code. The InMemory test provider is not
+        // relational and ignores transactions, hence the provider guard.
+        var deletionResult = Result.Success();
+        var strategy = dbContext.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = dbContext.Database.IsRelational()
+                ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+                : await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            await DeleteUser(user);
+
+            if (userHeldGrantsAll && !await OtherGrantsAllHolderExistsAsync(userId.Value, cancellationToken))
+            {
+                deletionResult = Result.Failure(ErrorMessages.User.LastSuperuserCannotDelete);
+                return;
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        });
+
+        if (deletionResult.IsFailure)
+        {
+            return deletionResult;
+        }
+
+        // Side effects run only after a committed delete: on rollback the surviving user
+        // must keep sessions and avatar, and no audit record may claim a deletion that
+        // never happened.
         await auditService.LogAsync(AuditActions.AccountDeletion, userId: userId.Value, ct: cancellationToken);
 
-        // Clean up avatar from storage if present (best-effort — don't block account deletion)
-        if (user.HasAvatar)
+        // Clean up avatar from storage if present (best-effort, never blocks the response)
+        if (hadAvatar)
         {
             var avatarDeleteResult = await fileStorageService.DeleteAsync($"avatars/{userId.Value}.webp", cancellationToken);
             if (!avatarDeleteResult.IsSuccess)
@@ -315,8 +357,12 @@ internal sealed class UserService(
             }
         }
 
-        await RevokeUserTokens(user, userId.Value, cancellationToken);
-        await DeleteUser(user);
+        // Refresh tokens cascade-delete with the user row, and stamp validation fails
+        // closed for a missing user, so evicting the cached security stamp is all that is
+        // needed to kill in-flight access tokens. Rotating the stamp via UserManager would
+        // issue an update against the deleted row and poison the change tracker.
+        await hybridCache.RemoveAsync(CacheKeys.SecurityStamp(userId.Value), cancellationToken);
+
         ClearAuthCookies();
         await InvalidateUserCache(userId.Value);
 
@@ -324,44 +370,32 @@ internal sealed class UserService(
     }
 
     /// <summary>
-    /// Prevents self-deletion if the user is the last Superuser.
+    /// Determines whether the given user currently holds any role that grants all permissions.
     /// </summary>
-    private async Task<Result> EnforceLastSuperuserProtectionForDeletionAsync(
-        ApplicationUser user, CancellationToken cancellationToken)
+    private async Task<bool> UserHoldsGrantsAllRoleAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var userRoles = await userManager.GetRolesAsync(user);
-
-        foreach (var role in userRoles.Where(r => r is AppRoles.Superuser))
-        {
-            var roleEntity = await roleManager.FindByNameAsync(role);
-            if (roleEntity is null) continue;
-
-            var usersInRoleCount = await dbContext.UserRoles
-                .CountAsync(ur => ur.RoleId == roleEntity.Id, cancellationToken);
-
-            if (usersInRoleCount <= 1)
-            {
-                return Result.Failure(ErrorMessages.User.LastSuperuserCannotDelete);
-            }
-        }
-
-        return Result.Success();
+        return await dbContext.UserRoles
+            .Where(ur => ur.UserId == userId)
+            .Join(dbContext.Roles.Where(r => r.GrantsAllPermissions),
+                ur => ur.RoleId,
+                r => r.Id,
+                (ur, _) => ur.UserId)
+            .AnyAsync(cancellationToken);
     }
 
-    private async Task RevokeUserTokens(ApplicationUser user, Guid userId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Determines whether any user other than <paramref name="userId"/> holds a role that
+    /// grants all permissions.
+    /// </summary>
+    private async Task<bool> OtherGrantsAllHolderExistsAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var tokens = await dbContext.RefreshTokens
-            .Where(rt => rt.UserId == userId && !rt.IsInvalidated)
-            .ToListAsync(cancellationToken);
-
-        foreach (var token in tokens)
-        {
-            token.IsInvalidated = true;
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await userManager.UpdateSecurityStampAsync(user);
-        await hybridCache.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
+        return await dbContext.UserRoles
+            .Where(ur => ur.UserId != userId)
+            .Join(dbContext.Roles.Where(r => r.GrantsAllPermissions),
+                ur => ur.RoleId,
+                r => r.Id,
+                (ur, _) => ur.UserId)
+            .AnyAsync(cancellationToken);
     }
 
     private void ClearAuthCookies()
@@ -389,19 +423,25 @@ internal sealed class UserService(
     }
 
     /// <summary>
-    /// Collects deduplicated permission values for the given roles in a single query.
-    /// Superuser receives all permissions implicitly.
+    /// Collects deduplicated permission values for the given roles.
+    /// Roles that grant all permissions expand to the full permission catalog so API
+    /// consumers can keep doing exact membership checks; the wildcard is never exposed.
     /// </summary>
-    private async Task<IReadOnlyList<string>> GetPermissionsForRolesAsync(IList<string> roleNames)
+    private async Task<IReadOnlyList<string>> GetPermissionsForRolesAsync(IList<string> roleNames,
+        CancellationToken cancellationToken)
     {
-        if (roleNames.Contains(AppRoles.Superuser))
-        {
-            return AppPermissions.All;
-        }
-
         var normalizedNames = roleNames
             .Select(r => r.ToUpperInvariant())
             .ToList();
+
+        var grantsAll = await dbContext.Roles
+            .AnyAsync(r => normalizedNames.Contains(r.NormalizedName!) && r.GrantsAllPermissions,
+                cancellationToken);
+
+        if (grantsAll)
+        {
+            return AppPermissions.All;
+        }
 
         return await dbContext.RoleClaims
             .Join(dbContext.Roles,
@@ -412,7 +452,7 @@ internal sealed class UserService(
                         && x.ClaimType == AppPermissions.ClaimType)
             .Select(x => x.ClaimValue!)
             .Distinct()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     /// <summary>

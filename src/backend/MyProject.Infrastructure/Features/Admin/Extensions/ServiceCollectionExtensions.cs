@@ -19,6 +19,7 @@ public static class ServiceCollectionExtensions
         {
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IRoleManagementService, RoleManagementService>();
+            services.AddScoped<PermissionEscalationGuard>();
             return services;
         }
     }

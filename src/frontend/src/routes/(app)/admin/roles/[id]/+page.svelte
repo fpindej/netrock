@@ -8,16 +8,16 @@
 	} from '$lib/components/admin';
 	import { createCooldown } from '$lib/state';
 	import { setDynamicLabel, clearDynamicLabel } from '$lib/state/breadcrumb.svelte';
-	import { hasPermission, Permissions, SystemRoles } from '$lib/utils';
+	import { hasPermission, Permissions } from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	let canManageRoles = $derived(hasPermission(data.user, Permissions.Roles.Manage));
-	let isSuperuser = $derived(data.role?.name === SystemRoles.Superuser);
+	let grantsAllPermissions = $derived(data.role?.grantsAllPermissions ?? false);
 	let isSystem = $derived(data.role?.isSystem ?? false);
-	let canEditPermissions = $derived(canManageRoles && !isSuperuser);
+	let canEditPermissions = $derived(canManageRoles && !grantsAllPermissions);
 	let canEditName = $derived(canManageRoles && !isSystem);
 	let canDelete = $derived(canManageRoles && !isSystem && (data.role?.userCount ?? 0) === 0);
 

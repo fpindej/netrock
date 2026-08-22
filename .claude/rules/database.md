@@ -11,7 +11,7 @@ Extends CLAUDE.md with EF Core patterns and commands.
 
 ## Migrations
 - Command: `dotnet ef migrations add {Name} --project src/backend/MyProject.Infrastructure --startup-project src/backend/MyProject.WebApi --output-dir Persistence/Migrations`
-- Seeding: roles via `AppRoles.All` (reflection), permissions via `SeedRolePermissionsAsync()`
+- Seeding: roles and their default permissions via `AppRoles.Definitions` (declarative, idempotent upsert in `SeedRolesAsync()`)
 
 ## Repository Pattern
 - `IBaseEntityRepository<T>` for CRUD with automatic soft-delete filtering (global query filter)

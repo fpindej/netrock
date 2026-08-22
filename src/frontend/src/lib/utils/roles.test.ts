@@ -1,173 +1,152 @@
 import { describe, expect, it } from 'vitest';
-import { canManageUser, getAssignableRoles, getHighestRank, getRoleRank } from './roles';
+import type { AdminRole } from '$lib/types';
+import { buildRoleRankMap, canManageUser, getHighestRank, getRoleRank } from './roles';
+
+/** Creates a minimal AdminRole object for testing. */
+function makeRole(name: string, rank: number): AdminRole {
+	return {
+		id: '00000000-0000-0000-0000-000000000001',
+		name,
+		rank,
+		isSystem: rank > 0,
+		userCount: 0,
+		permissions: []
+	};
+}
+
+const API_ROLES: AdminRole[] = [
+	makeRole('Superuser', 3),
+	makeRole('Admin', 2),
+	makeRole('User', 1),
+	makeRole('Moderator', 0)
+];
+
+const RANK_MAP = buildRoleRankMap(API_ROLES);
+
+describe('buildRoleRankMap', () => {
+	it('maps each role name to its rank', () => {
+		expect(RANK_MAP.get('Superuser')).toBe(3);
+		expect(RANK_MAP.get('Admin')).toBe(2);
+		expect(RANK_MAP.get('User')).toBe(1);
+		expect(RANK_MAP.get('Moderator')).toBe(0);
+	});
+
+	it('returns an empty map for an empty roles list', () => {
+		expect(buildRoleRankMap([]).size).toBe(0);
+	});
+
+	it('defaults a missing rank to 0', () => {
+		const role = makeRole('Custom', 0);
+		delete role.rank;
+		const map = buildRoleRankMap([role]);
+		expect(map.get('Custom')).toBe(0);
+	});
+
+	it('skips roles without a name', () => {
+		const role = makeRole('Nameless', 2);
+		delete role.name;
+		const map = buildRoleRankMap([role]);
+		expect(map.size).toBe(0);
+	});
+});
 
 describe('getRoleRank', () => {
-	it('returns 3 for Superuser', () => {
-		expect(getRoleRank('Superuser')).toBe(3);
+	it('returns the rank from the map', () => {
+		expect(getRoleRank('Superuser', RANK_MAP)).toBe(3);
+		expect(getRoleRank('Admin', RANK_MAP)).toBe(2);
+		expect(getRoleRank('User', RANK_MAP)).toBe(1);
 	});
 
-	it('returns 2 for Admin', () => {
-		expect(getRoleRank('Admin')).toBe(2);
+	it('returns 0 for unknown roles', () => {
+		expect(getRoleRank('Unknown', RANK_MAP)).toBe(0);
 	});
 
-	it('returns 1 for User', () => {
-		expect(getRoleRank('User')).toBe(1);
+	it('returns 0 for an empty role name', () => {
+		expect(getRoleRank('', RANK_MAP)).toBe(0);
 	});
 
-	it('returns 0 for an unknown role name', () => {
-		expect(getRoleRank('Moderator')).toBe(0);
+	it('is case-sensitive (unknown casing ranks 0)', () => {
+		expect(getRoleRank('superuser', RANK_MAP)).toBe(0);
+		expect(getRoleRank('admin', RANK_MAP)).toBe(0);
 	});
 
-	it('returns 0 for an empty string', () => {
-		expect(getRoleRank('')).toBe(0);
-	});
-
-	it('is case-sensitive - lowercase variants return 0', () => {
-		expect(getRoleRank('superuser')).toBe(0);
-		expect(getRoleRank('admin')).toBe(0);
-		expect(getRoleRank('user')).toBe(0);
+	it('returns 0 for any role with an empty map', () => {
+		expect(getRoleRank('Superuser', buildRoleRankMap([]))).toBe(0);
 	});
 });
 
 describe('getHighestRank', () => {
-	it('returns the highest rank from mixed roles', () => {
-		expect(getHighestRank(['User', 'Admin'])).toBe(2);
+	it('returns the highest rank among roles', () => {
+		expect(getHighestRank(['User', 'Admin'], RANK_MAP)).toBe(2);
+		expect(getHighestRank(['User', 'Superuser', 'Admin'], RANK_MAP)).toBe(3);
 	});
 
-	it('returns 3 when Superuser is present', () => {
-		expect(getHighestRank(['User', 'Superuser', 'Admin'])).toBe(3);
-	});
-
-	it('returns 0 for an empty array', () => {
-		expect(getHighestRank([])).toBe(0);
+	it('returns 0 for an empty roles list', () => {
+		expect(getHighestRank([], RANK_MAP)).toBe(0);
 	});
 
 	it('returns 0 when all roles are unknown', () => {
-		expect(getHighestRank(['Moderator', 'Viewer'])).toBe(0);
+		expect(getHighestRank(['Unknown', 'Viewer'], RANK_MAP)).toBe(0);
 	});
 
-	it('returns correct rank for a single known role', () => {
-		expect(getHighestRank(['Admin'])).toBe(2);
+	it('returns the rank of a single role', () => {
+		expect(getHighestRank(['Admin'], RANK_MAP)).toBe(2);
 	});
 
-	it('ignores unknown roles and returns highest known rank', () => {
-		expect(getHighestRank(['Unknown', 'User', 'AnotherUnknown'])).toBe(1);
+	it('ignores unknown roles when a known role is present', () => {
+		expect(getHighestRank(['Unknown', 'User', 'AnotherUnknown'], RANK_MAP)).toBe(1);
+	});
+
+	it('returns 0 for any roles with an empty map', () => {
+		expect(getHighestRank(['Superuser', 'Admin'], buildRoleRankMap([]))).toBe(0);
 	});
 });
 
 describe('canManageUser', () => {
-	it('Superuser can manage Admin', () => {
-		expect(canManageUser(['Superuser'], ['Admin'])).toBe(true);
+	it('higher rank can manage lower rank', () => {
+		expect(canManageUser(['Superuser'], ['Admin'], RANK_MAP)).toBe(true);
+		expect(canManageUser(['Superuser'], ['User'], RANK_MAP)).toBe(true);
+		expect(canManageUser(['Admin'], ['User'], RANK_MAP)).toBe(true);
 	});
 
-	it('Superuser can manage User', () => {
-		expect(canManageUser(['Superuser'], ['User'])).toBe(true);
+	it('lower rank cannot manage higher rank', () => {
+		expect(canManageUser(['Admin'], ['Superuser'], RANK_MAP)).toBe(false);
+		expect(canManageUser(['User'], ['Admin'], RANK_MAP)).toBe(false);
 	});
 
-	it('Admin can manage User', () => {
-		expect(canManageUser(['Admin'], ['User'])).toBe(true);
+	it('equal rank cannot manage (strictly greater required)', () => {
+		expect(canManageUser(['User'], ['User'], RANK_MAP)).toBe(false);
+		expect(canManageUser(['Admin'], ['Admin'], RANK_MAP)).toBe(false);
+		expect(canManageUser(['Superuser'], ['Superuser'], RANK_MAP)).toBe(false);
 	});
 
-	it('Admin cannot manage Superuser', () => {
-		expect(canManageUser(['Admin'], ['Superuser'])).toBe(false);
+	it('caller without roles cannot manage anyone', () => {
+		expect(canManageUser([], ['User'], RANK_MAP)).toBe(false);
 	});
 
-	it('User cannot manage Admin', () => {
-		expect(canManageUser(['User'], ['Admin'])).toBe(false);
+	it('caller with rank can manage a target without roles', () => {
+		expect(canManageUser(['User'], [], RANK_MAP)).toBe(true);
 	});
 
-	it('User cannot manage User - equal rank is not sufficient', () => {
-		expect(canManageUser(['User'], ['User'])).toBe(false);
+	it('neither side with roles cannot manage', () => {
+		expect(canManageUser([], [], RANK_MAP)).toBe(false);
 	});
 
-	it('Admin cannot manage Admin - equal rank is not sufficient', () => {
-		expect(canManageUser(['Admin'], ['Admin'])).toBe(false);
+	it('uses the highest rank on each side', () => {
+		expect(canManageUser(['User', 'Admin'], ['User'], RANK_MAP)).toBe(true);
+		expect(canManageUser(['Admin'], ['User', 'Superuser'], RANK_MAP)).toBe(false);
 	});
 
-	it('Superuser cannot manage Superuser - equal rank is not sufficient', () => {
-		expect(canManageUser(['Superuser'], ['Superuser'])).toBe(false);
+	it('unknown caller role cannot manage a ranked target', () => {
+		expect(canManageUser(['Moderator'], ['User'], RANK_MAP)).toBe(false);
 	});
 
-	it('empty caller roles cannot manage anyone', () => {
-		expect(canManageUser([], ['User'])).toBe(false);
+	it('ranked caller can manage an unknown-role target', () => {
+		expect(canManageUser(['User'], ['Unknown'], RANK_MAP)).toBe(true);
 	});
 
-	it('any role can manage a target with empty roles', () => {
-		expect(canManageUser(['User'], [])).toBe(true);
-	});
-
-	it('empty caller cannot manage empty target - both rank 0', () => {
-		expect(canManageUser([], [])).toBe(false);
-	});
-
-	it('uses highest role when caller has multiple roles', () => {
-		expect(canManageUser(['User', 'Admin'], ['User'])).toBe(true);
-	});
-
-	it('uses highest role when target has multiple roles', () => {
-		// Admin (rank 2) cannot manage target whose highest is Superuser (rank 3)
-		expect(canManageUser(['Admin'], ['User', 'Superuser'])).toBe(false);
-	});
-
-	it('unknown caller roles cannot manage known target roles', () => {
-		expect(canManageUser(['Moderator'], ['User'])).toBe(false);
-	});
-
-	it('known caller roles can manage unknown target roles', () => {
-		// User (rank 1) > unknown (rank 0)
-		expect(canManageUser(['User'], ['Moderator'])).toBe(true);
-	});
-});
-
-describe('getAssignableRoles', () => {
-	const allRoles = ['Superuser', 'Admin', 'User'];
-
-	it('Superuser can assign Admin and User', () => {
-		const result = getAssignableRoles(['Superuser'], allRoles);
-		expect(result).toEqual(['Admin', 'User']);
-	});
-
-	it('Admin can assign only User', () => {
-		const result = getAssignableRoles(['Admin'], allRoles);
-		expect(result).toEqual(['User']);
-	});
-
-	it('User cannot assign any role', () => {
-		const result = getAssignableRoles(['User'], allRoles);
-		expect(result).toEqual([]);
-	});
-
-	it('empty caller roles yield no assignable roles', () => {
-		const result = getAssignableRoles([], allRoles);
-		expect(result).toEqual([]);
-	});
-
-	it('unknown caller role yields no assignable roles from standard set', () => {
-		const result = getAssignableRoles(['Moderator'], allRoles);
-		expect(result).toEqual([]);
-	});
-
-	it('filters from arbitrary allRoles list', () => {
-		// Admin (rank 2) can assign anything with rank < 2
-		const result = getAssignableRoles(['Admin'], ['User', 'Viewer', 'Superuser']);
-		// User has rank 1 (< 2), Viewer has rank 0 (< 2), Superuser has rank 3 (not < 2)
-		expect(result).toEqual(['User', 'Viewer']);
-	});
-
-	it('returns empty when allRoles is empty', () => {
-		const result = getAssignableRoles(['Superuser'], []);
-		expect(result).toEqual([]);
-	});
-
-	it('never includes the caller own rank level', () => {
-		// Superuser (rank 3) should not be able to assign Superuser (rank 3)
-		const result = getAssignableRoles(['Superuser'], ['Superuser']);
-		expect(result).toEqual([]);
-	});
-
-	it('multi-role caller uses highest rank for filtering', () => {
-		// Caller has User + Admin, highest is Admin (rank 2)
-		const result = getAssignableRoles(['User', 'Admin'], allRoles);
-		expect(result).toEqual(['User']);
+	it('denies everything with an empty map (roles load failed)', () => {
+		const emptyMap = buildRoleRankMap([]);
+		expect(canManageUser(['Superuser'], ['User'], emptyMap)).toBe(false);
 	});
 });

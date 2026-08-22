@@ -31,7 +31,8 @@ public class RoleManagementServiceTests : IDisposable
         var logger = Substitute.For<ILogger<RoleManagementService>>();
 
         _sut = new RoleManagementService(
-            _roleManager, _userManager, _dbContext, _hybridCache, _auditService, logger);
+            _roleManager, _userManager, _dbContext, _hybridCache, _auditService,
+            new PermissionEscalationGuard(_dbContext), logger);
     }
 
     public void Dispose()
@@ -129,7 +130,8 @@ public class RoleManagementServiceTests : IDisposable
     public async Task UpdateRole_DescriptionOnly_ReturnsSuccess()
     {
         var roleId = Guid.NewGuid();
-        var role = new ApplicationRole { Id = roleId, Name = "Admin", Description = "Old" };
+        var role = TestRoles.Create(AppRoles.Admin, roleId);
+        role.Description = "Old";
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
         _roleManager.UpdateAsync(role).Returns(IdentityResult.Success);
 
@@ -142,7 +144,7 @@ public class RoleManagementServiceTests : IDisposable
     public async Task UpdateRole_SystemRoleRename_ReturnsFailure()
     {
         var roleId = Guid.NewGuid();
-        var role = new ApplicationRole { Id = roleId, Name = "Admin" };
+        var role = TestRoles.Create(AppRoles.Admin, roleId);
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var result = await _sut.UpdateRoleAsync(roleId, new UpdateRoleInput("NewAdmin", null));
@@ -186,7 +188,7 @@ public class RoleManagementServiceTests : IDisposable
     public async Task DeleteRole_SystemRole_ReturnsFailure()
     {
         var roleId = Guid.NewGuid();
-        var role = new ApplicationRole { Id = roleId, Name = "Admin" };
+        var role = TestRoles.Create(AppRoles.Admin, roleId);
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var result = await _sut.DeleteRoleAsync(roleId);
@@ -255,8 +257,8 @@ public class RoleManagementServiceTests : IDisposable
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var callerId = Guid.NewGuid();
-        MockCallerWithPermissions(callerId, "Admin",
-            [AppPermissions.Users.View, AppPermissions.Users.Manage]);
+        TestRoles.SeedAssigned(_dbContext, callerId, AppRoles.Admin,
+            AppPermissions.Users.View, AppPermissions.Users.Manage);
 
         var result = await _sut.SetRolePermissionsAsync(roleId,
             new SetRolePermissionsInput([AppPermissions.Users.View, AppPermissions.Users.Manage]),
@@ -269,7 +271,7 @@ public class RoleManagementServiceTests : IDisposable
     public async Task SetPermissions_SuperuserRole_ReturnsFailure()
     {
         var roleId = Guid.NewGuid();
-        var role = new ApplicationRole { Id = roleId, Name = AppRoles.Superuser };
+        var role = TestRoles.Create(AppRoles.Superuser, roleId);
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var result = await _sut.SetRolePermissionsAsync(roleId,
@@ -317,7 +319,7 @@ public class RoleManagementServiceTests : IDisposable
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var callerId = Guid.NewGuid();
-        MockCallerWithPermissions(callerId, "Admin", [AppPermissions.Roles.Manage]);
+        TestRoles.SeedAssigned(_dbContext, callerId, AppRoles.Admin, AppPermissions.Roles.Manage);
 
         var result = await _sut.SetRolePermissionsAsync(roleId,
             new SetRolePermissionsInput([AppPermissions.Users.View]),
@@ -336,8 +338,8 @@ public class RoleManagementServiceTests : IDisposable
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var callerId = Guid.NewGuid();
-        MockCallerWithPermissions(callerId, "Admin",
-            [AppPermissions.Users.View, AppPermissions.Users.Manage]);
+        TestRoles.SeedAssigned(_dbContext, callerId, AppRoles.Admin,
+            AppPermissions.Users.View, AppPermissions.Users.Manage);
 
         var result = await _sut.SetRolePermissionsAsync(roleId,
             new SetRolePermissionsInput([AppPermissions.Users.View, AppPermissions.Users.Manage, AppPermissions.Roles.View]),
@@ -349,21 +351,21 @@ public class RoleManagementServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SetPermissions_CallerNotFound_ReturnsForbidden()
+    public async Task SetPermissions_CallerWithoutRoles_ReturnsForbidden()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "CustomRole" };
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
+        // Caller has no role assignments in the database, so they hold no permissions.
         var callerId = Guid.NewGuid();
-        _userManager.FindByIdAsync(callerId.ToString()).Returns((ApplicationUser?)null);
 
         var result = await _sut.SetRolePermissionsAsync(roleId,
             new SetRolePermissionsInput([AppPermissions.Users.View]),
             callerId);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(ErrorMessages.Auth.InsufficientPermissions, result.Error);
+        Assert.Equal(ErrorMessages.Roles.CannotGrantUnheldPermission, result.Error);
         Assert.Equal(ErrorType.Forbidden, result.ErrorType);
     }
 
@@ -374,15 +376,12 @@ public class RoleManagementServiceTests : IDisposable
         var role = new ApplicationRole { Id = roleId, Name = "CustomRole" };
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
-        // Caller does not need to be mocked — empty list short-circuits before lookup.
+        // Caller has no seeded roles or permissions - an empty list short-circuits the guard.
         // The method will fail at ExecuteDeleteAsync (InMemory limitation), confirming the
         // escalation guard passed without requiring any caller permissions.
         await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.SetRolePermissionsAsync(roleId,
             new SetRolePermissionsInput([]),
             Guid.NewGuid()));
-
-        // Verify no caller lookup was attempted
-        await _userManager.DidNotReceive().FindByIdAsync(Arg.Any<string>());
     }
 
     [Fact]
@@ -393,71 +392,56 @@ public class RoleManagementServiceTests : IDisposable
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var callerId = Guid.NewGuid();
-        MockCallerWithMultipleRoles(callerId,
-            ("RoleA", [AppPermissions.Users.View]),
-            ("RoleB", [AppPermissions.Users.Manage]));
+        TestRoles.SeedAssigned(_dbContext, callerId, "RoleA", AppPermissions.Users.View);
+        TestRoles.SeedAssigned(_dbContext, callerId, "RoleB", AppPermissions.Users.Manage);
 
-        // Caller holds users.view via RoleA and users.manage via RoleB — combined they cover both.
+        // Caller holds users.view via RoleA and users.manage via RoleB - combined they cover both.
         // The method will fail at ExecuteDeleteAsync (InMemory limitation), confirming the guard passed.
         await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.SetRolePermissionsAsync(roleId,
             new SetRolePermissionsInput([AppPermissions.Users.View, AppPermissions.Users.Manage]),
             callerId));
-
-        // Verify both roles' claims were checked
-        await _roleManager.Received(2).GetClaimsAsync(Arg.Any<ApplicationRole>());
     }
 
     [Fact]
-    public async Task SetPermissions_CallerRoleNotFoundDuringAggregation_ContinuesGracefully()
+    public async Task SetPermissions_OrphanRoleAssignment_ContinuesGracefully()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "CustomRole" };
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var callerId = Guid.NewGuid();
-        var caller = new ApplicationUser { Id = callerId, UserName = "caller@test.com" };
-        _userManager.FindByIdAsync(callerId.ToString()).Returns(caller);
-        _userManager.GetRolesAsync(caller).Returns(["GhostRole", "RealRole"]);
 
-        // GhostRole not found — should be skipped silently
-        _roleManager.FindByNameAsync("GhostRole").Returns((ApplicationRole?)null);
+        // Orphan assignment: the referenced role row does not exist - skipped by the join.
+        _dbContext.UserRoles.Add(new IdentityUserRole<Guid> { UserId = callerId, RoleId = Guid.NewGuid() });
+        await _dbContext.SaveChangesAsync();
 
         // RealRole has the required permission
-        var realRole = new ApplicationRole { Id = Guid.NewGuid(), Name = "RealRole" };
-        _roleManager.FindByNameAsync("RealRole").Returns(realRole);
-        _roleManager.GetClaimsAsync(realRole).Returns(
-            [new System.Security.Claims.Claim(AppPermissions.ClaimType, AppPermissions.Users.View)]);
+        TestRoles.SeedAssigned(_dbContext, callerId, "RealRole", AppPermissions.Users.View);
 
-        // Should pass escalation guard despite GhostRole being null
+        // Should pass the escalation guard despite the orphan assignment
         await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.SetRolePermissionsAsync(roleId,
             new SetRolePermissionsInput([AppPermissions.Users.View]),
             callerId));
-
-        // GhostRole was looked up but GetClaimsAsync was never called for it
-        await _roleManager.Received(1).FindByNameAsync("GhostRole");
-        await _roleManager.Received(1).GetClaimsAsync(realRole);
     }
 
     [Fact]
-    public async Task SetPermissions_SuperuserCaller_SkipsPermissionCheck()
+    public async Task SetPermissions_GrantsAllCaller_SkipsPermissionCheck()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "CustomRole" };
         _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
 
         var callerId = Guid.NewGuid();
-        MockCallerWithRole(callerId, AppRoles.Superuser);
+        TestRoles.SeedAssigned(_dbContext, callerId, AppRoles.Superuser);
 
-        // Superuser caller should pass escalation check even though they don't
-        // have explicit permission claims. The method will fail at ExecuteDeleteAsync
-        // (InMemory provider limitation), confirming the escalation guard passed.
+        // A grants-all caller passes the escalation check even without explicit permission
+        // claims. The method will fail at ExecuteDeleteAsync (InMemory provider limitation),
+        // confirming the escalation guard passed.
         await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.SetRolePermissionsAsync(roleId,
             new SetRolePermissionsInput([AppPermissions.Users.View, AppPermissions.Users.Manage]),
             callerId));
 
-        // Verify the caller lookup was performed but no permission claims were checked
-        await _userManager.Received(1).FindByIdAsync(callerId.ToString());
-        await _userManager.Received(1).GetRolesAsync(Arg.Any<ApplicationUser>());
+        // The guard resolves held permissions from the database, never via RoleManager claims
         await _roleManager.DidNotReceive().GetClaimsAsync(Arg.Any<ApplicationRole>());
     }
 
@@ -492,6 +476,23 @@ public class RoleManagementServiceTests : IDisposable
         Assert.True(result.IsSuccess);
         Assert.Equal("CustomRole", result.Value.Name);
         Assert.Equal("A role", result.Value.Description);
+        Assert.Equal(0, result.Value.Rank);
+        Assert.False(result.Value.GrantsAllPermissions);
+    }
+
+    [Fact]
+    public async Task GetRoleDetail_GrantsAllRole_ExposesMetadata()
+    {
+        var roleId = Guid.NewGuid();
+        var role = TestRoles.Create(AppRoles.Superuser, roleId);
+        _roleManager.FindByIdAsync(roleId.ToString()).Returns(role);
+
+        var result = await _sut.GetRoleDetailAsync(roleId);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(3, result.Value.Rank);
+        Assert.True(result.Value.GrantsAllPermissions);
+        Assert.True(result.Value.IsSystem);
     }
 
     [Fact]
@@ -508,52 +509,4 @@ public class RoleManagementServiceTests : IDisposable
 
     #endregion
 
-    #region Helpers
-
-    /// <summary>
-    /// Mocks the UserManager/RoleManager chain so the caller is resolved with the given role
-    /// and that role has the specified permission claims.
-    /// </summary>
-    private void MockCallerWithPermissions(Guid callerId, string roleName, string[] permissions)
-    {
-        var caller = new ApplicationUser { Id = callerId, UserName = "caller@test.com" };
-        _userManager.FindByIdAsync(callerId.ToString()).Returns(caller);
-        _userManager.GetRolesAsync(caller).Returns([roleName]);
-
-        var callerRole = new ApplicationRole { Id = Guid.NewGuid(), Name = roleName };
-        _roleManager.FindByNameAsync(roleName).Returns(callerRole);
-        _roleManager.GetClaimsAsync(callerRole).Returns(
-            permissions.Select(p => new System.Security.Claims.Claim(AppPermissions.ClaimType, p)).ToList());
-    }
-
-    /// <summary>
-    /// Mocks the UserManager chain so the caller is resolved with the given role (no permission claims).
-    /// </summary>
-    private void MockCallerWithRole(Guid callerId, string roleName)
-    {
-        var caller = new ApplicationUser { Id = callerId, UserName = "caller@test.com" };
-        _userManager.FindByIdAsync(callerId.ToString()).Returns(caller);
-        _userManager.GetRolesAsync(caller).Returns([roleName]);
-    }
-
-    /// <summary>
-    /// Mocks the UserManager/RoleManager chain so the caller has multiple roles, each with distinct permissions.
-    /// </summary>
-    private void MockCallerWithMultipleRoles(Guid callerId,
-        params (string RoleName, string[] Permissions)[] roles)
-    {
-        var caller = new ApplicationUser { Id = callerId, UserName = "caller@test.com" };
-        _userManager.FindByIdAsync(callerId.ToString()).Returns(caller);
-        _userManager.GetRolesAsync(caller).Returns(roles.Select(r => r.RoleName).ToList());
-
-        foreach (var (roleName, permissions) in roles)
-        {
-            var appRole = new ApplicationRole { Id = Guid.NewGuid(), Name = roleName };
-            _roleManager.FindByNameAsync(roleName).Returns(appRole);
-            _roleManager.GetClaimsAsync(appRole).Returns(
-                permissions.Select(p => new System.Security.Claims.Claim(AppPermissions.ClaimType, p)).ToList());
-        }
-    }
-
-    #endregion
 }

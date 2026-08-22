@@ -3688,6 +3688,13 @@ export interface components {
 			userCount?: number;
 			/** @description The permission claim values assigned to this role. */
 			permissions?: string[];
+			/**
+			 * Format: int32
+			 * @description The hierarchy rank. Higher rank means more authority; custom roles have rank 0.
+			 */
+			rank?: number;
+			/** @description Whether the role implicitly grants every permission. */
+			grantsAllPermissions?: boolean;
 		};
 		/** @description Represents a user's full profile and account details for admin views. */
 		AdminUserResponse: {
@@ -4126,6 +4133,13 @@ export interface components {
 			 * @description The number of users assigned to this role.
 			 */
 			userCount?: number;
+			/**
+			 * Format: int32
+			 * @description The hierarchy rank. Higher rank means more authority; custom roles have rank 0.
+			 */
+			rank?: number;
+			/** @description Whether the role implicitly grants every permission. */
+			grantsAllPermissions?: boolean;
 		};
 		/** @description Request to set an initial password on a passwordless OAuth-created account. */
 		SetPasswordRequest: {

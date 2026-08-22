@@ -57,7 +57,9 @@ internal static class AdminMapper
         Description = output.Description,
         IsSystem = output.IsSystem,
         UserCount = output.UserCount,
-        Permissions = output.Permissions
+        Permissions = output.Permissions,
+        Rank = output.Rank,
+        GrantsAllPermissions = output.GrantsAllPermissions
     };
 
     /// <summary>
@@ -95,7 +97,9 @@ internal static class AdminMapper
         Description = output.Description,
         IsSystem = output.IsSystem,
         Permissions = output.Permissions,
-        UserCount = output.UserCount
+        UserCount = output.UserCount,
+        Rank = output.Rank,
+        GrantsAllPermissions = output.GrantsAllPermissions
     };
 
     /// <summary>

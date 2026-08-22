@@ -74,7 +74,7 @@ Configurations inherit `BaseEntityConfiguration<T>` (`public abstract`), overrid
 
 - Default `public` schema. Named schemas only for existing grouped features (e.g., `"auth"`).
 - `.HasComment()` on all enum columns documenting values.
-- Seeding: roles via `AppRoles.All` (reflection), permissions via `SeedRolePermissionsAsync()`.
+- Seeding: roles and their default permissions via `AppRoles.Definitions` (declarative, idempotent upsert in `SeedRolesAsync()`).
 
 Migration command:
 ```bash

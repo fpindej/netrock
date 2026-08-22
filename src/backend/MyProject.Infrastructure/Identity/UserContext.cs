@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using MyProject.Application.Identity;
-using MyProject.Application.Identity.Constants;
 
 namespace MyProject.Infrastructure.Identity;
 
@@ -48,8 +47,7 @@ internal class UserContext(IHttpContextAccessor httpContextAccessor) : IUserCont
     /// <inheritdoc />
     public bool HasPermission(string permission)
     {
-        return IsInRole(AppRoles.Superuser) ||
-               (httpContextAccessor.HttpContext?.User.HasClaim(AppPermissions.ClaimType, permission) ?? false);
+        return PermissionEvaluator.HasPermission(httpContextAccessor.HttpContext?.User, permission);
     }
 
     private T? GetClaimValue<T>(string claimType, Func<string, T> converter)
