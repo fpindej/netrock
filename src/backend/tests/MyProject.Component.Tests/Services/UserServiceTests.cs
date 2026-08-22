@@ -257,6 +257,32 @@ public class UserServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task DeleteAccount_DeleteFails_WritesNoAuditAndKeepsAvatarAndCookies()
+    {
+        // Side effects must only run after a committed delete: a failed delete must not
+        // produce an AccountDeletion audit record, remove the avatar, or clear cookies.
+        var user = new ApplicationUser { Id = _userId, UserName = "test@example.com", HasAvatar = true };
+        _userContext.UserId.Returns(_userId);
+        _userManager.FindByIdAsync(_userId.ToString()).Returns(user);
+        _userManager.CheckPasswordAsync(user, "correct").Returns(true);
+        _userManager.DeleteAsync(user).Returns(IdentityResult.Failed());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _sut.DeleteAccountAsync(new DeleteAccountInput("correct")));
+
+        await _auditService.DidNotReceive().LogAsync(
+            AuditActions.AccountDeletion,
+            userId: Arg.Any<Guid?>(),
+            targetEntityType: Arg.Any<string?>(),
+            targetEntityId: Arg.Any<Guid?>(),
+            metadata: Arg.Any<string?>(),
+            ct: Arg.Any<CancellationToken>());
+        await _fileStorageService.DidNotReceive()
+            .DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        _cookieService.DidNotReceive().DeleteCookie(Arg.Any<string>());
+    }
+
+    [Fact]
     public async Task DeleteAccount_SuperuserWithSecondGrantsAllHolder_Succeeds()
     {
         var user = new ApplicationUser { Id = _userId, UserName = "superuser@example.com" };

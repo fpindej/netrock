@@ -28,6 +28,7 @@ public class AdminServiceTests : IDisposable
     private readonly HybridCache _hybridCache;
     private readonly ITemplatedEmailSender _templatedEmailSender;
     private readonly IAuditService _auditService;
+    private readonly IFileStorageService _fileStorageService;
     private readonly FakeTimeProvider _timeProvider;
     private readonly MyProjectDbContext _dbContext;
     private readonly AdminService _sut;
@@ -57,13 +58,13 @@ public class AdminServiceTests : IDisposable
         var emailTokenService = new EmailTokenService(_dbContext, _timeProvider, authOptions);
         _auditService = Substitute.For<IAuditService>();
 
-        var fileStorageService = Substitute.For<IFileStorageService>();
+        _fileStorageService = Substitute.For<IFileStorageService>();
 
         _sut = new AdminService(
             _userManager, _roleManager, _dbContext, _hybridCache, _timeProvider,
             _templatedEmailSender, emailTokenService, _auditService,
             new PermissionEscalationGuard(_dbContext),
-            fileStorageService, authOptions, emailOptions, logger);
+            _fileStorageService, authOptions, emailOptions, logger);
     }
 
     public void Dispose()
@@ -728,6 +729,38 @@ public class AdminServiceTests : IDisposable
 
         Assert.True(result.IsFailure);
         Assert.Equal(ErrorMessages.Admin.LastSuperuserCannotDelete, result.Error);
+    }
+
+    [Fact]
+    public async Task DeleteUser_DeleteFails_LeavesSessionsAndAvatarIntact()
+    {
+        // Destructive side effects (session revocation, avatar deletion) must only run
+        // after a committed delete - a failed delete leaves the user fully intact.
+        SetupCallerAsAdmin();
+        var target = SetupTargetAsUser();
+        target.HasAvatar = true;
+        _userManager.DeleteAsync(target).Returns(IdentityResult.Failed());
+
+        _dbContext.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            Token = "hashed",
+            UserId = _targetId,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
+            ExpiredAt = _timeProvider.GetUtcNow().UtcDateTime.AddDays(7),
+            IsUsed = false,
+            IsInvalidated = false
+        });
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _sut.DeleteUserAsync(_callerId, _targetId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorMessages.Admin.DeleteFailed, result.Error);
+        var token = Assert.Single(_dbContext.RefreshTokens);
+        Assert.False(token.IsInvalidated);
+        await _fileStorageService.DidNotReceive()
+            .DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

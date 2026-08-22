@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -304,29 +305,25 @@ internal sealed class UserService(
             return Result.Failure(ErrorMessages.User.LastSuperuserCannotDelete);
         }
 
-        await auditService.LogAsync(AuditActions.AccountDeletion, userId: userId.Value, ct: cancellationToken);
-
-        // Clean up avatar from storage if present (best-effort — don't block account deletion)
-        if (user.HasAvatar)
-        {
-            var avatarDeleteResult = await fileStorageService.DeleteAsync($"avatars/{userId.Value}.webp", cancellationToken);
-            if (!avatarDeleteResult.IsSuccess)
-            {
-                logger.LogWarning("Failed to delete avatar for user {UserId} during account deletion: {Error}",
-                    userId.Value, avatarDeleteResult.Error);
-            }
-        }
-
-        await RevokeUserTokens(user, userId.Value, cancellationToken);
+        // Captured before the mutation: the entity is detached after a committed delete.
+        var hadAvatar = user.HasAvatar;
 
         // Mutation and lockout re-verification share one transaction so two concurrent
         // self-deletions of the last two grants-all holders cannot both slip past the
-        // pre-check and jointly leave zero holders.
+        // pre-check and jointly leave zero holders. Serializable is required: at READ
+        // COMMITTED a reader neither blocks on nor sees a concurrent uncommitted delete of
+        // a different row, so both re-checks could still pass. Under serializable isolation
+        // Postgres aborts one transaction with a serialization failure, which Npgsql marks
+        // transient; the retrying execution strategy re-runs the delegate and the re-check
+        // then fails with the stable error code. The InMemory test provider is not
+        // relational and ignores transactions, hence the provider guard.
         var deletionResult = Result.Success();
         var strategy = dbContext.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
         {
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = dbContext.Database.IsRelational()
+                ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+                : await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             await DeleteUser(user);
 
@@ -343,6 +340,26 @@ internal sealed class UserService(
         {
             return deletionResult;
         }
+
+        // Side effects run only after a committed delete: on rollback the surviving user
+        // must keep sessions and avatar, and no audit record may claim a deletion that
+        // never happened.
+        await auditService.LogAsync(AuditActions.AccountDeletion, userId: userId.Value, ct: cancellationToken);
+
+        // Clean up avatar from storage if present (best-effort, never blocks the response)
+        if (hadAvatar)
+        {
+            var avatarDeleteResult = await fileStorageService.DeleteAsync($"avatars/{userId.Value}.webp", cancellationToken);
+            if (!avatarDeleteResult.IsSuccess)
+            {
+                logger.LogWarning("Failed to delete avatar for user {UserId} during account deletion: {Error}",
+                    userId.Value, avatarDeleteResult.Error);
+            }
+        }
+
+        // Refresh tokens cascade-delete with the user row; this evicts the cached security
+        // stamp so in-flight access tokens fail validation immediately.
+        await RevokeUserTokens(user, userId.Value, cancellationToken);
 
         ClearAuthCookies();
         await InvalidateUserCache(userId.Value);
