@@ -1,4 +1,14 @@
 {
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
+  "enabledPlugins": {
+    "csharp-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true
+  },
   "permissions": {
     "allow": [
       "Bash(pnpm *)",
@@ -87,7 +97,7 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "",
+        "matcher": "startup",
         "hooks": [
           {
             "type": "command",
