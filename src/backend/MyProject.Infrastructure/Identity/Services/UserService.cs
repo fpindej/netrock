@@ -357,9 +357,11 @@ internal sealed class UserService(
             }
         }
 
-        // Refresh tokens cascade-delete with the user row; this evicts the cached security
-        // stamp so in-flight access tokens fail validation immediately.
-        await RevokeUserTokens(user, userId.Value, cancellationToken);
+        // Refresh tokens cascade-delete with the user row, and stamp validation fails
+        // closed for a missing user, so evicting the cached security stamp is all that is
+        // needed to kill in-flight access tokens. Rotating the stamp via UserManager would
+        // issue an update against the deleted row and poison the change tracker.
+        await hybridCache.RemoveAsync(CacheKeys.SecurityStamp(userId.Value), cancellationToken);
 
         ClearAuthCookies();
         await InvalidateUserCache(userId.Value);
@@ -394,22 +396,6 @@ internal sealed class UserService(
                 r => r.Id,
                 (ur, _) => ur.UserId)
             .AnyAsync(cancellationToken);
-    }
-
-    private async Task RevokeUserTokens(ApplicationUser user, Guid userId, CancellationToken cancellationToken)
-    {
-        var tokens = await dbContext.RefreshTokens
-            .Where(rt => rt.UserId == userId && !rt.IsInvalidated)
-            .ToListAsync(cancellationToken);
-
-        foreach (var token in tokens)
-        {
-            token.IsInvalidated = true;
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await userManager.UpdateSecurityStampAsync(user);
-        await hybridCache.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
     }
 
     private void ClearAuthCookies()

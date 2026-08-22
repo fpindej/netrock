@@ -420,8 +420,11 @@ internal class AdminService(
 
         // Side effects run only after a committed delete: on rollback the surviving user
         // must keep their sessions and avatar. Refresh tokens cascade-delete with the user
-        // row; this evicts the cached security stamp so in-flight tokens die immediately.
-        await RevokeUserSessionsAsync(user, userId, cancellationToken);
+        // row, and stamp validation fails closed for a missing user, so evicting the cached
+        // security stamp is all that is needed to kill in-flight access tokens. Rotating
+        // the stamp via UserManager would issue an update against the deleted row, leaving
+        // a poisoned change tracker entry that silently breaks the audit write below.
+        await hybridCache.RemoveAsync(CacheKeys.SecurityStamp(userId), cancellationToken);
 
         // Clean up avatar from storage if present (best-effort, never blocks the response)
         if (hadAvatar)

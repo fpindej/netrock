@@ -302,7 +302,7 @@ public class UserServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task DeleteAccount_Valid_RevokesTokensAndClearsState()
+    public async Task DeleteAccount_Valid_ClearsSessionState()
     {
         var user = new ApplicationUser { Id = _userId, UserName = "test@example.com" };
         _userContext.UserId.Returns(_userId);
@@ -311,26 +311,15 @@ public class UserServiceTests : IDisposable
         _userManager.GetRolesAsync(user).Returns(new List<string> { AppRoles.User });
         _userManager.DeleteAsync(user).Returns(IdentityResult.Success);
 
-        // Seed a refresh token
-        _dbContext.RefreshTokens.Add(new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            Token = "hashed-token",
-            UserId = _userId,
-            CreatedAt = DateTime.UtcNow,
-            ExpiredAt = DateTime.UtcNow.AddDays(7),
-            IsUsed = false,
-            IsInvalidated = false
-        });
-        await _dbContext.SaveChangesAsync();
-
         var result = await _sut.DeleteAccountAsync(new DeleteAccountInput("correct"));
 
         Assert.True(result.IsSuccess);
 
-        // Verify refresh tokens were invalidated
-        var token = Assert.Single(_dbContext.RefreshTokens);
-        Assert.True(token.IsInvalidated);
+        // Refresh tokens cascade-delete with the user row; the service's contract is to
+        // delete the user and evict the cached security stamp so in-flight access tokens
+        // fail validation immediately.
+        await _userManager.Received(1).DeleteAsync(user);
+        await _hybridCache.Received(1).RemoveAsync(CacheKeys.SecurityStamp(_userId));
 
         // Verify cookies were cleared
         _cookieService.Received(1).DeleteCookie(CookieNames.AccessToken);
