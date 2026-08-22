@@ -698,6 +698,12 @@ internal class AdminService(
     /// Enforces the lockout invariant for a role removal: the operation may not leave zero
     /// users holding any role that grants all permissions. Only checked when the role being
     /// removed grants all permissions; the affected assignment itself is excluded from the count.
+    /// <para>
+    /// For the Superuser role itself this guard is effectively unreachable via
+    /// <see cref="RemoveRoleAsync"/>: the rank gate (role rank at or above the caller's rank
+    /// is blocked) fires first for a max-rank role, so the <c>LastRoleHolder</c> failure is
+    /// only reachable for rank-0 roles flagged <c>GrantsAllPermissions</c>.
+    /// </para>
     /// </summary>
     private async Task<Result> EnforceLockoutInvariantForRoleRemovalAsync(Guid userId,
         ApplicationRole role, CancellationToken cancellationToken)
