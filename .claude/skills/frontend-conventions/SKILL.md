@@ -19,6 +19,8 @@ src/
 │   │   ├── profile/               # Profile forms, avatar, account details
 │   │   ├── settings/              # Password, account deletion, activity log, 2FA management
 │   │   ├── admin/                 # User/role/job management, audit trail
+│   │   ├── dashboard/             # Dashboard widgets
+│   │   ├── oauth/                 # OAuth provider linking
 │   │   └── common/                # Small shared pieces (status indicator, etc.)
 │   │   # For the live component inventory, list the barrels: $lib/components/*/index.ts
 │   ├── config/                    # i18n.ts (client-safe), server.ts (server-only - never export from barrel)
@@ -163,7 +165,7 @@ Use `ms-*`/`me-*`/`ps-*`/`pe-*`/`start-*`/`end-*`/`text-start`/`text-end`/`borde
 ### Responsive Design (Mobile-First)
 
 - Base styles for 320px, then `sm:` -> `md:` -> `lg:` -> `xl:`
-- Touch targets >= 40px (`h-10`), primary actions >= 44px (`h-11`)
+- Touch targets minimum 44px (`min-h-11`) on all interactive elements (CLAUDE.md hard rule)
 - `h-dvh` not `h-screen` for full-height layouts
 - `min-w-0` on flex children with text, `shrink-0` on icons/badges
 - **Content grids: `lg:grid-cols-2`** - the `max-w-7xl` constraint ensures sufficient column width even with the sidebar

@@ -32,7 +32,7 @@ Before making any changes:
 After changes, verify as applicable:
 ```bash
 # Docker builds
-docker build -f src/backend/Dockerfile -t test-api .
+docker build -f src/backend/MyProject.WebApi/Dockerfile -t test-api .
 docker build -f src/frontend/Dockerfile -t test-frontend .
 
 # Aspire orchestration
