@@ -14,12 +14,13 @@ src/
 │   ├── auth/                      # auth.ts (getUser, logout), middleware.ts (token refresh)
 │   ├── components/
 │   │   ├── ui/                    # shadcn (generated, customizable)
-│   │   ├── auth/                  # AuthShell, LoginForm, RegisterForm, ForgotPasswordForm, ResetPasswordForm, EmailVerificationBanner, TurnstileWidget, TwoFactorStep
-│   │   ├── layout/                # Header, AppSidebar, UserNav, ThemeToggle, LanguageSelector, ShortcutsHelp
-│   │   ├── profile/               # ProfileForm, ProfileHeader, AvatarDialog, AccountDetails, InfoItem
-│   │   ├── settings/              # ChangePasswordForm, DeleteAccountDialog, ActivityLog, TwoFactorCard, TwoFactorSetupDialog, TwoFactorDisableDialog, TwoFactorRecoveryCodesDialog
-│   │   ├── admin/                 # UserTable, UserDetailCards, UserManagementCard, RoleManagement, AccountActions, RoleCardGrid, RoleDetailsCard, RolePermissionsSection, RoleDeleteSection, JobTable, JobInfoCard, JobActionsCard, JobExecutionHistory, AuditTrailCard, ...
-│   │   └── common/                # StatusIndicator, WorkInProgress
+│   │   ├── auth/                  # Login/register/reset flows, 2FA step, Turnstile
+│   │   ├── layout/                # Header, sidebar, user nav, theme/language toggles
+│   │   ├── profile/               # Profile forms, avatar, account details
+│   │   ├── settings/              # Password, account deletion, activity log, 2FA management
+│   │   ├── admin/                 # User/role/job management, audit trail
+│   │   └── common/                # Small shared pieces (status indicator, etc.)
+│   │   # For the live component inventory, list the barrels: $lib/components/*/index.ts
 │   ├── config/                    # i18n.ts (client-safe), server.ts (server-only - never export from barrel)
 │   ├── state/                     # .svelte.ts files only (cooldown, health, shake, theme, sidebar, shortcuts)
 │   ├── types/index.ts             # Type aliases from API schemas

@@ -52,10 +52,16 @@ Argument: PR number or URL.
 
 ### 4. Test verification
 
-- Checkout the PR branch: `gh pr checkout {number}`
-- Run the relevant test suite:
-  - Backend: `dotnet build src/backend/MyProject.slnx && dotnet test src/backend/MyProject.slnx -c Release`
-  - Frontend: `cd src/frontend && pnpm install && pnpm run test && pnpm run check`
+Never `gh pr checkout` - that would switch the user's working tree. Test in a disposable worktree:
+
+```bash
+git fetch origin pull/{number}/head
+git worktree add /tmp/dependabot-{number} FETCH_HEAD
+```
+
+- Backend: `dotnet build /tmp/dependabot-{number}/src/backend/MyProject.slnx && dotnet test /tmp/dependabot-{number}/src/backend/MyProject.slnx -c Release`
+- Frontend: `cd /tmp/dependabot-{number}/src/frontend && pnpm install && pnpm run test && pnpm run check`
+- Afterwards: `git worktree remove --force /tmp/dependabot-{number}`
 - If tests pass, that's a strong signal. If they fail, identify whether the failure is related to the update.
 
 ## Output format
@@ -87,7 +93,7 @@ Argument: PR number or URL.
 
 ## Rules
 
-- Research only - do NOT modify any files (except running `pnpm install` to update the lock file for testing)
+- Research only - never modify the user's working tree; all build/test side effects stay inside the disposable worktree
 - Always run the test suite - never skip it
 - When in doubt, verdict is NEEDS MANUAL REVIEW, not SAFE TO MERGE
 - A passing test suite does not override known breaking changes in the changelog

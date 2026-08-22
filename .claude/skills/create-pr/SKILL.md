@@ -20,7 +20,7 @@ Creates a pull request for the current branch.
 
 - **Never commit on master.** If on master, create a branch first. No exceptions.
 - **No Co-Authored-By lines** in commits. User mentions Claude on PRs, not on individual commits.
-- **Sign all commits** with `-S` flag.
+- **Commit signing follows the developer's git config** (`commit.gpgsign`) - never pass `-S` explicitly; fresh clones may have no signing key.
 - **Session docs are immutable history** - never update old session docs to reflect current state.
 
 ## Steps
